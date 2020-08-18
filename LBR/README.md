@@ -16,3 +16,4 @@ Description of Labradar series
 | 012 | Sterling Cross| RPrimfire  | 2020-08-08 | 
 | 013 | Federal 36gr Black Pack | RPRimfire  | 2020-08-08 |
 | 014 | Aguila 38gr Super Extra Hollowpoint  | RPrimfire | 2020-08-06 | 
+| 015 | 230gr CamPro.  4.5gr Bullseye | G41 |2020-08-17 |
