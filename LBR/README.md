@@ -31,4 +31,9 @@ For ammo, stick with the format:
 | 023 | 8mm Mauser; 180gr Barnes TSX, 45.0gr IMR-4985 | Isreali 98K |2020-11-28 |
 | 024 | 6.5x55; 130gr Hornady ELDX; 36gr D-4895; 2.402" to ogive | M96 | 2021-01-04 |
 | 025 | .223; Norinco 55gr | MRA Renegade 16" | 2021-01-04 |
-| 026 | .223; 55gr Lake City projecticle; 24.8gr H-4895 (could be 25.4gr as well)  | MRA Renegade 16" | 2021-01-04 |
+| 026 | .223; 55gr Lake City projecticle; 24.8gr H-4895 (could be 25.4gr as well)  | MRA Renegade 16" | 2021-01-10 |
+| 027 | 6.5x55; 140gr Hornady Interlock, 35.0gr D-4895  | M96 | 2021-01-10 |
+| 028 | 6.5x55; 140gr Hornady HPBT, 35.0gr D-4895  | M96 | 2021-01-10 |
+| 029 | 6.5x55; 140gr Hornady SST, 35.0gr D-4895  | M96 | 2021-01-10 |
+| 030 | .223; 69gr SMK; 23.75gr D-4895 | MRA Renegade 16" | 2021-01-10 |
+| 031 | .223; 55gr Lake City projecticle; 24.8gr H-4895 | MRA Renegade 16" | 2021-01-10 |
