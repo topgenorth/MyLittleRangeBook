@@ -37,3 +37,7 @@ For ammo, stick with the format:
 | 029 | 6.5x55; 140gr Hornady SST, 35.0gr D-4895  | M96 | 2021-01-10 |
 | 030 | .223; 69gr SMK; 23.75gr D-4895 | MRA Renegade 16" | 2021-01-10 |
 | 031 | .223; 55gr Lake City projecticle; 24.8gr H-4895 | MRA Renegade 16" | 2021-01-10 |
+| 032 | unknown;Some black powder bullet; black powder | Al Keeler's Black Powder Thompson Contender | 2021-02-28 |
+| 033 | .22LR; Federal 36gr Black Pack | Remington 597 | 2021-02-28 |
+| 034 | 8mm Mauser; 170gr CIL Spitzer ; 46.8gr IMR-4895 | Isreali 98K, Burris 2-7 Scout Scope | 2021-02-28 |
+| 035 | 8mm Mauser; 180gr Barnes TSX; 45gr IMR-4895 | Isreali 98K, Burris 2-7 Scout Scope | 2021-02-28 |
