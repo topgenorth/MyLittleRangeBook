@@ -41,3 +41,5 @@ For ammo, stick with the format:
 | 033 | .22LR; Federal 36gr Black Pack | Remington 597 | 2021-02-28 |
 | 034 | 8mm Mauser; 170gr CIL Spitzer ; 46.8gr IMR-4895 | Isreali 98K, Burris 2-7 Scout Scope | 2021-02-28 |
 | 035 | 8mm Mauser; 180gr Barnes TSX; 45gr IMR-4895 | Isreali 98K, Burris 2-7 Scout Scope | 2021-02-28 |
+| 036 | .22LR; Federal 36gr Black Pack | Remington 597 | 2021-03-13 |
+| 037 | JUNK SESSION - IGNORE | JUNK SESSION - IGNORE | 2021-03-13 |
