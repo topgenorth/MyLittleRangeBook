@@ -43,3 +43,8 @@ For ammo, stick with the format:
 | 035 | 8mm Mauser; 180gr Barnes TSX; 45gr IMR-4895 | Isreali 98K, Burris 2-7 Scout Scope | 2021-02-28 |
 | 036 | .22LR; Federal 36gr Black Pack | Remington 597 | 2021-03-13 |
 | 037 | JUNK SESSION - IGNORE | JUNK SESSION - IGNORE | 2021-03-13 |
+| 038 | .22LR; Federal 36gr Black Pack | Grey Birch | 2021-06-07 |
+| 039 | .22LR; CCI SV | Grey Birch | 2021-06-07 |
+| 040 | .22LR; Eley Force | Grey Birch | 2021-06-07 |
+| 041 | .22LR; Federal 36gr Black Pack | Grey Birch | 2021-06-07 |
+
