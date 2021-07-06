@@ -1,12 +1,7 @@
 {
-  "name": "make-json",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.1",
+    "node-ts": "^5.1.1",
+    "typescript": "^4.3.5"
+  }
 }
