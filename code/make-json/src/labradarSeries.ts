@@ -38,7 +38,7 @@ interface LabradarSeries {
             name: string,
             amount: number
         }
-    }
-
+    },
+    notes: string,
     tags: string[];
 }

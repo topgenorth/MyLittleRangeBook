@@ -1,7 +1,7 @@
 "use strict";
 const fs = require('fs');
 const rd = require('readline');
-const filename = '/Users/tomo/work/labradar/LBR/SR0001/SR0001 Report.csv';
+const filename = '/Users/tomo/work/labradar/LBR/SR0042/SR0042 Report.csv';
 let count = 0;
 let labradarSeries = {
     labradar: {
@@ -44,6 +44,7 @@ let labradarSeries = {
             amount: 0
         }
     },
+    notes: ``,
     tags: Array()
 };
 const reader = rd.createInterface(fs.createReadStream(filename));
