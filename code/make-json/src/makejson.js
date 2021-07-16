@@ -33,7 +33,7 @@ let labradarSeries = {
         projectile: {
             name: ``,
             weight: 0,
-            BC: {
+            ballisticCoefficient: {
                 dragModel: ``,
                 value: 0,
                 sd: 0
@@ -91,6 +91,16 @@ function parseLineFromFile(l) {
     }
     count++;
 }
+function saveJsonForWebsite(labradarSeries) {
+    let destination = '/Users/tomo/work/topgenorth.github.io/data/labradar/' + labradarSeries.labradar.seriesName + '.json';
+    let jsonData = JSON.stringify(labradarSeries);
+    // @ts-ignore
+    fs.writeFile(destination, jsonData, function (err) {
+        if (err) {
+            console.log(err);
+        }
+    });
+}
 function calculateInformationForSeries() {
     const v0 = labradarSeries.labradar.velocitiesInSeries.slice().sort();
     labradarSeries.labradar.totalNumberOfShots = v0.length;
@@ -100,6 +110,7 @@ function calculateInformationForSeries() {
     labradarSeries.labradar.stats.average = average(v0);
     labradarSeries.labradar.stats.standardDeviation = Math.round(standardDeviation(v0) * 10) / 10;
     console.log(labradarSeries);
+    saveJsonForWebsite(labradarSeries);
 }
 function average(someValues) {
     const avg = someValues.reduce((a, b) => (a + b)) / someValues.length;

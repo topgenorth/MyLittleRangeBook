@@ -5,36 +5,36 @@ const filename = '/Users/tomo/work/labradar/LBR/SR0042/SR0042 Report.csv';
 let count = 0;
 
 let labradarSeries = {
-    labradar : {
+    labradar: {
         deviceId: ``,
         date: ``,
         time: ``,
         seriesName: ``,
         totalNumberOfShots: 0,
-        units : {
+        units: {
             velocity: ``,
             distance: ``,
             weight: ``
         },
-        stats : {
+        stats: {
             average: 0,
             max: 0,
             min: 0,
             extremeSpread: 0,
             standardDeviation: 0
         },
-        velocitiesInSeries : Array<number>()
+        velocitiesInSeries: Array<number>()
     },
-    firearm : {
+    firearm: {
         name: ``,
-        cartridge : ``
+        cartridge: ``
     },
-    loadData : {
-        cartridge : ``,
+    loadData: {
+        cartridge: ``,
         projectile: {
             name: ``,
             weight: 0,
-            BC: {
+            ballisticCoefficient: {
                 dragModel: ``,
                 value: 0,
                 sd: 0
@@ -88,8 +88,8 @@ function parseLineFromFile(l: string) {
             }
             if (count === 18) {
                 let cells = l.split(';');
-                let dateIdx = cells.length-3;
-                labradarSeries.labradar.time = cells[dateIdx+1];
+                let dateIdx = cells.length - 3;
+                labradarSeries.labradar.time = cells[dateIdx + 1];
                 labradarSeries.labradar.date = cells[dateIdx];
             }
             break;
@@ -97,19 +97,36 @@ function parseLineFromFile(l: string) {
     count++;
 }
 
+
+function saveJsonForWebsite(labradarSeries: LabradarSeries) {
+
+    let destination = '/Users/tomo/work/topgenorth.github.io/data/labradar/' + labradarSeries.labradar.seriesName + '.json';
+    let jsonData = JSON.stringify(labradarSeries);
+    // @ts-ignore
+    fs.writeFile(destination, jsonData, function (err) {
+        if (err) {
+            console.log(err);
+        }
+    });
+
+}
+
 function calculateInformationForSeries() {
     const v0 = labradarSeries.labradar.velocitiesInSeries.slice().sort();
 
     labradarSeries.labradar.totalNumberOfShots = v0.length;
 
-    labradarSeries.labradar.stats.max = v0[v0.length-1];
+    labradarSeries.labradar.stats.max = v0[v0.length - 1];
     labradarSeries.labradar.stats.min = v0[0];
     labradarSeries.labradar.stats.extremeSpread = labradarSeries.labradar.stats.max - labradarSeries.labradar.stats.min;
 
     labradarSeries.labradar.stats.average = average(v0);
-    labradarSeries.labradar.stats.standardDeviation = Math.round(standardDeviation(v0) * 10)/10;
+    labradarSeries.labradar.stats.standardDeviation = Math.round(standardDeviation(v0) * 10) / 10;
 
     console.log(labradarSeries);
+
+
+    saveJsonForWebsite(labradarSeries)
 }
 
 function average(someValues: number[]) {

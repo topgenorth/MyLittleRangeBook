@@ -28,7 +28,7 @@ interface LabradarSeries {
         projectile: {
             name: string,
             weight: number,
-            BC: {
+            ballisticCoefficient: {
                 dragModel: string,
                 value: number,
                 sd: number
