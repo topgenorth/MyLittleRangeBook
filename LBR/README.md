@@ -47,4 +47,5 @@ For ammo, stick with the format:
 | 039 | .22LR; CCI SV | Grey Birch | 2021-06-07 |
 | 040 | .22LR; Eley Force | Grey Birch | 2021-06-07 |
 | 041 | .22LR; Federal 36gr Black Pack | Grey Birch | 2021-06-07 |
+| 042 | .22LR; CCI SV | Remington 597 | 2021-07-15 |
 
