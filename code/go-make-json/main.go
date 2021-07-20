@@ -19,4 +19,5 @@ import "opgenorth.net/labradar/cmd"
 
 func main() {
 	cmd.Execute()
+
 }

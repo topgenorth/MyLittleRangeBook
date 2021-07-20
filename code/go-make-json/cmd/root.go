@@ -16,8 +16,10 @@ limitations under the License.
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
 
 	"github.com/spf13/viper"
@@ -25,19 +27,33 @@ import (
 
 var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
+
 var rootCmd = &cobra.Command{
 	Use:   "labradar",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Utilities for working with the Labradar CSV files.",
+	Long: `Currently this will read a CSV file and convert it to JSON.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+Future plans include converting all the CSV file in a directory. Maybe even connecting via BT to the 
+Labradar and downloading stuff?`,
+	Run: func(cmd *cobra.Command, args []string) {
+		f, err := os.Open("/Users/tomo/work/labradar/LBR/SR0042/SR0042 Report.csv")
+
+		if  err != nil {
+			log.Fatal(err)
+			os.Exit(1)
+		}
+		defer f.Close()
+
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			fmt.Println(scanner.Text())
+		}
+
+		if err := scanner.Err(); err != nil {
+			log.Fatal(err)
+		}
+
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
