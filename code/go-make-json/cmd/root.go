@@ -17,16 +17,17 @@ package cmd
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
 	"log"
+	"opgenorth.net/labradar/domain"
 	"os"
 
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
-
 
 var rootCmd = &cobra.Command{
 	Use:   "labradar",
@@ -36,24 +37,41 @@ var rootCmd = &cobra.Command{
 Future plans include converting all the CSV file in a directory. Maybe even connecting via BT to the 
 Labradar and downloading stuff?`,
 	Run: func(cmd *cobra.Command, args []string) {
-		f, err := os.Open("/Users/tomo/work/labradar/LBR/SR0042/SR0042 Report.csv")
+		readLabradarCsvFile("/Users/tomo/work/labradar/LBR/SR0042/SR0042 Report.csv")
 
-		if  err != nil {
-			log.Fatal(err)
-			os.Exit(1)
+		theStruct := &domain.PowderCharge{Name: "IMR-4895", Amount: 45.0}
+
+		b, err := json.Marshal(theStruct)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
-		defer f.Close()
-
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			fmt.Println(scanner.Text())
-		}
-
-		if err := scanner.Err(); err != nil {
-			log.Fatal(err)
-		}
-
+		fmt.Println(string(b))
 	},
+}
+
+func readLabradarCsvFile(filename string) {
+	f, err := os.Open(filename)
+
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+
+		}
+	}(f)
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
