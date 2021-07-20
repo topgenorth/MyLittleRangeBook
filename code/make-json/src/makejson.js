@@ -1,8 +1,14 @@
 "use strict";
 const fs = require('fs');
 const rd = require('readline');
-const filename = '/Users/tomo/work/labradar/LBR/SR0042/SR0042 Report.csv';
-let count = 0;
+// fs.readdir(testFolder, (err, files) => {
+//     files.forEach(file => {
+//         console.log(file);
+//     });
+// });
+// const testFile = '/Users/tomo/work/labradar/LBR/SR0042/SR0042 Report.csv';
+const blogDataDir = '/Users/tomo/work/topgenorth.github.io/data/labradar/';
+const labradarFolder = '/Users/tomo/work/labradar/LBR/';
 let labradarSeries = {
     labradar: {
         deviceId: ``,
@@ -47,11 +53,71 @@ let labradarSeries = {
     notes: ``,
     tags: Array()
 };
-const reader = rd.createInterface(fs.createReadStream(filename));
-reader.on("line", parseLineFromFile);
-reader.on("close", calculateInformationForSeries);
+let count = 0;
+fs.readdirSync(labradarFolder).forEach((entry) => {
+    if (entry.startsWith('SR')) {
+        const root = entry.split(".")[0];
+        const sourceFile = labradarFolder + root + "/" + root + " Report.csv";
+        if (fs.existsSync(sourceFile)) {
+            convertLabradarFileForBlog(sourceFile);
+        }
+        else {
+            console.log("'" + sourceFile + "' does not exist.");
+        }
+    }
+});
+function convertLabradarFileForBlog(filename) {
+    count = 0;
+    labradarSeries = {
+        labradar: {
+            deviceId: ``,
+            date: ``,
+            time: ``,
+            seriesName: ``,
+            totalNumberOfShots: 0,
+            units: {
+                velocity: ``,
+                distance: ``,
+                weight: ``
+            },
+            stats: {
+                average: 0,
+                max: 0,
+                min: 0,
+                extremeSpread: 0,
+                standardDeviation: 0
+            },
+            velocitiesInSeries: Array()
+        },
+        firearm: {
+            name: ``,
+            cartridge: ``
+        },
+        loadData: {
+            cartridge: ``,
+            projectile: {
+                name: ``,
+                weight: 0,
+                ballisticCoefficient: {
+                    dragModel: ``,
+                    value: 0,
+                    sd: 0
+                }
+            },
+            powder: {
+                name: ``,
+                amount: 0
+            }
+        },
+        notes: ``,
+        tags: Array()
+    };
+    console.log("Processing file '" + filename + "'.");
+    const reader = rd.createInterface(fs.createReadStream(filename));
+    reader.on("line", parseLineFromFile);
+    reader.on("close", calculateInformationForSeries);
+}
 function parseLineFromFile(l) {
-    console.log(count + `: ` + l);
     switch (count) {
         case 0:
             // separator
@@ -92,7 +158,7 @@ function parseLineFromFile(l) {
     count++;
 }
 function saveJsonForWebsite(labradarSeries) {
-    let destination = '/Users/tomo/work/topgenorth.github.io/data/labradar/' + labradarSeries.labradar.seriesName + '.json';
+    let destination = blogDataDir + labradarSeries.labradar.seriesName + '.json';
     let jsonData = JSON.stringify(labradarSeries);
     // @ts-ignore
     fs.writeFile(destination, jsonData, function (err) {
@@ -100,6 +166,7 @@ function saveJsonForWebsite(labradarSeries) {
             console.log(err);
         }
     });
+    console.log("  Wrote JSON to '" + destination + "'.");
 }
 function calculateInformationForSeries() {
     const v0 = labradarSeries.labradar.velocitiesInSeries.slice().sort();
@@ -109,7 +176,6 @@ function calculateInformationForSeries() {
     labradarSeries.labradar.stats.extremeSpread = labradarSeries.labradar.stats.max - labradarSeries.labradar.stats.min;
     labradarSeries.labradar.stats.average = average(v0);
     labradarSeries.labradar.stats.standardDeviation = Math.round(standardDeviation(v0) * 10) / 10;
-    console.log(labradarSeries);
     saveJsonForWebsite(labradarSeries);
 }
 function average(someValues) {
