@@ -37,7 +37,14 @@ var rootCmd = &cobra.Command{
 Future plans include converting all the CSV file in a directory. Maybe even connecting via BT to the 
 Labradar and downloading stuff?`,
 	Run: func(cmd *cobra.Command, args []string) {
-		readLabradarCsvFile("/Users/tomo/work/labradar/LBR/SR0042/SR0042 Report.csv")
+
+		dirname, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatal( err )
+		}
+		fmt.Println( dirname )
+
+		readLabradarCsvFile(dirname + "/work/labradar/LBR/SR0042/SR0042 Report.csv")
 
 		theStruct := &domain.PowderCharge{Name: "IMR-4895", Amount: 45.0}
 
