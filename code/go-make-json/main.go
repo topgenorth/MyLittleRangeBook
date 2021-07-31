@@ -16,10 +16,10 @@ limitations under the License.
 package main
 
 import (
-	"opgenorth.net/labradar/cmd"
+	"opgenorth.net/labradar/commands"
 )
 
 func main() {
-	cmd.Execute()
+	commands.Execute()
 
 }

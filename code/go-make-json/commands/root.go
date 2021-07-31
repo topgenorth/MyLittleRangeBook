@@ -13,18 +13,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package commands
 
 import (
 	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
-	"log"
+	"github.com/spf13/viper"
 	"opgenorth.net/labradar/domain"
 	"os"
 
-	"github.com/spf13/viper"
+	jww "github.com/spf13/jwalterweatherman"
 )
 
 var cfgFile string
@@ -32,25 +32,18 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "labradar",
 	Short: "Utilities for working with the Labradar CSV files.",
-	Long: `Currently this will read a CSV file and convert it to JSON.
-
-Future plans include converting all the CSV file in a directory. Maybe even connecting via BT to the 
-Labradar and downloading stuff?`,
+	Long: `Currently this will read a CSV file and convert it to JSON.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		dirname, err := os.UserHomeDir()
-		if err != nil {
-			log.Fatal( err )
-		}
-		fmt.Println( dirname )
 
-		readLabradarCsvFile(dirname + "/work/labradar/LBR/SR0042/SR0042 Report.csv")
+		readLabradarCsvFile("GetPathToLabradarSeries(42)")
+
 
 		theStruct := &domain.PowderCharge{Name: "IMR-4895", Amount: 45.0}
 
 		b, err := json.Marshal(theStruct)
 		if err != nil {
-			fmt.Println(err)
+			jww.ERROR.Println(err)
 			return
 		}
 		fmt.Println(string(b))
@@ -61,7 +54,7 @@ func readLabradarCsvFile(filename string) {
 	f, err := os.Open(filename)
 
 	if err != nil {
-		log.Fatal(err)
+		jww.FATAL.Println(err)
 		os.Exit(1)
 	}
 	defer func(f *os.File) {
@@ -73,11 +66,11 @@ func readLabradarCsvFile(filename string) {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+		jww.TRACE.Println(scanner.Text())
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		jww.FATAL.Fatal(err)
 	}
 }
 
@@ -121,6 +114,9 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		_, err := fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		if err != nil {
+			return
+		}
 	}
 }
