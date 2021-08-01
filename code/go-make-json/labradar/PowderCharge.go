@@ -1,4 +1,4 @@
-package domain
+package labradar
 
 type PowderCharge struct {
 	Name   string

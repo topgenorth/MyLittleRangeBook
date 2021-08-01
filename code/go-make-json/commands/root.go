@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"opgenorth.net/labradar/domain"
+	"opgenorth.net/labradar/labradar"
 	"os"
 
 	jww "github.com/spf13/jwalterweatherman"
@@ -39,7 +39,7 @@ var rootCmd = &cobra.Command{
 		readLabradarCsvFile("GetPathToLabradarSeries(42)")
 
 
-		theStruct := &domain.PowderCharge{Name: "IMR-4895", Amount: 45.0}
+		theStruct := &labradar.PowderCharge{Name: "IMR-4895", Amount: 45.0}
 
 		b, err := json.Marshal(theStruct)
 		if err != nil {

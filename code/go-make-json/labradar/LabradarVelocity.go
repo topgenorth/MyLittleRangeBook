@@ -1,4 +1,4 @@
-package domain
+package labradar
 
 import "math"
 
@@ -23,8 +23,8 @@ func (stats *LabradarVelocity) addVelocity(velocity int) {
 }
 
 func getMaxAndMin(array []int) (int, int) {
-	var max int = array[0]
-	var min int = array[0]
+	max := array[0]
+	min := array[0]
 	for _, value := range array {
 		if max < value {
 			max = value

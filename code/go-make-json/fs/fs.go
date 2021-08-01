@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/afero"
 	jww "github.com/spf13/jwalterweatherman"
+	"opgenorth.net/labradar/labradar"
 	"os"
 )
 
@@ -14,13 +15,22 @@ type fileParts struct {
 	LbrToken  string
 }
 
+func LoadLabradarSeries(seriesNumber int) *labradar.LabradarSeries {
+
+	return nil
+}
+
+
+func FormatLabradarSeriesNumber(seriesNumber int)  string  {
+	return fmt.Sprintf("SR%04d", seriesNumber)
+}
 func GetPathToLabradarSeries(seriesNumber int) string {
 
 	var fileParts = &fileParts{
 		[]string{"work", "labradar", "LBR"},
 		string(os.PathSeparator),
 		getHomeDir(),
-		fmt.Sprintf("SR%04d", seriesNumber),
+		FormatLabradarSeriesNumber(seriesNumber),
 	}
 	var pathToSeries = fileParts.HomeDir + fileParts.PathSep
 	for _, part := range fileParts.NameParts {

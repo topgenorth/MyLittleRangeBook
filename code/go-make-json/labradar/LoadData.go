@@ -1,4 +1,4 @@
-package domain
+package labradar
 
 type LoadData struct {
 	Cartridge  string

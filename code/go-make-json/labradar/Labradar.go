@@ -1,4 +1,4 @@
-package domain
+package labradar
 
 type Labradar struct {
 	DeviceId           string
@@ -6,6 +6,6 @@ type Labradar struct {
 	Time               string
 	SeriesName         string
 	TotalNumberOfShots int
-	Units              LabradarUnits
-	Stats              LabradarVelocity
+	Units              *LabradarUnits
+	Stats              *LabradarVelocity
 }

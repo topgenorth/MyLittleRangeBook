@@ -1,4 +1,4 @@
-package domain
+package labradar
 
 type BallisticCoefficient struct {
 	DragModel string

@@ -1,4 +1,4 @@
-package domain
+package labradar
 
 type LabradarUnits struct {
 	Velocity string
