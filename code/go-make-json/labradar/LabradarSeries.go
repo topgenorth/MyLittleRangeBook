@@ -1,6 +1,7 @@
 package labradar
 
 import (
+	"fmt"
 	"opgenorth.net/labradar/util"
 	"time"
 )
@@ -52,5 +53,34 @@ func initLabradarStruct(seriesNumber int) *Labradar {
 			StandardDeviation:  0,
 			VelocitiesInSeries: nil,
 		},
+	}
+}
+
+func (ls *LabradarSeries) ParseLine(ld *LineOfData) {
+	switch ld.LineNumber {
+	case 1:
+		ls.Labradar.DeviceId = ld.GetString()
+	case 3:
+		ls.Number = ld.GetInt()
+		ls.Labradar.SeriesName = util.FormatLabradarSeriesNumber(ls.Number)
+	case 4:
+		ls.Labradar.TotalNumberOfShots = ld.GetInt()
+	case 6:
+		ls.Labradar.Units.Velocity = ld.GetString()
+	case 7:
+		ls.Labradar.Units.Distance = ld.GetString()
+	case 9:
+		ls.Labradar.Units.Weight = ld.GetString()
+	case 18:
+		ls.Labradar.Stats.addVelocity(ld.GetInt())
+		ls.Labradar.Date, ls.Labradar.Time = ld.GetDateAndTime()
+
+	default:
+		if ld.LineNumber > 18 {
+			ls.Labradar.Stats.addVelocity(ld.GetInt())
+		} else {
+			fmt.Printf("%d: %s", ld.LineNumber, ld.CleanValue)
+			fmt.Println()
+		}
 	}
 }

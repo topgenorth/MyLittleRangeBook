@@ -78,3 +78,4 @@ func GetPathToLabradarSeries(seriesNumber int) string {
 	return pathToSeries
 
 }
+

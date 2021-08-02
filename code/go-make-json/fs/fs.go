@@ -2,16 +2,13 @@ package fs
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/spf13/afero"
 	jww "github.com/spf13/jwalterweatherman"
 	"opgenorth.net/labradar/labradar"
 	"opgenorth.net/labradar/util"
 )
 
-
 func LoadLabradardCsv(ls *labradar.LabradarSeries) error {
-
 	a := afero.Afero{
 		Fs: afero.NewOsFs(),
 	}
@@ -26,17 +23,15 @@ func LoadLabradardCsv(ls *labradar.LabradarSeries) error {
 		return err
 	}
 
-	s := bufio.NewScanner(file)
-	var i = 0
-	for s.Scan() {
-		line := util.FixupLabradarLine(s.Text())
-
-		fmt.Printf("%d: %s", i, line)
-		fmt.Println()
-		i++
+	skanner := bufio.NewScanner(file)
+	var lineNumber = 0
+	for skanner.Scan() {
+		lineOfData := labradar.CreateLine(lineNumber, skanner.Text())
+		ls.ParseLine(lineOfData)
+		lineNumber++
 	}
 
-	if err := s.Err(); err != nil {
+	if err := skanner.Err(); err != nil {
 		return err
 	}
 
