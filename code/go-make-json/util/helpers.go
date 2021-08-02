@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	jww "github.com/spf13/jwalterweatherman"
+	"math"
 	"os"
 	"strings"
 	"unicode/utf8"
@@ -79,3 +80,38 @@ func GetPathToLabradarSeries(seriesNumber int) string {
 
 }
 
+func GetMaxAndMin(array []int) (int, int) {
+	max := array[0]
+	min := array[0]
+	for _, value := range array {
+		if max < value {
+			max = value
+		}
+		if min > value {
+			min = value
+		}
+	}
+	return min, max
+}
+
+func CalculateAverage(array []int) float64 {
+	count := len(array)
+	sum := 0
+	for _, velocity := range array {
+		sum += velocity
+	}
+
+	return float64(sum) / float64(count)
+}
+
+func CalculateStandardDeviation(array []int) float64 {
+	count := len(array)
+	mean := CalculateAverage(array)
+	var sd float64
+	sd = float64(0)
+	for j := 0; j < count; j++ {
+		sd += math.Pow(float64(array[j])-mean, 2)
+	}
+
+	return math.Sqrt(sd / float64(count))
+}

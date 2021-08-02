@@ -16,7 +16,6 @@ limitations under the License.
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -41,12 +40,10 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		b, err := json.Marshal(ls)
-		if err != nil {
-			jww.ERROR.Println(err)
-			return
+		err2 := fs.SaveLabradarSeriesToJson(ls)
+		if err2 != nil {
+			jww.FATAL.Println(err2)
 		}
-		fmt.Println(string(b))
 	},
 }
 

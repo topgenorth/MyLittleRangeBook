@@ -6,6 +6,6 @@ type Labradar struct {
 	Time               string
 	SeriesName         string
 	TotalNumberOfShots int
-	Units              *LabradarUnits
-	Stats              *LabradarVelocity
+	Units              *UnitsOfMeasure
+	Stats              *Velocities
 }
