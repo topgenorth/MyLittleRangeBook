@@ -8,11 +8,11 @@ import (
 	"opgenorth.net/labradar/util"
 )
 
-func LoadLabradardCsv(ls *labradar.LabradarSeries) error {
+func LoadLabradarSeriesFromCsv(seriesNumber int, ls *labradar.LabradarSeries) error {
 	a := afero.Afero{
 		Fs: afero.NewOsFs(),
 	}
-	file, err := a.Open(util.GetPathToLabradarSeries(ls.Number))
+	file, err := a.Open(util.GetPathToLabradarSeries(seriesNumber))
 	defer func(f afero.File) {
 		err := f.Close()
 		if err != nil {

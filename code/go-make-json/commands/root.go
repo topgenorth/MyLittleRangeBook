@@ -35,8 +35,8 @@ var rootCmd = &cobra.Command{
 	Long:  `Currently this will read a CSV file and convert it to JSON.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		ls := labradar.Create(42)
-		err := fs.LoadLabradardCsv(ls)
+		ls := labradar.NewSeries()
+		err := fs.LoadLabradarSeriesFromCsv(42, ls)
 		if err != nil {
 			return
 		}
@@ -49,7 +49,6 @@ var rootCmd = &cobra.Command{
 		fmt.Println(string(b))
 	},
 }
-
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
