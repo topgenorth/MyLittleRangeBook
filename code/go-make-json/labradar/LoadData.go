@@ -2,6 +2,6 @@ package labradar
 
 type LoadData struct {
 	Cartridge  string
-	Projectile Projectile
-	Powder     PowderCharge
+	Projectile *Projectile
+	Powder     *PowderCharge
 }
