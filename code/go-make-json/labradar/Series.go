@@ -7,13 +7,13 @@ import (
 )
 
 type Series struct {
-	Number   int
-	Labradar *Labradar
-	Firearm  *Firearm
-	LoadData *LoadData
-	Notes    string
-	Tags     []string
-	Data     map[int]*LineOfData
+	Number   int                 `json:"number"`
+	Labradar *Labradar           `json:"labradar"`
+	Firearm  *Firearm            `json:"firearm"`
+	LoadData *LoadData           `json:"loadData"`
+	Notes    string              `json:"notes"`
+	Tags     []string            `json:"tags"`
+	Data     map[int]*LineOfData `json:"data"`
 }
 
 func NewSeries() *Series {
@@ -57,7 +57,6 @@ func initLabradarStruct(seriesNumber int) *Labradar {
 		now.Format("YYYY-MM-DD"),
 		now.Format("15:04"),
 		util.FormatLabradarSeriesNumber(seriesNumber),
-		0,
 		&UnitsOfMeasure{
 			Velocity: "fps",
 			Distance: "m",
@@ -88,9 +87,6 @@ func (ls *Series) ParseLine(ld *LineOfData) {
 		ls.Data[ld.LineNumber] = ld
 		ls.Number = ld.GetInt()
 		ls.Labradar.SeriesName = util.FormatLabradarSeriesNumber(ls.Number)
-	case 4:
-		ls.Data[ld.LineNumber] = ld
-		ls.Labradar.TotalNumberOfShots = ld.GetInt()
 	case 6:
 		ls.Data[ld.LineNumber] = ld
 		ls.Labradar.Units.Velocity = ld.GetString()
@@ -114,4 +110,8 @@ func (ls *Series) ParseLine(ld *LineOfData) {
 			ls.Labradar.Stats.AddVelocity(ld.GetInt())
 		}
 	}
+}
+
+func (ls *Series) TotalNumberOfShots() int {
+	return len(ls.Labradar.Stats.VelocitiesInSeries)
 }

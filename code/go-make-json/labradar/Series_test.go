@@ -35,8 +35,4 @@ func Test_initLabradarStruct(t *testing.T) {
 		t.Errorf("ls.SeriesName = %s; wanted SR0042.", ls.SeriesName)
 	}
 
-	if ls.TotalNumberOfShots != 0 {
-		t.Errorf("ls.TotalNumberOfShots =%d; wanted 0.", ls.TotalNumberOfShots)
-	}
-
 }

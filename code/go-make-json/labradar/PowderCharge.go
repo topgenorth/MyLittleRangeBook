@@ -1,6 +1,6 @@
 package labradar
 
 type PowderCharge struct {
-	Name   string
-	Amount float32
+	Name   string  `json:"name"`
+	Amount float32 `json:"amount"`
 }

@@ -5,12 +5,12 @@ import (
 )
 
 type Velocities struct {
-	Average            int
-	Max                int
-	Min                int
-	ExtremeSpread      int
-	StandardDeviation  float64
-	VelocitiesInSeries []int
+	Average            int     `json:"average"`
+	Max                int     `json:"max"`
+	Min                int     `json:"min"`
+	ExtremeSpread      int     `json:"extremeSpread"`
+	StandardDeviation  float64 `json:"standardDeviation"`
+	VelocitiesInSeries []int   `json:"velocities"`
 }
 
 func (stats *Velocities) AddVelocity(velocity int) {
@@ -23,4 +23,3 @@ func (stats *Velocities) AddVelocity(velocity int) {
 	stats.ExtremeSpread = max - min
 	stats.StandardDeviation = util.CalculateStandardDeviation(stats.VelocitiesInSeries)
 }
-

@@ -1,6 +1,6 @@
 package labradar
 
 type BallisticCoefficient struct {
-	DragModel string
-	Value     float32
+	DragModel string  `json:"dragModel"`
+	Value     float32 `json:"value"`
 }

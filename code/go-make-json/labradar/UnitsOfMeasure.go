@@ -1,7 +1,7 @@
 package labradar
 
 type UnitsOfMeasure struct {
-	Velocity string
-	Distance string
-	Weight   string
+	Velocity string `json:"velocity"`
+	Distance string `json:"distance"`
+	Weight   string `json:"weight"`
 }

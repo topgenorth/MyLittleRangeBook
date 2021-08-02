@@ -1,6 +1,6 @@
 package labradar
 
 type Firearm struct {
-	Name      string
-	Cartridge string
+	Name      string `json:"name"`
+	Cartridge string `json:"cartridge"`
 }
