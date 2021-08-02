@@ -1,11 +1,12 @@
 package labradar
 
 import (
-	"opgenorth.net/labradar/fs"
+	"opgenorth.net/labradar/util"
 	"time"
 )
 
 type LabradarSeries struct {
+	Number   int
 	Labradar *Labradar
 	Firearm  *Firearm
 	LoadData *LoadData
@@ -14,21 +15,17 @@ type LabradarSeries struct {
 }
 
 func Create(seriesNumber int) *LabradarSeries {
-	series := loadSeries(32)
-	return series
-}
 
-
-func loadSeries(seriesNumber int) *LabradarSeries {
-	//contents := fs.LoadLabradarSeries(seriesNumber)
-
-	return &LabradarSeries{
+	ls := &LabradarSeries{
+		Number:   seriesNumber,
 		Labradar: initLabradarStruct(seriesNumber),
-		Firearm:  &Firearm{},
-		LoadData: &LoadData{},
+		Firearm:  nil,
+		LoadData: nil,
 		Notes:    "",
 		Tags:     nil,
 	}
+
+	return ls
 }
 
 func initLabradarStruct(seriesNumber int) *Labradar {
@@ -40,7 +37,7 @@ func initLabradarStruct(seriesNumber int) *Labradar {
 		"",
 		now.Format("YYYY-MM-DD"),
 		now.Format("15:04"),
-		fs.FormatLabradarSeriesNumber(seriesNumber),
+		util.FormatLabradarSeriesNumber(seriesNumber),
 		0,
 		&LabradarUnits{
 			Velocity: "fps",

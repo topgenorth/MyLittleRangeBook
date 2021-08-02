@@ -1,63 +1,44 @@
 package fs
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/spf13/afero"
 	jww "github.com/spf13/jwalterweatherman"
 	"opgenorth.net/labradar/labradar"
-	"os"
+	"opgenorth.net/labradar/util"
 )
 
-type fileParts struct {
-	NameParts []string
-	PathSep   string
-	HomeDir   string
-	LbrToken  string
-}
 
-func LoadLabradarSeries(seriesNumber int) *labradar.LabradarSeries {
+func LoadLabradardCsv(ls *labradar.LabradarSeries) error {
 
-	return nil
-}
-
-
-func FormatLabradarSeriesNumber(seriesNumber int)  string  {
-	return fmt.Sprintf("SR%04d", seriesNumber)
-}
-func GetPathToLabradarSeries(seriesNumber int) string {
-
-	var fileParts = &fileParts{
-		[]string{"work", "labradar", "LBR"},
-		string(os.PathSeparator),
-		getHomeDir(),
-		FormatLabradarSeriesNumber(seriesNumber),
-	}
-	var pathToSeries = fileParts.HomeDir + fileParts.PathSep
-	for _, part := range fileParts.NameParts {
-		pathToSeries += part
-		pathToSeries += fileParts.PathSep
-	}
-	pathToSeries += fileParts.LbrToken + fileParts.PathSep + fileParts.LbrToken + " Report.csv"
-	return pathToSeries
-
-}
-
-func getHomeDir() string {
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		jww.FATAL.Fatal(err)
-	}
-	return homedir
-}
-
-func readFile(filename string) (string, error) {
 	a := afero.Afero{
 		Fs: afero.NewOsFs(),
 	}
-	fileBytes, err := a.ReadFile(filename)
+	file, err := a.Open(util.GetPathToLabradarSeries(ls.Number))
+	defer func(f afero.File) {
+		err := f.Close()
+		if err != nil {
+			jww.ERROR.Println(err)
+		}
+	}(file)
 	if err != nil {
-
-		return "", err
+		return err
 	}
-	return string(fileBytes), nil
+
+	s := bufio.NewScanner(file)
+	var i = 0
+	for s.Scan() {
+		line := util.FixupLabradarLine(s.Text())
+
+		fmt.Printf("%d: %s", i, line)
+		fmt.Println()
+		i++
+	}
+
+	if err := s.Err(); err != nil {
+		return err
+	}
+
+	return nil
 }

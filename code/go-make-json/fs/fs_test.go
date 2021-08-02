@@ -1,6 +1,9 @@
 package fs
 
-import "testing"
+import (
+	"opgenorth.net/labradar/util"
+	"testing"
+)
 
 func TestGetPathToLabradarSeries(t *testing.T) {
 	type args struct {
@@ -16,7 +19,7 @@ func TestGetPathToLabradarSeries(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetPathToLabradarSeries(tt.args.seriesNumber); got != tt.want {
+			if got := util.GetPathToLabradarSeries(tt.args.seriesNumber); got != tt.want {
 				t.Errorf("GetPathToLabradarSeries() = %v, want %v", got, tt.want)
 			}
 		})

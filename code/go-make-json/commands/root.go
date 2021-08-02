@@ -16,11 +16,11 @@ limitations under the License.
 package commands
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"opgenorth.net/labradar/fs"
 	"opgenorth.net/labradar/labradar"
 	"os"
 
@@ -32,16 +32,16 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "labradar",
 	Short: "Utilities for working with the Labradar CSV files.",
-	Long: `Currently this will read a CSV file and convert it to JSON.`,
+	Long:  `Currently this will read a CSV file and convert it to JSON.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		ls := labradar.Create(42)
+		err := fs.LoadLabradardCsv(ls)
+		if err != nil {
+			return
+		}
 
-		readLabradarCsvFile("GetPathToLabradarSeries(42)")
-
-
-		theStruct := &labradar.PowderCharge{Name: "IMR-4895", Amount: 45.0}
-
-		b, err := json.Marshal(theStruct)
+		b, err := json.Marshal(ls)
 		if err != nil {
 			jww.ERROR.Println(err)
 			return
@@ -50,29 +50,6 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func readLabradarCsvFile(filename string) {
-	f, err := os.Open(filename)
-
-	if err != nil {
-		jww.FATAL.Println(err)
-		os.Exit(1)
-	}
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-
-		}
-	}(f)
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		jww.TRACE.Println(scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		jww.FATAL.Fatal(err)
-	}
-}
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
