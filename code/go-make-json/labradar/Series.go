@@ -1,9 +1,12 @@
 package labradar
 
 import (
-	"opgenorth.net/labradar/util"
-	"path/filepath"
-	"time"
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"github.com/spf13/afero"
+	"io/ioutil"
+	"os"
 )
 
 type Series struct {
@@ -14,6 +17,10 @@ type Series struct {
 	Notes    string              `json:"notes"`
 	Tags     []string            `json:"tags"`
 	Data     map[int]*LineOfData `json:"data"`
+}
+
+func (ls *Series) TotalNumberOfShots() int {
+	return len(ls.Labradar.Stats.VelocitiesInSeries)
 }
 
 func NewSeries() *Series {
@@ -48,70 +55,63 @@ func NewSeries() *Series {
 	return ls
 }
 
-func initLabradarStruct(seriesNumber int) *Labradar {
-	loc, _ := time.LoadLocation("UTC")
-	now := time.Now().In(loc)
-
-	return &Labradar{
-		"",
-		now.Format("YYYY-MM-DD"),
-		now.Format("15:04"),
-		util.FormatLabradarSeriesNumber(seriesNumber),
-		&UnitsOfMeasure{
-			Velocity: "fps",
-			Distance: "m",
-			Weight:   "gr (grains)",
-		},
-		&Velocities{
-			Average:            0,
-			Max:                0,
-			Min:                0,
-			ExtremeSpread:      0,
-			StandardDeviation:  0,
-			VelocitiesInSeries: nil,
-		},
+func LoadLabradarSeriesFromCsv(seriesNumber int, ls *Series) error {
+	filename, err := getPathToLabradarCsvFile(seriesNumber)
+	a := afero.Afero{
+		Fs: afero.NewOsFs(),
 	}
+
+	file, err := a.Open(filename)
+	defer func(f afero.File) {
+		err := f.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(file)
+	if err != nil {
+		return err
+	}
+
+	skanner := bufio.NewScanner(file)
+	var lineNumber = 0
+	for skanner.Scan() {
+		lineOfData := CreateLine(lineNumber, skanner.Text())
+		ls.parseLine(lineOfData)
+		lineNumber++
+	}
+
+	if err := skanner.Err(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (ls *Series) JsonFileName(directory string) string {
-	filename := filepath.Join(directory, ls.Labradar.SeriesName+".json")
-	return filename
-}
+func SaveLabradarSeriesToJson(ls *Series) error {
 
-func (ls *Series) ParseLine(ld *LineOfData) {
-	switch ld.LineNumber {
-	case 1:
-		ls.Data[ld.LineNumber] = ld
-		ls.Labradar.DeviceId = ld.GetString()
-	case 3:
-		ls.Data[ld.LineNumber] = ld
-		ls.Number = ld.GetInt()
-		ls.Labradar.SeriesName = util.FormatLabradarSeriesNumber(ls.Number)
-	case 6:
-		ls.Data[ld.LineNumber] = ld
-		ls.Labradar.Units.Velocity = ld.GetString()
-	case 7:
-		ls.Data[ld.LineNumber] = ld
-		ls.Labradar.Units.Distance = ld.GetString()
-	case 9:
-		ls.Data[ld.LineNumber] = ld
-		ls.Labradar.Units.Weight = ld.GetString()
-	case 18:
-		// For now, we only care about V0 (i.e. the muzzle velocity).
-		ls.Data[ld.LineNumber] = ld
-		ls.Labradar.Stats.AddVelocity(ld.GetInt())
+	filename := ls.jsonFileName(DirectoryForJson)
+	a := afero.Afero{
+		Fs: afero.NewOsFs(),
+	}
 
-		// We also pull the date and time from the first shot recorded
-		ls.Labradar.Date, ls.Labradar.Time = ld.GetDateAndTime()
-
-	default:
-		if ld.LineNumber > 18 {
-			ls.Data[ld.LineNumber] = ld
-			ls.Labradar.Stats.AddVelocity(ld.GetInt())
+	exists, _ := a.Exists(filename)
+	if exists {
+		e1 := os.Remove(filename)
+		if e1 != nil {
+			return e1
 		}
 	}
+
+	jsonToSave, err := json.MarshalIndent(ls, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	err2 := ioutil.WriteFile(filename, jsonToSave, 0644)
+	if err2 != nil {
+		return err2
+	}
+
+	return nil
 }
 
-func (ls *Series) TotalNumberOfShots() int {
-	return len(ls.Labradar.Stats.VelocitiesInSeries)
-}

@@ -1,7 +1,6 @@
 package labradar
 
 import (
-	"opgenorth.net/labradar/util"
 	"testing"
 )
 
@@ -21,7 +20,7 @@ func TestFormatLabradarSeriesNumber(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := util.FormatLabradarSeriesNumber(tt.args.seriesNumber); got != tt.want {
+			if got := formatLabradarSeriesNumber(tt.args.seriesNumber); got != tt.want {
 				t.Errorf("FormatLabradarSeriesNumber() = %v, want %v", got, tt.want)
 			}
 		})

@@ -1,7 +1,6 @@
 package labradar
 
 import (
-	"opgenorth.net/labradar/util"
 	"strconv"
 	"strings"
 )
@@ -16,7 +15,7 @@ func CreateLine(linenumber int, s string) *LineOfData {
 	return &LineOfData{
 		LineNumber: linenumber,
 		Raw:        s,
-		Value:      util.FixupLabradarLine(s),
+		Value:      fixupLabradarLine(s),
 	}
 }
 

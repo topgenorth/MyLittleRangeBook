@@ -20,9 +20,12 @@ import (
 	"os"
 )
 
+
 func main() {
 	cmd := commands.ReadLabradarFileCmd()
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
+
+

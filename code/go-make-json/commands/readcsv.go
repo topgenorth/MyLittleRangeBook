@@ -20,11 +20,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"opgenorth.net/labradar/fs"
 	"opgenorth.net/labradar/labradar"
 	"strings"
-
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 const (
@@ -37,9 +34,9 @@ const (
 )
 
 func ReadLabradarFileCmd() *cobra.Command {
-
 	seriesNumber := 0
-	rootCmd := &cobra.Command{
+
+	cmd := &cobra.Command{
 		Use:   "readcsv",
 		Short: "Reads a Labradar CSV file and converts it to JSON.",
 		Long:  `Currently this will read a CSV file and convert it to JSON.`,
@@ -50,22 +47,22 @@ func ReadLabradarFileCmd() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			ls := labradar.NewSeries()
-			err := fs.LoadLabradarSeriesFromCsv(seriesNumber, ls)
+			err := labradar.LoadLabradarSeriesFromCsv(seriesNumber, ls)
 			if err != nil {
 				return
 			}
 
-			err2 := fs.SaveLabradarSeriesToJson(ls)
+			err2 := labradar.SaveLabradarSeriesToJson(ls)
 			if err2 != nil {
-				jww.FATAL.Println(err2)
+				fmt.Println(err2)
 			}
 		},
 	}
 
 	// Define cobra flags, the default value has the lowest (least significant) precedence
-	rootCmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Labradar CSV file to read.")
+	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Labradar CSV file to read.")
 
-	return rootCmd
+	return cmd
 }
 
 func initializeConfig(cmd *cobra.Command) error {
