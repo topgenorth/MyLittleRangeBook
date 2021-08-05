@@ -101,7 +101,9 @@ func CalculateAverage(array []int) float64 {
 		sum += velocity
 	}
 
-	return float64(sum) / float64(count)
+	value := float64(sum) / float64(count)
+	valRounded :=  math.Round(value*10)/10
+	return valRounded
 }
 
 func CalculateStandardDeviation(array []int) float64 {
@@ -113,5 +115,7 @@ func CalculateStandardDeviation(array []int) float64 {
 		sd += math.Pow(float64(array[j])-mean, 2)
 	}
 
-	return math.Sqrt(sd / float64(count))
+	value := math.Sqrt(sd / float64(count))
+	valRounded := math.Round(value*10)/10
+	return valRounded
 }

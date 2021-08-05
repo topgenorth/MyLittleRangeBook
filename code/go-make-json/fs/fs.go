@@ -3,7 +3,6 @@ package fs
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"github.com/spf13/afero"
 	jww "github.com/spf13/jwalterweatherman"
 	"io/ioutil"
@@ -73,6 +72,5 @@ func SaveLabradarSeriesToJson(ls *labradar.Series) error {
 
 	jww.INFO.Printf("Saved the JSON to %s.", filename)
 
-	fmt.Println(string(jsonToSave))
 	return nil
 }
