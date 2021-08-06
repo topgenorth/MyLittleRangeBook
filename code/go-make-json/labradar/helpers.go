@@ -108,13 +108,16 @@ func formatLabradarSeriesNumber(seriesNumber int) string {
 }
 
 func initLabradarStruct(seriesNumber int) *Labradar {
-	loc, _ := time.LoadLocation("UTC")
-	now := time.Now().In(loc)
+
+	// TODO: timezone stuff?
+	timezone, _ := time.LoadLocation("America/Edmonton")
+	now := time.Now().In(timezone)
 
 	return &Labradar{
 		"",
 		now.Format("YYYY-MM-DD"),
 		now.Format("15:04"),
+		"America/Edmonton",
 		formatLabradarSeriesNumber(seriesNumber),
 		&UnitsOfMeasure{
 			Velocity: "fps",
