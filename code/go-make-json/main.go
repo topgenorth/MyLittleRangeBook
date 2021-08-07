@@ -16,16 +16,20 @@ limitations under the License.
 package main
 
 import (
+	"github.com/spf13/cobra"
 	"opgenorth.net/labradar/commands"
 	"os"
 )
 
-
 func main() {
-	cmd := commands.ReadLabradarFileCmd()
-	if err := cmd.Execute(); err != nil {
+	rootCmd := &cobra.Command{Use: "lbr [sub]"}
+
+	rootCmd.AddCommand(
+		commands.ReadLabradarFileCmd(),
+		commands.ReadLabradarDirectoryCmd(),
+	)
+
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
-
-

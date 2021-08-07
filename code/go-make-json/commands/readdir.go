@@ -1,11 +1,11 @@
 package commands
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
-	"opgenorth.net/labradar/pkg/config"
 )
 
-func ReadLabradarDirectory(cfg *config.Config) *cobra.Command {
+func ReadLabradarDirectoryCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "readcsv",
@@ -17,6 +17,7 @@ func ReadLabradarDirectory(cfg *config.Config) *cobra.Command {
 			return initializeConfig(cmd)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("read a directory of Labradar CSV files")
 			/*			ls := labradar.NewSeries(seriesNumber, cfg)
 						err := labradar.LoadLabradarSeriesFromCsv(ls, cfg)
 						if err != nil {

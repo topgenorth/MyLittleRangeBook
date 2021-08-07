@@ -33,7 +33,6 @@ func ReadLabradarFileCmd() *cobra.Command {
 		Use:   "readcsv",
 		Short: "Reads a Device CSV file and converts it to JSON.",
 		Long:  `Currently this will read a CSV file and convert it to JSON.`,
-		Args:  cobra.MinimumNArgs(1),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// You can bind cobra and viper in a few locations, but PersistencePreRunE on the root command works well
 			return initializeConfig(cmd)
