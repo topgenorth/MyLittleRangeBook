@@ -20,25 +20,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"opgenorth.net/labradar/labradar"
+	"opgenorth.net/labradar/pkg/config"
+	"opgenorth.net/labradar/pkg/labradar"
 	"strings"
 )
 
-const (
-	// The name of our config file, without the file extension because viper supports many different config file languages.
-	defaultConfigFilename = "make-json"
-
-	// The environment variable prefix of all environment variables bound to our command line flags.
-	// For example, --number is bound to STING_NUMBER.
-	envPrefix = "LABRADAR"
-)
-
-func ReadLabradarFileCmd() *cobra.Command {
+func ReadLabradarFileCmd(cfg *config.Config) *cobra.Command {
 	seriesNumber := 0
 
 	cmd := &cobra.Command{
 		Use:   "readcsv",
-		Short: "Reads a Labradar CSV file and converts it to JSON.",
+		Short: "Reads a Device CSV file and converts it to JSON.",
 		Long:  `Currently this will read a CSV file and convert it to JSON.`,
 		Args:  cobra.MinimumNArgs(1),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -46,13 +38,13 @@ func ReadLabradarFileCmd() *cobra.Command {
 			return initializeConfig(cmd)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			ls := labradar.NewSeries()
-			err := labradar.LoadLabradarSeriesFromCsv(seriesNumber, ls)
+			ls := labradar.NewSeries(seriesNumber, cfg)
+			err := labradar.LoadLabradarSeriesFromCsv(ls, cfg)
 			if err != nil {
 				return
 			}
 
-			err2 := labradar.SaveLabradarSeriesToJson(ls)
+			err2 := labradar.SaveLabradarSeriesToJson(ls, cfg)
 			if err2 != nil {
 				fmt.Println(err2)
 			}
@@ -60,7 +52,7 @@ func ReadLabradarFileCmd() *cobra.Command {
 	}
 
 	// Define cobra flags, the default value has the lowest (least significant) precedence
-	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Labradar CSV file to read.")
+	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
 
 	return cmd
 }
@@ -69,7 +61,7 @@ func initializeConfig(cmd *cobra.Command) error {
 	v := viper.New()
 
 	// Set the base name of the config file, without the file extension.
-	v.SetConfigName(defaultConfigFilename)
+	v.SetConfigName(config.DefaultConfigFileName)
 
 	// Set as many paths as you like where viper should look for the
 	// config file. We are only looking in the current working directory.
@@ -89,7 +81,7 @@ func initializeConfig(cmd *cobra.Command) error {
 	// environment variables are prefixed, e.g. a flag like --number
 	// binds to an environment variable STING_NUMBER. This helps
 	// avoid conflicts.
-	v.SetEnvPrefix(envPrefix)
+	v.SetEnvPrefix(config.EnvPrefix)
 
 	// Bind to environment variables
 	// Works great for simple config names, but needs help for names
@@ -106,10 +98,10 @@ func initializeConfig(cmd *cobra.Command) error {
 func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		// Environment variables can't have dashes in them, so bind them to their equivalent
-		// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
+		// keys with underscores, e.g. --favorite-color to LABRADAR_FAVORITE_COLOR
 		if strings.Contains(f.Name, "-") {
 			envVarSuffix := strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))
-			v.BindEnv(f.Name, fmt.Sprintf("%s_%s", envPrefix, envVarSuffix))
+			v.BindEnv(f.Name, fmt.Sprintf("%s_%s", config.EnvPrefix, envVarSuffix))
 		}
 
 		// Apply the viper config value to the flag when the flag is not set and viper has a value

@@ -2,7 +2,7 @@
   <configuration default="false" name="lbr" type="GoApplicationRunConfiguration" factoryName="Go Application" show_console_on_std_err="true" show_console_on_std_out="true">
     <module name="go-make-json" />
     <working_directory value="$PROJECT_DIR$" />
-    <parameters value="readcsv --number 32" />
+    <parameters value="readcsv --number 44" />
     <kind value="PACKAGE" />
     <package value="opgenorth.net/labradar" />
     <directory value="$PROJECT_DIR$" />

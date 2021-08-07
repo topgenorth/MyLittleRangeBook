@@ -1,7 +1,7 @@
 package labradar
 
 import (
-	"opgenorth.net/labradar/util"
+	"opgenorth.net/labradar/pkg/util"
 	"testing"
 )
 

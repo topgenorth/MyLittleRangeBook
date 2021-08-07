@@ -1,6 +1,6 @@
 package labradar
 
-type Labradar struct {
+type Device struct {
 	DeviceId   string          `json:"deviceId"`
 	Date       string          `json:"date"`
 	Time       string          `json:"time"`
