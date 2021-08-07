@@ -17,15 +17,12 @@ package main
 
 import (
 	"opgenorth.net/labradar/commands"
-	"opgenorth.net/labradar/pkg/config"
 	"os"
 )
 
 
 func main() {
-	cfg := config.New()
-
-	cmd := commands.ReadLabradarFileCmd(cfg)
+	cmd := commands.ReadLabradarFileCmd()
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}

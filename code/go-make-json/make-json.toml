@@ -1,5 +1,3 @@
 outputDir = "/Users/tom/work/topgenorth.github.io/data/labradar/"
 inputDir = "/Users/tom/work/labradar/LBR/"
-
-[labradar]
 timezone = "America/Edmonton"

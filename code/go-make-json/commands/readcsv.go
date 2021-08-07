@@ -20,10 +20,14 @@ import (
 	"github.com/spf13/cobra"
 	"opgenorth.net/labradar/pkg/config"
 	"opgenorth.net/labradar/pkg/labradar"
+	"time"
 )
 
-func ReadLabradarFileCmd(cfg *config.Config) *cobra.Command {
+func ReadLabradarFileCmd() *cobra.Command {
 	seriesNumber := 0
+	inputDirectory := ""
+	outputDirectory := ""
+	timezone := ""
 
 	cmd := &cobra.Command{
 		Use:   "readcsv",
@@ -35,6 +39,12 @@ func ReadLabradarFileCmd(cfg *config.Config) *cobra.Command {
 			return initializeConfig(cmd)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+
+			cfg := config.New()
+			cfg.InputDir = inputDirectory
+			cfg.OutputDir = outputDirectory
+			cfg.TimeZone, _ = time.LoadLocation(timezone)
+
 			ls := labradar.NewSeries(seriesNumber, cfg)
 			err := labradar.LoadLabradarSeriesFromCsv(ls, cfg)
 			if err != nil {
@@ -50,7 +60,8 @@ func ReadLabradarFileCmd(cfg *config.Config) *cobra.Command {
 
 	// Define cobra flags, the default value has the lowest (least significant) precedence
 	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-
+	cmd.Flags().StringVarP(&inputDirectory, "inputDir", "i", "", "The location of the input files.")
+	cmd.Flags().StringVarP(&outputDirectory, "outputDir", "o", "", "The location of the output files.")
+	cmd.Flags().StringVarP(&timezone, "timezone", "", "", "The IANA timezone that the Labradar is in.")
 	return cmd
 }
-
