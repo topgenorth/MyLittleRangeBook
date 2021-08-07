@@ -1,13 +1,9 @@
 package labradar
 
 import (
-	"bufio"
 	"fmt"
-	"github.com/spf13/afero"
 	"opgenorth.net/labradar/pkg"
 	"opgenorth.net/labradar/pkg/config"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -44,73 +40,6 @@ func NewSeries(seriesNumber int, cfg *config.Config) *Series {
 	return ls
 }
 
-func closeFile(f afero.File) {
-	err := f.Close()
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-func openFile(filename string, a afero.Afero) (afero.File, error) {
-	file, err := a.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return file, nil
-}
-
-func LoadLabradarSeriesFromCsv(ls *Series, cfg *config.Config) error {
-	inputFileName := filepath.Join(cfg.InputDir, ls.Labradar.SeriesName, ls.Labradar.SeriesName+" Report.csv")
-
-	file, err := openFile(inputFileName, cfg.Context.Afero)
-	if err != nil {
-		fmt.Println("Could not open the file " + inputFileName)
-		return err
-	}
-	defer closeFile(file)
-
-	s := bufio.NewScanner(file)
-	var lineNumber = 0
-	for s.Scan() {
-		lineOfData := CreateLine(lineNumber, s.Text())
-		ls.parseLineOfTextFromLabradarCsv(lineOfData)
-		lineNumber++
-	}
-
-	if err := s.Err(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func SaveLabradarSeriesToJson(ls *Series, cfg *config.Config) error {
-	outputFileName := filepath.Join(cfg.OutputDir, ls.Labradar.SeriesName+".json")
-
-	err := deleteFileIfExists(cfg.Context.Afero, outputFileName)
-	if err != nil {
-		return err
-	}
-
-	err2 := cfg.Context.Afero.WriteFile(outputFileName, ls.ToJson(), 0644)
-	if err2 != nil {
-		return err2
-	}
-
-	return nil
-}
-
-func deleteFileIfExists(a afero.Afero, fileName string) error {
-	exists, _ := a.Exists(fileName)
-	if exists {
-		err := os.Remove(fileName)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func fixupLabradarLine(line string) string {
 	parts := strings.Split(strings.TrimSpace(line), pkg.UnicodeNUL)
 
@@ -139,30 +68,30 @@ func (ls *Series) parseLineOfTextFromLabradarCsv(ld *LineOfData) {
 	switch ld.LineNumber {
 	case 1:
 		ls.RawData[ld.LineNumber] = ld
-		ls.Labradar.DeviceId = ld.GetString()
+		ls.Labradar.DeviceId = ld.getStringValue()
 	case 3:
 		ls.RawData[ld.LineNumber] = ld
 	case 6:
 		ls.RawData[ld.LineNumber] = ld
-		ls.Labradar.Units.Velocity = ld.GetString()
+		ls.Labradar.Units.Velocity = ld.getStringValue()
 	case 7:
 		ls.RawData[ld.LineNumber] = ld
-		ls.Labradar.Units.Distance = ld.GetString()
+		ls.Labradar.Units.Distance = ld.getStringValue()
 	case 9:
 		ls.RawData[ld.LineNumber] = ld
-		ls.Labradar.Units.Weight = ld.GetString()
+		ls.Labradar.Units.Weight = ld.getStringValue()
 	case 18:
 		// For now, we only care about V0 (i.e. the muzzle velocity).
 		ls.RawData[ld.LineNumber] = ld
-		ls.Labradar.Stats.AddVelocity(ld.GetInt())
+		ls.Labradar.Stats.AddVelocity(ld.getIntValue())
 
 		// We also pull the date and time from the first shot recorded
-		ls.Labradar.Date, ls.Labradar.Time = ld.GetDateAndTime()
+		ls.Labradar.Date, ls.Labradar.Time = ld.getDateAndTime()
 
 	default:
 		if ld.LineNumber > 18 {
 			ls.RawData[ld.LineNumber] = ld
-			ls.Labradar.Stats.AddVelocity(ld.GetInt())
+			ls.Labradar.Stats.AddVelocity(ld.getIntValue())
 		}
 	}
 }
