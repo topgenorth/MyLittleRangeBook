@@ -16,10 +16,8 @@ limitations under the License.
 package commands
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"opgenorth.net/labradar/pkg/config"
-	"opgenorth.net/labradar/pkg/labradar"
 	"time"
 )
 
@@ -44,16 +42,7 @@ func ReadLabradarFileCmd() *cobra.Command {
 			cfg.OutputDir = outputDirectory
 			cfg.TimeZone, _ = time.LoadLocation(timezone)
 
-			ls := labradar.NewSeries(seriesNumber, cfg)
-			err := labradar.LoadLabradarSeriesFromCsv(ls, cfg)
-			if err != nil {
-				return
-			}
-
-			err2 := labradar.SaveLabradarSeriesToJson(ls, cfg)
-			if err2 != nil {
-				fmt.Println(err2)
-			}
+			readLabradarCsvAndConvertToJson(seriesNumber, cfg)
 		},
 	}
 
@@ -64,3 +53,4 @@ func ReadLabradarFileCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&timezone, "timezone", "", "", "The IANA timezone that the Labradar is in.")
 	return cmd
 }
+

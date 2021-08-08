@@ -4,3 +4,5 @@
 /LBR/.DS_Store
 /code/go-make-json/.idea/modules.xml
 /code/go-make-json/lbr
+/code/go-make-json/readcsv
+/code/go-make-json/readdir
