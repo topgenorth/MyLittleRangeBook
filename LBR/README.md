@@ -48,6 +48,6 @@ For ammo, stick with the format:
 | 040 | .22LR; Eley Force | Grey Birch | 2021-06-07 |
 | 041 | .22LR; Federal 36gr Black Pack | Grey Birch | 2021-06-07 |
 | 042 | .22LR; CCI SV | Remington 597 | 2021-07-15 |
-| 043 | 8mm Mauser; 150 Hornady SP; 47.0gr IMR-4895 | Isreali 98K, Burris 2-7 Scout Scope | 2021-08-06 |
+| 043 | 8mm Mauser; 150 Speer SP; 47.0gr IMR-4895 | Isreali 98K, Burris 2-7 Scout Scope | 2021-08-06 |
 | 044 | 8mm Mauser; 180 Barnes TSX; 45.0gr IMR-4895 | Isreali 98K, Burris 2-7 Scout Scope | 2021-08-06 |
 
