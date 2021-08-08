@@ -10,7 +10,7 @@ For ammo, stick with the format:
 | 002 | .45ACP; 230gr CamPro; unknown load. I suspect 4.5gr HP-45? | G41 |2020-07-25 |
 | 003 | .45ACP; 230gr CamPro; 4.5gr HP-35 | G41 | 2020-07-25 |
 | 004 | .45ACP; 230gr CamPro; 6.1gr 800-X | G41 |2020-07-25 |
-| 005 | 9mm P; 121gr & 124gr CamPro. 4.5gr HP-45 | G17 |2020-07-25 |
+| 005 | 9mm P; 124gr CamPro. 4.5gr HP-45 | G17 |2020-07-25 |
 | 006 | .22LR; 36gr Sterling Cross | RPrimfire | 2020-07-30 |
 | 007 | .22LR; Federal 36gr Black Pack | RPrimfire | 2020-07-30 |
 | 008 | .22LR; Aguila 38gr Super Extra Hollowpoint | RPrimfire | 2020-07-30 |
@@ -23,7 +23,7 @@ For ammo, stick with the format:
 | 015 | .45ACP; 230gr CamPro; 4.5gr Bullseye | G41 |2020-08-17 |
 | 016 | 6.5x55; 140gr Sierra Match King; 33gr H-4895 | M96 |2020-08-17 |
 | 017 | 6.5x55; 140gr Hornady HPBT; 35gr IMR-4895 | M96 |2020-08-17 |
-| 018 | 6.5x55; 107gr; ??  | M96 |2020-08-17 |
+| 018 | 6.5x55; 107gr; ??  | M96 |2020-08-17 |  
 | 019 | 8mm Mauser; 170gr Federal | G41 |2020-08-17 |
 | 020 | 8mm Mauser; 170gr CIL, 46.8gr IMR-4985 | Isreali 98K |2020-11-28 |
 | 021 | 8mm Mauser; 170gr Hornady RN, 46.8gr IMR-4985 | Isreali 98K |2020-11-28 |

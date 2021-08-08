@@ -57,6 +57,7 @@ func closeFile(f afero.File) {
 		fmt.Println(err)
 	}
 }
+
 func openFile(filename string, a afero.Afero) (afero.File, error) {
 	file, err := a.Open(filename)
 	if err != nil {

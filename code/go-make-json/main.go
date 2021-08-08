@@ -27,6 +27,7 @@ func main() {
 	rootCmd.AddCommand(
 		commands.ReadLabradarFileCmd(),
 		commands.ReadLabradarDirectoryCmd(),
+		commands.GetReadmeCmd(),
 	)
 
 	if err := rootCmd.Execute(); err != nil {
