@@ -13,6 +13,14 @@ func NewSeries(seriesNumber int, cfg *config.Config) *Series {
 	ls := &Series{
 		Number:   seriesNumber,
 		Labradar: initLabradarStruct(seriesNumber, cfg.TimeZone),
+		Velocities: &VelocityData{
+			Average:           0,
+			Max:               0,
+			Min:               0,
+			ExtremeSpread:     0,
+			StandardDeviation: 0,
+			Values:            nil,
+		},
 		Firearm: &Firearm{
 			Name:      "",
 			Cartridge: "",
@@ -83,7 +91,7 @@ func (ls *Series) parseLineOfTextFromLabradarCsv(ld *LineOfData) {
 	case 18:
 		// For now, we only care about V0 (i.e. the muzzle velocity).
 		ls.RawData[ld.LineNumber] = ld
-		ls.Labradar.Stats.AddVelocity(ld.getIntValue())
+		ls.Velocities.AddVelocity(ld.getIntValue())
 
 		// We also pull the date and time from the first shot recorded
 		ls.Labradar.Date, ls.Labradar.Time = ld.getDateAndTime()
@@ -91,7 +99,7 @@ func (ls *Series) parseLineOfTextFromLabradarCsv(ld *LineOfData) {
 	default:
 		if ld.LineNumber > 18 {
 			ls.RawData[ld.LineNumber] = ld
-			ls.Labradar.Stats.AddVelocity(ld.getIntValue())
+			ls.Velocities.AddVelocity(ld.getIntValue())
 		}
 	}
 }
@@ -109,14 +117,6 @@ func initLabradarStruct(seriesNumber int, timezone *time.Location) *Device {
 			Velocity: "fps",
 			Distance: "m",
 			Weight:   "gr (grains)",
-		},
-		&VelocityData{
-			Average:           0,
-			Max:               0,
-			Min:               0,
-			ExtremeSpread:     0,
-			StandardDeviation: 0,
-			Values:            nil,
 		},
 	}
 }

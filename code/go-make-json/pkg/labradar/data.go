@@ -24,7 +24,6 @@ type Device struct {
 	TimeZone   string          `json:"timezone"`
 	SeriesName string          `json:"seriesName"`
 	Units      *UnitsOfMeasure `json:"units"`
-	Stats      *VelocityData   `json:"stats"`
 }
 
 type Firearm struct {
@@ -44,13 +43,14 @@ type PowderCharge struct {
 }
 
 type Series struct {
-	Number   int                 `json:"number"`
-	Labradar *Device             `json:"labradar"`
-	Firearm  *Firearm            `json:"firearm"`
-	LoadData *LoadData           `json:"loadData"`
-	Notes    string              `json:"notes"`
-	Tags     []string            `json:"tags"`
-	RawData  map[int]*LineOfData `json:"data"`
+	Number     int                 `json:"number"`
+	Labradar   *Device             `json:"labradar"`
+	Velocities *VelocityData       `json:"velocities"`
+	Firearm    *Firearm            `json:"firearm"`
+	LoadData   *LoadData           `json:"loadData"`
+	Notes      string              `json:"notes"`
+	Tags       []string            `json:"tags"`
+	RawData    map[int]*LineOfData `json:"data"`
 }
 
 type UnitsOfMeasure struct {
@@ -80,7 +80,7 @@ func (stats *VelocityData) AddVelocity(velocity int) {
 }
 
 func (ls *Series) TotalNumberOfShots() int {
-	return len(ls.Labradar.Stats.Values)
+	return len(ls.Velocities.Values)
 }
 
 func (ls *Series) ToJson() []byte {
