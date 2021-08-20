@@ -110,13 +110,13 @@ func initLabradarStruct(seriesNumber int, timezone *time.Location) *Device {
 			Distance: "m",
 			Weight:   "gr (grains)",
 		},
-		&Velocities{
-			Average:            0,
-			Max:                0,
-			Min:                0,
-			ExtremeSpread:      0,
-			StandardDeviation:  0,
-			VelocitiesInSeries: nil,
+		&VelocityData{
+			Average:           0,
+			Max:               0,
+			Min:               0,
+			ExtremeSpread:     0,
+			StandardDeviation: 0,
+			Values:            nil,
 		},
 	}
 }

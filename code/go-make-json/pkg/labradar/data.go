@@ -6,7 +6,6 @@ import (
 	"sort"
 )
 
-
 type BallisticCoefficient struct {
 	DragModel string  `json:"dragModel"`
 	Value     float32 `json:"value"`
@@ -25,7 +24,7 @@ type Device struct {
 	TimeZone   string          `json:"timezone"`
 	SeriesName string          `json:"seriesName"`
 	Units      *UnitsOfMeasure `json:"units"`
-	Stats      *Velocities     `json:"stats"`
+	Stats      *VelocityData   `json:"stats"`
 }
 
 type Firearm struct {
@@ -60,28 +59,28 @@ type UnitsOfMeasure struct {
 	Weight   string `json:"weight"`
 }
 
-type Velocities struct {
-	Average            int     `json:"average"`
-	Max                int     `json:"max"`
-	Min                int     `json:"min"`
-	ExtremeSpread      int     `json:"extremeSpread"`
-	StandardDeviation  float64 `json:"standardDeviation"`
-	VelocitiesInSeries []int   `json:"velocities"`
+type VelocityData struct {
+	Average           int     `json:"average"`
+	Max               int     `json:"max"`
+	Min               int     `json:"min"`
+	ExtremeSpread     int     `json:"extremeSpread"`
+	StandardDeviation float64 `json:"standardDeviation"`
+	Values            []int   `json:"values"`
 }
 
-func (stats *Velocities) AddVelocity(velocity int) {
-	stats.VelocitiesInSeries = append(stats.VelocitiesInSeries, velocity)
-	min, max := util.GetMaxAndMin(stats.VelocitiesInSeries)
+func (stats *VelocityData) AddVelocity(velocity int) {
+	stats.Values = append(stats.Values, velocity)
+	min, max := util.GetMaxAndMin(stats.Values)
 
-	stats.Average = int(util.CalculateAverage(stats.VelocitiesInSeries))
+	stats.Average = int(util.CalculateAverage(stats.Values))
 	stats.Max = max
 	stats.Min = min
 	stats.ExtremeSpread = max - min
-	stats.StandardDeviation = util.CalculateStandardDeviation(stats.VelocitiesInSeries)
+	stats.StandardDeviation = util.CalculateStandardDeviation(stats.Values)
 }
 
 func (ls *Series) TotalNumberOfShots() int {
-	return len(ls.Labradar.Stats.VelocitiesInSeries)
+	return len(ls.Labradar.Stats.Values)
 }
 
 func (ls *Series) ToJson() []byte {
