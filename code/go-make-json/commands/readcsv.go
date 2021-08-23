@@ -42,7 +42,7 @@ func ReadLabradarFileCmd() *cobra.Command {
 			cfg.OutputDir = outputDirectory
 			cfg.TimeZone, _ = time.LoadLocation(timezone)
 
-			readLabradarCsvAndConvertToJson(seriesNumber, cfg)
+			_ = readLabradarCsvAndConvertToJson(seriesNumber, cfg)
 		},
 	}
 

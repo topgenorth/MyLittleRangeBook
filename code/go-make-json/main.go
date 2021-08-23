@@ -22,12 +22,14 @@ import (
 )
 
 func main() {
+
 	rootCmd := &cobra.Command{Use: "lbr [sub]"}
 
 	rootCmd.AddCommand(
 		commands.ReadLabradarFileCmd(),
 		commands.ReadLabradarDirectoryCmd(),
 		commands.GetReadmeCmd(),
+		commands.ListCartridgesCmd(),
 	)
 
 	if err := rootCmd.Execute(); err != nil {
