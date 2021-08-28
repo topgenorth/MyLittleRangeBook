@@ -1,4 +1,4 @@
-package context
+package mycontext
 
 import (
 	"github.com/spf13/afero"
@@ -6,15 +6,15 @@ import (
 	"os"
 )
 
-type Context struct {
+type MyContext struct {
 	Afero afero.Afero
 	In    io.Reader
 	Out   io.Writer
 	Err   io.Writer
 }
 
-func New() *Context {
-	return &Context{
+func New() *MyContext {
+	return &MyContext{
 		Afero: afero.Afero{
 			Fs: afero.NewOsFs(),
 		},

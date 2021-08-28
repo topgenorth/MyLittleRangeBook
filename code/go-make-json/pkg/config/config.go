@@ -1,7 +1,7 @@
 package config
 
 import (
-	"opgenorth.net/labradar/pkg/context"
+	"opgenorth.net/labradar/pkg/mycontext"
 	"time"
 )
 
@@ -16,14 +16,14 @@ const (
 type Config struct {
 	InputDir  string
 	OutputDir string
-	Context   *context.Context
+	Context   *mycontext.MyContext
 	TimeZone  *time.Location
 }
 
 func New() *Config {
 	timezone, _ := time.LoadLocation(DefaultTimeZone)
 	c := &Config{
-		Context:   context.New(),
+		Context:   mycontext.New(),
 		InputDir:  "",
 		OutputDir: "",
 		TimeZone:  timezone,
