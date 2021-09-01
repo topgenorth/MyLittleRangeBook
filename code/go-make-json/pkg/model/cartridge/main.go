@@ -2,6 +2,7 @@ package cartridge
 
 import (
 	"context"
+	"errors"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"gocloud.dev/docstore/awsdynamodb"
@@ -34,7 +35,7 @@ func (c *Cartridge) ToString() string {
 }
 
 func Save(c Cartridge) error {
-	return nil
+	return errors.New("Not implemented.")
 }
 
 func loadFrom(m map[string]interface{}) Cartridge {
@@ -46,7 +47,7 @@ func loadFrom(m map[string]interface{}) Cartridge {
 	return c
 }
 
-func Load() ([]Cartridge, error) {
+func FetchAll() ([]Cartridge, error) {
 	sess, err := session.NewSession()
 	if err != nil {
 		return nil, err

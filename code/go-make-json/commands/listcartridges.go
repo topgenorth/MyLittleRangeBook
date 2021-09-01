@@ -1,14 +1,18 @@
 package commands
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	_ "gocloud.dev/docstore/awsdynamodb"
-	"opgenorth.net/labradar/pkg/model/cartridge"
-	"sort"
+	"log"
+	"opgenorth.net/labradar/pkg/mylittlerangebook"
 )
 
 func ListCartridgesCmd() *cobra.Command {
+
+	app, err := mylittlerangebook.New()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	cmd := &cobra.Command{
 		Use:   "listcartridges",
@@ -17,27 +21,9 @@ func ListCartridgesCmd() *cobra.Command {
 			return initializeConfig(cmd)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			// cartridges = getCartridgesFromAWS()
-
-			cartridges, err := cartridge.Load()
-			if err != nil {
-				fmt.Println("Problem retrieving a list of cartridges. ", err)
-				return
-			}
-			displayCartridgesToStdOut(cartridges)
+			app.ListCartridges()
 		},
 	}
 
 	return cmd
 }
-
-func displayCartridgesToStdOut(cartridges []cartridge.Cartridge) {
-	sort.Slice(cartridges[:], func(i, j int) bool {
-		return cartridges[i].Name < cartridges[j].Name
-	})
-
-	for _, c := range cartridges {
-		fmt.Println(c.ToString())
-	}
-}
-
