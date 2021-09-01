@@ -1,19 +1,12 @@
 package commands
 
 import (
-	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/spf13/cobra"
-	"gocloud.dev/docstore/awsdynamodb"
 	_ "gocloud.dev/docstore/awsdynamodb"
-	"io"
-	"opgenorth.net/labradar/pkg/model"
+	"opgenorth.net/labradar/pkg/model/cartridge"
 	"sort"
 )
-
-const CARTRIDGE_TABLENAME = "Cartridge-ns5rcz7k7jgbfhizt4qmyecvhy-staging"
 
 func ListCartridgesCmd() *cobra.Command {
 
@@ -26,7 +19,7 @@ func ListCartridgesCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			// cartridges = getCartridgesFromAWS()
 
-			cartridges, err := getCartridges()
+			cartridges, err := cartridge.Load()
 			if err != nil {
 				fmt.Println("Problem retrieving a list of cartridges. ", err)
 				return
@@ -38,7 +31,7 @@ func ListCartridgesCmd() *cobra.Command {
 	return cmd
 }
 
-func displayCartridgesToStdOut(cartridges []model.Cartridge) {
+func displayCartridgesToStdOut(cartridges []cartridge.Cartridge) {
 	sort.Slice(cartridges[:], func(i, j int) bool {
 		return cartridges[i].Name < cartridges[j].Name
 	})
@@ -48,41 +41,3 @@ func displayCartridgesToStdOut(cartridges []model.Cartridge) {
 	}
 }
 
-func getCartridges() ([]model.Cartridge, error) {
-	sess, err := session.NewSession()
-	if err != nil {
-		return nil, err
-	}
-	coll, err := awsdynamodb.OpenCollection(
-		dynamodb.New(sess), CARTRIDGE_TABLENAME, "id", "", nil)
-	if err != nil {
-		return nil, err
-	}
-	defer coll.Close()
-
-	ctx := context.Background()
-
-	iter := coll.Query().Get(ctx)
-	defer iter.Stop()
-
-	list := []model.Cartridge{}
-	for {
-		m := map[string]interface{}{}
-		err := iter.Next(ctx, m)
-
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return nil, err
-		} else {
-			c := model.Cartridge{
-				Id:   m["id"].(string),
-				Name: m["name"].(string),
-				Size: m["size"].(string),
-			}
-			list = append(list, c)
-		}
-	}
-
-	return list, nil
-}
