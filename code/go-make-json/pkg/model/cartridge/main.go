@@ -48,6 +48,8 @@ func loadFrom(m map[string]interface{}) Cartridge {
 }
 
 func FetchAll() ([]Cartridge, error) {
+
+	// TODO Need to clean this up; lots of hardcoded AWS stuff.
 	sess, err := session.NewSession()
 	if err != nil {
 		return nil, err

@@ -70,7 +70,7 @@ func openFile(filename string, a afero.Afero) (afero.File, error) {
 func LoadLabradarSeriesFromCsv(ls *Series, cfg *config.Config) error {
 	inputFileName := filepath.Join(cfg.InputDir, ls.Labradar.SeriesName, ls.Labradar.SeriesName+" Report.csv")
 
-	file, err := openFile(inputFileName, cfg.Context.Afero)
+	file, err := openFile(inputFileName, cfg.Context.Filesystem)
 	if err != nil {
 		fmt.Println("Could not open the file " + inputFileName)
 		return err
@@ -95,12 +95,12 @@ func LoadLabradarSeriesFromCsv(ls *Series, cfg *config.Config) error {
 func SaveLabradarSeriesToJson(ls *Series, cfg *config.Config) error {
 	outputFileName := filepath.Join(cfg.OutputDir, ls.Labradar.SeriesName+".json")
 
-	err := deleteFileIfExists(cfg.Context.Afero, outputFileName)
+	err := deleteFileIfExists(cfg.Context.Filesystem, outputFileName)
 	if err != nil {
 		return err
 	}
 
-	err2 := cfg.Context.Afero.WriteFile(outputFileName, ls.ToJson(), 0644)
+	err2 := cfg.Context.Filesystem.WriteFile(outputFileName, ls.ToJson(), 0644)
 	if err2 != nil {
 		return err2
 	}

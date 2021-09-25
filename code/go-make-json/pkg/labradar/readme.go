@@ -21,7 +21,7 @@ type ReadmeLine struct {
 func LoadReadmeFromFile(cfg *config.Config) ([]*ReadmeLine, error) {
 	filename := filepath.Join(cfg.InputDir, "README.md")
 
-	file, err := openFile(filename, cfg.Context.Afero)
+	file, err := openFile(filename, cfg.Context.Filesystem)
 	if err != nil {
 		return nil, fmt.Errorf("Could not load the file %s. %s", filename, err)
 	}

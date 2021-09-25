@@ -12,7 +12,7 @@ func NewSeries(seriesNumber int, cfg *config.Config) *Series {
 
 	ls := &Series{
 		Number:   seriesNumber,
-		Labradar: initLabradarStruct(seriesNumber, cfg.TimeZone),
+		Labradar: initLabradarStruct(seriesNumber, cfg.TimeLocation()),
 		Velocities: &VelocityData{
 			Average:           0,
 			Max:               0,

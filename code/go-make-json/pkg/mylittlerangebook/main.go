@@ -2,28 +2,28 @@ package mylittlerangebook
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
+	"opgenorth.net/labradar/pkg/config"
 	"opgenorth.net/labradar/pkg/model/cartridge"
 	"sort"
 )
 
-type App struct {
-	viper *viper.Viper
+type MyLittleRangeBook struct {
+	*config.Config
 }
 
-func New() (*App, error) {
-	v := viper.New()
-	v.AddConfigPath(".")
+func New() *MyLittleRangeBook {
 
-	err := v.ReadInConfig()
-	if err != nil {
-		return nil, err
+	cfg := config.New()
+	return NewWithConfig(cfg)
+}
+
+func NewWithConfig(cfg *config.Config) *MyLittleRangeBook {
+	return &MyLittleRangeBook{
+		cfg,
 	}
-
-	return &App{viper: v}, nil
 }
 
-func (a *App) ListCartridges() {
+func (a *MyLittleRangeBook) ListCartridges() {
 
 	cartridges, err := cartridge.FetchAll()
 	if err != nil {
@@ -38,5 +38,9 @@ func (a *App) ListCartridges() {
 	for _, c := range cartridges {
 		fmt.Println(c.ToString())
 	}
+}
 
+func (a *MyLittleRangeBook) ConvertLabradarCsvToJson(inputFile string) (string, error) {
+	fmt.Println(inputFile)
+	return "", nil
 }
