@@ -16,22 +16,15 @@ limitations under the License.
 package main
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"log"
+	"opgenorth.net/labradar/pkg/labradar"
 	"opgenorth.net/labradar/pkg/mylittlerangebook"
 	"os"
 )
 
 func main() {
-
 	rootCmd := buildRootCommand()
-
-	//rootCmd.AddCommand(
-	//	cmd.ReadLabradarFileCmd(),
-	//	cmd.ReadLabradarDirectoryCmd(),
-	//	cmd.GetReadmeCmd(),
-	//	cmd.ListCartridgesCmd(),
-	//)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
@@ -39,13 +32,13 @@ func main() {
 }
 
 func buildRootCommand() *cobra.Command {
-	a := mylittlerangebook.New()
+	app := mylittlerangebook.New()
 
 	cmd := &cobra.Command{
 		Use:  "mlrb [sub]",
 		Long: "mlrb is my app for the various reloading things.",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			err := a.ConfigCmd(cmd)
+			err := app.ConfigCmd(cmd)
 			if err != nil {
 				return err
 			}
@@ -56,11 +49,11 @@ func buildRootCommand() *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().BoolVar(&a.Debug, "debug", false, "Enable debug logging")
-	cmd.PersistentFlags().StringVar(&a.Timezone, "timezone", "", "Set the timezone of the Labradar file.")
+	cmd.PersistentFlags().BoolVar(&app.Debug, "debug", false, "Enable debug logging")
+	cmd.PersistentFlags().StringVar(&app.Timezone, "timezone", "", "Set the timezone of the Labradar file.")
 
-	cmd.AddCommand(buildReadLabradarFileCmd(a))
-	cmd.AddCommand(buildListCartridgesCmd(a))
+	cmd.AddCommand(buildReadLabradarFileCmd(app))
+	cmd.AddCommand(buildListCartridgesCmd(app))
 
 	return cmd
 }
@@ -73,6 +66,7 @@ func buildListCartridgesCmd(a *mylittlerangebook.MyLittleRangeBook) *cobra.Comma
 			return a.ConfigCmd(cmd)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			a.ConfigLogging()
 			a.ListCartridges()
 		},
 	}
@@ -81,9 +75,12 @@ func buildListCartridgesCmd(a *mylittlerangebook.MyLittleRangeBook) *cobra.Comma
 }
 
 func buildReadLabradarFileCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.Command {
-	seriesNumber := 0
-	inputDirectory := ""
-	outputDirectory := ""
+
+	readCsvCfg := &labradar.ReadCsvConfig{
+		SeriesNumber: -1,
+		InputDir:     "",
+		OutputDir:    "",
+	}
 
 	cmd := &cobra.Command{
 		Use:   "readcsv",
@@ -93,17 +90,23 @@ func buildReadLabradarFileCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.C
 			return app.ConfigCmd(cmd)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			jsonFile, err := app.ConvertLabradarCsvToJson("")
+
+			app.ConfigLogging()
+
+			log.Debugf("Reading Labradar CSV file number %d.", readCsvCfg.SeriesNumber)
+			log.Debugf("Input directory: %s.", readCsvCfg.InputDir)
+			log.Debugf("Output directory: %s.", readCsvCfg.OutputDir)
+
+			_, err := app.ConvertLabradarCsvToJson(readCsvCfg)
 			if err != nil {
 				log.Fatal(err)
 			}
-			log.Println(jsonFile)
 		},
 	}
 
 	// Define cobra flags, the default value has the lowest (least significant) precedence
-	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-	cmd.Flags().StringVarP(&inputDirectory, "inputDir", "i", "", "The location of the input files.")
-	cmd.Flags().StringVarP(&outputDirectory, "outputDir", "o", "", "The location of the output files.")
+	cmd.Flags().IntVarP(&readCsvCfg.SeriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
+	cmd.Flags().StringVarP(&readCsvCfg.InputDir, "InputDir", "i", "", "The location of the input files.")
+	cmd.Flags().StringVarP(&readCsvCfg.OutputDir, "outputDir", "o", "", "The location of the output files.")
 	return cmd
 }

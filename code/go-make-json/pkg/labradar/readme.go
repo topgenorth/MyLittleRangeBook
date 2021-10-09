@@ -1,10 +1,6 @@
 package labradar
 
 import (
-	"bufio"
-	"fmt"
-	"opgenorth.net/labradar/pkg/config"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -18,41 +14,6 @@ type ReadmeLine struct {
 	Err          error
 }
 
-func LoadReadmeFromFile(cfg *config.Config) ([]*ReadmeLine, error) {
-	filename := filepath.Join(cfg.InputDir, "README.md")
-
-	file, err := openFile(filename, cfg.Context.Filesystem)
-	if err != nil {
-		return nil, fmt.Errorf("Could not load the file %s. %s", filename, err)
-	}
-	defer closeFile(file)
-
-	var lineNumber = 0
-	var lines = []*ReadmeLine{}
-
-	s := bufio.NewScanner(file)
-	for s.Scan() {
-		if lineNumber > 7 {
-			t := s.Text()
-			line := getReadmeLine(t)
-
-			if line.Err == nil {
-				line.LineNumber = lineNumber
-				lines = append(lines, line)
-			} else {
-				fmt.Printf("Could not parse line %d: %s. %s\n", lineNumber, t, line.Err)
-			}
-		}
-
-		lineNumber++
-	}
-
-	if err := s.Err(); err != nil {
-		return nil, err
-	}
-
-	return lines, nil
-}
 
 func getReadmeLine(text string) *ReadmeLine {
 

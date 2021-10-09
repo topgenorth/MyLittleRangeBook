@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/spf13/afero"
-	"opgenorth.net/labradar/pkg/config"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -67,10 +66,10 @@ func openFile(filename string, a afero.Afero) (afero.File, error) {
 	return file, nil
 }
 
-func LoadLabradarSeriesFromCsv(ls *Series, cfg *config.Config) error {
-	inputFileName := filepath.Join(cfg.InputDir, ls.Labradar.SeriesName, ls.Labradar.SeriesName+" Report.csv")
+func LoadLabradarSeriesFromCsv(ls *Series, cfg *ReadCsvConfig) error {
+	inputFileName := cfg.GetInputFilename()
 
-	file, err := openFile(inputFileName, cfg.Context.Filesystem)
+	file, err := openFile(inputFileName, cfg.Filesystem)
 	if err != nil {
 		fmt.Println("Could not open the file " + inputFileName)
 		return err
@@ -92,7 +91,7 @@ func LoadLabradarSeriesFromCsv(ls *Series, cfg *config.Config) error {
 	return nil
 }
 
-func SaveLabradarSeriesToJson(ls *Series, cfg *config.Config) error {
+func SaveLabradarSeriesToJson(ls *Series, cfg *ReadCsvConfig) error {
 	outputFileName := filepath.Join(cfg.OutputDir, ls.Labradar.SeriesName+".json")
 
 	err := deleteFileIfExists(cfg.Context.Filesystem, outputFileName)

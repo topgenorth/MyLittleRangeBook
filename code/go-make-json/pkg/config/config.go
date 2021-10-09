@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	// Filename is the file name of the porter configuration file.
-	Filename = "labradar.toml"
+	// Filename is the file name of the  configuration file.
+	Filename = "mlrb"
 
 	// EnvPREFIX is the prefix for all environment variables.
 	EnvPREFIX = "MLRB"
 
-	// EnvHOME is the name of the environment variable containing the porter home directory path.
+	// EnvHOME is the name of the environment variable containing the mlrb home directory path.
 	EnvHOME = "MLRB_HOME"
 
 	// EnvDEBUG is a custom  parameter that signals that --debug flag has been passed through from the client to the runtime.
@@ -31,7 +31,7 @@ const (
 )
 
 // These are functions that afero doesn't support, so this lets us stub them out for tests to set the
-// location of the current executable porter binary and resolve PORTER_HOME.
+// location of the current executable mlrb binary and resolve MLRB_HOME.
 var getExecutable = os.Executable
 var evalSymlinks = filepath.EvalSymlinks
 
@@ -40,8 +40,8 @@ type Config struct {
 	Filesystem afero.Afero
 	AwsConfig  *AwsConfig
 
-	labradarHome string
-	labradarPath string
+	mlrbHome string
+	mlrbPath string
 }
 
 type AwsConfig struct {
@@ -59,8 +59,8 @@ func New() *Config {
 }
 
 func (c *Config) GetHomeDir() (string, error) {
-	if c.labradarHome != "" {
-		return c.labradarHome, nil
+	if c.mlrbHome != "" {
+		return c.mlrbHome, nil
 	}
 
 	home := c.Getenv(EnvHOME)
@@ -69,17 +69,17 @@ func (c *Config) GetHomeDir() (string, error) {
 		if err != nil {
 			return "", errors.Wrap(err, "could not get user home directory")
 		}
-		home = filepath.Join(userHome, ".porter")
+		home = filepath.Join(userHome, ".mlrb")
 	}
 
 	c.SetHomeDir(home)
-	return c.labradarHome, nil
+	return c.mlrbHome, nil
 }
 
 // SetHomeDir is a test function that allows tests to use an alternate
-// Porter home directory.
+// mlrb home directory.
 func (c *Config) SetHomeDir(home string) {
-	c.labradarHome = home
+	c.mlrbHome = home
 
 	// Set this as an environment variable so that when we spawn new processes
 	// such as a mixin or plugin, that they can find LABRADAR_HOME too
@@ -91,7 +91,7 @@ func (c *Config) Load(cmd *cobra.Command) error {
 
 	// Set the base name of the config file, without the file extension.
 	v.SetConfigName(Filename)
-
+	v.SetConfigType("toml")
 	// Set as many paths as you like where viper should look for the
 	// config file. We are only looking in the current working directory.
 	v.AddConfigPath(".")
