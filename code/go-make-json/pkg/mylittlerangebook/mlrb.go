@@ -42,10 +42,9 @@ func (a *MyLittleRangeBook) ShowConfig() {
 
 func (a *MyLittleRangeBook) ListCartridges() {
 
-	log.Info("List cartridges")
 	cartridges, err := cartridge.FetchAll()
 	if err != nil {
-		fmt.Println("Problem retrieving a list of cartridges. ", err)
+		log.Error("Problem retrieving a list of cartridges. ", err)
 		return
 	}
 
@@ -58,12 +57,13 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	}
 }
 
-func (a *MyLittleRangeBook) ConvertLabradarCsvToJson(cfg *labradar.ReadCsvConfig) error {
+func (a *MyLittleRangeBook) GetLabradarSeries(cfg *labradar.ReadCsvConfig) (*labradar.Series, error) {
+	cfg.Config = a.Config
 	r := labradar.NewCsvConversion(cfg)
 
 	if r.Error != nil {
-		return r.Error
+		return nil, r.Error
 	}
 
-	return nil
+	return r.LabradarSeries, nil
 }

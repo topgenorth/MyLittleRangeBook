@@ -1,27 +1,12 @@
 package labradar
 
 import (
-	"fmt"
 	"github.com/spf13/afero"
 	"os"
 	"path/filepath"
 )
 
-func closeFile(f afero.File) {
-	err := f.Close()
-	if err != nil {
-		fmt.Println(err)
-	}
-}
 
-func openFile(filename string, a afero.Afero) (afero.File, error) {
-	file, err := a.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return file, nil
-}
 
 func SaveLabradarSeriesToJson(ls *Series, cfg *ReadCsvConfig) error {
 	outputFileName := filepath.Join(cfg.OutputDir, ls.Labradar.SeriesName+".json")

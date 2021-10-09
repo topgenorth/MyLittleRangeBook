@@ -65,6 +65,9 @@ func (c *Context) IsVerbose() bool {
 }
 
 func (c *Context) TimeLocation() *time.Location {
+
+	
+
 	tz, err := time.LoadLocation(c.Timezone)
 	if err == nil {
 		return tz

@@ -19,8 +19,10 @@ type ReadCsvConfig struct {
 
 func (c *ReadCsvConfig) GetInputFilename() string {
 	stub := fmt.Sprintf("%04d", c.SeriesNumber)
-	filename := fmt.Sprintf("%s Report.csv", stub)
-	return path.Join(c.InputDir, stub, filename)
+	subdir := fmt.Sprintf("SR%s", stub)
+	filename := fmt.Sprintf("SR%s Report.csv", stub)
+	p:= path.Join(c.InputDir, subdir, filename)
+	return p
 }
 
 func (c *ReadCsvConfig) GetOutputFilename() string {

@@ -37,7 +37,7 @@ var evalSymlinks = filepath.EvalSymlinks
 
 type Config struct {
 	*context.Context
-	Filesystem afero.Afero
+	Filesystem afero.Fs
 	AwsConfig  *AwsConfig
 
 	mlrbHome string
@@ -54,6 +54,7 @@ func New() *Config {
 	c := context.New()
 	return &Config{
 		Context:   c,
+		Filesystem: afero.NewOsFs(),
 		AwsConfig: getAwsConfig(c.EnvironMap()),
 	}
 }

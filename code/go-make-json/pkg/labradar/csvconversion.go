@@ -2,6 +2,8 @@ package labradar
 
 import (
 	"bufio"
+	"fmt"
+	"github.com/spf13/afero"
 )
 
 type CsvConversion struct {
@@ -18,9 +20,10 @@ func NewCsvConversion(c *ReadCsvConfig) *CsvConversion {
 		Error:          nil,
 	}
 
-	file, err := openFile(r.InputFile, c.Filesystem)
+	file, err := c.Filesystem.Open(r.InputFile)
 	if err != nil {
 		r.Error = err
+		return r
 	}
 	defer closeFile(file)
 
@@ -39,3 +42,9 @@ func NewCsvConversion(c *ReadCsvConfig) *CsvConversion {
 	return r
 }
 
+func closeFile(f afero.File) {
+	err := f.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+}

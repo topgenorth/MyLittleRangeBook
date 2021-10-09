@@ -16,6 +16,7 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/labradar/pkg/labradar"
@@ -75,7 +76,6 @@ func buildListCartridgesCmd(a *mylittlerangebook.MyLittleRangeBook) *cobra.Comma
 }
 
 func buildReadLabradarFileCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.Command {
-
 	readCsvCfg := &labradar.ReadCsvConfig{
 		SeriesNumber: -1,
 		InputDir:     "",
@@ -90,17 +90,13 @@ func buildReadLabradarFileCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.C
 			return app.ConfigCmd(cmd)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-
 			app.ConfigLogging()
-
-			log.Debugf("Reading Labradar CSV file number %d.", readCsvCfg.SeriesNumber)
-			log.Debugf("Input directory: %s.", readCsvCfg.InputDir)
-			log.Debugf("Output directory: %s.", readCsvCfg.OutputDir)
-
-			_, err := app.ConvertLabradarCsvToJson(readCsvCfg)
+			series, err := app.GetLabradarSeries(readCsvCfg)
 			if err != nil {
 				log.Fatal(err)
 			}
+
+			fmt.Print(series)
 		},
 	}
 
