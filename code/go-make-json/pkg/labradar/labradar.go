@@ -3,16 +3,15 @@ package labradar
 import (
 	"fmt"
 	"opgenorth.net/labradar/pkg"
-	"opgenorth.net/labradar/pkg/config"
 	"strings"
 	"time"
 )
 
-func NewSeries(seriesNumber int, cfg *config.Config) *Series {
+func NewSeries(seriesNumber int, timeLocation *time.Location) *Series {
 
 	ls := &Series{
 		Number:   seriesNumber,
-		Labradar: initLabradarStruct(seriesNumber, cfg.TimeLocation()),
+		Labradar: initLabradarStruct(seriesNumber, timeLocation),
 		Velocities: &VelocityData{
 			Average:           0,
 			Max:               0,

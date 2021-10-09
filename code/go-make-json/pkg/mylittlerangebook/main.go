@@ -36,7 +36,6 @@ func (a *MyLittleRangeBook) ConfigLogging() {
 	}
 }
 
-
 func (a *MyLittleRangeBook) ShowConfig() {
 	log.Info("Show Config")
 }
@@ -59,7 +58,12 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	}
 }
 
-func (a *MyLittleRangeBook) ConvertLabradarCsvToJson(cfg *labradar.ReadCsvConfig) (string, error) {
-	log.Debugf("Extracting data from %s.", cfg.GetInputFilename())
-	return "", nil
+func (a *MyLittleRangeBook) ConvertLabradarCsvToJson(cfg *labradar.ReadCsvConfig) error {
+	r := labradar.NewCsvConversion(cfg)
+
+	if r.Error != nil {
+		return r.Error
+	}
+
+	return nil
 }
