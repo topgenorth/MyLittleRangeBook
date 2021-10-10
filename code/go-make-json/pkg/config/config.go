@@ -35,27 +35,40 @@ const (
 var getExecutable = os.Executable
 var evalSymlinks = filepath.EvalSymlinks
 
-type Config struct {
-	*context.Context
-	Filesystem afero.Fs
-	AwsConfig  *AwsConfig
+type DataStoreLoaderFunc func(*Config) error
 
-	mlrbHome string
-	mlrbPath string
+var _ DataStoreLoaderFunc = NoopDataLoader
+
+// NoopDataLoader doesn't do anything.
+func NoopDataLoader(config *Config) error {
+	return nil
 }
 
-type AwsConfig struct {
-	Region          string
-	AccessKeyId     string
-	SecretAccessKey string
+type Config struct {
+	*context.Context
+	DataLoader DataStoreLoaderFunc
+	// ConfigFilePath is the path the loaded configuration file.
+	ConfigFilePath string
+
+	// store the resolved home directory for MLRB
+	mlrbHome string
+
+	// Store the path to the executable.
+	mlrbPath string
+
+	Filesystem     afero.Fs
+	AwsConfig      *AwsConfig
+	LabradarConfig *LabradarConfig
 }
 
 func New() *Config {
 	c := context.New()
 	return &Config{
-		Context:   c,
+		Context:    c,
+		DataLoader: NoopDataLoader,
+
 		Filesystem: afero.NewOsFs(),
-		AwsConfig: getAwsConfig(c.EnvironMap()),
+		AwsConfig:  getAwsConfig(c.EnvironMap()),
 	}
 }
 
@@ -87,46 +100,28 @@ func (c *Config) SetHomeDir(home string) {
 	c.Setenv(EnvHOME, home)
 }
 
-func (c *Config) Load(cmd *cobra.Command) error {
-	v := viper.New()
-
-	// Set the base name of the config file, without the file extension.
-	v.SetConfigName(Filename)
-	v.SetConfigType("toml")
-	// Set as many paths as you like where viper should look for the
-	// config file. We are only looking in the current working directory.
-	v.AddConfigPath(".")
-
-	// Attempt to read the config file, gracefully ignoring errors
-	// caused by a config file not being found. Return an error
-	// if we cannot parse the config file.
-	if err := v.ReadInConfig(); err != nil {
-		// It's okay if there isn't a config file
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return err
-		}
+func (c *Config) GetMlrbPath() (string, error) {
+	if c.mlrbPath != "" {
+		return c.mlrbPath, nil
 	}
 
-	//err := v.Unmarshal(c)
+	path, err := getExecutable()
+	if err != nil {
+		return "", errors.Wrap(err, "could not get path to the executing mlrb binary")
+	}
+	// We try to resolve back to the original location
+	hardPath, err := evalSymlinks(path)
+	if err != nil { // if we have trouble resolving symlinks, skip trying to help people who used symlinks
+		fmt.Fprintln(c.Err, errors.Wrapf(err, "WARNING could not resolve %s for symbolic links\n", path))
+	} else if hardPath != path {
+		if c.Debug {
+			fmt.Fprintf(c.Err, "Resolved mlrb binary from %s to %s\n", path, hardPath)
+		}
+		path = hardPath
+	}
 
-	// When we bind flags to environment variables expect that the
-	// environment variables are prefixed, e.g. a flag like --number
-	// binds to an environment variable STING_NUMBER. This helps
-	// avoid conflicts.
-	v.SetEnvPrefix(EnvPREFIX)
-
-	// Bind to environment variables
-	// Works great for simple config names, but needs help for names
-	// like --favorite-color which we fix in the bindFlags function
-	v.AutomaticEnv()
-
-	// Bind the current command's flags to viper
-	bindFlags(cmd, v)
-
-	//setTimezone(c)
-
-	//c.Context = context.New()
-	return nil
+	c.mlrbPath = path
+	return path, nil
 }
 
 func (c *Config) ConfigCmd(cmd *cobra.Command) error {
@@ -147,6 +142,11 @@ func (c *Config) ConfigCmd(cmd *cobra.Command) error {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			return err
 		}
+	}
+
+	var cfg MlrbConfig
+	if err := v.Unmarshal(&cfg); err != nil {
+		return err
 	}
 
 	// When we bind flags to environment variables expect that the

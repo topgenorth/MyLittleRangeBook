@@ -6,6 +6,7 @@ import (
 	"opgenorth.net/labradar/pkg/config"
 	"opgenorth.net/labradar/pkg/labradar"
 	"opgenorth.net/labradar/pkg/model/cartridge"
+	"os"
 	"sort"
 )
 
@@ -40,6 +41,7 @@ func (a *MyLittleRangeBook) ShowConfig() {
 	log.Info("Show Config")
 }
 
+// ListCartridges will do a simple dump of the cartridges to STDOUT.
 func (a *MyLittleRangeBook) ListCartridges() {
 
 	cartridges, err := cartridge.FetchAll()
@@ -57,7 +59,7 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	}
 }
 
-func (a *MyLittleRangeBook) GetLabradarSeries(cfg *labradar.ReadCsvConfig) (*labradar.Series, error) {
+func (a *MyLittleRangeBook) ReadLabradarCsv(cfg *labradar.ReadCsvConfig) (*labradar.Series, error) {
 	cfg.Config = a.Config
 	r := labradar.NewCsvConversion(cfg)
 
@@ -66,4 +68,22 @@ func (a *MyLittleRangeBook) GetLabradarSeries(cfg *labradar.ReadCsvConfig) (*lab
 	}
 
 	return r.LabradarSeries, nil
+}
+
+// Init will create the necessary filesystem structure.
+func (a *MyLittleRangeBook) Init(dir string) {
+
+	if _, err := os.Stat(dir); err == nil {
+		// path/to/whatever exists// path/to/whatever exists
+		log.Debugf("The directory %s exists.", dir)
+	} else if os.IsNotExist(err) {
+		log.Warnf("Have to create the directory %s.", dir)
+	} else {
+		log.Fatal(err)
+		// Schrodinger: file may or may not exist. See err for details.
+
+		// Therefore, do *NOT* use !os.IsNotExist(err) to test for file existence
+	}
+
+	fmt.Println("Initializing directories....")
 }

@@ -2,7 +2,10 @@ package labradar
 
 import (
 	"fmt"
+	"github.com/carolynvs/aferox"
 	"opgenorth.net/labradar/pkg"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -127,4 +130,30 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 		fmt.Sprintf("SR%04d", seriesNumber),
 		u,
 	}
+}
+
+func SaveLabradarSeriesToJson(ls *Series, cfg *ReadCsvConfig) error {
+	outputFileName := filepath.Join(cfg.OutputDir, ls.Labradar.SeriesName+".json")
+
+	err := deleteFileIfExists(cfg.FileSystem, outputFileName)
+	if err != nil {
+		return err
+	}
+
+	err2 := cfg.FileSystem.WriteFile(outputFileName, ls.ToJson(), 0644)
+	if err2 != nil {
+		return err2
+	}
+
+	return nil
+}
+func deleteFileIfExists(a aferox.Aferox, fileName string) error {
+	exists, _ := a.Exists(fileName)
+	if exists {
+		err := os.Remove(fileName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

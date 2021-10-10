@@ -32,6 +32,8 @@ func main() {
 	}
 }
 
+
+
 func buildRootCommand() *cobra.Command {
 	app := mylittlerangebook.New()
 
@@ -55,7 +57,7 @@ func buildRootCommand() *cobra.Command {
 
 	cmd.AddCommand(buildReadLabradarFileCmd(app))
 	cmd.AddCommand(buildListCartridgesCmd(app))
-
+	cmd.AddCommand(buildInitMyLittleRangeBookCmd(app))
 	return cmd
 }
 
@@ -75,9 +77,28 @@ func buildListCartridgesCmd(a *mylittlerangebook.MyLittleRangeBook) *cobra.Comma
 	return cmd
 }
 
+func buildInitMyLittleRangeBookCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.Command {
+	var homeDir string
+	cmd := &cobra.Command{
+		Use:   "init",
+		Short: "Will initialize a directory for use.",
+		Long:  "Will setup the directory for string files.",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return app.ConfigCmd(cmd)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			app.Init(homeDir)
+			log.Debugf("Initialized the directory %s.", homeDir)
+		},
+	}
+	cmd.Flags().StringVarP(&homeDir, "homeDir", "", "", "The location of the home directory.")
+
+	return cmd
+}
+
 func buildReadLabradarFileCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.Command {
 	readCsvCfg := &labradar.ReadCsvConfig{
-		SeriesNumber: -1,
+		SeriesNumber: 0,
 		InputDir:     "",
 		OutputDir:    "",
 	}
@@ -91,7 +112,7 @@ func buildReadLabradarFileCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.C
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			app.ConfigLogging()
-			series, err := app.GetLabradarSeries(readCsvCfg)
+			series, err := app.ReadLabradarCsv(readCsvCfg)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -102,7 +123,7 @@ func buildReadLabradarFileCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.C
 
 	// Define cobra flags, the default value has the lowest (least significant) precedence
 	cmd.Flags().IntVarP(&readCsvCfg.SeriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-	cmd.Flags().StringVarP(&readCsvCfg.InputDir, "InputDir", "i", "", "The location of the input files.")
+	cmd.Flags().StringVarP(&readCsvCfg.InputDir, "inputDir", "i", "", "The location of the input files.")
 	cmd.Flags().StringVarP(&readCsvCfg.OutputDir, "outputDir", "o", "", "The location of the output files.")
 	return cmd
 }
