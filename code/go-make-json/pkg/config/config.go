@@ -42,8 +42,8 @@ func NoopDataLoader(config *Config) error {
 
 type Config struct {
 	*context.Context
-	Data       *Data
-	DataLoader DataStoreLoaderFunc
+	//Data       *Data
+	//DataLoader DataStoreLoaderFunc
 
 	// ConfigFilePath is the path the loaded configuration file.
 	ConfigFilePath string
@@ -61,21 +61,9 @@ func New() *Config {
 	c := context.New()
 	return &Config{
 		Context:    c,
-		DataLoader: NoopDataLoader,
 	}
 }
 
-// LoadData from the datastore in MLRB_HOME.
-// This defaults to doing nothing unless DataLoader has been set.
-func (c *Config) LoadData() error {
-	c.Data = nil
-
-	if c.DataLoader == nil {
-		c.DataLoader = NoopDataLoader
-	}
-
-	return c.DataLoader(c)
-}
 
 func (c *Config) GetHomeDir() (string, error) {
 	if c.mlrbHome != "" {

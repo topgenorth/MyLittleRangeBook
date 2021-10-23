@@ -1,5 +1,0 @@
-debug = true
-
-[labradar]
-outputDir = "/root/labradar/json"
-inputDir = "/root/labradar/LBR"
