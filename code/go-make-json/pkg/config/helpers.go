@@ -15,7 +15,7 @@ type TestConfig struct {
 func NewTestConfig(t *testing.T) *TestConfig {
 	cxt := context.NewTestContext(t)
 	cfg := New()
-	cfg.Context = cxt.Context
+	cfg.AppContext = cxt.AppContext
 	tc := &TestConfig{
 		Config:      cfg,
 		TestContext: cxt,

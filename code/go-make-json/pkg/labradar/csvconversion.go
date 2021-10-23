@@ -20,7 +20,7 @@ func NewCsvConversion(c *ReadCsvConfig) *CsvConversion {
 		Error:          nil,
 	}
 
-	file, err := c.Filesystem.Open(r.InputFile)
+	file, err := c.FileSystem.Open(r.InputFile)
 	if err != nil {
 		r.Error = err
 		return r

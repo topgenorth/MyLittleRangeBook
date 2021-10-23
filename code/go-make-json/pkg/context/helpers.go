@@ -19,7 +19,7 @@ import (
 )
 
 type TestContext struct {
-	*Context
+	*AppContext
 
 	cleanupDirs []string
 	capturedErr *bytes.Buffer
@@ -39,7 +39,7 @@ func NewTestContext(t *testing.T) *TestContext {
 	aggOut := io.MultiWriter(out, test.Logger{T: t})
 
 	c := &TestContext{
-		Context: &Context{
+		AppContext: &AppContext{
 			Debug:      true,
 			environ:    getEnviron(),
 			FileSystem: aferox.NewAferox("/", afero.NewMemMapFs()),

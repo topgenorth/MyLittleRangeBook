@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/spf13/afero"
 	"opgenorth.net/labradar/pkg/context"
 	"os"
 	"path/filepath"
@@ -31,19 +30,8 @@ const (
 var getExecutable = os.Executable
 var evalSymlinks = filepath.EvalSymlinks
 
-type DataStoreLoaderFunc func(*Config) error
-
-var _ DataStoreLoaderFunc = NoopDataLoader
-
-// NoopDataLoader doesn't do anything.
-func NoopDataLoader(config *Config) error {
-	return nil
-}
-
 type Config struct {
-	*context.Context
-	//Data       *Data
-	//DataLoader DataStoreLoaderFunc
+	*context.AppContext
 
 	// ConfigFilePath is the path the loaded configuration file.
 	ConfigFilePath string
@@ -53,17 +41,16 @@ type Config struct {
 
 	// Store the path to the executable.
 	mlrbPath string
-
-	Filesystem afero.Fs
 }
 
 func New() *Config {
-	c := context.New()
-	return &Config{
-		Context:    c,
+	ctx := context.New()
+	c := Config{
+		AppContext: ctx,
 	}
-}
 
+	return &c
+}
 
 func (c *Config) GetHomeDir() (string, error) {
 	if c.mlrbHome != "" {

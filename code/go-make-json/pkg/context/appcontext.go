@@ -16,7 +16,7 @@ const (
 	DefaultTimeZone = "America/Edmonton"
 )
 
-type Context struct {
+type AppContext struct {
 	Debug      bool
 	verbose    bool
 	environ    map[string]string
@@ -27,11 +27,11 @@ type Context struct {
 	Timezone   string
 }
 
-func New() *Context {
+func New() *AppContext {
 
 	pwd, _ := os.Getwd()
 
-	return &Context{
+	return &AppContext{
 		environ:    getEnviron(),
 		In:         os.Stdin,
 		Out:        os.Stdout,
@@ -41,17 +41,17 @@ func New() *Context {
 	}
 }
 
-func (c *Context) SetVerbose(value bool) {
+func (c *AppContext) SetVerbose(value bool) {
 	c.verbose = value
 }
 
-func (c *Context) IsVerbose() bool {
+func (c *AppContext) IsVerbose() bool {
 	return c.Debug || c.verbose
 }
 
 // Environ returns a copy of strings representing the environment,
 // in the form "key=value".
-func (c *Context) Environ() []string {
+func (c *AppContext) Environ() []string {
 	e := make([]string, 0, len(c.environ))
 	for k, v := range c.environ {
 		e = append(e, fmt.Sprintf("%s=%s", k, v))
@@ -60,7 +60,7 @@ func (c *Context) Environ() []string {
 }
 
 // EnvironMap returns a map of the current environment variables.
-func (c *Context) EnvironMap() map[string]string {
+func (c *AppContext) EnvironMap() map[string]string {
 	env := make(map[string]string, len(c.environ))
 	for k, v := range c.environ {
 		env[k] = v
@@ -71,14 +71,14 @@ func (c *Context) EnvironMap() map[string]string {
 // ExpandEnv replaces ${var} or $var in the string according to the values
 // of the current environment variables. References to undefined
 // variables are replaced by the empty string.
-func (c *Context) ExpandEnv(s string) string {
+func (c *AppContext) ExpandEnv(s string) string {
 	return os.Expand(s, func(key string) string { return c.Getenv(key) })
 }
 
 // Getenv retrieves the value of the environment variable named by the key.
 // It returns the value, which will be empty if the variable is not present.
 // To distinguish between an empty value and an unset value, use LookupEnv.
-func (c *Context) Getenv(key string) string {
+func (c *AppContext) Getenv(key string) string {
 	return c.environ[key]
 }
 
@@ -87,14 +87,14 @@ func (c *Context) Getenv(key string) string {
 // value (which may be empty) is returned and the boolean is true.
 // Otherwise the returned value will be empty and the boolean will
 // be false.
-func (c *Context) LookupEnv(key string) (string, bool) {
+func (c *AppContext) LookupEnv(key string) (string, bool) {
 	value, ok := c.environ[key]
 	return value, ok
 }
 
 // Setenv sets the value of the environment variable named by the key.
 // It returns an error, if any.
-func (c *Context) Setenv(key string, value string) {
+func (c *AppContext) Setenv(key string, value string) {
 	if c.environ == nil {
 		c.environ = make(map[string]string, 1)
 	}
@@ -103,26 +103,26 @@ func (c *Context) Setenv(key string, value string) {
 }
 
 // Unsetenv unsets a single environment variable.
-func (c *Context) Unsetenv(key string) {
+func (c *AppContext) Unsetenv(key string) {
 	delete(c.environ, key)
 }
 
 // Clearenv deletes all environment variables.
-func (c *Context) Clearenv() {
+func (c *AppContext) Clearenv() {
 	c.environ = make(map[string]string, 0)
 }
 
 // Getwd returns a rooted path name corresponding to the current directory.
-func (c *Context) Getwd() string {
+func (c *AppContext) Getwd() string {
 	return c.FileSystem.Getwd()
 }
 
 // Chdir changes the current working directory to the named directory.
-func (c *Context) Chdir(dir string) {
+func (c *AppContext) Chdir(dir string) {
 	c.FileSystem.Chdir(dir)
 }
 
-func (c *Context) TimeLocation() *time.Location {
+func (c *AppContext) TimeLocation() *time.Location {
 	tz, err := time.LoadLocation(c.Timezone)
 	if err == nil {
 		return tz
@@ -147,7 +147,7 @@ func getEnviron() map[string]string {
 	return environ
 }
 
-func (c *Context) CopyFile(src, dest string) error {
+func (c *AppContext) CopyFile(src, dest string) error {
 	info, err := c.FileSystem.Stat(src)
 	if err != nil {
 		return errors.WithStack(err)
@@ -162,7 +162,7 @@ func (c *Context) CopyFile(src, dest string) error {
 	return errors.WithStack(err)
 }
 
-func (c *Context) CopyDirectory(srcDir, destDir string, includeBaseDir bool) error {
+func (c *AppContext) CopyDirectory(srcDir, destDir string, includeBaseDir bool) error {
 	var stripPrefix string
 	if includeBaseDir {
 		stripPrefix = filepath.Dir(srcDir)
