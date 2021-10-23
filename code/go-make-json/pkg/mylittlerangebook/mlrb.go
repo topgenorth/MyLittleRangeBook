@@ -15,7 +15,6 @@ type MyLittleRangeBook struct {
 }
 
 func New() *MyLittleRangeBook {
-
 	cfg := config.New()
 	return NewWithConfig(cfg)
 }

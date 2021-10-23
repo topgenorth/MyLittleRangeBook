@@ -147,6 +147,7 @@ func SaveLabradarSeriesToJson(ls *Series, cfg *ReadCsvConfig) error {
 
 	return nil
 }
+
 func deleteFileIfExists(a aferox.Aferox, fileName string) error {
 	exists, _ := a.Exists(fileName)
 	if exists {

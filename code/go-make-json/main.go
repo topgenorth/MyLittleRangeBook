@@ -40,13 +40,6 @@ func buildRootCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "mlrb [sub]",
 		Long: "mlrb is my app for the various reloading things.",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			err := app.ConfigCmd(cmd)
-			if err != nil {
-				return err
-			}
-			return nil
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
@@ -65,9 +58,6 @@ func buildListCartridgesCmd(a *mylittlerangebook.MyLittleRangeBook) *cobra.Comma
 	cmd := &cobra.Command{
 		Use:   "listcartridges",
 		Short: "List the cartridges in Amplify",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return a.ConfigCmd(cmd)
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			a.ConfigLogging()
 			a.ListCartridges()
@@ -83,9 +73,6 @@ func buildInitMyLittleRangeBookCmd(app *mylittlerangebook.MyLittleRangeBook) *co
 		Use:   "init",
 		Short: "Will initialize a directory for use.",
 		Long:  "Will setup the directory for string files.",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return app.ConfigCmd(cmd)
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			app.Init(homeDir)
 			log.Debugf("Initialized the directory %s.", homeDir)
@@ -107,9 +94,6 @@ func buildReadLabradarFileCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.C
 		Use:   "readcsv",
 		Short: "Reads a Device CSV file and converts it to JSON.",
 		Long:  `Currently this will read a CSV file and convert it to JSON.`,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return app.ConfigCmd(cmd)
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			app.ConfigLogging()
 			series, err := app.ReadLabradarCsv(readCsvCfg)
