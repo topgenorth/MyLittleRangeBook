@@ -42,17 +42,6 @@ type PowderCharge struct {
 	Amount float32 `json:"amount"`
 }
 
-type Series struct {
-	Number     int                 `json:"number"`
-	Labradar   *Device             `json:"labradar"`
-	Velocities *VelocityData       `json:"velocities"`
-	Firearm    *Firearm            `json:"firearm"`
-	LoadData   *LoadData           `json:"loadData"`
-	Notes      string              `json:"notes"`
-	Tags       []string            `json:"tags"`
-	RawData    map[int]*LineOfData `json:"data"`
-}
-
 type UnitsOfMeasure struct {
 	Velocity string `json:"velocity"`
 	Distance string `json:"distance"`

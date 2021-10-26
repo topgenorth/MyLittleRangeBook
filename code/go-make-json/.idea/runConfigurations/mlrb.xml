@@ -1,0 +1,18 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="mlrb" type="GoApplicationRunConfiguration" factoryName="Go Application" show_console_on_std_err="true" show_console_on_std_out="true">
+    <module name="go-make-json" />
+    <working_directory value="$PROJECT_DIR$" />
+    <parameters value="--debug readcsv -n 1" />
+    <envs>
+      <env name="AWS_REGION" value="us-east-1" />
+      <env name="AWS_ACCESS_KEY_ID" value="AKIA3WPMZI2XGGLUBO4X" />
+      <env name="AWS_SECRET_ACCESS_KEY" value="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" />
+    </envs>
+    <kind value="PACKAGE" />
+    <package value="opgenorth.net/labradar" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/main.go" />
+    <output_directory value="$PROJECT_DIR$" />
+    <method v="2" />
+  </configuration>
+</component>

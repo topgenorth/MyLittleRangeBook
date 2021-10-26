@@ -1,6 +1,7 @@
 package labradar
 
 import (
+	"opgenorth.net/labradar/pkg"
 	"strconv"
 	"strings"
 )
@@ -11,7 +12,7 @@ type LineOfData struct {
 	Value      string `json:"value"`
 }
 
-func newLineOfData(linenumber int, s string) *LineOfData {
+func NewLineOfData(linenumber int, s string) *LineOfData {
 	return &LineOfData{
 		LineNumber: linenumber,
 		Raw:        s,
@@ -19,6 +20,9 @@ func newLineOfData(linenumber int, s string) *LineOfData {
 	}
 }
 
+func (l LineOfData) String() string {
+	return l.Value
+}
 func (ld *LineOfData) getStringValue() string {
 	parts := strings.Split(ld.Value, ";")
 	if len(parts) < 2 {
@@ -43,4 +47,27 @@ func (ld *LineOfData) getDateAndTime() (string, string) {
 		return "", ""
 	}
 	return parts[l-3], parts[l-2]
+}
+
+func fixupLabradarLine(line string) string {
+	parts := strings.Split(strings.TrimSpace(line), pkg.UnicodeNUL)
+
+	switch lengthOfParts := len(parts); lengthOfParts {
+	case 2:
+		// The string either started with a NUL or ended with a NUL
+		if len(parts[0]) == 0 {
+			return parts[1]
+		}
+		if len(parts[1]) == 0 {
+			return parts[0]
+		}
+
+		return line
+	case 3:
+		// The string started with NUL and and ended with NUL
+		return parts[1]
+	default:
+
+		return line
+	}
 }
