@@ -3,11 +3,6 @@
     <module name="go-make-json" />
     <working_directory value="$PROJECT_DIR$" />
     <parameters value="--debug readcsv -n 1" />
-    <envs>
-      <env name="AWS_REGION" value="us-east-1" />
-      <env name="AWS_ACCESS_KEY_ID" value="AKIA3WPMZI2XGGLUBO4X" />
-      <env name="AWS_SECRET_ACCESS_KEY" value="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" />
-    </envs>
     <kind value="PACKAGE" />
     <package value="opgenorth.net/labradar" />
     <directory value="$PROJECT_DIR$" />

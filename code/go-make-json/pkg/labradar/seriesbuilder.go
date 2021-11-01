@@ -13,7 +13,7 @@ type SeriesBuilder struct {
 
 func NewSeriesBuilder() *SeriesBuilder {
 	return &SeriesBuilder{
-		NewSeries2(),
+		NewSeries(),
 		make(map[int]*LineOfData),
 	}
 }

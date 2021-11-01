@@ -16,7 +16,7 @@ type Series struct {
 	RawData    map[int]*LineOfData `json:"data"`
 }
 
-func NewSeries2() *Series {
+func NewSeries() *Series {
 
 	now := time.Now()
 
@@ -76,7 +76,7 @@ func NewSeries2() *Series {
 	return ls
 }
 
-func NewSeries(seriesNumber int, timeLocation *time.Location) *Series {
+func OddSeriesFactory(seriesNumber int, timeLocation *time.Location) *Series {
 
 	lr := initDevice(seriesNumber, timeLocation)
 	vd := &VelocityData{

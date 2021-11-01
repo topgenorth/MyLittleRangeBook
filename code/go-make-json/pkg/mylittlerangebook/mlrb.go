@@ -60,7 +60,7 @@ func (a *MyLittleRangeBook) ListCartridges() {
 
 func (a *MyLittleRangeBook) ReadLabradarCsv(cfg *labradar.ReadCsvConfig) (*labradar.Series, error) {
 	cfg.Config = a.Config
-	r := labradar.NewCsvConversion(cfg)
+	r := labradar.ReadFile(cfg)
 
 	if r.Error != nil {
 		return nil, r.Error
