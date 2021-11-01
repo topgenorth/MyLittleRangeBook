@@ -3,6 +3,8 @@ package labradar
 import (
 	"fmt"
 	"opgenorth.net/labradar/pkg/context"
+	"os"
+	"text/template"
 	"time"
 )
 
@@ -76,49 +78,19 @@ func NewSeries() *Series {
 	return ls
 }
 
-func OddSeriesFactory(seriesNumber int, timeLocation *time.Location) *Series {
+func (s *Series) Print() {
+	// TODO Inject some kind of printer thingy.
 
-	lr := initDevice(seriesNumber, timeLocation)
-	vd := &VelocityData{
-		Average:           0,
-		Max:               0,
-		Min:               0,
-		ExtremeSpread:     0,
-		StandardDeviation: 0,
-		Values:            nil,
-	}
-	f := &Firearm{
-		Name:      "",
-		Cartridge: "",
-	}
-	pr := &Projectile{
-		Name:   "",
-		Weight: 0,
-		BC: &BallisticCoefficient{
-			DragModel: "",
-			Value:     0,
-		},
-	}
-	po := &PowderCharge{
-		Name:   "",
-		Amount: 0,
-	}
-	ld := &LoadData{
-		Cartridge:  "",
-		Projectile: pr,
-		Powder:     po,
-	}
-	ls := &Series{
-		Number:     seriesNumber,
-		Labradar:   lr,
-		Velocities: vd,
-		Firearm:    f,
-		LoadData:   ld,
-		Notes:      "",
-		RawData:    make(map[int]*LineOfData),
+	t, err := template.New("Series").Parse("Labradar Series {{.Number}}\nAverage Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}\n")
+	if err != nil {
+		panic(err)
 	}
 
-	return ls
+	err = t.Execute(os.Stdout, s)
+	if err != nil {
+		panic(err)
+	}
+
 }
 
 func initDevice(seriesNumber int, timezone *time.Location) *Device {

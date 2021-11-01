@@ -123,13 +123,11 @@ func buildReadLabradarFileCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.C
 		Short: "Reads a Device CSV file and converts it to JSON.",
 		Long:  `Currently this will read a CSV file and convert it to JSON.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			//app.ConfigLogging()
 			series, err := app.ReadLabradarCsv(readCsvCfg)
 			if err != nil {
 				log.Fatal(err)
 			}
-
-			fmt.Print(series)
+			series.Print()
 		},
 	}
 
