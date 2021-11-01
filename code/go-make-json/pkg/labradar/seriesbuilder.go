@@ -24,6 +24,7 @@ func (sb *SeriesBuilder) ParseLine(ld *LineOfData) {
 		sb.RawData[ld.LineNumber] = ld
 		sb.Labradar.DeviceId = ld.getStringValue()
 	case 3:
+		sb.Labradar.SeriesName = ld.getStringValue()
 		sb.RawData[ld.LineNumber] = ld
 	case 6:
 		sb.RawData[ld.LineNumber] = ld

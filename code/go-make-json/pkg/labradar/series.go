@@ -79,9 +79,10 @@ func NewSeries() *Series {
 }
 
 func (s *Series) Print() {
+
 	// TODO Inject some kind of printer thingy.
 
-	t, err := template.New("Series").Parse("Labradar Series {{.Number}}\nAverage Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}\n")
+	t, err := template.New("Series").Parse(tmpl)
 	if err != nil {
 		panic(err)
 	}
@@ -110,3 +111,9 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 		u,
 	}
 }
+
+const tmpl = `Labradar Series {{.Labradar.SeriesName}}
+Average Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}
+Standard Deviation: {{.Velocities.StandardDeviation}}{{.Labradar.Units.Velocity}}
+Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
+`
