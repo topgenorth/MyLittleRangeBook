@@ -1,4 +1,4 @@
-package mylittlerangebook
+package mlrb
 
 import (
 	"fmt"

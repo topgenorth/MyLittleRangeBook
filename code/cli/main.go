@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
-	"opgenorth.net/mylittlerangebook/pkg/mylittlerangebook"
+	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 	"os"
 	"strings"
 )
@@ -22,7 +22,7 @@ func main() {
 }
 
 func buildRootCommand() *cobra.Command {
-	app := mylittlerangebook.New()
+	app := mlrb.New()
 
 	cmd := &cobra.Command{
 		Use:  "mlrb [sub]",
@@ -81,7 +81,7 @@ func initializeCommand(cmd *cobra.Command) error {
 	return nil
 }
 
-func buildListCartridgesCmd(a *mylittlerangebook.MyLittleRangeBook) *cobra.Command {
+func buildListCartridgesCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "listcartridges",
 		Short: "List the cartridges in Amplify",
@@ -94,7 +94,7 @@ func buildListCartridgesCmd(a *mylittlerangebook.MyLittleRangeBook) *cobra.Comma
 	return cmd
 }
 
-func buildInitMyLittleRangeBookCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.Command {
+func buildInitMyLittleRangeBookCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	var homeDir string
 	cmd := &cobra.Command{
 		Use:   "init",
@@ -110,7 +110,7 @@ func buildInitMyLittleRangeBookCmd(app *mylittlerangebook.MyLittleRangeBook) *co
 	return cmd
 }
 
-func buildReadLabradarFileCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.Command {
+func buildReadLabradarFileCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	readCsvCfg := &labradar.ReadCsvConfig{
 		Config: app.Config,
 		SeriesNumber: 0,
