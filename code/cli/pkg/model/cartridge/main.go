@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const CARTRIDGE_TABLENAME = "Cartridge" // -ns5rcz7k7jgbfhizt4qmyecvhy-staging
+const CARTRIDGE_TABLENAME = "Cartridge"
 
 type Cartridge struct {
 	Id               string
@@ -82,5 +82,3 @@ func FetchAll() ([]Cartridge, error) {
 
 	return list, nil
 }
-
-

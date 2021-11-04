@@ -1,9 +1,11 @@
 package labradar
 
 import (
+	"encoding/json"
 	"fmt"
 	"opgenorth.net/mylittlerangebook/pkg/context"
 	"os"
+	"sort"
 	"text/template"
 	"time"
 )
@@ -94,6 +96,20 @@ func (s *Series) Print() {
 
 }
 
+func (ls *Series) TotalNumberOfShots() int {
+	return len(ls.Velocities.Values)
+}
+
+func (ls *Series) ToJson() []byte {
+	ls.RawData = sortRawDataByKey(ls.RawData)
+	jsonBytes, err := json.MarshalIndent(ls, "", "  ")
+	if err != nil {
+		return nil
+	}
+
+	return jsonBytes
+}
+
 func initDevice(seriesNumber int, timezone *time.Location) *Device {
 	now := time.Now().In(timezone)
 
@@ -121,3 +137,17 @@ Standard Deviation: {{.Velocities.StandardDeviation}}{{.Labradar.Units.Velocity}
 Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
 ----
 `
+
+func sortRawDataByKey(d map[int]*LineOfData) map[int]*LineOfData {
+	keys := make([]int, 0, len(d))
+	for k := range d {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+
+	m := make(map[int]*LineOfData)
+	for _, k := range keys {
+		m[k] = d[k]
+	}
+	return m
+}
