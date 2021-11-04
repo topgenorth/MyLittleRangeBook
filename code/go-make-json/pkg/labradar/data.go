@@ -2,7 +2,7 @@ package labradar
 
 import (
 	"encoding/json"
-	"opgenorth.net/labradar/pkg/util"
+	"opgenorth.net/mylittlerangebook/pkg/util"
 	"sort"
 )
 

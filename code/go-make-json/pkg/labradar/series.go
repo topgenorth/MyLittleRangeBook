@@ -2,7 +2,7 @@ package labradar
 
 import (
 	"fmt"
-	"opgenorth.net/labradar/pkg/context"
+	"opgenorth.net/mylittlerangebook/pkg/context"
 	"os"
 	"text/template"
 	"time"

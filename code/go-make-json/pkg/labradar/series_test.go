@@ -1,7 +1,7 @@
 package labradar
 
 import (
-	"opgenorth.net/labradar/pkg/context"
+	"opgenorth.net/mylittlerangebook/pkg/context"
 	"testing"
 	"time"
 )

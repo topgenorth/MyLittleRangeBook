@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"opgenorth.net/labradar/pkg/context"
+	"opgenorth.net/mylittlerangebook/pkg/context"
 	"os"
 	"path/filepath"
 )

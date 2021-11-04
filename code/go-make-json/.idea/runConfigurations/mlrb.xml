@@ -4,7 +4,7 @@
     <working_directory value="$PROJECT_DIR$/bin" />
     <parameters value="--debug readcsv -n 1" />
     <kind value="PACKAGE" />
-    <package value="opgenorth.net/labradar" />
+    <package value="opgenorth.net/mylittlerangebook" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$/main.go" />
     <output_directory value="$PROJECT_DIR$/bin" />

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	test "opgenorth.net/labradar/pkg/test"
+	test "opgenorth.net/mylittlerangebook/pkg/test"
 	"os"
 	"path/filepath"
 	"runtime"

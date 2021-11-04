@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"opgenorth.net/labradar/pkg/config"
-	"opgenorth.net/labradar/pkg/labradar"
-	"opgenorth.net/labradar/pkg/mylittlerangebook"
+	"opgenorth.net/mylittlerangebook/pkg/config"
+	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	"opgenorth.net/mylittlerangebook/pkg/mylittlerangebook"
 	"os"
 	"strings"
 )
