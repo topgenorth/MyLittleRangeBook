@@ -112,8 +112,12 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 	}
 }
 
-const tmpl = `Labradar Series {{.Labradar.SeriesName}}
+const tmpl = `----
+Labradar Series {{.Labradar.SeriesName}}
+
+Number of Shots: {{.TotalNumberOfShots}}
 Average Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}
 Standard Deviation: {{.Velocities.StandardDeviation}}{{.Labradar.Units.Velocity}}
 Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
+----
 `

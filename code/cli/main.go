@@ -131,10 +131,10 @@ func buildReadLabradarFileCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 
-	// Define cobra flags, the default value has the lowest (least significant) precedence
 	cmd.Flags().IntVarP(&readCsvCfg.SeriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
 	cmd.Flags().StringVarP(&readCsvCfg.InputDir, "labradar.inputDir", "i", "", "The location of the input files.")
 	cmd.Flags().StringVarP(&readCsvCfg.OutputDir, "labradar.outputDir", "o", "", "The location of the output files.")
+
 	return cmd
 }
 
