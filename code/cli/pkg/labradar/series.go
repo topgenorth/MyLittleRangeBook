@@ -80,7 +80,7 @@ func NewSeries() *Series {
 	return ls
 }
 
-func (s *Series) Print() {
+func (s Series) Print() {
 
 	// TODO Inject some kind of printer thingy.
 
@@ -96,13 +96,13 @@ func (s *Series) Print() {
 
 }
 
-func (ls *Series) TotalNumberOfShots() int {
-	return len(ls.Velocities.Values)
+func (s Series) TotalNumberOfShots() int {
+	return len(s.Velocities.Values)
 }
 
-func (ls *Series) ToJson() []byte {
-	ls.RawData = sortRawDataByKey(ls.RawData)
-	jsonBytes, err := json.MarshalIndent(ls, "", "  ")
+func (s Series) ToJsonBytes() []byte {
+	s.RawData = sortRawDataByKey(s.RawData)
+	jsonBytes, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return nil
 	}
@@ -128,16 +128,7 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 	}
 }
 
-const tmpl = `----
-Labradar Series {{.Labradar.SeriesName}}
-
-Number of Shots: {{.TotalNumberOfShots}}
-Average Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}
-Standard Deviation: {{.Velocities.StandardDeviation}}{{.Labradar.Units.Velocity}}
-Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
-----
-`
-
+// Used to sort the lines of data in a series by their key, i.e the line number.
 func sortRawDataByKey(d map[int]*LineOfData) map[int]*LineOfData {
 	keys := make([]int, 0, len(d))
 	for k := range d {
@@ -151,3 +142,16 @@ func sortRawDataByKey(d map[int]*LineOfData) map[int]*LineOfData {
 	}
 	return m
 }
+
+const tmpl = `----
+Labradar Series {{.Labradar.SeriesName}}
+
+Number of Shots: {{.TotalNumberOfShots}}
+Average Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}
+Standard Deviation: {{.Velocities.StandardDeviation}}{{.Labradar.Units.Velocity}}
+Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
+----
+`
+
+
+
