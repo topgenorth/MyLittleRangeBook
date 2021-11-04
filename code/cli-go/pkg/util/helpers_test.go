@@ -1,7 +1,7 @@
 package util
 
 import (
-	"opgenorth.net/labradar/pkg"
+	"opgenorth.net/mylittlerangebook/pkg"
 	"testing"
 )
 

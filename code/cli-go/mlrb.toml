@@ -1,5 +1,5 @@
 debug = true
 
 [labradar]
-outputDir = "/Users/tom/work/topgenorth.github.io/data/labradar/"
-inputDir = "/Users/tom/work/labradar/LBR/"
+outputDir = "/Users/tom/work/topgenorth.github.io/data/mylittlerangebook/"
+inputDir = "/Users/tom/work/mylittlerangebook/LBR/"

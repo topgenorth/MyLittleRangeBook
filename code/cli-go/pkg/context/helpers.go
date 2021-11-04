@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	test "opgenorth.net/labradar/pkg/test"
 	"os"
 	"path/filepath"
 	"runtime"

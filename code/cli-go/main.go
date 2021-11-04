@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"opgenorth.net/labradar/pkg/config"
-	"opgenorth.net/labradar/pkg/labradar"
-	"opgenorth.net/labradar/pkg/mylittlerangebook"
+	//"opgenorth.net/mlrb/pkg/config"
+	//"opgenorth.net/mlrb/pkg/labradar"
+	//"opgenorth.net/mlrb/pkg/mlrb"
 	"os"
 	"strings"
 )
@@ -112,7 +112,7 @@ func buildInitMyLittleRangeBookCmd(app *mylittlerangebook.MyLittleRangeBook) *co
 
 func buildReadLabradarFileCmd(app *mylittlerangebook.MyLittleRangeBook) *cobra.Command {
 	readCsvCfg := &labradar.ReadCsvConfig{
-		Config: app.Config,
+		Config:       app.Config,
 		SeriesNumber: 0,
 		InputDir:     "",
 		OutputDir:    "",

@@ -1,11 +1,11 @@
-package mylittlerangebook
+package mlrb
 
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"opgenorth.net/labradar/pkg/config"
-	"opgenorth.net/labradar/pkg/labradar"
-	"opgenorth.net/labradar/pkg/model/cartridge"
+	"opgenorth.net/mylittlerangebook/pkg/config"
+	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	"opgenorth.net/mylittlerangebook/pkg/model/cartridge"
 	"os"
 	"sort"
 )

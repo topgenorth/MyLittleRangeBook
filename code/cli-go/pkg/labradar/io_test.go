@@ -1,7 +1,7 @@
 package labradar
 //
 //import (
-//	"opgenorth.net/labradar/pkg/model/cartridge"
+//	"opgenorth.net/mlrb/pkg/model/cartridge"
 //	"testing"
 //)
 //
@@ -16,15 +16,15 @@ package labradar
 //	}{
 //		// TODO: Add test cases.
 //		{"Is a Labradar CSV file",
-//			lineArgs {"/Users/tom/work/labradar/LBR/SR0001/SR0001 Report.csv"},
+//			lineArgs {"/Users/tom/work/mlrb/LBR/SR0001/SR0001 Report.csv"},
 //			true,
 //		},
 //		{"Is not a Labradar CSV file - invalid extension",
-//			lineArgs {"/Users/tom/work/labradar/LBR/SR0001/SR0001 Report.CSX"},
+//			lineArgs {"/Users/tom/work/mlrb/LBR/SR0001/SR0001 Report.CSX"},
 //			false,
 //		},
 //		{"Is not a Labradar CSV file - doesn't start with SR",
-//			lineArgs {"/Users/tom/work/labradar/LBR/SR0001/S0001 Report.CSV"},
+//			lineArgs {"/Users/tom/work/mlrb/LBR/SR0001/S0001 Report.CSV"},
 //			false,
 //		},
 //	}

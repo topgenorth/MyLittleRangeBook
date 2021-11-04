@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	_ "gocloud.dev/docstore/awsdynamodb"
-	"opgenorth.net/labradar/pkg/mylittlerangebook"
+	"opgenorth.net/mylittlerangebook/pkg/mylittlerangebook"
 )
 
 func ListCartridgesCmd() *cobra.Command {

@@ -3,7 +3,7 @@ package labradar
 import (
 	"fmt"
 	"log"
-	"opgenorth.net/labradar/pkg/config"
+	"opgenorth.net/mylittlerangebook/pkg/config"
 	"os"
 	"path"
 	"path/filepath"

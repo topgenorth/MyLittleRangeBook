@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="mlrb" type="GoApplicationRunConfiguration" factoryName="Go Application" show_console_on_std_err="true" show_console_on_std_out="true">
-    <module name="go-make-json" />
+    <module name="cli" />
     <working_directory value="$PROJECT_DIR$" />
     <parameters value="--debug readcsv -n 1" />
     <kind value="PACKAGE" />

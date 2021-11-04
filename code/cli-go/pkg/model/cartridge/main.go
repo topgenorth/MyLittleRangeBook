@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"gocloud.dev/docstore/awsdynamodb"
 	"io"
-	"opgenorth.net/labradar/pkg/aws"
+	"opgenorth.net/mylittlerangebook/pkg/aws"
 	"strings"
 )
 
