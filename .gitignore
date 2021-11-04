@@ -9,3 +9,6 @@
 /code/go-make-json/readme
 /code/go-make-json/listcartridges
 /code/go-make-json/mlrb
+/code/cli/bin/mlrb.exe
+/code/cli/mlrb.exe
+/code/cli/bin/mlrb.toml

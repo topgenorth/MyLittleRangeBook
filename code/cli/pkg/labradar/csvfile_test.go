@@ -18,7 +18,7 @@ func TestReadFile(t *testing.T) {
 			"SHould provide filename",
 			args{c: nil},
 			&CsvFile{
-				InputFile:      "/Users/tom/work/mlrb/LBR/SR0001/SR0001 Report.csv",
+				InputFile:      "/Users/tom/work/labradar/LBR/SR0001/SR0001 Report.csv",
 				LabradarSeries: nil,
 				Error:          nil,
 			},

@@ -1,4 +1,4 @@
-module mylittlerangebook
+module opgenorth.net/mylittlerangebook
 
 go 1.16
 

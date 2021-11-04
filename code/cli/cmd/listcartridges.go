@@ -3,12 +3,12 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	_ "gocloud.dev/docstore/awsdynamodb"
-	"opgenorth.net/mylittlerangebook/pkg/mylittlerangebook"
+	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
 
 func ListCartridgesCmd() *cobra.Command {
 
-	app := mylittlerangebook.New()
+	app := mlrb.New()
 
 	cmd := &cobra.Command{
 		Use:   "listcartridges",

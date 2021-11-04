@@ -14,7 +14,7 @@ func Test_getSeriesNumberFrom(t *testing.T) {
 		// TODO: Add test cases.
 		{
 			"Should return 42 for the series number",
-			args{"/Users/tom/work/mlrb/LBR/SR0042/SR0042 Report.CSV"},
+			args{"/Users/tom/work/labradar/LBR/SR0042/SR0042 Report.CSV"},
 			42,
 		},
 	}

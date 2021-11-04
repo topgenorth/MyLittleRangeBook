@@ -1,13 +1,17 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="mlrb" type="GoApplicationRunConfiguration" factoryName="Go Application" show_console_on_std_err="true" show_console_on_std_out="true">
     <module name="cli" />
+<<<<<<< HEAD:code/cli-go/.idea/runConfigurations/mlrb.xml
     <working_directory value="$PROJECT_DIR$" />
+=======
+    <working_directory value="$PROJECT_DIR$/bin" />
+>>>>>>> recover:code/cli/.idea/runConfigurations/mlrb.xml
     <parameters value="--debug readcsv -n 1" />
     <kind value="PACKAGE" />
-    <package value="opgenorth.net/labradar" />
+    <package value="opgenorth.net/mylittlerangebook" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$/main.go" />
-    <output_directory value="$PROJECT_DIR$" />
+    <output_directory value="$PROJECT_DIR$/bin" />
     <method v="2" />
   </configuration>
 </component>
