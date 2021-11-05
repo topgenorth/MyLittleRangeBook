@@ -2,6 +2,7 @@ package labradar
 
 import (
 	"opgenorth.net/mylittlerangebook/pkg"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -71,3 +72,19 @@ func fixupLabradarLine(line string) string {
 		return line
 	}
 }
+
+// Used to sort the lines of data in a series by their key, i.e the line number.
+func SortLinesOfData(d map[int]*LineOfData) map[int]*LineOfData {
+	keys := make([]int, 0, len(d))
+	for k := range d {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+
+	m := make(map[int]*LineOfData)
+	for _, k := range keys {
+		m[k] = d[k]
+	}
+	return m
+}
+

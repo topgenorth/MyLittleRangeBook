@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"opgenorth.net/mylittlerangebook/pkg/context"
 	"os"
-	"sort"
+	"path/filepath"
 	"text/template"
 	"time"
 )
@@ -100,14 +100,46 @@ func (s Series) TotalNumberOfShots() int {
 	return len(s.Velocities.Values)
 }
 
+func (s Series) SaveTo(cfg *ReadCsvConfig) error {
+	outputFileName := filepath.Join(cfg.OutputDir, s.Labradar.SeriesName+".json")
+
+	exists, err := cfg.FileSystem.Exists(outputFileName)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		err := os.Remove(outputFileName)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = cfg.FileSystem.WriteFile(outputFileName, s.ToJsonBytes(), 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s Series) ToJsonBytes() []byte {
-	s.RawData = sortRawDataByKey(s.RawData)
-	jsonBytes, err := json.MarshalIndent(s, "", "  ")
+	jsonBytes, err := json.MarshalIndent(SortLinesOfData(s.RawData), "", "  ")
 	if err != nil {
 		return nil
 	}
 
 	return jsonBytes
+}
+
+func (s Series) ToJson() (string,error) {
+	jsonBytes, err := json.MarshalIndent(SortLinesOfData(s.RawData), "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+
+	return fmt.Sprintf("%x", jsonBytes), nil
 }
 
 func initDevice(seriesNumber int, timezone *time.Location) *Device {
@@ -126,21 +158,6 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 		fmt.Sprintf("SR%04d", seriesNumber),
 		u,
 	}
-}
-
-// Used to sort the lines of data in a series by their key, i.e the line number.
-func sortRawDataByKey(d map[int]*LineOfData) map[int]*LineOfData {
-	keys := make([]int, 0, len(d))
-	for k := range d {
-		keys = append(keys, k)
-	}
-	sort.Ints(keys)
-
-	m := make(map[int]*LineOfData)
-	for _, k := range keys {
-		m[k] = d[k]
-	}
-	return m
 }
 
 const tmpl = `----

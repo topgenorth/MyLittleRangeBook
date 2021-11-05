@@ -1,11 +1,5 @@
 package labradar
 
-import (
-	"github.com/carolynvs/aferox"
-	"os"
-	"path/filepath"
-)
-
 type SeriesBuilder struct {
 	*Series
 	RawData map[int]*LineOfData `json:"data"`
@@ -19,6 +13,8 @@ func NewSeriesBuilder() *SeriesBuilder {
 }
 
 func (sb *SeriesBuilder) ParseLine(ld *LineOfData) {
+
+	// TODO Don't rely on the line number to figure out what it is we're parsing. 
 	switch ld.LineNumber {
 	case 1:
 		sb.RawData[ld.LineNumber] = ld
@@ -49,31 +45,4 @@ func (sb *SeriesBuilder) ParseLine(ld *LineOfData) {
 			sb.Velocities.AddVelocity(ld.getIntValue())
 		}
 	}
-}
-
-func (sb *SeriesBuilder) SaveToJson(cfg *ReadCsvConfig) error {
-	outputFileName := filepath.Join(cfg.OutputDir, sb.Labradar.SeriesName+".json")
-
-	err := deleteFileIfExists(cfg.FileSystem, outputFileName)
-	if err != nil {
-		return err
-	}
-
-	err2 := cfg.FileSystem.WriteFile(outputFileName, sb.ToJson(), 0644)
-	if err2 != nil {
-		return err2
-	}
-
-	return nil
-}
-
-func deleteFileIfExists(a aferox.Aferox, fileName string) error {
-	exists, _ := a.Exists(fileName)
-	if exists {
-		err := os.Remove(fileName)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
