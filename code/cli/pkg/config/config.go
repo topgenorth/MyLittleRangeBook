@@ -45,11 +45,25 @@ type Config struct {
 
 func New() *Config {
 	ctx := context.New()
-	c := Config{
+	c := &Config{
 		AppContext: ctx,
 	}
 
-	return &c
+	p, err := c.GetHomeDir()
+	if err !=nil {
+		c.mlrbHome = ""
+	} else {
+		c.mlrbHome=p
+	}
+
+	p, err = c.GetMlrbPath()
+	if err !=nil {
+		c.mlrbPath = ""
+	} else {
+		c.mlrbPath = p
+	}
+
+	return c
 }
 
 func (c *Config) GetHomeDir() (string, error) {
