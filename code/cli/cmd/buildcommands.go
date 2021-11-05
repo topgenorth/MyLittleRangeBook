@@ -72,6 +72,7 @@ func BuildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	cmd.Flags().IntVarP(&readCsvCfg.SeriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
 	cmd.Flags().StringVarP(&readCsvCfg.InputDir, "labradar.inputDir", "i", "", "The location of the input files.")
 	cmd.Flags().StringVarP(&readCsvCfg.OutputDir, "labradar.outputDir", "o", "", "The location of the output files.")
+	cmd.Flags().StringVarP(&readCsvCfg.AppId, "aws.appId", "a", "", "The AWS App ID.")
 
 	return cmd
 }
