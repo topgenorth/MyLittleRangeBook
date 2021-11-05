@@ -1,4 +1,4 @@
-package cartridge
+package aws
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"gocloud.dev/docstore/awsdynamodb"
 	"io"
-	"opgenorth.net/mylittlerangebook/pkg/aws"
+	"opgenorth.net/mylittlerangebook/pkg/config"
 	"strings"
 )
 
@@ -20,7 +20,7 @@ type Cartridge struct {
 	DocstoreRevision interface{}
 }
 
-func (c *Cartridge) ToString() string {
+func (c Cartridge) ToString() string {
 	var sb strings.Builder
 
 	sb.WriteString(c.Id)
@@ -47,7 +47,7 @@ func loadFrom(m map[string]interface{}) Cartridge {
 	return c
 }
 
-func FetchAll() ([]Cartridge, error) {
+func FetchAllCartridges(cfg config.Config) ([]Cartridge, error) {
 
 	// TODO Need to clean this up; lots of hardcoded AWS stuff.
 	sess, err := session.NewSession()
@@ -56,7 +56,7 @@ func FetchAll() ([]Cartridge, error) {
 	}
 
 	coll, err := awsdynamodb.OpenCollection(
-		dynamodb.New(sess), aws.GetTableName(CARTRIDGE_TABLENAME), "id", "", nil)
+		dynamodb.New(sess), getStagingTableName(CARTRIDGE_TABLENAME,cfg), "id", "", nil)
 	if err != nil {
 		return nil, err
 	}

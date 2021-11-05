@@ -3,9 +3,9 @@ package mlrb
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"opgenorth.net/mylittlerangebook/pkg/aws"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
-	"opgenorth.net/mylittlerangebook/pkg/model/cartridge"
 	"os"
 	"sort"
 )
@@ -43,7 +43,7 @@ func (a *MyLittleRangeBook) ShowConfig() {
 // ListCartridges will do a simple dump of the cartridges to STDOUT.
 func (a *MyLittleRangeBook) ListCartridges() {
 
-	cartridges, err := cartridge.FetchAll()
+	cartridges, err := aws.FetchAllCartridges()
 	if err != nil {
 		log.Error("Problem retrieving a list of cartridges. ", err)
 		return

@@ -1,7 +1,11 @@
 package aws
 
-const STAGING_APP_ID = "ns5rcz7k7jgbfhizt4qmyecvhy"
+import (
+	"fmt"
+	"opgenorth.net/mylittlerangebook/pkg/config"
+)
 
-func GetTableName(table string) string {
-	return table + "-" + STAGING_APP_ID + "-staging"
+// Get the table name for the table in staging.
+func getStagingTableName(table string, cfg config.Config) string {
+	return fmt.Sprintf("%s-%s-staging", table, cfg.Getenv("STAGING_APP_ID") )
 }

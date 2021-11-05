@@ -14,7 +14,7 @@ func NewSeriesBuilder() *SeriesBuilder {
 
 func (sb *SeriesBuilder) ParseLine(ld *LineOfData) {
 
-	// TODO Don't rely on the line number to figure out what it is we're parsing. 
+	// TODO Don't rely on the line number to figure out what it is we're parsing.
 	switch ld.LineNumber {
 	case 1:
 		sb.RawData[ld.LineNumber] = ld
