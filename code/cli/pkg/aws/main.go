@@ -1,11 +1,21 @@
 package aws
 
 import (
-	"fmt"
-	"opgenorth.net/mylittlerangebook/pkg/config"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 )
 
-// Get the table name for the table in staging.
-func getStagingTableName(table string, cfg config.Config) string {
-	return fmt.Sprintf("%s-%s-staging", table, cfg.Getenv("STAGING_APP_ID") )
+
+func buildAwsConfig() *aws.Config {
+	return &aws.Config{
+		Region: aws.String("us-east-1"),
+	}
+}
+
+func GetSession() *session.Session {
+	sess, err := session.NewSession(buildAwsConfig())
+	if err != nil {
+		panic(err)
+	}
+	return sess
 }

@@ -3,20 +3,17 @@ package aws
 import (
 	"context"
 	"errors"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"gocloud.dev/docstore/awsdynamodb"
 	"io"
-	"opgenorth.net/mylittlerangebook/pkg/config"
 	"strings"
 )
-
-const CARTRIDGE_TABLENAME = "Cartridge"
 
 type Cartridge struct {
 	Id               string
 	Name             string
 	Size             string
+	Version          int64
 	DocstoreRevision interface{}
 }
 
@@ -40,23 +37,20 @@ func Save(c Cartridge) error {
 
 func loadFrom(m map[string]interface{}) Cartridge {
 	c := Cartridge{
-		Id:   m["id"].(string),
-		Name: m["name"].(string),
-		Size: m["size"].(string),
+		Id:      m["id"].(string),
+		Name:    m["name"].(string),
+		Size:    m["size"].(string),
+		Version: m["_version"].(int64),
 	}
 	return c
 }
 
-func FetchAllCartridges(cfg config.Config) ([]Cartridge, error) {
+func FetchAllCartridges() ([]Cartridge, error) {
 
-	// TODO Need to clean this up; lots of hardcoded AWS stuff.
-	sess, err := session.NewSession()
-	if err != nil {
-		return nil, err
-	}
+	sess := GetSession()
 
 	coll, err := awsdynamodb.OpenCollection(
-		dynamodb.New(sess), getStagingTableName(CARTRIDGE_TABLENAME,cfg), "id", "", nil)
+		dynamodb.New(sess), "Cartridge-ns5rcz7k7jgbfhizt4qmyecvhy-staging", "id", "", nil)
 	if err != nil {
 		return nil, err
 	}
