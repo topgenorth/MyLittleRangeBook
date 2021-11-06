@@ -15,7 +15,6 @@ type Cartridge struct {
 	Name             string
 	Size             string
 	Version          int64
-	DocstoreRevision interface{}
 }
 
 func (c Cartridge) ToString() string {
