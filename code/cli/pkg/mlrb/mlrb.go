@@ -43,7 +43,7 @@ func (a *MyLittleRangeBook) ShowConfig() {
 // ListCartridges will do a simple dump of the cartridges to STDOUT.
 func (a *MyLittleRangeBook) ListCartridges() {
 
-	cartridges, err := aws.FetchAllCartridges(*a.Config)
+	cartridges, err := aws.FetchAllCartridges()
 	if err != nil {
 		log.Error("Problem retrieving a list of cartridges. ", err)
 		return
