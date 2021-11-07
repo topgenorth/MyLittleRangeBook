@@ -58,6 +58,7 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	}
 }
 
+// ReadLabradarCsv will take a Labradar CSV file, and display relevant details to STDOUT.
 func (a *MyLittleRangeBook) ReadLabradarCsv(cfg *labradar.ReadCsvConfig) (*labradar.Series, error) {
 	cfg.Config = a.Config
 	r := labradar.ReadFile(cfg)
@@ -69,20 +70,7 @@ func (a *MyLittleRangeBook) ReadLabradarCsv(cfg *labradar.ReadCsvConfig) (*labra
 	return r.LabradarSeries, nil
 }
 
-// Init will create the necessary filesystem structure.
-func (a *MyLittleRangeBook) Init(dir string) {
-
-	if _, err := os.Stat(dir); err == nil {
-		// path/to/whatever exists// path/to/whatever exists
-		log.Debugf("The directory %s exists.", dir)
-	} else if os.IsNotExist(err) {
-		log.Warnf("Have to create the directory %s.", dir)
-	} else {
-		log.Fatal(err)
-		// Schrodinger: file may or may not exist. See err for details.
-
-		// Therefore, do *NOT* use !os.IsNotExist(err) to test for file existence
-	}
-
-	fmt.Println("Initializing directories....")
+// Submit
+func (a *MyLittleRangeBook) SubmitLabradarCsv(cfg *labradar.ReadCsvConfig) error  {
+	return nil
 }

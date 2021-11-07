@@ -19,3 +19,4 @@ func GetSession() *session.Session {
 	}
 	return sess
 }
+
