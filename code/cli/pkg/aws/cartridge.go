@@ -1,12 +1,13 @@
 package aws
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"gocloud.dev/docstore/awsdynamodb"
 	"io"
-	"strings"
+	"text/template"
 )
 
 type Cartridge struct {
@@ -18,17 +19,17 @@ type Cartridge struct {
 }
 
 func (c Cartridge) ToString() string {
-	var sb strings.Builder
+	t, err := template.New("Series").Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
 
-	sb.WriteString(c.Id)
-	sb.WriteString(": ")
-	sb.WriteString(c.Name)
-	sb.WriteString(" (")
-	sb.WriteString(c.Size)
-	sb.WriteString(")")
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, c); err != nil {
+		panic(err)
+	}
 
-	return sb.String()
-
+	return buf.String()
 }
 
 func Save(c Cartridge) error {
@@ -76,3 +77,5 @@ func FetchAllCartridges() ([]Cartridge, error) {
 
 	return list, nil
 }
+
+const tmpl = `{{.Name}} ({{.Size}}) [{{.Id}}]`
