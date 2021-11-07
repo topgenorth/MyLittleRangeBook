@@ -6,7 +6,6 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/aws"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
-	"os"
 	"sort"
 )
 
