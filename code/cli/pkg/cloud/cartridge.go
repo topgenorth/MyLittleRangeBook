@@ -1,20 +1,20 @@
-package aws
+package cloud
 
 import (
 	"bytes"
 	"context"
-	"errors"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"gocloud.dev/docstore"
 	"gocloud.dev/docstore/awsdynamodb"
 	"io"
 	"text/template"
 )
 
 type Cartridge struct {
-	Id               string
-	Name             string
-	Size             string
-	Version          int64
+	Id      string
+	Name    string
+	Size    string
+	Version int64
 }
 
 func (c Cartridge) ToString() string {
@@ -31,10 +31,6 @@ func (c Cartridge) ToString() string {
 	return buf.String()
 }
 
-func Save(c Cartridge) error {
-	return errors.New("Not implemented.")
-}
-
 func loadFrom(m map[string]interface{}) Cartridge {
 	c := Cartridge{
 		Id:      m["id"].(string),
@@ -47,6 +43,7 @@ func loadFrom(m map[string]interface{}) Cartridge {
 
 func FetchAllCartridges() ([]Cartridge, error) {
 
+	// TODO replace with GoCloud.dev stuff.
 	sess := GetSession()
 
 	coll, err := awsdynamodb.OpenCollection(
@@ -54,7 +51,10 @@ func FetchAllCartridges() ([]Cartridge, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer coll.Close()
+
+	defer func(coll *docstore.Collection) {
+		_ = coll.Close()
+	}(coll)
 
 	ctx := context.Background()
 

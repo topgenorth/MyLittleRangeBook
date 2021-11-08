@@ -3,7 +3,7 @@ package mlrb
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"opgenorth.net/mylittlerangebook/pkg/aws"
+	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"sort"
@@ -42,7 +42,7 @@ func (a *MyLittleRangeBook) ShowConfig() {
 // ListCartridges will do a simple dump of the cartridges to STDOUT.
 func (a *MyLittleRangeBook) ListCartridges() {
 
-	cartridges, err := aws.FetchAllCartridges()
+	cartridges, err := cloud.FetchAllCartridges()
 	if err != nil {
 		log.Error("Problem retrieving a list of cartridges. ", err)
 		return
@@ -69,10 +69,12 @@ func (a *MyLittleRangeBook) ReadLabradarCsv(cfg *labradar.ReadCsvConfig) (*labra
 	return r.LabradarSeries, nil
 }
 
-func (a *MyLittleRangeBook) SubmitLabradarCsv(cfg *labradar.ReadCsvConfig) error  {
-	sess := aws.GetSession()
-	err := aws.AddFileToS3(sess, cfg.GetInputFilename())
-	if err !=nil {
+func (a *MyLittleRangeBook) SubmitLabradarCsv(cfg *labradar.ReadCsvConfig) error {
+	//sess := cloud.GetSession()
+	//err := cloud.AddFileToS3(sess, cfg.GetInputFilename())
+
+	err := cloud.SubmitLabradarCsvFile(cfg.GetInputFilename())
+	if err != nil {
 		return err
 	}
 	return nil
