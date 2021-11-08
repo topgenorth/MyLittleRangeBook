@@ -31,7 +31,34 @@ func BuildRootCmd() *cobra.Command {
 
 	cmd.AddCommand(BuildReadLabradarCsvCmd(app))
 	cmd.AddCommand(BuildListCartridgesCmd(app))
-	cmd.AddCommand(buildInitMyLittleRangeBookCmd(app))
+	cmd.AddCommand(BuildSubmitCsvFile(app))
+	return cmd
+}
+
+func BuildSubmitCsvFile(a *mlrb.MyLittleRangeBook) *cobra.Command {
+	readCsvCfg := &labradar.ReadCsvConfig{
+		Config:       a.Config,
+		SeriesNumber: 0,
+		InputDir:     "",
+		OutputDir:    "",
+	}
+	cmd := &cobra.Command{
+		Use:   "submit",
+		Short: "Submit the CSV file.",
+		Run: func(cmd *cobra.Command, args []string) {
+			err := a.SubmitLabradarCsv(readCsvCfg)
+			if err != nil {
+				logrus.Error(err)
+			} else {
+				logrus.Info("Submitted the file " +  readCsvCfg.GetInputFilename() + ".")
+			}
+
+		},
+	}
+
+	cmd.Flags().IntVarP(&readCsvCfg.SeriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
+	cmd.Flags().StringVarP(&readCsvCfg.InputDir, "labradar.inputDir", "i", "", "The location of the input files.")
+
 	return cmd
 }
 
@@ -76,21 +103,21 @@ func BuildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	return cmd
 }
 
-func buildInitMyLittleRangeBookCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
-	var homeDir string
-	cmd := &cobra.Command{
-		Use:   "init",
-		Short: "Will initialize a directory for use.",
-		Long:  "Will setup the directory for string files.",
-		Run: func(cmd *cobra.Command, args []string) {
-			app.Init(homeDir)
-			logrus.Debugf("Initialized the directory %s.", homeDir)
-		},
-	}
-	cmd.Flags().StringVarP(&homeDir, "homeDir", "", "", "The location of the home directory.")
-
-	return cmd
-}
+//func buildInitMyLittleRangeBookCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
+//	var homeDir string
+//	cmd := &cobra.Command{
+//		Use:   "init",
+//		Short: "Will initialize a directory for use.",
+//		Long:  "Will setup the directory for string files.",
+//		Run: func(cmd *cobra.Command, args []string) {
+//			app.Init(homeDir)
+//			logrus.Debugf("Initialized the directory %s.", homeDir)
+//		},
+//	}
+//	cmd.Flags().StringVarP(&homeDir, "homeDir", "", "", "The location of the home directory.")
+//
+//	return cmd
+//}
 
 func initializeCommand(cmd *cobra.Command) error {
 	v := viper.New()

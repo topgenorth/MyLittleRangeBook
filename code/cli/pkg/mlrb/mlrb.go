@@ -69,7 +69,11 @@ func (a *MyLittleRangeBook) ReadLabradarCsv(cfg *labradar.ReadCsvConfig) (*labra
 	return r.LabradarSeries, nil
 }
 
-// Submit
 func (a *MyLittleRangeBook) SubmitLabradarCsv(cfg *labradar.ReadCsvConfig) error  {
+	sess := aws.GetSession()
+	err := aws.AddFileToS3(sess, cfg.GetInputFilename())
+	if err !=nil {
+		return err
+	}
 	return nil
 }
