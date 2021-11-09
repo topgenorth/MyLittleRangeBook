@@ -2,13 +2,6 @@
 /code/.DS_Store
 /.DS_Store
 /LBR/.DS_Store
-/code/go-make-json/.idea/modules.xml
-/code/go-make-json/lbr
-/code/go-make-json/readcsv
-/code/go-make-json/readdir
-/code/go-make-json/readme
-/code/go-make-json/listcartridges
-/code/go-make-json/mlrb
 /code/cli/bin/mlrb.exe
 /code/cli/mlrb.exe
 /code/cli/bin/mlrb.toml
