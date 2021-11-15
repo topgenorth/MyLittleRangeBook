@@ -2,7 +2,6 @@ package cloud
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/s3blob"
 	"golang.org/x/net/context"
@@ -47,13 +46,6 @@ func buildAwsConfig() *aws.Config {
 	}
 }
 
-func GetSession() *session.Session {
-	sess, err := session.NewSession(buildAwsConfig())
-	if err != nil {
-		panic(err)
-	}
-	return sess
-}
 
 func SubmitLabradarCsvFile(filename string) error {
 
