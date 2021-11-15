@@ -135,7 +135,7 @@ func initializeCommand(cmd *cobra.Command) error {
 	if err := v.ReadInConfig(); err != nil {
 		// It's okay if there isn't a config file
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return err
+			return fmt.Errorf("Error initalizeCommand: %v", err)
 		}
 	}
 
@@ -162,13 +162,13 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 		// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
 		if strings.Contains(f.Name, "-") {
 			envVarSuffix := strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))
-			v.BindEnv(f.Name, fmt.Sprintf("%s_%s", config.EnvPREFIX, envVarSuffix))
+			_ = v.BindEnv(f.Name, fmt.Sprintf("%s_%s", config.EnvPREFIX, envVarSuffix))
 		}
 
 		// Apply the viper config value to the flag when the flag is not set and viper has a value
 		if !f.Changed && v.IsSet(f.Name) {
 			val := v.Get(f.Name)
-			cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
+			_ = cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
 		}
 	})
 }

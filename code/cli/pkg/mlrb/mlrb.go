@@ -45,7 +45,6 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	cartridges, err := cloud.FetchAllCartridges()
 	if err != nil {
 		log.Error("Problem retrieving a list of cartridges. ", err)
-		return
 	}
 
 	sort.Slice(cartridges[:], func(i, j int) bool {
@@ -53,7 +52,7 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	})
 
 	for _, c := range cartridges {
-		fmt.Println(c.ToString())
+		fmt.Println(c.String())
 	}
 }
 
@@ -63,19 +62,16 @@ func (a *MyLittleRangeBook) ReadLabradarCsv(cfg *labradar.ReadCsvConfig) (*labra
 	r := labradar.ReadFile(cfg)
 
 	if r.Error != nil {
-		return nil, r.Error
+		return nil, fmt.Errorf("Could not read the Labradar file %s %v", cfg.GetInputFilename(), r.Error)
 	}
 
 	return r.LabradarSeries, nil
 }
 
 func (a *MyLittleRangeBook) SubmitLabradarCsv(cfg *labradar.ReadCsvConfig) error {
-	//sess := cloud.GetSession()
-	//err := cloud.AddFileToS3(sess, cfg.GetInputFilename())
-
 	err := cloud.SubmitLabradarCsvFile(cfg.GetInputFilename())
 	if err != nil {
-		return err
+		return fmt.Errorf("Error submitting the Labradar file #%s, %v", cfg.GetInputFilename(), err)
 	}
 	return nil
 }

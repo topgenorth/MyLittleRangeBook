@@ -3,6 +3,7 @@ package cloud
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"gocloud.dev/docstore"
 	"gocloud.dev/docstore/awsdynamodb"
@@ -21,7 +22,7 @@ func (c *Cartridge) IsEmpty() bool {
 	return  c.Id == "" && c.Name == "" && c.Size == "" && c.Version == 0
 }
 
-func (c Cartridge) ToString() string {
+func (c Cartridge) String() string {
 	t, err := template.New("Series").Parse(tmpl)
 	if err != nil {
 		panic(err)
@@ -54,20 +55,16 @@ func loadFrom(m map[string]interface{}) Cartridge {
 }
 
 
-func UpsertCartridge(c Cartridge) Cartridge {
-	return emptyCartridge()
-}
-
 func FetchAllCartridges() ([]Cartridge, error) {
 
 	// TODO [TO20211109] Replace with GoCloud.dev stuff
 
-	sess := GetSession()
+	sess := getAwsSession()
 
 	coll, err := awsdynamodb.OpenCollection(
 		dynamodb.New(sess), "Cartridge-ns5rcz7k7jgbfhizt4qmyecvhy-staging", "id", "", nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("FetchAllCartridges %v.", err)
 	}
 
 	defer func(coll *docstore.Collection) {
@@ -86,7 +83,7 @@ func FetchAllCartridges() ([]Cartridge, error) {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("FetchAllCartridges 2 %v.", err)
 		} else {
 			list = append(list, loadFrom(m))
 		}
