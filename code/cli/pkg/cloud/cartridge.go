@@ -3,6 +3,7 @@ package cloud
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"gocloud.dev/docstore"
 	"io"
 	"text/template"
@@ -28,8 +29,8 @@ func (c *Cartridge) IsEmpty() bool {
 	return c.Id == "" && c.Name == "" && c.Size == "" && c.Version == 0
 }
 
-func (c Cartridge) ToString() string {
-	t, err := template.New("Series").Parse(tmpl_tostring_cartridge)
+func (c Cartridge) String() string {
+	t, err := template.New("Series").Parse(tmpl)
 	if err != nil {
 		panic(err)
 	}
@@ -57,13 +58,13 @@ func FetchAllCartridges() ([]Cartridge, error) {
 
 	c := &collStuff{
 		"dynamodb://"+tbl_name_cartridge+"?partition_key=id",
-		
+
 	}
 
 	ctx := context.Background()
 	coll, err := docstore.OpenCollection(ctx, "dynamodb://"+tbl_name_cartridge+"?partition_key=id")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("FetchAllCartridges %v.", err)
 	}
 	defer func(coll *docstore.Collection) {
 		_ = coll.Close()
