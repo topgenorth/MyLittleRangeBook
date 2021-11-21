@@ -57,21 +57,21 @@ func (a *MyLittleRangeBook) ListCartridges() {
 }
 
 // ReadLabradarCsv will take a Labradar CSV file, and display relevant details to STDOUT.
-func (a *MyLittleRangeBook) ReadLabradarCsv(cfg *labradar.ReadCsvConfig) (*labradar.Series, error) {
-	cfg.Config = a.Config
-	r := labradar.ReadFile(cfg)
+func (a *MyLittleRangeBook) ReadLabradarCsv(f *labradar.LabradarCsvFile) (*labradar.Series, error) {
+	f.Config = a.Config
+	r := labradar.ReadFile(f)
 
 	if r.Error != nil {
-		return nil, fmt.Errorf("Could not read the Labradar file %s %v", cfg.GetInputFilename(), r.Error)
+		return nil, fmt.Errorf("Could not read the Labradar file %s %v", f.GetInputFilename(), r.Error)
 	}
 
 	return r.LabradarSeries, nil
 }
 
-func (a *MyLittleRangeBook) SubmitLabradarCsv(cfg *labradar.ReadCsvConfig) error {
-	err := cloud.SubmitLabradarCsvFile(cfg.GetInputFilename())
+func (a *MyLittleRangeBook) SubmitLabradarCsv(f *labradar.LabradarCsvFile) error {
+	err := cloud.SubmitLabradarCsvFile(f.GetInputFilename())
 	if err != nil {
-		return fmt.Errorf("Error submitting the Labradar file #%s, %v", cfg.GetInputFilename(), err)
+		return fmt.Errorf("Error submitting the Labradar file %s, %v", f.GetInputFilename(), err)
 	}
 	return nil
 }

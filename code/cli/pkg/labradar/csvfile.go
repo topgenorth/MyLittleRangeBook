@@ -13,7 +13,7 @@ type CsvFile struct {
 }
 
 // ReadFile will try to load the CSV file and store the results in a Series struct.
-func ReadFile(c *ReadCsvConfig) *CsvFile {
+func ReadFile(c *LabradarCsvFile) *CsvFile {
 
 	filename := c.GetInputFilename()
 

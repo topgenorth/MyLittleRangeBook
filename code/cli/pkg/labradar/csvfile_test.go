@@ -7,7 +7,7 @@ import (
 
 func TestReadFile(t *testing.T) {
 	type args struct {
-		c *ReadCsvConfig
+		c *LabradarCsvFile
 	}
 	tests := []struct {
 		name string

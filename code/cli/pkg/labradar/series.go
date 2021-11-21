@@ -100,7 +100,7 @@ func (s Series) TotalNumberOfShots() int {
 	return len(s.Velocities.Values)
 }
 
-func (s Series) SaveTo(cfg *ReadCsvConfig) error {
+func (s Series) SaveTo(cfg *LabradarCsvFile) error {
 	outputFileName := filepath.Join(cfg.OutputDir, s.Labradar.SeriesName+".json")
 
 	exists, err := cfg.FileSystem.Exists(outputFileName)

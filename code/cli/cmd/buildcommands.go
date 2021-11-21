@@ -36,7 +36,7 @@ func BuildRootCmd() *cobra.Command {
 }
 
 func BuildSubmitCsvFile(a *mlrb.MyLittleRangeBook) *cobra.Command {
-	readCsvCfg := &labradar.ReadCsvConfig{
+	readCsvCfg := &labradar.LabradarCsvFile{
 		Config:       a.Config,
 		SeriesNumber: 0,
 		InputDir:     "",
@@ -76,7 +76,7 @@ func BuildListCartridgesCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 }
 
 func BuildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
-	readCsvCfg := &labradar.ReadCsvConfig{
+	readCsvCfg := &labradar.LabradarCsvFile{
 		Config:       app.Config,
 		SeriesNumber: 0,
 		InputDir:     "",
