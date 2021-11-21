@@ -21,10 +21,13 @@ var empty_cartridge = Cartridge{
 }
 
 type Cartridge struct {
-	Id      string
-	Name    string
-	Size    string
-	Version int64
+	Id            string
+	Name          string
+	Size          string
+	Version       int64
+	LastChangedAt int64
+	UpdatedAt     string
+	CreatedAt     string
 }
 
 func (c *Cartridge) IsEmpty() bool {
@@ -45,58 +48,59 @@ func (c Cartridge) String() string {
 	return buf.String()
 }
 
-type awsCartridgeCollection struct {
-	Url  string
-	Ctx  context.Context
-	iter *docstore.DocumentIterator
-}
-
-func (c *awsCartridgeCollection) getIterator() (*docstore.DocumentIterator, error) {
-
-	coll, err := docstore.OpenCollection(c.Ctx, c.Url)
-	if err != nil {
-		return nil, fmt.Errorf("getIterator - opening the collection: %v", err)
-	}
-	defer func(coll *docstore.Collection) {
-		_ = coll.Close()
-	}(coll)
-
-	iter := coll.Query().Get(c.Ctx)
-	defer iter.Stop()
-
-	return iter, nil
+type cartridgeCollection struct {
+	*docstore.Collection
+	url     string
+	ctx     context.Context
+	results []Cartridge
 }
 
 func FetchAllCartridges() ([]Cartridge, error) {
 
-	c := &awsCartridgeCollection{
-		"dynamodb://" + tbl_name_cartridge + "?partition_key=id",
-		context.Background(),
-		nil,
-	}
-
-	iter, err := c.getIterator()
+	cartridges, err := openCartridgeCollection()
 	if err != nil {
-		return nil, fmt.Errorf("FetchAllCartridges: %v", err)
+		return nil, fmt.Errorf("could not open the dynamodb collection - %v", err)
 	}
 
-	list := []Cartridge{}
+	iter := cartridges.Query().Get(cartridges.ctx)
+	defer iter.Stop()
+
 	for {
 		row := map[string]interface{}{}
-		err := iter.Next(c.Ctx, row)
+		err := iter.Next(cartridges.ctx, row)
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return nil, fmt.Errorf("FetchAllCartridges: %v", err)
+			return nil, fmt.Errorf("there was a problem retrieving the cartridges: %v", err)
 		} else {
-			list = append(list, Cartridge{
-				Id:      row["id"].(string),
-				Name:    row["name"].(string),
-				Size:    row["size"].(string),
-				Version: row["_version"].(int64),
-			})
+			c := Cartridge{
+				Id:            row["id"].(string),
+				Name:          row["name"].(string),
+				Size:          row["size"].(string),
+				Version:       row["_version"].(int64),
+				LastChangedAt: row["_lastChangedAt"].(int64),
+				UpdatedAt:     row["updatedAt"].(string),
+				CreatedAt:     row["createdAt"].(string),
+			}
+			cartridges.results = append(cartridges.results, c)
 		}
 	}
 
-	return list, nil
+	return cartridges.results, nil
+}
+
+func openCartridgeCollection() (*cartridgeCollection, error) {
+	ctx := context.Background()
+	url := "dynamodb://" + tbl_name_cartridge + "?partition_key=id"
+	coll, err := docstore.OpenCollection(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	cartridges := &cartridgeCollection{
+		coll,
+		url,
+		context.Background(),
+		[]Cartridge{},
+	}
+	return cartridges, nil
 }
