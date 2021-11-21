@@ -11,7 +11,8 @@ import (
 
 const tmpl_tostring_cartridge = `{{.Name}} ({{.Size}}) [{{.Id}}]`
 const tbl_name_cartridge = "Cartridge-ns5rcz7k7jgbfhizt4qmyecvhy-staging"
-var  empty_cartridge = Cartridge{
+
+var empty_cartridge = Cartridge{
 	Id:      "",
 	Name:    "",
 	Size:    "",
@@ -30,7 +31,7 @@ func (c *Cartridge) IsEmpty() bool {
 }
 
 func (c Cartridge) String() string {
-	t, err := template.New("Series").Parse(tmpl)
+	t, err := template.New("Cartridge").Parse(tmpl_tostring_cartridge)
 	if err != nil {
 		panic(err)
 	}
@@ -43,44 +44,49 @@ func (c Cartridge) String() string {
 	return buf.String()
 }
 
-
-func fetchAll() {
-
+type awsCartridgeCollection struct {
+	Url  string
+	Ctx  context.Context
+	iter *docstore.DocumentIterator
 }
 
+func (c *awsCartridgeCollection) getIterator() (*docstore.DocumentIterator, error) {
 
-type  collStuff struct {
-	url string
-}
-
-
-func FetchAllCartridges() ([]Cartridge, error) {
-
-	c := &collStuff{
-		"dynamodb://"+tbl_name_cartridge+"?partition_key=id",
-
-	}
-
-	ctx := context.Background()
-	coll, err := docstore.OpenCollection(ctx, "dynamodb://"+tbl_name_cartridge+"?partition_key=id")
+	coll, err := docstore.OpenCollection(c.Ctx, c.Url)
 	if err != nil {
-		return nil, fmt.Errorf("FetchAllCartridges %v.", err)
+		return nil, fmt.Errorf("getIterator - opening the collection: %v", err)
 	}
 	defer func(coll *docstore.Collection) {
 		_ = coll.Close()
 	}(coll)
 
-	list := []Cartridge{}
-	iter := coll.Query().Get(ctx)
+	iter := coll.Query().Get(c.Ctx)
 	defer iter.Stop()
 
+	return iter, nil
+}
+
+func FetchAllCartridges() ([]Cartridge, error) {
+
+	c := &awsCartridgeCollection{
+		"dynamodb://" + tbl_name_cartridge + "?partition_key=id",
+		context.Background(),
+		nil,
+	}
+
+	iter, err := c.getIterator()
+	if err != nil {
+		return nil, fmt.Errorf("FetchAllCartridges: %v", err)
+	}
+
+	list := []Cartridge{}
 	for {
 		row := map[string]interface{}{}
-		err := iter.Next(ctx, row)
+		err := iter.Next(c.Ctx, row)
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("FetchAllCartridges: %v", err)
 		} else {
 			list = append(list, Cartridge{
 				Id:      row["id"].(string),
@@ -93,4 +99,3 @@ func FetchAllCartridges() ([]Cartridge, error) {
 
 	return list, nil
 }
-
