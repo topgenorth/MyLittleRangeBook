@@ -3,10 +3,8 @@ package cloud
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"gocloud.dev/docstore"
 	_ "gocloud.dev/docstore/awsdynamodb"
-	"io"
 	"text/template"
 )
 
@@ -53,40 +51,6 @@ type cartridgeCollection struct {
 	url     string
 	ctx     context.Context
 	results []Cartridge
-}
-
-func FetchAllCartridges() ([]Cartridge, error) {
-
-	cartridges, err := openCartridgeCollection()
-	if err != nil {
-		return nil, fmt.Errorf("could not open the dynamodb collection - %v", err)
-	}
-
-	iter := cartridges.Query().Get(cartridges.ctx)
-	defer iter.Stop()
-
-	for {
-		row := map[string]interface{}{}
-		err := iter.Next(cartridges.ctx, row)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return nil, fmt.Errorf("there was a problem retrieving the cartridges: %v", err)
-		} else {
-			c := Cartridge{
-				Id:            row["id"].(string),
-				Name:          row["name"].(string),
-				Size:          row["size"].(string),
-				Version:       row["_version"].(int64),
-				LastChangedAt: row["_lastChangedAt"].(int64),
-				UpdatedAt:     row["updatedAt"].(string),
-				CreatedAt:     row["createdAt"].(string),
-			}
-			cartridges.results = append(cartridges.results, c)
-		}
-	}
-
-	return cartridges.results, nil
 }
 
 func openCartridgeCollection() (*cartridgeCollection, error) {
