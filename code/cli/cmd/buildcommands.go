@@ -32,6 +32,8 @@ func BuildRootCmd() *cobra.Command {
 	cmd.AddCommand(BuildReadLabradarCsvCmd(app))
 	cmd.AddCommand(BuildListCartridgesCmd(app))
 	cmd.AddCommand(BuildSubmitCsvFile(app))
+	cmd.AddCommand(BuildListLabradarCsvFilesCmd(app))
+
 	return cmd
 }
 
@@ -50,7 +52,7 @@ func BuildSubmitCsvFile(a *mlrb.MyLittleRangeBook) *cobra.Command {
 			if err != nil {
 				logrus.Error(err)
 			} else {
-				logrus.Info("Submitted the file " +  readCsvCfg.GetInputFilename() + ".")
+				logrus.Info("Submitted the file " + readCsvCfg.GetInputFilename() + ".")
 			}
 
 		},
@@ -85,8 +87,7 @@ func BuildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "readcsv",
-		Short: "Reads a Device CSV file and converts it to JSON.",
-		Long:  `Currently this will read a CSV file and convert it to JSON.`,
+		Short: "Reads a Labradar CSV file and displays a summary to STDOUT.",
 		Run: func(cmd *cobra.Command, args []string) {
 			series, err := app.ReadLabradarCsv(readCsvCfg)
 			if err != nil {
@@ -103,21 +104,30 @@ func BuildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	return cmd
 }
 
-//func buildInitMyLittleRangeBookCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
-//	var homeDir string
-//	cmd := &cobra.Command{
-//		Use:   "init",
-//		Short: "Will initialize a directory for use.",
-//		Long:  "Will setup the directory for string files.",
-//		Run: func(cmd *cobra.Command, args []string) {
-//			app.Init(homeDir)
-//			logrus.Debugf("Initialized the directory %s.", homeDir)
-//		},
-//	}
-//	cmd.Flags().StringVarP(&homeDir, "homeDir", "", "", "The location of the home directory.")
-//
-//	return cmd
-//}
+func BuildListLabradarCsvFilesCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
+
+	cfg := &labradar.LabradarCsvFile{
+		Config:       app.Config,
+		SeriesNumber: -1,
+		InputDir:     "",
+		OutputDir:    "",
+	}
+
+	cmd := &cobra.Command{
+		Use:   "listcsv",
+		Short: "Will display a list of all the CSV files in the input directory.",
+		Run: func(cmd *cobra.Command, args []string) {
+			_, err := app.ListLabradarCsvFiles(cfg)
+			if err != nil {
+				logrus.Fatal(err)
+			}
+		},
+	}
+
+	cmd.Flags().StringVarP(&cfg.InputDir, "labradar.inputDir", "i", "", "The location of the input files.")
+
+	return cmd
+}
 
 func initializeCommand(cmd *cobra.Command) error {
 	v := viper.New()

@@ -75,3 +75,8 @@ func (a *MyLittleRangeBook) SubmitLabradarCsv(f *labradar.LabradarCsvFile) error
 	}
 	return nil
 }
+
+func (a *MyLittleRangeBook) ListLabradarCsvFiles(*labradar.LabradarCsvFile) ([]interface{}, error) {
+
+	return nil, nil
+}
