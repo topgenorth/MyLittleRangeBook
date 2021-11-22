@@ -11,6 +11,7 @@ import (
 )
 
 type LabradarCsvFile struct {
+	// TODO [TO20211122] Duplication with labradar.CsvFile
 	*config.Config
 	SeriesNumber int
 	InputDir     string
@@ -21,7 +22,7 @@ func (c *LabradarCsvFile) GetInputFilename() string {
 	stub := fmt.Sprintf("%04d", c.SeriesNumber)
 	subdir := fmt.Sprintf("SR%s", stub)
 	filename := fmt.Sprintf("SR%s Report.csv", stub)
-	p:= path.Join(c.InputDir, subdir, filename)
+	p := path.Join(c.InputDir, subdir, filename)
 	return p
 }
 

@@ -7,6 +7,7 @@ import (
 )
 
 type CsvFile struct {
+	// TODO [TO20211122] Duplication with labrader.LabradarCsvFile
 	InputFile      string
 	LabradarSeries *Series
 	Error          error
