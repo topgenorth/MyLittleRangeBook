@@ -6,7 +6,9 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	"os"
 	"sort"
+	"strings"
 )
 
 type MyLittleRangeBook struct {
@@ -76,7 +78,17 @@ func (a *MyLittleRangeBook) SubmitLabradarCsv(f *labradar.LabradarCsvFile) error
 	return nil
 }
 
-func (a *MyLittleRangeBook) ListLabradarCsvFiles(*labradar.LabradarCsvFile) ([]interface{}, error) {
+func (a *MyLittleRangeBook) ListLabradarCsvFiles(cfg *labradar.LabradarCsvFile) ([]labradar.CsvFile, error) {
+	files, err := os.ReadDir(cfg.InputDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range files {
+		if file.IsDir() && strings.HasPrefix(file.Name(), "SR") {
+			fmt.Println(file.Name())
+		}
+	}
 
 	return nil, nil
 }
