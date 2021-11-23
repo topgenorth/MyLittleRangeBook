@@ -13,9 +13,9 @@ type LineOfData struct {
 	Value      string `json:"value"`
 }
 
-func NewLineOfData(linenumber int, s string) *LineOfData {
+func NewLineOfData(n int, s string) *LineOfData {
 	return &LineOfData{
-		LineNumber: linenumber,
+		LineNumber: n,
 		Raw:        s,
 		Value:      fixupLabradarLine(s),
 	}
@@ -24,16 +24,16 @@ func NewLineOfData(linenumber int, s string) *LineOfData {
 func (l LineOfData) String() string {
 	return l.Value
 }
-func (ld *LineOfData) getStringValue() string {
-	parts := strings.Split(ld.Value, ";")
+func (l *LineOfData) getStringValue() string {
+	parts := strings.Split(l.Value, ";")
 	if len(parts) < 2 {
 		return ""
 	}
 	return parts[1]
 }
 
-func (ld *LineOfData) getIntValue() int {
-	parts := strings.Split(ld.Value, ";")
+func (l *LineOfData) getIntValue() int {
+	parts := strings.Split(l.Value, ";")
 	if len(parts) < 2 {
 		return -1
 	}
@@ -41,13 +41,13 @@ func (ld *LineOfData) getIntValue() int {
 	return i
 }
 
-func (ld *LineOfData) getDateAndTime() (string, string) {
-	parts := strings.Split(ld.Value, ";")
-	l := len(parts)
-	if l == 1 {
+func (l *LineOfData) getDateAndTime() (string, string) {
+	parts := strings.Split(l.Value, ";")
+	x := len(parts)
+	if x == 1 {
 		return "", ""
 	}
-	return parts[l-3], parts[l-2]
+	return parts[x-3], parts[x-2]
 }
 
 func fixupLabradarLine(line string) string {
@@ -65,7 +65,7 @@ func fixupLabradarLine(line string) string {
 
 		return line
 	case 3:
-		// The string started with NUL and and ended with NUL
+		// The string started with NUL and ended with NUL
 		return parts[1]
 	default:
 
@@ -87,4 +87,3 @@ func SortLinesOfData(d map[int]*LineOfData) map[int]*LineOfData {
 	}
 	return m
 }
-

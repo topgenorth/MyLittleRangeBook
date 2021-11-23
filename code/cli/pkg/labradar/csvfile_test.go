@@ -20,18 +20,17 @@ var _ = Describe("isLabradarCsvFile", func() {
 	Describe("Check if Labradar CSV ", func() {
 		Context("Has correct prefix and extension", func() {
 			It("should pass.", func() {
-				Expect(true, isLabradarCsvFile(valid))
+				Expect(isLabradarCsvFile(valid)).To(BeTrue())
 			})
 		})
-
 		Context("Has invalid extension", func() {
 			It("should not pass", func() {
-				Expect(false, isLabradarCsvFile(invalid1))
+				Expect(isLabradarCsvFile(invalid1)).To(BeFalse())
 			})
 		})
 		Context("Does not start with SR", func() {
 			It("should not pass", func() {
-				Expect(false, isLabradarCsvFile(invalid2))
+				Expect(isLabradarCsvFile(invalid2)).To(BeFalse())
 			})
 		})
 	})
