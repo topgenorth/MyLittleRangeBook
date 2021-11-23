@@ -6,9 +6,7 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
-	"os"
 	"sort"
-	"strings"
 )
 
 type MyLittleRangeBook struct {
@@ -37,10 +35,6 @@ func (a *MyLittleRangeBook) ConfigLogging() {
 	}
 }
 
-func (a *MyLittleRangeBook) ShowConfig() {
-	log.Info("Show Config")
-}
-
 // ListCartridges will do a simple dump of the cartridges to STDOUT.
 func (a *MyLittleRangeBook) ListCartridges() {
 
@@ -59,36 +53,41 @@ func (a *MyLittleRangeBook) ListCartridges() {
 }
 
 // ReadLabradarCsv will take a Labradar CSV file, and display relevant details to STDOUT.
-func (a *MyLittleRangeBook) ReadLabradarCsv(f *labradar.LabradarCsvFile) (*labradar.Series, error) {
-	f.Config = a.Config
-	r := labradar.ReadFile(f)
+func (a *MyLittleRangeBook) ReadLabradarCsv(inputDir string, seriesNumber int) (*labradar.Series, error) {
+	r := labradar.LoadCsv(a.Config, inputDir, seriesNumber)
 
 	if r.Error != nil {
-		return nil, fmt.Errorf("Could not read the Labradar file %s %v", f.GetInputFilename(), r.Error)
+		return nil, fmt.Errorf("could not read the Labradar file %s, %v", labradar.FilenameForSeries(inputDir, seriesNumber), r.Error)
 	}
 
-	return r.LabradarSeries, nil
+	return r.Series, nil
 }
 
-func (a *MyLittleRangeBook) SubmitLabradarCsv(f *labradar.LabradarCsvFile) error {
-	err := cloud.SubmitLabradarCsvFile(f.GetInputFilename())
+func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
+	err := cloud.SubmitLabradarCsvFile(filename)
 	if err != nil {
-		return fmt.Errorf("Error submitting the Labradar file %s, %v", f.GetInputFilename(), err)
+		return fmt.Errorf("error submitting the Labradar file %s, %v", filename, err)
 	}
 	return nil
 }
 
-func (a *MyLittleRangeBook) ListLabradarCsvFiles(cfg *labradar.LabradarCsvFile) ([]labradar.CsvFile, error) {
-	files, err := os.ReadDir(cfg.InputDir)
-	if err != nil {
-		log.Fatal(err)
+func (a *MyLittleRangeBook) ListLabradarCsvFiles(inputDir string) ([]labradar.CsvFile, error) {
+	files := labradar.LoadDataFiles(a.Config, inputDir)
+
+	for _, f := range files.Files {
+		fmt.Println(f)
 	}
 
-	for _, file := range files {
-		if file.IsDir() && strings.HasPrefix(file.Name(), "SR") {
-			fmt.Println(file.Name())
-		}
-	}
+	//files, err := os.ReadDir(inputDir)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//
+	//for _, file := range files {
+	//	if file.IsDir() && strings.HasPrefix(file.Name(), "SR") {
+	//		fmt.Println(file.Name())
+	//	}
+	//}
 
 	return nil, nil
 }

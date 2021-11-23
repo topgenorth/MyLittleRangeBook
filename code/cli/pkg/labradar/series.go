@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"opgenorth.net/mylittlerangebook/pkg/context"
 	"os"
-	"path/filepath"
 	"text/template"
 	"time"
 )
@@ -100,28 +99,28 @@ func (s Series) TotalNumberOfShots() int {
 	return len(s.Velocities.Values)
 }
 
-func (s Series) SaveTo(cfg *LabradarCsvFile) error {
-	outputFileName := filepath.Join(cfg.OutputDir, s.Labradar.SeriesName+".json")
-
-	exists, err := cfg.FileSystem.Exists(outputFileName)
-	if err != nil {
-		return err
-	}
-
-	if exists {
-		err := os.Remove(outputFileName)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = cfg.FileSystem.WriteFile(outputFileName, s.ToJsonBytes(), 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
+//func (s Series) SaveTo(cfg *ObsoleteLabradarCsvFile) error {
+//	outputFileName := filepath.Join(cfg.OutputDir, s.Labradar.SeriesName+".json")
+//
+//	exists, err := cfg.FileSystem.Exists(outputFileName)
+//	if err != nil {
+//		return err
+//	}
+//
+//	if exists {
+//		err := os.Remove(outputFileName)
+//		if err != nil {
+//			return err
+//		}
+//	}
+//
+//	err = cfg.FileSystem.WriteFile(outputFileName, s.ToJsonBytes(), 0644)
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
 
 func (s Series) ToJsonBytes() []byte {
 	jsonBytes, err := json.MarshalIndent(SortLinesOfData(s.RawData), "", "  ")
@@ -132,12 +131,11 @@ func (s Series) ToJsonBytes() []byte {
 	return jsonBytes
 }
 
-func (s Series) ToJson() (string,error) {
+func (s Series) ToJson() (string, error) {
 	jsonBytes, err := json.MarshalIndent(SortLinesOfData(s.RawData), "", "  ")
 	if err != nil {
 		return "", err
 	}
-
 
 	return fmt.Sprintf("%x", jsonBytes), nil
 }
@@ -169,6 +167,3 @@ Standard Deviation: {{.Velocities.StandardDeviation}}{{.Labradar.Units.Velocity}
 Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
 ----
 `
-
-
-

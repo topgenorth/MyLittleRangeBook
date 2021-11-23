@@ -3,8 +3,10 @@ package cloud
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"gocloud.dev/docstore"
 	_ "gocloud.dev/docstore/awsdynamodb"
+	"io"
 	"text/template"
 )
 
