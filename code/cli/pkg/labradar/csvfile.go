@@ -96,12 +96,15 @@ func isLabradarCsvFile(path string) bool {
 
 	return false
 }
-func FilenameForSeries(inputDir string, seriesNumber int) string {
+
+// FilenameForSeries Given the number of a series and the root directory of the Labradar files, infer the filename of the Labradar
+// CSV file that holds the results of the series.
+func FilenameForSeries(labradarRootDirectory string, seriesNumber int) string {
 	stub := fmt.Sprintf("%04d", seriesNumber)
 	//goland:noinspection SpellCheckingInspection
 	subdir := fmt.Sprintf("SR%s", stub)
 	filename := fmt.Sprintf("SR%s Report.csv", stub)
-	p := path.Join(inputDir, subdir, filename)
+	p := path.Join(labradarRootDirectory, subdir, filename)
 	return p
 }
 func outputFileNameFor(seriesNumber int, outputDir string) string {
@@ -110,7 +113,7 @@ func outputFileNameFor(seriesNumber int, outputDir string) string {
 	return path.Join(outputDir, filename)
 }
 func getCsvFilenamesInDirectory(inputDir string) []string {
-	// TODO [TO20211122] Should verify that inputDir is actually a directory.
+	// TODO [TO20211122] Should verify that labradarDirectory is actually a directory.
 	var filenames []string
 
 	// TODO [TO20211122] Can't really mock out filepath.Walk.

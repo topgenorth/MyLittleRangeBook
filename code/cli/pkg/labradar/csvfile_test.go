@@ -40,3 +40,27 @@ func Test_isLabradarCsvFile(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "isLabradarCsvFile")
 }
+
+func TestFilenameForSeries(t *testing.T) {
+	type args struct {
+		labradarDirectory string
+		seriesNumber      int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"Should format the name correctly",
+			args{"/tmp/LBR", 1},
+			"/tmp/LBR/SR0001/SR0001 Report.csv",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := FilenameForSeries(tt.args.labradarDirectory, tt.args.seriesNumber); got != tt.want {
+				t.Errorf("FilenameForSeries() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
