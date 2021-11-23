@@ -3,6 +3,7 @@ package mlrb
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
@@ -42,13 +43,15 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	if err != nil {
 		log.Error("Problem retrieving a list of cartridges. ", err)
 	}
-
 	sort.Slice(cartridges[:], func(i, j int) bool {
 		return cartridges[i].Name < cartridges[j].Name
 	})
 
 	for _, c := range cartridges {
-		fmt.Println(c.String())
+		_, err := io.WriteString(a.Config.Out, c.String())
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
@@ -78,16 +81,13 @@ func (a *MyLittleRangeBook) ListLabradarCsvFiles(inputDir string) ([]labradar.Cs
 		fmt.Println(f)
 	}
 
-	//files, err := os.ReadDir(inputDir)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//
-	//for _, file := range files {
-	//	if file.IsDir() && strings.HasPrefix(file.Name(), "SR") {
-	//		fmt.Println(file.Name())
-	//	}
-	//}
-
 	return nil, nil
+}
+
+func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Cartridge, error) {
+	c, err := cloud.AddCartridge(name, size)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }

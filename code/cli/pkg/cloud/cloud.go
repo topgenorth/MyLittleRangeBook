@@ -16,7 +16,8 @@ import (
 const S3_LABRADAR_CSV_BUCKET_FOR_INCOMING_FILES = "mylittlerangebookca841fe0a51d4b32898841aff4e72b25240-staging"
 const AWS_REGION = "us-east-1"
 
-type labradarCsvFile struct {
+// This struct holds a Labradar CSV file to submit to S3.
+type labradarS3File struct {
 	*aws.Config
 	BucketName string
 	Key        string
@@ -24,13 +25,13 @@ type labradarCsvFile struct {
 	Bytes      []byte
 }
 
-func buildIncomingLabradarConfig(filename string) (*labradarCsvFile, error) {
+func buildIncomingLabradarConfig(filename string) (*labradarS3File, error) {
 	csvBytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("buildIncomingLabradarConfig %v", err)
 	}
 
-	csv := &labradarCsvFile{
+	csv := &labradarS3File{
 		buildAwsConfig(),
 		S3_LABRADAR_CSV_BUCKET_FOR_INCOMING_FILES,
 		filepath.Base(filename),

@@ -33,6 +33,7 @@ func BuildRootCmd() *cobra.Command {
 	cmd.AddCommand(BuildListCartridgesCmd(app))
 	cmd.AddCommand(BuildSubmitCsvFileCmd(app))
 	cmd.AddCommand(BuildListLabradarCsvFilesCmd(app))
+	cmd.AddCommand(BuildAddCartridgeCommand(app))
 
 	return cmd
 }
@@ -71,6 +72,29 @@ func BuildListCartridgesCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 
+	return cmd
+}
+
+func BuildAddCartridgeCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
+	var (
+		name string
+		size string
+	)
+	cmd := &cobra.Command{
+		Use:   "addcartridge",
+		Short: "Add a new cartridge to the list.",
+		Run: func(cmd *cobra.Command, args []string) {
+
+			c2, err := a.SubmitCartridge(name, size)
+			if err != nil {
+				logrus.Fatal(err)
+			}
+
+			logrus.Infof("Added %s to the list.", c2)
+		},
+	}
+	cmd.Flags().StringVarP(&name, "name", "n", "", "A unique name for the cartridge.")
+	cmd.Flags().StringVarP(&size, "size", "s", "", "The size of the cartridge (metric).")
 	return cmd
 }
 
