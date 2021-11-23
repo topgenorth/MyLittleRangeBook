@@ -121,7 +121,7 @@ func getCsvFilenamesInDirectory(inputDir string) []string {
 		return nil
 	})
 	if err != nil {
-		logrus.Error("Could not list files in the directory %s. %v", inputDir, err)
+		logrus.Errorf("Could not list files in the directory %s. %v", inputDir, err)
 		return nil
 	}
 
