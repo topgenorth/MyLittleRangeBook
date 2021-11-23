@@ -78,7 +78,6 @@ func openCartridgeCollection() (*cartridgeCollection, error) {
 	return cartridges, nil
 }
 
-
 // AddCartridge will insert the specified cartridge into the database.  It will return
 // the version of the Cartridge that is in the database at the time of the upsert.
 func AddCartridge(name string, size string) (*Cartridge, error) {
@@ -105,47 +104,36 @@ func AddCartridge(name string, size string) (*Cartridge, error) {
 	return c, nil
 }
 
-// FetchAllCartridges will retrieve a list of all Cartridges.
 func FetchAllCartridges() ([]Cartridge, error) {
-	var (
-		ctx = context.Background()
-		url = "dynamodb://" + tbl_name_cartridge + "?partition_key=id"
-	)
 
-	// Open the collection
-	coll, err := docstore.OpenCollection(ctx, url)
+	cartridges, err := openCartridgeCollection()
 	if err != nil {
-		return nil, fmt.Errorf("getIterator - opening the collection: %v", err)
+		return nil, fmt.Errorf("could not open the dynamodb collection - %v", err)
 	}
-	defer func(coll *docstore.Collection) {
-		_ = coll.Close()
-	}(coll)
 
-	// Get an iterator for the collection
-	iter := coll.Query().Get(ctx)
+	iter := cartridges.Query().Get(cartridges.ctx)
 	defer iter.Stop()
-	if err != nil {
-		return nil, fmt.Errorf("FetchAllCartridges: %v", err)
-	}
 
-	// Take each row in the iterator, and map it to a collection.
-	var list []Cartridge
 	for {
 		row := map[string]interface{}{}
-		err := iter.Next(ctx, row)
+		err := iter.Next(cartridges.ctx, row)
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return nil, fmt.Errorf("FetchAllCartridges: %v", err)
+			return nil, fmt.Errorf("there was a problem retrieving the cartridges: %v", err)
 		} else {
-			list = append(list, Cartridge{
-				Id:      row["id"].(string),
-				Name:    row["name"].(string),
-				Size:    row["size"].(string),
-				Version: row["_version"].(int64),
-			})
+			c := Cartridge{
+				Id:            row["id"].(string),
+				Name:          row["name"].(string),
+				Size:          row["size"].(string),
+				Version:       row["_version"].(int64),
+				LastChangedAt: row["_lastChangedAt"].(int64),
+				UpdatedAt:     row["updatedAt"].(string),
+				CreatedAt:     row["createdAt"].(string),
+			}
+			cartridges.results = append(cartridges.results, c)
 		}
 	}
 
-	return list, nil
+	return cartridges.results, nil
 }
