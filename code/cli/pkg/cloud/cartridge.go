@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/google/uuid"
 	"gocloud.dev/docstore"
 	_ "gocloud.dev/docstore/awsdynamodb"
@@ -13,13 +17,6 @@ import (
 
 const tmpl_tostring_cartridge = `{{.Name}} ({{.Size}}) [{{.Id}}]`
 const tbl_name_cartridge = "Cartridge-5yebjmcc75d6tp6w2hvr54b6b4-staging"
-
-var empty_cartridge = Cartridge{
-	Id:      "",
-	Name:    "",
-	Size:    "",
-	Version: 0,
-}
 
 type Cartridge struct {
 	Id            string
@@ -49,61 +46,7 @@ func (c Cartridge) String() string {
 	return buf.String()
 }
 
-type addCartridgeCmd struct {
-	id   string
-	name string
-	size string
-}
-
-type cartridgeCollection struct {
-	*docstore.Collection
-	url     string
-	ctx     context.Context
-	results []Cartridge
-}
-
-func openCartridgeCollection() (*cartridgeCollection, error) {
-	ctx := context.Background()
-	url := "dynamodb://" + tbl_name_cartridge + "?partition_key=id"
-	coll, err := docstore.OpenCollection(ctx, url)
-	if err != nil {
-		return nil, err
-	}
-	cartridges := &cartridgeCollection{
-		coll,
-		url,
-		context.Background(),
-		[]Cartridge{},
-	}
-	return cartridges, nil
-}
-
-// AddCartridge will insert the specified cartridge into the database.  It will return
-// the version of the Cartridge that is in the database at the time of the upsert.
-func AddCartridge(name string, size string) (*Cartridge, error) {
-	var (
-		ctx = context.Background()
-		url = "dynamodb://" + tbl_name_cartridge + "?partition_key=id"
-	)
-
-	// Open the collection
-	coll, err := docstore.OpenCollection(ctx, url)
-	if err != nil {
-		return nil, fmt.Errorf("AddCartridge failed trying to open the collection - %v", err)
-	}
-	defer func(coll *docstore.Collection) {
-		_ = coll.Close()
-	}(coll)
-
-	doc := &addCartridgeCmd{uuid.New().String(), name, size}
-	if err := coll.Put(ctx, doc); err != nil {
-		return nil, fmt.Errorf("AddCartridge failed trying to insert the data - %v", err)
-	}
-
-	c := &Cartridge{}
-	return c, nil
-}
-
+// FetchAllCartridges will retrieve a list of all the cartridges in our list.
 func FetchAllCartridges() ([]Cartridge, error) {
 
 	cartridges, err := openCartridgeCollection()
@@ -136,4 +79,69 @@ func FetchAllCartridges() ([]Cartridge, error) {
 	}
 
 	return cartridges.results, nil
+}
+
+type cartridgeCollection struct {
+	*docstore.Collection
+	url     string
+	ctx     context.Context
+	results []Cartridge
+}
+
+func openCartridgeCollection() (*cartridgeCollection, error) {
+	ctx := context.Background()
+	url := "dynamodb://" + tbl_name_cartridge + "?partition_key=id"
+	coll, err := docstore.OpenCollection(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	cartridges := &cartridgeCollection{
+		coll,
+		url,
+		context.Background(),
+		[]Cartridge{},
+	}
+	return cartridges, nil
+}
+
+type addCartridgeCmd struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Size string `json:"size"`
+}
+
+// AddCartridge will insert the specified cartridge into the database.  It will return
+// the version of the Cartridge that is in the database at the time of the upsert.
+func AddCartridge(name string, size string) (*Cartridge, error) {
+	//var (
+	//	ctx = context.Background()
+	//	url = "dynamodb://" + tbl_name_cartridge + "?partition_key=id"
+	//)
+
+	// Marshal the values to an input item
+	av, err := dynamodbattribute.MarshalMap(addCartridgeCmd{uuid.New().String(),
+		name,
+		size})
+	if err != nil {
+		return nil, fmt.Errorf("AddCartridge - couldn't marshal the values. %v", err)
+	}
+	fmt.Printf("marshalled struct: %+v", av)
+
+	i := &dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(tbl_name_cartridge),
+	}
+
+	// Initialize a session that the SDK will use to load
+	// credentials from the shared credentials file ~/.aws/credentials
+	// and region from the shared configuration file ~/.aws/config.
+	sess := session.Must(session.NewSessionWithOptions(session.Options{SharedConfigState: session.SharedConfigEnable}))
+	// Create DynamoDB client
+	svc := dynamodb.New(sess)
+	_, err = svc.PutItem(i)
+	if err != nil {
+		return nil, fmt.Errorf("AddCatridge - couldn't put the values. %v", err)
+	}
+
+	return nil, nil
 }
