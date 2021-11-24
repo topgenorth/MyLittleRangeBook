@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"opgenorth.net/mylittlerangebook/pkg/config"
-	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 	"strings"
 )
@@ -29,113 +27,8 @@ func BuildRootCmd() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&app.Debug, "debug", false, "Enable debug logging")
 	cmd.PersistentFlags().StringVar(&app.Timezone, "timezone", "", "Set the timezone of the Labradar file.")
 
-	cmd.AddCommand(BuildReadLabradarCsvCmd(app))
-	cmd.AddCommand(BuildListCartridgesCmd(app))
-	cmd.AddCommand(BuildSubmitCsvFileCmd(app))
-	cmd.AddCommand(BuildListLabradarCsvFilesCmd(app))
-	cmd.AddCommand(BuildAddCartridgeCommand(app))
-
-	return cmd
-}
-
-func BuildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
-
-	var seriesNumber int
-	var inputDir string
-	cmd := &cobra.Command{
-		Use:   "submitcsv",
-		Short: "Submit the CSV file.",
-		Run: func(cmd *cobra.Command, args []string) {
-			filename := labradar.FilenameForSeries(inputDir, seriesNumber)
-			err := a.SubmitLabradarCsv(filename)
-			if err != nil {
-				logrus.Error(err)
-			} else {
-				logrus.Info("Submitted the file " + labradar.FilenameForSeries(inputDir, seriesNumber) + ".")
-			}
-		},
-	}
-
-	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "i", "", "The location of the input files.")
-
-	return cmd
-}
-
-func BuildListCartridgesCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "listcartridges",
-		Short: "List the cartridges in the datastore.",
-		Run: func(cmd *cobra.Command, args []string) {
-			a.ConfigLogging()
-			a.ListCartridges()
-		},
-	}
-
-	return cmd
-}
-
-func BuildAddCartridgeCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
-	var (
-		name string
-		size string
-	)
-	cmd := &cobra.Command{
-		Use:   "addcartridge",
-		Short: "Add a new cartridge to the list.",
-		Run: func(cmd *cobra.Command, args []string) {
-
-			c2, err := a.SubmitCartridge(name, size)
-			if err != nil {
-				logrus.Fatal(err)
-			}
-
-			logrus.Infof("Added %s to the list.", c2)
-		},
-	}
-	cmd.Flags().StringVarP(&name, "name", "n", "", "A unique name for the cartridge.")
-	cmd.Flags().StringVarP(&size, "size", "s", "", "The size of the cartridge (metric).")
-	return cmd
-}
-
-func BuildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
-
-	var inputDir string
-	var seriesNumber int
-
-	cmd := &cobra.Command{
-		Use:   "readcsv",
-		Short: "Reads a Labradar CSV file and displays a summary to STDOUT.",
-		Run: func(cmd *cobra.Command, args []string) {
-			series, err := app.ReadLabradarCsv(inputDir, seriesNumber)
-			if err != nil {
-				logrus.Fatal(err)
-			}
-			series.Print()
-		},
-	}
-
-	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "i", "", "The location of the input files.")
-
-	return cmd
-}
-
-func BuildListLabradarCsvFilesCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
-	var inputDir string
-
-	cmd := &cobra.Command{
-		Use:   "listcsv",
-		Short: "Will display a list of all the CSV files in the input directory.",
-		Run: func(cmd *cobra.Command, args []string) {
-			_, err := app.ListLabradarCsvFiles(inputDir)
-			if err != nil {
-				logrus.Fatal(err)
-			}
-		},
-	}
-
-	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "i", "", "The root directory of the labrada files.")
+	cmd.AddCommand(buildCartridgeCommands(app))
+	cmd.AddCommand(buildLabradarCommands(app))
 
 	return cmd
 }
