@@ -50,5 +50,8 @@ For ammo, stick with the format:
 | 042 | .22LR; CCI SV | Remington 597 | 2021-07-15 |
 | 043 | 8mm Mauser; 150 Hornady SP; 47.0gr IMR-4895 | Isreali 98K, Burris 2-7 Scout Scope | 2021-08-06 |
 | 044 | 8mm Mauser; 180 Barnes TSX; 45.0gr IMR-4895 | Isreali 98K, Burris 2-7 Scout Scope | 2021-08-06 |
-| 045 | 6.5x55; 140gr Hornady | M96 Swedish Mauser, Bushnell Elite 10x | 2021-08-11
-
+| 045 | 6.5x55; 140gr Hornady;4 4xgr H-4895 | M96 Swedish Mauser, Bushnell Elite 10x | 2021-08-11
+| 046 | 6.5x55; 140gr Hornady;4 4xgr D-4895 | M96 Swedish Mauser, Bushnell Elite 10x | 2021-11-27 |
+| 047 | 6.5x55; 142gr SMK; OCW testing D-4895, string 1 | M96 Swedish Mauser, Bushnell Elite 10x | 2021-11-27 |
+| 048 | 6.5x55; 142gr SMK; OCW testing D-4895, string 2 | M96 Swedish Mauser, Bushnell Elite 10x | 2021-11-27 |
+| 049 | 6.5x55; 142gr SMK; OCW testing D-4895, string 3 | M96 Swedish Mauser, Bushnell Elite 10x | 2021-11-27 |
