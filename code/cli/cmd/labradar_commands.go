@@ -34,7 +34,6 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 				logrus.Fatal("Could not read the CSV file. %v", err)
 			}
 			s.Notes = notes
-
 		},
 	}
 
