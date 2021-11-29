@@ -16,8 +16,34 @@ func buildLabradarCommands(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	cmd.AddCommand(buildReadLabradarCsvCmd(a))
 	cmd.AddCommand(buildListLabradarCsvFilesCmd(a))
 	cmd.AddCommand(buildSubmitCsvFileCmd(a))
+	cmd.AddCommand(buildDescribeSeriesCommand(a))
+	return cmd
+}
+
+func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
+	var seriesNumber int
+	var notes string
+	var inputDir string
+
+	cmd := &cobra.Command{
+		Use:   "describe",
+		Short: "Describe the series.",
+		Run: func(cmd *cobra.Command, args []string) {
+			s, err := a.ReadLabradarCsv(inputDir, seriesNumber)
+			if err != nil {
+				logrus.Fatal("Could not read the CSV file. %v", err)
+			}
+			s.Notes = notes
+
+		},
+	}
+
+	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
+	cmd.Flags().StringVarP(&notes, "text", "t", "", "Some text to describe what this series is about.")
+	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "i", "", "The location of the input files.")
 
 	return cmd
+
 }
 
 func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
