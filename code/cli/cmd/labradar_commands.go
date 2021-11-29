@@ -24,6 +24,7 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	var seriesNumber int
 	var notes string
 	var inputDir string
+	var firearm string
 
 	cmd := &cobra.Command{
 		Use:   "describe",
@@ -34,11 +35,15 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 				logrus.Fatal("Could not read the CSV file. %v", err)
 			}
 			s.Notes = notes
+			s.Firearm.Name = firearm
+
+			s.SaveDescription()
 		},
 	}
 
 	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-	cmd.Flags().StringVarP(&notes, "text", "t", "", "Some text to describe what this series is about.")
+	cmd.Flags().StringVarP(&firearm, "firearm", "f", "", "The name of the firearm.")
+	cmd.Flags().StringVarP(&notes, "notes", "t", "", "Some text to describe what this series is about.")
 	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "i", "", "The location of the input files.")
 
 	return cmd

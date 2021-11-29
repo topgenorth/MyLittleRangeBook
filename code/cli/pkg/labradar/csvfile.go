@@ -26,7 +26,7 @@ func LoadDataFiles(c *config.Config, inputDir string) DataFiles {
 }
 
 func LoadCsv(c *config.Config, inputDir string, seriesNumber int) *CsvFile {
-	f := loadCsvFile(c.FileSystem, FilenameForSeries(inputDir, seriesNumber))
+	f := loadCsvInteral(c.FileSystem, FilenameForSeries(inputDir, seriesNumber))
 	return f
 }
 
@@ -43,7 +43,7 @@ func (f CsvFile) String() string {
 func getLabradarCsvFiles(c *config.Config, inputDir string) []CsvFile {
 	var files []CsvFile
 	for _, filename := range getCsvFilenamesInDirectory(inputDir) {
-		f := loadCsvFile(c.FileSystem, filename)
+		f := loadCsvInteral(c.FileSystem, filename)
 		if f.Error == nil {
 			files = append(files, *f)
 		}
@@ -51,7 +51,7 @@ func getLabradarCsvFiles(c *config.Config, inputDir string) []CsvFile {
 	return files
 }
 
-func loadCsvFile(fs aferox.Aferox, filename string) *CsvFile {
+func loadCsvInteral(fs aferox.Aferox, filename string) *CsvFile {
 	f, err := fs.Open(filename)
 	if err != nil {
 		return &CsvFile{

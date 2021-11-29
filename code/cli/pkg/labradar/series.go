@@ -82,8 +82,7 @@ func NewSeries() *Series {
 func (s Series) Print() {
 
 	// TODO Inject some kind of printer thingy.
-
-	t, err := template.New("Series").Parse(tmpl)
+	t, err := template.New("Series").Parse(tmpl_summarize_series)
 	if err != nil {
 		panic(err)
 	}
@@ -97,6 +96,19 @@ func (s Series) Print() {
 
 func (s Series) TotalNumberOfShots() int {
 	return len(s.Velocities.Values)
+}
+
+func (s Series) SaveDescription() error {
+	t, err := template.New("DescribeSeries").Parse(tmpl_describe_series)
+	if err != nil {
+		return fmt.Errorf("SaveDescription - %v", err)
+	}
+
+	err = t.Execute(os.Stdout, s)
+	if err != nil {
+		return fmt.Errorf("SaveDescription - %v", err)
+	}
+	return nil
 }
 
 //func (s Series) SaveTo(cfg *ObsoleteLabradarCsvFile) error {
@@ -158,7 +170,7 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 	}
 }
 
-const tmpl = `----
+const tmpl_summarize_series = `----
 Labradar Series {{.Labradar.SeriesName}}
 
 Number of Shots: {{.TotalNumberOfShots}}
@@ -166,4 +178,16 @@ Average Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}
 Standard Deviation: {{.Velocities.StandardDeviation}}{{.Labradar.Units.Velocity}}
 Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
 ----
+`
+
+const tmpl_describe_series = `
+# Description of Labradar series
+
+For ammo, stick with the format:
+
+Cartridge; Bullet; Powder; COAL or CBTO
+
+| Series Number | Ammo | Firearm | Date | 
+| :---:         | :--- | :-----  | :---: |
+| {{.Number}} | {{.Notes}}| {{.Firearm.Name}} | {{.Labradar.Date}} |
 `
