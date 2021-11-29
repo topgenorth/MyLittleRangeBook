@@ -72,13 +72,13 @@ func (c *AppContext) EnvironMap() map[string]string {
 // of the current environment variables. References to undefined
 // variables are replaced by the empty string.
 func (c *AppContext) ExpandEnv(s string) string {
-	return os.Expand(s, func(key string) string { return c.Getenv(key) })
+	return os.Expand(s, func(key string) string { return c.GetEnv(key) })
 }
 
-// Getenv retrieves the value of the environment variable named by the key.
+// GetEnv retrieves the value of the environment variable named by the key.
 // It returns the value, which will be empty if the variable is not present.
 // To distinguish between an empty value and an unset value, use LookupEnv.
-func (c *AppContext) Getenv(key string) string {
+func (c *AppContext) GetEnv(key string) string {
 	return c.environ[key]
 }
 
@@ -92,9 +92,9 @@ func (c *AppContext) LookupEnv(key string) (string, bool) {
 	return value, ok
 }
 
-// Setenv sets the value of the environment variable named by the key.
+// SetEnv sets the value of the environment variable named by the key.
 // It returns an error, if any.
-func (c *AppContext) Setenv(key string, value string) {
+func (c *AppContext) SetEnv(key string, value string) {
 	if c.environ == nil {
 		c.environ = make(map[string]string, 1)
 	}
@@ -102,13 +102,13 @@ func (c *AppContext) Setenv(key string, value string) {
 	c.environ[key] = value
 }
 
-// Unsetenv unsets a single environment variable.
-func (c *AppContext) Unsetenv(key string) {
+// UnsetEnv unsets a single environment variable.
+func (c *AppContext) UnsetEnv(key string) {
 	delete(c.environ, key)
 }
 
-// Clearenv deletes all environment variables.
-func (c *AppContext) Clearenv() {
+// ClearEnv deletes all environment variables.
+func (c *AppContext) ClearEnv() {
 	c.environ = make(map[string]string, 0)
 }
 

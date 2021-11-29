@@ -185,10 +185,10 @@ func (c *TestContext) AddTestDriver(src, name string) string {
 		c.T.Fatal(err)
 	}
 
-	path := c.Getenv("PATH")
+	path := c.GetEnv("PATH")
 	pathlist := []string{dirname, path}
 	newpath := strings.Join(pathlist, string(os.PathListSeparator))
-	c.Setenv("PATH", newpath)
+	c.SetEnv("PATH", newpath)
 
 	return dirname
 }

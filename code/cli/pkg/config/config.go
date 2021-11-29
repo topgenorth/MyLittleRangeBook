@@ -50,14 +50,14 @@ func New() *Config {
 	}
 
 	p, err := c.GetHomeDir()
-	if err !=nil {
+	if err != nil {
 		c.mlrbHome = ""
 	} else {
-		c.mlrbHome=p
+		c.mlrbHome = p
 	}
 
 	p, err = c.GetMlrbPath()
-	if err !=nil {
+	if err != nil {
 		c.mlrbPath = ""
 	} else {
 		c.mlrbPath = p
@@ -71,7 +71,7 @@ func (c *Config) GetHomeDir() (string, error) {
 		return c.mlrbHome, nil
 	}
 
-	home := c.Getenv(EnvHOME)
+	home := c.GetEnv(EnvHOME)
 	if home == "" {
 		userHome, err := os.UserHomeDir()
 		if err != nil {
@@ -91,7 +91,7 @@ func (c *Config) SetHomeDir(home string) {
 
 	// Set this as an environment variable so that when we spawn new processes
 	// such as a mixin or plugin, that they can find LABRADAR_HOME too
-	c.Setenv(EnvHOME, home)
+	c.SetEnv(EnvHOME, home)
 }
 
 func (c *Config) GetMlrbPath() (string, error) {
