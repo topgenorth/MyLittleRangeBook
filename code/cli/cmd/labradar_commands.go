@@ -111,7 +111,7 @@ func buildListLabradarCsvFilesCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "i", "", "The root directory of the labrada files.")
+	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "i", "", "The root directory of the labradar files (i.e. LBR).")
 
 	return cmd
 }

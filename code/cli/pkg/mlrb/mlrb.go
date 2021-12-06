@@ -76,7 +76,7 @@ func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
 }
 
 func (a *MyLittleRangeBook) ListLabradarCsvFiles(inputDir string) ([]labradar.CsvFile, error) {
-	files := labradar.LoadDataFiles(a.Config, inputDir)
+	files := labradar.LoadLabradarDataFiles(a.Config, inputDir)
 
 	fmt.Printf("Labradar files in %s:\n", inputDir)
 	for _, f := range files.Files {
