@@ -18,32 +18,32 @@ func (sb *SeriesBuilder) ParseLine(ld *LineOfData) {
 	switch ld.LineNumber {
 	case 1:
 		sb.RawData[ld.LineNumber] = ld
-		sb.Labradar.DeviceId = ld.getStringValue()
+		sb.Labradar.DeviceId = ld.StringValue()
 	case 3:
-		sb.Series.Number = ld.getIntValue()
-		sb.Labradar.SeriesName = "SR" + ld.getStringValue()
+		sb.Series.Number = ld.IntValue()
+		sb.Labradar.SeriesName = "SR" + ld.StringValue()
 		sb.RawData[ld.LineNumber] = ld
 	case 6:
 		sb.RawData[ld.LineNumber] = ld
-		sb.Labradar.Units.Velocity = ld.getStringValue()
+		sb.Labradar.Units.Velocity = ld.StringValue()
 	case 7:
 		sb.RawData[ld.LineNumber] = ld
-		sb.Labradar.Units.Distance = ld.getStringValue()
+		sb.Labradar.Units.Distance = ld.StringValue()
 	case 9:
 		sb.RawData[ld.LineNumber] = ld
-		sb.Labradar.Units.Weight = ld.getStringValue()
+		sb.Labradar.Units.Weight = ld.StringValue()
 	case 18:
 		// For now, we only care about V0 (i.e. the muzzle velocity).
 		sb.RawData[ld.LineNumber] = ld
-		sb.Velocities.AddVelocity(ld.getIntValue())
+		sb.Velocities.AddVelocity(ld.IntValue())
 
 		// We also pull the date and time from the first shot recorded
-		sb.Labradar.Date, sb.Labradar.Time = ld.getDateAndTime()
+		sb.Labradar.Date, sb.Labradar.Time = ld.DateAndTime()
 
 	default:
 		if ld.LineNumber > 18 {
 			sb.RawData[ld.LineNumber] = ld
-			sb.Velocities.AddVelocity(ld.getIntValue())
+			sb.Velocities.AddVelocity(ld.IntValue())
 		}
 	}
 }

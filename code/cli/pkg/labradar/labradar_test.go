@@ -25,8 +25,8 @@ func Test_fixupLineFromLabradarFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := fixupLabradarLine(tt.args.line); got != tt.want {
-				t.Errorf("fixupLabradarLine() = %v, want %v", got, tt.want)
+			if got := parseLabradarLineOfText(tt.args.line); got != tt.want {
+				t.Errorf("parseLabradarLineOfText() = %v, want %v", got, tt.want)
 			}
 		})
 	}

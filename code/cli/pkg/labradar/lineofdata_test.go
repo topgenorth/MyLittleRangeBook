@@ -11,7 +11,6 @@ func TestNewLineOfData(t *testing.T) {
 	RunSpecs(t, "Lines of text from the Labradar CSV file")
 }
 
-
 var _ = Describe("Lines of text from the Labradar CSV file", func() {
 	var (
 		lineOfData *LineOfData
@@ -41,4 +40,3 @@ var _ = Describe("Lines of text from the Labradar CSV file", func() {
 	})
 
 })
-

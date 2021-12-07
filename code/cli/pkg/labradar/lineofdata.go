@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type LineOfData struct {
@@ -13,18 +14,21 @@ type LineOfData struct {
 	Value      string `json:"value"`
 }
 
-func NewLineOfData(n int, s string) *LineOfData {
+// NewLineOfData will create a new LineOfData, parsing out the value from it.
+func NewLineOfData(lineNumber int, s string) *LineOfData {
 	return &LineOfData{
-		LineNumber: n,
+		LineNumber: lineNumber,
 		Raw:        s,
-		Value:      fixupLabradarLine(s),
+		Value:      parseLabradarLineOfText(s),
 	}
 }
 
 func (l LineOfData) String() string {
 	return l.Value
 }
-func (l *LineOfData) getStringValue() string {
+
+// StringValue will return the value of the line, as a string.
+func (l *LineOfData) StringValue() string {
 	parts := strings.Split(l.Value, ";")
 	if len(parts) < 2 {
 		return ""
@@ -32,7 +36,8 @@ func (l *LineOfData) getStringValue() string {
 	return parts[1]
 }
 
-func (l *LineOfData) getIntValue() int {
+// IntValue will return the value of the line, as an integer
+func (l *LineOfData) IntValue() int {
 	parts := strings.Split(l.Value, ";")
 	if len(parts) < 2 {
 		return -1
@@ -41,16 +46,32 @@ func (l *LineOfData) getIntValue() int {
 	return i
 }
 
-func (l *LineOfData) getDateAndTime() (string, string) {
+//DateAndTime will return the date and time of the line.
+func (l *LineOfData) DateAndTime() (string, string) {
 	parts := strings.Split(l.Value, ";")
 	x := len(parts)
 	if x == 1 {
 		return "", ""
 	}
-	return parts[x-3], parts[x-2]
+
+	t := parseDateAndTime(parts[x-3], parts[x-2])
+	//date := standarizeDate(parts[x-3])
+	//time := parts[x-2]
+	return t.Format("2006-Jan-02"), t.Format("15:04")
 }
 
-func fixupLabradarLine(line string) string {
+// parseDateAndTime will take two strings are return a time.Time value.
+func parseDateAndTime(d string, t string) time.Time {
+	myDate, err := time.Parse("01-02-2006 3:04:05", d+" "+t)
+	if err != nil {
+		panic(err)
+	}
+
+	return myDate
+}
+
+// parseLabradarLineOfText will tryn and parse out the value, as a string, from the text.
+func parseLabradarLineOfText(line string) string {
 	parts := strings.Split(strings.TrimSpace(line), pkg.UnicodeNUL)
 
 	switch lengthOfParts := len(parts); lengthOfParts {
@@ -68,12 +89,11 @@ func fixupLabradarLine(line string) string {
 		// The string started with NUL and ended with NUL
 		return parts[1]
 	default:
-
 		return line
 	}
 }
 
-// Used to sort the lines of data in a series by their key, i.e the line number.
+// SortLinesOfData will sort the array according to their key (i.e. line number)
 func SortLinesOfData(d map[int]*LineOfData) map[int]*LineOfData {
 	keys := make([]int, 0, len(d))
 	for k := range d {
