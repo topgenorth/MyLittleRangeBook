@@ -189,5 +189,5 @@ Cartridge; Bullet; Powder; COAL or CBTO
 
 | Series Number | Ammo | Firearm | Date | 
 | :---:         | :--- | :-----  | :---: |
-| {{.Number}} | {{.Notes}}| {{.Firearm.Name}} | {{.Labradar.Date}} |
+| {{.Number}} | {{.Notes}} | {{.Firearm.Name}} | {{.Labradar.Date}} |
 `
