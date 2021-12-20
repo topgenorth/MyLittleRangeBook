@@ -62,7 +62,7 @@ func (l *LineOfData) DateAndTime() (string, string) {
 
 // parseDateAndTime will take two strings are return a time.Time value.
 func parseDateAndTime(d string, t string) time.Time {
-	myDate, err := time.Parse("01-02-2006 3:04:05", d+" "+t)
+	myDate, err := time.Parse("01-02-2006 15:04:05", d+" "+t)
 	if err != nil {
 		panic(err)
 	}
