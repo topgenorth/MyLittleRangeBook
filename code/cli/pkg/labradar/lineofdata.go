@@ -55,8 +55,6 @@ func (l *LineOfData) DateAndTime() (string, string) {
 	}
 
 	t := parseDateAndTime(parts[x-3], parts[x-2])
-	//date := standarizeDate(parts[x-3])
-	//time := parts[x-2]
 	return t.Format("2006-Jan-02"), t.Format("15:04")
 }
 
