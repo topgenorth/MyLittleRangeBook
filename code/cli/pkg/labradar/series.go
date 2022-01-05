@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"opgenorth.net/mylittlerangebook/pkg/context"
-	"os"
-	"text/template"
 	"time"
 )
 
@@ -17,6 +15,15 @@ type Series struct {
 	LoadData   *LoadData           `json:"loadData"`
 	Notes      string              `json:"notes"`
 	RawData    map[int]*LineOfData `json:"data"`
+}
+
+type SeriesError struct {
+	msg    string
+	number int
+}
+
+func (s SeriesError) Error() string {
+	return fmt.Sprintf("There was a problem trying to process series %d: %s.", s.number, s.msg)
 }
 
 func NewSeries() *Series {
@@ -79,60 +86,9 @@ func NewSeries() *Series {
 	return ls
 }
 
-func (s Series) Print() {
-
-	// TODO Inject some kind of printer thingy.
-	t, err := template.New("Series").Parse(tmpl_summarize_series)
-	if err != nil {
-		panic(err)
-	}
-
-	err = t.Execute(os.Stdout, s)
-	if err != nil {
-		panic(err)
-	}
-
-}
-
 func (s Series) TotalNumberOfShots() int {
 	return len(s.Velocities.Values)
 }
-
-func (s Series) SaveDescription() error {
-	t, err := template.New("DescribeSeries").Parse(tmpl_describe_series)
-	if err != nil {
-		return fmt.Errorf("SaveDescription - %v", err)
-	}
-
-	err = t.Execute(os.Stdout, s)
-	if err != nil {
-		return fmt.Errorf("SaveDescription - %v", err)
-	}
-	return nil
-}
-
-//func (s Series) SaveTo(cfg *ObsoleteLabradarCsvFile) error {
-//	outputFileName := filepath.Join(cfg.OutputDir, s.Labradar.SeriesName+".json")
-//
-//	exists, err := cfg.FileSystem.Exists(outputFileName)
-//	if err != nil {
-//		return err
-//	}
-//
-//	if exists {
-//		err := os.Remove(outputFileName)
-//		if err != nil {
-//			return err
-//		}
-//	}
-//
-//	err = cfg.FileSystem.WriteFile(outputFileName, s.ToJsonBytes(), 0644)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
 
 func (s Series) ToJsonBytes() []byte {
 	jsonBytes, err := json.MarshalIndent(SortLinesOfData(s.RawData), "", "  ")
@@ -170,7 +126,7 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 	}
 }
 
-const tmpl_summarize_series = `----
+const TMPL_SUMMARIZE_SERIES = `----
 Labradar Series {{.Labradar.SeriesName}}
 
 Number of Shots: {{.TotalNumberOfShots}}
@@ -180,7 +136,7 @@ Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
 ----
 `
 
-const tmpl_describe_series = `
+const TMPL_DESCRIBE_SERIES = `
 # Description of Labradar series
 
 For ammo, stick with the format:

@@ -37,7 +37,13 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 			s.Notes = notes
 			s.Firearm.Name = firearm
 
-			s.SaveDescription()
+			sw := labradar.SeriesWriter{C: a.Config}
+
+			err = sw.WriteStdOut(*s, labradar.TMPL_DESCRIBE_SERIES)
+			if err != nil {
+				logrus.Fatal("Could not describe the series. %v", err)
+			}
+
 		},
 	}
 
@@ -86,8 +92,13 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 			series, err := app.ReadLabradarCsv(inputDir, seriesNumber)
 			if err != nil {
 				logrus.Fatal(err)
+				return
 			}
-			series.Print()
+			sw := labradar.SeriesWriter{C: app.Config}
+			err = sw.WriteStdOut(*series, labradar.TMPL_SUMMARIZE_SERIES)
+			if err != nil {
+				logrus.Fatal(err)
+			}
 		},
 	}
 
