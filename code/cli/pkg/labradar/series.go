@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"opgenorth.net/mylittlerangebook/pkg/context"
+	"opgenorth.net/mylittlerangebook/pkg/util"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -108,6 +111,67 @@ func (s Series) ToJson() (string, error) {
 	return fmt.Sprintf("%x", jsonBytes), nil
 }
 
+func (s *Series) SetProjectile(projectileDescription string) {
+	if len(projectileDescription) > 0 {
+		s.LoadData.Projectile = parseProjectileString(projectileDescription)
+	}
+}
+
+func (s *Series) SetPowder(powderDescription string) {
+
+}
+
+func parseProjectileString(projectile string) *Projectile {
+	parts := util.RemoveEmptyStrings(strings.Split(projectile, " "))
+
+	if len(parts) < 1 {
+		return &Projectile{Name: "Unknown", Weight: 0, BC: nil}
+	}
+
+	p := &Projectile{
+		Name:   parseNameOfProjectileFromString(strings.Join(parts[1:], " ")),
+		Weight: parseWeightFromProjectileString(parts[0]),
+		BC:     nil, // [TO20220106] We don't worry about BC right now.
+	}
+
+	if util.IsNumericOnly(parts[0]) {
+		// [TO20220106] We've checked this is numeric, so there should never be an error, right?
+		p.Weight, _ = strconv.Atoi(parts[0])
+	}
+
+	return p
+}
+
+func parseNameOfProjectileFromString(name string) string {
+
+	replacer := strings.NewReplacer(
+		"grains", "",
+		"grain", "",
+		"gr.", "",
+		"gr", "",
+	)
+	return strings.TrimSpace(replacer.Replace(name))
+}
+
+func parseWeightFromProjectileString(weight string) int {
+
+	replacer := strings.NewReplacer(
+		"grains", "",
+		"grain", "",
+		"gr.", "",
+		"gr", "",
+	)
+
+	str := strings.TrimSpace(replacer.Replace(weight))
+
+	w, err := strconv.ParseFloat(str, 10)
+	if err != nil {
+		return 0
+	}
+
+	return int(w)
+}
+
 func initDevice(seriesNumber int, timezone *time.Location) *Device {
 	now := time.Now().In(timezone)
 
@@ -140,10 +204,9 @@ const TMPL_DESCRIBE_SERIES = `
 # Description of Labradar series
 
 For ammo, stick with the format:
-
-Cartridge; Bullet; Powder; COAL or CBTO
+    Cartridge; Bullet; Powder; COAL or CBTO
 
 | Series Number | Ammo | Firearm | Date | 
 | :---:         | :--- | :-----  | :---: |
-| {{.Number}} | {{.Notes}} | {{.Firearm.Name}} | {{.Labradar.Date}} |
+| {{.Number}} | {{.LoadData}} | {{.Firearm.Name}} | {{.Labradar.Date}} |
 `

@@ -28,3 +28,27 @@ func DeleteFile(s string, c *config.Config) bool {
 	}
 	return true
 }
+
+func IsNumericOnly(str string) bool {
+
+	if len(str) == 0 {
+		return false
+	}
+
+	for _, s := range str {
+		if s < '0' || s > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func RemoveEmptyStrings(s []string) []string {
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+	return r
+}
