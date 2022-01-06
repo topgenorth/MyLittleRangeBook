@@ -49,7 +49,7 @@ func initializeCommand(cmd *cobra.Command) error {
 	if err := v.ReadInConfig(); err != nil {
 		// It's okay if there isn't a config file
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return fmt.Errorf("Error initalizeCommand: %v", err)
+			return fmt.Errorf("Error with initalizeCommand: %w", err)
 		}
 	}
 

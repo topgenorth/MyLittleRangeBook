@@ -27,7 +27,7 @@ type labradarS3File struct {
 func buildIncomingLabradarConfig(filename string) (*labradarS3File, error) {
 	csvBytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, fmt.Errorf("buildIncomingLabradarConfig %v", err)
+		return nil, fmt.Errorf("Could not build the LabradarS3File: %w", err)
 	}
 
 	csv := &labradarS3File{
@@ -58,14 +58,14 @@ func getAwsSession() *session.Session {
 func SubmitLabradarCsvFile(filename string) error {
 	csvFile, err := buildIncomingLabradarConfig(filename)
 	if err != nil {
-		return fmt.Errorf("getAwsSession - error trying to read the incoming CSV file %s: %v", filename, err)
+		return fmt.Errorf("getAwsSession - error trying to read the incoming CSV file %s: %w", filename, err)
 	}
 
 	ctx := context.Background()
 
 	s3Bucket, err := blob.OpenBucket(ctx, "s3://"+csvFile.BucketName)
 	if err != nil {
-		return fmt.Errorf("getAwsSession - opening S3 bucket: %v", err)
+		return fmt.Errorf("getAwsSession - opening S3 bucket: %w", err)
 	}
 	defer func(s3Bucket *blob.Bucket) {
 		_ = s3Bucket.Close()
@@ -73,15 +73,15 @@ func SubmitLabradarCsvFile(filename string) error {
 
 	w, err := blob.PrefixedBucket(s3Bucket, "incoming").NewWriter(ctx, "/"+csvFile.Key, nil)
 	if err != nil {
-		return fmt.Errorf("getAwsSession - opening S3 bucket: %v", err)
+		return fmt.Errorf("getAwsSession - opening S3 bucket: %w", err)
 	}
 	_, err = w.Write(csvFile.Bytes)
 
 	if err != nil {
-		return fmt.Errorf("getAwsSession - trying to write the bytes: %v", err)
+		return fmt.Errorf("getAwsSession - trying to write the bytes: %w", err)
 	}
 	if err := w.Close(); err != nil {
-		return fmt.Errorf("getAwsSession - return to close the Writer: %v", err)
+		return fmt.Errorf("getAwsSession - could not close the Writer: %w", err)
 	}
 	return nil
 }
