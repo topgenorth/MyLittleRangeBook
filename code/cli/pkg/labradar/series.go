@@ -118,7 +118,22 @@ func (s *Series) SetProjectile(projectileDescription string) {
 }
 
 func (s *Series) SetPowder(powderDescription string) {
+	if len(powderDescription) > 0 {
+		s.LoadData.Powder = parsePowderString(powderDescription)
+	}
+}
 
+func parsePowderString(powder string) *PowderCharge {
+	parts := util.RemoveEmptyStrings(strings.Split(powder, " "))
+	if len(parts) < 1 {
+		return &PowderCharge{Name: "Unknown", Amount: 0.0}
+	}
+
+	p := &PowderCharge{
+		Name:   parseNameOfProjectileFromString(strings.Join(parts[1:], " ")),
+		Amount: parseAmountFromPowderString(parts[0]),
+	}
+	return p
 }
 
 func parseProjectileString(projectile string) *Projectile {
@@ -132,11 +147,6 @@ func parseProjectileString(projectile string) *Projectile {
 		Name:   parseNameOfProjectileFromString(strings.Join(parts[1:], " ")),
 		Weight: parseWeightFromProjectileString(parts[0]),
 		BC:     nil, // [TO20220106] We don't worry about BC right now.
-	}
-
-	if util.IsNumericOnly(parts[0]) {
-		// [TO20220106] We've checked this is numeric, so there should never be an error, right?
-		p.Weight, _ = strconv.Atoi(parts[0])
 	}
 
 	return p
@@ -153,6 +163,25 @@ func parseNameOfProjectileFromString(name string) string {
 	return strings.TrimSpace(replacer.Replace(name))
 }
 
+func parseAmountFromPowderString(amount string) float32 {
+
+	replacer := strings.NewReplacer(
+		"grains", "",
+		"grain", "",
+		"gr.", "",
+		"gr", "",
+	)
+
+	str := strings.TrimSpace(replacer.Replace(amount))
+
+	w, err := strconv.ParseFloat(str, 32)
+	if err != nil {
+		return 0.0
+	}
+
+	return float32(w)
+}
+
 func parseWeightFromProjectileString(weight string) int {
 
 	replacer := strings.NewReplacer(
@@ -164,7 +193,7 @@ func parseWeightFromProjectileString(weight string) int {
 
 	str := strings.TrimSpace(replacer.Replace(weight))
 
-	w, err := strconv.ParseFloat(str, 10)
+	w, err := strconv.ParseFloat(str, 32)
 	if err != nil {
 		return 0
 	}

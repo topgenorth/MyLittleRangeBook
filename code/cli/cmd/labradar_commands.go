@@ -41,14 +41,15 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 			s.Notes = notes
 			s.Firearm.Name = firearm
 			s.LoadData.Cartridge = cartridge
+			s.LoadData.CBTO = cbto
 			s.SetProjectile(bullet)
+			s.SetPowder(powder)
 
 			sw := labradar.SeriesWriter{C: a.Config}
 			err = sw.WriteStdOut(*s, labradar.TMPL_DESCRIBE_SERIES)
 			if err != nil {
 				logrus.Fatal("Could not describe the series. %w", err)
 			}
-
 		},
 	}
 

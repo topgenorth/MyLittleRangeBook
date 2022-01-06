@@ -6,6 +6,7 @@ type LoadData struct {
 	Cartridge  string        `json:"cartridge"`
 	Projectile *Projectile   `json:"projectile"`
 	Powder     *PowderCharge `json:"powder"`
+	CBTO       float32       `json:cbto`
 }
 
 func (l LoadData) String() string {
@@ -31,10 +32,18 @@ func (l LoadData) String() string {
 
 	}
 
-	str := fmt.Sprintf("%s; %s; %s",
+	var cbto string
+	if l.CBTO > 0 {
+		cbto = fmt.Sprintf("%2.3f\" CBTO", l.CBTO)
+	} else {
+		cbto = "Unknown CBTO"
+	}
+
+	str := fmt.Sprintf("%s; %s; %s; %s",
 		l.Cartridge,
 		bullet,
 		powder,
+		cbto,
 	)
 	return str
 }
