@@ -61,7 +61,7 @@ func (a *MyLittleRangeBook) ReadLabradarCsv(inputDir string, seriesNumber int) (
 	r := labradar.LoadCsv(a.Config, inputDir, seriesNumber)
 
 	if r.Error != nil {
-		return nil, fmt.Errorf("could not read the Labradar file %s, %v", labradar.FilenameForSeries(inputDir, seriesNumber), r.Error)
+		return nil, fmt.Errorf("could not read the Labradar file %s, %w: ", labradar.FilenameForSeries(inputDir, seriesNumber), r.Error)
 	}
 
 	return r.Series, nil
@@ -70,7 +70,7 @@ func (a *MyLittleRangeBook) ReadLabradarCsv(inputDir string, seriesNumber int) (
 func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
 	err := cloud.SubmitLabradarCsvFile(filename)
 	if err != nil {
-		return fmt.Errorf("error submitting the Labradar file %s, %v", filename, err)
+		return fmt.Errorf("error submitting the Labradar file %s: %w", filename, err)
 	}
 	return nil
 }

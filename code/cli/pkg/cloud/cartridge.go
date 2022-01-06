@@ -51,7 +51,7 @@ func FetchAllCartridges() ([]Cartridge, error) {
 
 	cartridges, err := openCartridgeCollection()
 	if err != nil {
-		return nil, fmt.Errorf("could not open the dynamodb collection - %v", err)
+		return nil, fmt.Errorf("could not open the dynamodb collection:  %w", err)
 	}
 
 	iter := cartridges.Query().Get(cartridges.ctx)
@@ -63,7 +63,7 @@ func FetchAllCartridges() ([]Cartridge, error) {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return nil, fmt.Errorf("there was a problem retrieving the cartridges: %v", err)
+			return nil, fmt.Errorf("there was a problem retrieving the cartridges: %w", err)
 		} else {
 			c := Cartridge{
 				Id:            row["id"].(string),
@@ -123,7 +123,7 @@ func AddCartridge(name string, size string) (*Cartridge, error) {
 		name,
 		size})
 	if err != nil {
-		return nil, fmt.Errorf("AddCartridge - couldn't marshal the values. %v", err)
+		return nil, fmt.Errorf("AddCartridge - couldn't marshal the values: %w", err)
 	}
 	fmt.Printf("marshalled struct: %+v", av)
 
@@ -140,7 +140,7 @@ func AddCartridge(name string, size string) (*Cartridge, error) {
 	svc := dynamodb.New(sess)
 	_, err = svc.PutItem(i)
 	if err != nil {
-		return nil, fmt.Errorf("AddCatridge - couldn't put the values. %v", err)
+		return nil, fmt.Errorf("AddCatridge - couldn't PUT the values: %w", err)
 	}
 
 	return nil, nil
