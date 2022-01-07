@@ -15,7 +15,7 @@ import (
 	"text/template"
 )
 
-const tmpl_tostring_cartridge = `{{.Name}} ({{.Size}}) [{{.Id}}]`
+const TMPL_TOSTRING_CARTRIDGE = `{{.Name}} ({{.Size}}) [{{.Id}}]`
 const tbl_name_cartridge = "Cartridge-5yebjmcc75d6tp6w2hvr54b6b4-staging"
 
 type Cartridge struct {
@@ -33,7 +33,7 @@ func (c *Cartridge) IsEmpty() bool {
 }
 
 func (c Cartridge) String() string {
-	t, err := template.New("Cartridge").Parse(tmpl_tostring_cartridge)
+	t, err := template.New("Cartridge").Parse(TMPL_TOSTRING_CARTRIDGE)
 	if err != nil {
 		panic(err)
 	}

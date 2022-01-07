@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"opgenorth.net/mylittlerangebook/pkg/context"
-	"opgenorth.net/mylittlerangebook/pkg/util"
 	"strconv"
 	"strings"
 	"time"
@@ -21,12 +20,12 @@ type Series struct {
 }
 
 type SeriesError struct {
-	msg    string
-	number int
+	Msg    string
+	Number int
 }
 
 func (s SeriesError) Error() string {
-	return fmt.Sprintf("There was a problem trying to process series %d: %s.", s.number, s.msg)
+	return fmt.Sprintf("There was a problem trying to process series %d: %s.", s.Number, s.Msg)
 }
 
 func NewSeries() *Series {
@@ -124,7 +123,7 @@ func (s *Series) SetPowder(powderDescription string) {
 }
 
 func parsePowderString(powder string) *PowderCharge {
-	parts := util.RemoveEmptyStrings(strings.Split(powder, " "))
+	parts := RemoveEmptyStrings(strings.Split(powder, " "))
 	if len(parts) < 1 {
 		return &PowderCharge{Name: "Unknown", Amount: 0.0}
 	}
@@ -137,7 +136,7 @@ func parsePowderString(powder string) *PowderCharge {
 }
 
 func parseProjectileString(projectile string) *Projectile {
-	parts := util.RemoveEmptyStrings(strings.Split(projectile, " "))
+	parts := RemoveEmptyStrings(strings.Split(projectile, " "))
 
 	if len(parts) < 1 {
 		return &Projectile{Name: "Unknown", Weight: 0, BC: nil}
@@ -218,24 +217,3 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 		u,
 	}
 }
-
-const TMPL_SUMMARIZE_SERIES = `----
-Labradar Series {{.Labradar.SeriesName}}
-
-Number of Shots: {{.TotalNumberOfShots}}
-Average Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}
-Standard Deviation: {{.Velocities.StandardDeviation}}{{.Labradar.Units.Velocity}}
-Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
-----
-`
-
-const TMPL_DESCRIBE_SERIES = `
-# Description of Labradar series
-
-For ammo, stick with the format:
-    Cartridge; Bullet; Powder; COAL or CBTO
-
-| Series Number | Ammo | Firearm | Date | 
-| :---:         | :--- | :-----  | :---: |
-| {{.Number}} | {{.LoadData}} | {{.Firearm.Name}} | {{.Labradar.Date}} |
-`

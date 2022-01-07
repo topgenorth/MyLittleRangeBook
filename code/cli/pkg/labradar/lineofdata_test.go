@@ -27,7 +27,7 @@ var _ = Describe("Lines of text from the Labradar CSV file", func() {
 
 	Context("parse the 3rd line", func() {
 
-		It("should have the Series number", func() {
+		It("should have the Series Number", func() {
 			lineOfData = NewLineOfData(3, "\u0000Series No;0001;;\u0000                                            \n")
 			Expect(lineOfData.Value).To(BeEquivalentTo("Series No;0001;;"))
 		})
@@ -35,9 +35,9 @@ var _ = Describe("Lines of text from the Labradar CSV file", func() {
 
 	Context("parse the 4th line", func() {
 
-		It("should have the total number of shots", func() {
-			lineOfData = NewLineOfData(4, "\u0000Total number of shots;0009;;\u0000                                \n")
-			Expect(lineOfData.Value).To(BeEquivalentTo("Total number of shots;0009;;"))
+		It("should have the total Number of shots", func() {
+			lineOfData = NewLineOfData(4, "\u0000Total Number of shots;0009;;\u0000                                \n")
+			Expect(lineOfData.Value).To(BeEquivalentTo("Total Number of shots;0009;;"))
 		})
 	})
 
