@@ -57,8 +57,8 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	}
 }
 
-// ReadLabradarCsv will take a Labradar CSV file, and display relevant details to STDOUT.
-func (a *MyLittleRangeBook) ReadLabradarCsv(inputDir string, seriesNumber int) (*labradar.Series, error) {
+// LoadLabradarCsv will take a Labradar CSV file, and display relevant details to STDOUT.
+func (a *MyLittleRangeBook) LoadLabradarCsv(inputDir string, seriesNumber int) (*labradar.Series, error) {
 	r := labradar.LoadCsv(a.Config, inputDir, seriesNumber)
 
 	if r.Error != nil {
@@ -93,6 +93,11 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 		return nil, err
 	}
 	return c, nil
+}
+
+func (a *MyLittleRangeBook) AddSeriesToLabradarReadme(s *labradar.Series) error {
+
+	return nil
 }
 
 func (a *MyLittleRangeBook) DescribeToStdOut(s *labradar.Series) error {

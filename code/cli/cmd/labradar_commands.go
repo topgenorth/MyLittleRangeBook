@@ -38,7 +38,7 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		Short: "Describe the series.",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			s, err := a.ReadLabradarCsv(inputDir, seriesNumber)
+			s, err := a.LoadLabradarCsv(inputDir, seriesNumber)
 			if err != nil {
 				logrus.Fatal("Could not read the CSV file. %w", err)
 			}
@@ -49,7 +49,7 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 			s.SetProjectile(bullet)
 			s.SetPowder(powder)
 
-			a.DescribeToStdOut(s)
+			_ = a.DescribeToStdOut(s)
 
 			r, err := readme.Load(filepath.Join(inputDir, "README.md"), a.Config.FileSystem)
 			if err != nil {
@@ -107,7 +107,7 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 		Use:   "read",
 		Short: "Reads a Labradar CSV file and displays a summary to STDOUT.",
 		Run: func(cmd *cobra.Command, args []string) {
-			series, err := app.ReadLabradarCsv(inputDir, seriesNumber)
+			series, err := app.LoadLabradarCsv(inputDir, seriesNumber)
 			if err != nil {
 				logrus.Fatal(err)
 				return

@@ -23,7 +23,7 @@ func (w StringWriter) String() string {
 func (w *StringWriter) Write(s labradar.Series) error {
 	w.Value = ""
 
-	t, err := template.New("OldSeriesWriter").Parse(TMPL_README_SERIES_LINE)
+	t, err := template.New("labradarReadmeStringWriter").Parse(TMPL_README_SERIES_LINE)
 	if err != nil {
 		return labradar.SeriesError{
 			Number: s.Number,
