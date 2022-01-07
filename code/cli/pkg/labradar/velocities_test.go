@@ -1,7 +1,7 @@
 package labradar
 
 import (
-	"opgenorth.net/mylittlerangebook/pkg/util"
+	"opgenorth.net/mylittlerangebook/pkg/math"
 	"testing"
 )
 
@@ -16,7 +16,7 @@ func Test_average_of_array(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := util.CalculateAverage(tt.args); got != tt.want {
+			if got := math.CalculateAverage(tt.args); got != tt.want {
 				t.Errorf("CalculateAverage() = %v, want %v", got, tt.want)
 			}
 		})
@@ -35,7 +35,7 @@ func Test_getMaxAndMin_of_array(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			min, max := util.GetMaxAndMin(tt.args)
+			min, max := math.GetMaxAndMin(tt.args)
 			if min != tt.wantMin {
 				t.Errorf("GetMaxAndMin() min = %v, want %v", min, tt.wantMin)
 			}
@@ -57,7 +57,7 @@ func Test_standardDeviation_for_array(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := util.CalculateStandardDeviation(tt.args); got != tt.want {
+			if got := math.CalculateStandardDeviation(tt.args); got != tt.want {
 				t.Errorf("CalculateStandardDeviation() = %v, want %v", got, tt.want)
 			}
 		})

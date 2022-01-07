@@ -3,7 +3,6 @@ package labradar
 import (
 	"fmt"
 	"opgenorth.net/mylittlerangebook/pkg/config"
-	"opgenorth.net/mylittlerangebook/pkg/util"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -55,7 +54,7 @@ func filenameForSeries(s Series, c *config.Config, ext string) (string, error) {
 		return "", err
 	}
 	outputFileName := filepath.Join(dir, s.Labradar.SeriesName+"."+ext)
-	if !util.DeleteFile(outputFileName, c) {
+	if !DeleteFile(outputFileName, c) {
 		return "", SeriesError{number: s.Number, msg: fmt.Sprintf("The file %s exists.", outputFileName)}
 	}
 

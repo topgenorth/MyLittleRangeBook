@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"opgenorth.net/mylittlerangebook/pkg/context"
-	"opgenorth.net/mylittlerangebook/pkg/util"
 	"strconv"
 	"strings"
 	"time"
@@ -124,7 +123,7 @@ func (s *Series) SetPowder(powderDescription string) {
 }
 
 func parsePowderString(powder string) *PowderCharge {
-	parts := util.RemoveEmptyStrings(strings.Split(powder, " "))
+	parts := RemoveEmptyStrings(strings.Split(powder, " "))
 	if len(parts) < 1 {
 		return &PowderCharge{Name: "Unknown", Amount: 0.0}
 	}
@@ -137,7 +136,7 @@ func parsePowderString(powder string) *PowderCharge {
 }
 
 func parseProjectileString(projectile string) *Projectile {
-	parts := util.RemoveEmptyStrings(strings.Split(projectile, " "))
+	parts := RemoveEmptyStrings(strings.Split(projectile, " "))
 
 	if len(parts) < 1 {
 		return &Projectile{Name: "Unknown", Weight: 0, BC: nil}
