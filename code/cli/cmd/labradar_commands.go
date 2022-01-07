@@ -4,7 +4,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/readme"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
+	"path/filepath"
 )
 
 func buildLabradarCommands(a *mlrb.MyLittleRangeBook) *cobra.Command {
@@ -44,6 +46,14 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 			s.LoadData.CBTO = cbto
 			s.SetProjectile(bullet)
 			s.SetPowder(powder)
+
+			r, err := readme.Load(filepath.Join(inputDir, "README.md"), a.Config.FileSystem)
+			if err != nil {
+				logrus.Warnf("Will not append the series %s to the README file: %w", s, err)
+			} else {
+				r.AppendSeries(*s)
+				readme.Save(*r, a.Config.FileSystem)
+			}
 
 			sw := labradar.SeriesWriter{C: a.Config}
 			err = sw.WriteStdOut(*s, labradar.TMPL_DESCRIBE_SERIES)
