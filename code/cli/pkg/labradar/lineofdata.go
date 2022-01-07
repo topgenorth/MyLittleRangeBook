@@ -91,7 +91,7 @@ func parseLabradarLineOfText(line string) string {
 	}
 }
 
-// SortLinesOfData will sort the array according to their key (i.e. line number)
+// SortLinesOfData will sort the array according to their key (i.e. line Number)
 func SortLinesOfData(d map[int]*LineOfData) map[int]*LineOfData {
 	keys := make([]int, 0, len(d))
 	for k := range d {

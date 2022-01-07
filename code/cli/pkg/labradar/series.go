@@ -20,12 +20,12 @@ type Series struct {
 }
 
 type SeriesError struct {
-	msg    string
-	number int
+	Msg    string
+	Number int
 }
 
 func (s SeriesError) Error() string {
-	return fmt.Sprintf("There was a problem trying to process series %d: %s.", s.number, s.msg)
+	return fmt.Sprintf("There was a problem trying to process series %d: %s.", s.Number, s.Msg)
 }
 
 func NewSeries() *Series {
@@ -217,24 +217,3 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 		u,
 	}
 }
-
-const TMPL_SUMMARIZE_SERIES = `----
-Labradar Series {{.Labradar.SeriesName}}
-
-Number of Shots: {{.TotalNumberOfShots}}
-Average Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}
-Standard Deviation: {{.Velocities.StandardDeviation}}{{.Labradar.Units.Velocity}}
-Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
-----
-`
-
-const TMPL_DESCRIBE_SERIES = `
-# Description of Labradar series
-
-For ammo, stick with the format:
-    Cartridge; Bullet; Powder; COAL or CBTO
-
-| Series Number | Ammo | Firearm | Date | 
-| :---:         | :--- | :-----  | :---: |
-| {{.Number}} | {{.LoadData}} | {{.Firearm.Name}} | {{.Labradar.Date}} |
-`

@@ -101,7 +101,7 @@ func loadCsvInternal(fs aferox.Aferox, filename string) *CsvFile {
 	}
 }
 
-// FilenameForSeries Given the number of a series and the root directory of the Labradar files, infer the filename of the Labradar
+// FilenameForSeries Given the Number of a series and the root directory of the Labradar files, infer the filename of the Labradar
 // CSV file that holds the results of the series.
 func FilenameForSeries(labradarRootDirectory string, seriesNumber int) string {
 	stub := fmt.Sprintf("%04d", seriesNumber)

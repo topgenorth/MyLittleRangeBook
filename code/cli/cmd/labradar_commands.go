@@ -4,6 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/io"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/readme"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 	"path/filepath"
@@ -36,6 +37,7 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		Use:   "describe",
 		Short: "Describe the series.",
 		Run: func(cmd *cobra.Command, args []string) {
+
 			s, err := a.ReadLabradarCsv(inputDir, seriesNumber)
 			if err != nil {
 				logrus.Fatal("Could not read the CSV file. %w", err)
@@ -47,19 +49,16 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 			s.SetProjectile(bullet)
 			s.SetPowder(powder)
 
+			a.DescribeToStdOut(s)
+
 			r, err := readme.Load(filepath.Join(inputDir, "README.md"), a.Config.FileSystem)
 			if err != nil {
 				logrus.Warnf("Will not append the series %s to the README file: %w", s, err)
 			} else {
 				r.AppendSeries(*s)
-				readme.Save(*r, a.Config.FileSystem)
+				_ = readme.Save(*r, a.Config.FileSystem)
 			}
 
-			sw := labradar.SeriesWriter{C: a.Config}
-			err = sw.WriteStdOut(*s, labradar.TMPL_DESCRIBE_SERIES)
-			if err != nil {
-				logrus.Fatal("Could not describe the series. %w", err)
-			}
 		},
 	}
 
@@ -113,9 +112,9 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 				logrus.Fatal(err)
 				return
 			}
-			sw := labradar.SeriesWriter{C: app.Config}
-			err = sw.WriteStdOut(*series, labradar.TMPL_SUMMARIZE_SERIES)
-			if err != nil {
+
+			sw := io.StdOutSeriesWriter1{TemplateString: io.TMPL_SUMMARIZE_SERIES}
+			if err := sw.Write(*series); err != nil {
 				logrus.Fatal(err)
 			}
 		},

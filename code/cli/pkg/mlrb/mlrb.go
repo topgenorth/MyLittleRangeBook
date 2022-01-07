@@ -7,6 +7,7 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	lbrio "opgenorth.net/mylittlerangebook/pkg/labradar/io"
 	"sort"
 	"strings"
 )
@@ -92,4 +93,10 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 		return nil, err
 	}
 	return c, nil
+}
+
+func (a *MyLittleRangeBook) DescribeToStdOut(s *labradar.Series) error {
+	w := lbrio.StdOutSeriesWriter1{TemplateString: lbrio.TMPL_DESCRIBE_SERIES}
+
+	return w.Write(*s)
 }
