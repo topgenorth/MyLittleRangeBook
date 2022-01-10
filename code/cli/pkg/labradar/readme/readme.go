@@ -21,9 +21,23 @@ func (l readmeLine) String() string {
 	return l.value
 }
 
+// This structure holds the contents of a ReadMe file for the Labradar series.
 type ReadmeMd struct {
 	Filename string
 	lines    []*readmeLine
+}
+
+// Create a new ReadMe file but with zero lines of content.
+func New(filename string) *ReadmeMd {
+
+	r := &ReadmeMd{Filename: filename, lines: make([]*readmeLine, 5)}
+	r.lines[0] = &readmeLine{0, "# Description of Labradar series\n\n"}
+	r.lines[1] = &readmeLine{1, "For ammo, stick with the format:\n"}
+	r.lines[2] = &readmeLine{2, "`Cartridge; Bullet; Powder; COAL;Description`\n\n"}
+	r.lines[3] = &readmeLine{3, "| Series Number | Ammo | Firearm | Date |\n"}
+	r.lines[4] = &readmeLine{4, "| :---:         | :--- | :-----  | :---: |\n"}
+
+	return r
 }
 
 func Load(filename string, fs aferox.Aferox) (*ReadmeMd, error) {
