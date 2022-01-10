@@ -2,11 +2,13 @@ package readme
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/carolynvs/aferox"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
-	"os"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/io"
 	"sort"
 )
 
@@ -45,10 +47,17 @@ func Load(filename string, fs aferox.Aferox) (*ReadmeMd, error) {
 	return r, nil
 }
 
-func (r *ReadmeMd) AppendSeries(s labradar.Series) {
+func (r *ReadmeMd) AppendSeries(s labradar.Series, oldformat bool) {
+	// [TO20220110] What happens if we duplicate a series number?
+
+	w := &io.ReadMeSeriesWriter{OldFormat: oldformat}
+	if err := w.Write(s); err != nil {
+		logrus.Error("could not serialize the series.")
+		return
+	}
+
 	i := len(r.lines)
-	str := ""
-	r.lines = append(r.lines, &readmeLine{index: i, value: str})
+	r.lines = append(r.lines, &readmeLine{index: i, value: w.Output})
 }
 
 func Save(r ReadmeMd, fs aferox.Aferox) error {
@@ -59,24 +68,14 @@ func Save(r ReadmeMd, fs aferox.Aferox) error {
 		})
 	}
 
-	file, err := fs.OpenFile(r.Filename, 0644, os.ModeExclusive)
-	defer func(f afero.File) {
-		_ = f.Close()
-	}(file)
+	var b bytes.Buffer
+	for _, line := range r.lines {
+		b.WriteString(line.value)
+		b.WriteString("\n")
+	}
+	err := fs.WriteFile(r.Filename, b.Bytes(), 0644)
 	if err != nil {
 		return fmt.Errorf("could not open the README.MD %s:%w", r.Filename, err)
-	}
-
-	writer := bufio.NewWriter(file)
-	defer func(w *bufio.Writer) {
-		_ = w.Flush()
-	}(writer)
-
-	for i, line := range r.lines {
-		_, err := writer.WriteString(line.value + "\n")
-		if err != nil {
-			return fmt.Errorf("problem writing to the file %s, line number %d: %w", r.Filename, i, err)
-		}
 	}
 
 	return nil

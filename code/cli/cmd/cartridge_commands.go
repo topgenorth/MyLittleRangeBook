@@ -50,6 +50,8 @@ func buildAddCartridgeCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&name, "name", "n", "", "A unique name for the cartridge.")
-	cmd.Flags().StringVarP(&size, "size", "s", "", "The size of the cartridge (metric).")
+	cmd.Flags().StringVarP(&size, "size", "", "", "The size of the cartridge (metric).")
+	setMandatoryFlags(cmd, "name", "size")
+
 	return cmd
 }

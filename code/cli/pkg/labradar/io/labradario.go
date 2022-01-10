@@ -30,17 +30,6 @@ Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
 ----
 `
 
-const TMPL_DESCRIBE_SERIES = `
-# Description of Labradar series
-
-For ammo, stick with the format:
-    Cartridge; Bullet; Powder; COAL or CBTO
-
-| Series Number | Ammo | Firearm | Notes | Date |
-| :---:         | :--- | :-----  | :--- | :---:
-| {{.Number}} | {{.LoadData}} | {{.Firearm.Name}} | {{.Notes}} | {{.Labradar.Date}} |
-`
-
 type SeriesWriter interface {
 	Write(s labradar.Series) error
 }

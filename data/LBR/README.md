@@ -2,7 +2,7 @@
 
 For ammo, stick with the format:
 
-`Cartridge; Bullet; Powder; COAL`
+`Cartridge; Bullet; Powder; COAL;Description`
 
 | Series Number | Ammo | Firearm | Date | 
 | :---:         | :--- | :-----  | :---: |

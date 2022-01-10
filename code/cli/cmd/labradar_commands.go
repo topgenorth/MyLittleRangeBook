@@ -5,9 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/io"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/readme"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
-	"path/filepath"
 )
 
 func buildLabradarCommands(a *mlrb.MyLittleRangeBook) *cobra.Command {
@@ -21,57 +19,6 @@ func buildLabradarCommands(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	cmd.AddCommand(buildSubmitCsvFileCmd(a))
 	cmd.AddCommand(buildDescribeSeriesCommand(a))
 	return cmd
-}
-
-func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
-	var seriesNumber int
-	var notes string
-	var inputDir string
-	var firearm string
-	var cartridge string
-	var bullet string
-	var powder string
-	var cbto float32
-
-	cmd := &cobra.Command{
-		Use:   "describe",
-		Short: "Describe the series.",
-		Run: func(cmd *cobra.Command, args []string) {
-
-			s, err := a.LoadLabradarCsv(inputDir, seriesNumber)
-			if err != nil {
-				logrus.Fatal("Could not read the CSV file. %w", err)
-			}
-			s.Notes = notes
-			s.Firearm.Name = firearm
-			s.LoadData.Cartridge = cartridge
-			s.LoadData.CBTO = cbto
-			s.SetProjectile(bullet)
-			s.SetPowder(powder)
-
-			_ = a.DescribeToStdOut(s)
-
-			r, err := readme.Load(filepath.Join(inputDir, "README.md"), a.Config.FileSystem)
-			if err != nil {
-				logrus.Warnf("Will not append the series %s to the README file: %w", s, err)
-			} else {
-				r.AppendSeries(*s)
-				_ = readme.Save(*r, a.Config.FileSystem)
-			}
-
-		},
-	}
-
-	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-	cmd.Flags().StringVarP(&firearm, "firearm", "f", "", "The name of the firearm.")
-	cmd.Flags().StringVarP(&notes, "notes", "", "", "Some text to describe what this series is about.")
-	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "i", "", "The location of the input files.")
-	cmd.Flags().StringVarP(&cartridge, "cartridge", "", "", "The cartridge that was measured. e.g. 6.5 Grendel")
-	cmd.Flags().StringVarP(&bullet, "bullet", "", "", "The bullet that was used. e.g. 123gr Hornady ELD Match")
-	cmd.Flags().StringVarP(&powder, "powder", "", "", "The weight and powder that was used. e.g. 29.1gr BL-C(2)")
-	cmd.Flags().Float32VarP(&cbto, "cbto", "", 0, "The cartridge-to-base-ogive length, in inches.  e.g. 1.666")
-	return cmd
-
 }
 
 func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
@@ -93,7 +40,9 @@ func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	}
 
 	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "i", "", "The location of the input files.")
+	setMandatoryFlags(cmd, "number")
+
+	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "", "", "The location of the input files.")
 
 	return cmd
 }
@@ -121,7 +70,9 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	}
 
 	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "i", "", "The location of the input files.")
+	setMandatoryFlags(cmd, "number")
+
+	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "", "", "The location of the input files.")
 
 	return cmd
 }
@@ -140,7 +91,28 @@ func buildListLabradarCsvFilesCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "i", "", "The root directory of the labradar files (i.e. LBR).")
+	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "", "", "The root directory of the labradar files (i.e. LBR).")
 
 	return cmd
+}
+
+// Sets the specified flags as mandatory.  This is a helper method to reduce some of the repetitiveness with
+// setting mandatory flags. If there is an error setting the mandatory flag, then a warning would be logged.
+func setMandatoryFlags(cmd *cobra.Command, flagnames ...string) {
+	type f struct {
+		flagName string
+		success  bool
+		c        *cobra.Command
+	}
+
+	flags := make([]f, len(flagnames))
+	for _, n := range flagnames {
+		err := cmd.MarkFlagRequired(n)
+		flags = append(flags, f{flagName: n, success: err == nil, c: cmd})
+		if err != nil {
+			logrus.Warnf("Could not make the flag %s mandatory: %v.", n, err.Error())
+		}
+	}
+
+	// [TO20220110] Maybe do something like a warning if a flag could not be set?
 }
