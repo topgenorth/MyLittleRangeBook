@@ -79,13 +79,17 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	cmd.Flags().IntVarP(&p.seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
 	cmd.Flags().StringVarP(&p.cartridge, "cartridge", "", "", "The cartridge that was measured. e.g. 6.5 Grendel.")
 	cmd.Flags().StringVarP(&p.firearm, "firearm", "", "", "The name of the firearm.")
-	setMandatoryFlags(cmd, "cartridge", "firearm", "number")
+	cmd.Flags().StringVarP(&p.inputDir, "labradar.inputDir", "", "", "The location of the input files.")
+	setMandatoryFlags(cmd, "cartridge", "firearm")
 
 	cmd.Flags().StringVarP(&p.notes, "notes", "", "", "Some text to describe what this series is about.")
 	cmd.Flags().StringVarP(&p.bullet, "bullet", "", "", "The bullet that was used. e.g. 123gr Hornady ELD Match.")
 	cmd.Flags().StringVarP(&p.powder, "powder", "", "", "The weight and powder that was used. e.g. 29.1gr BL-C(2).")
 	cmd.Flags().Float32VarP(&p.cbto, "cbto", "", 0, "The cartridge-to-base-ogive length, in inches.  e.g. 1.666")
-	cmd.Flags().StringVarP(&p.inputDir, "labradar.inputDir", "", "", "The location of the input files.")
+
+	if err := initializeCommand(cmd); err != nil {
+		logrus.Errorf("There is a problem trying to initialize the commnad %s: %v", cmd.Name(), err)
+	}
 
 	return cmd
 }

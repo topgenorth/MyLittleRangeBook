@@ -13,7 +13,7 @@ import (
 func BuildRootCmd() *cobra.Command {
 	app := mlrb.New()
 
-	cmd := &cobra.Command{
+	rootCmd := &cobra.Command{
 		Use:  "mlrb [sub]",
 		Long: "mlrb is my app for the various reloading things.",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -24,13 +24,13 @@ func BuildRootCmd() *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().BoolVar(&app.Debug, "debug", false, "Enable debug logging")
-	cmd.PersistentFlags().StringVar(&app.Timezone, "timezone", "", "Set the timezone of the Labradar file.")
+	rootCmd.PersistentFlags().BoolVar(&app.Debug, "debug", false, "Enable debug logging")
+	rootCmd.PersistentFlags().StringVar(&app.Timezone, "timezone", "", "Set the timezone of the Labradar file.")
 
-	cmd.AddCommand(buildCartridgeCommands(app))
-	cmd.AddCommand(buildLabradarCommands(app))
+	rootCmd.AddCommand(buildCartridgeCommands(app))
+	rootCmd.AddCommand(buildLabradarCommands(app))
 
-	return cmd
+	return rootCmd
 }
 
 func initializeCommand(cmd *cobra.Command) error {
@@ -85,4 +85,5 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 			_ = cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
 		}
 	})
+
 }

@@ -9,54 +9,71 @@ import (
 )
 
 func buildLabradarCommands(a *mlrb.MyLittleRangeBook) *cobra.Command {
+	var inputDir string
+	var seriesNumber int
 	cmd := &cobra.Command{
-		Use:   "labradar",
-		Short: "All the commands for dealing with Labradar files via the command line.",
+		Use:              "labradar",
+		Short:            "All the commands for dealing with Labradar files via the command line.",
+		TraverseChildren: true,
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			logrus.Debug("Pre run!")
+		},
+		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+			logrus.Debug("Post run!")
+		},
 	}
+
+	cmd.PersistentFlags().StringVarP(&inputDir, "labradar.inputDir", "", "", "The location of the input files.")
+	cmd.PersistentFlags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
+	setMandatoryFlags(cmd, "number", "labradar.inputDir")
 
 	cmd.AddCommand(buildReadLabradarCsvCmd(a))
 	cmd.AddCommand(buildListLabradarCsvFilesCmd(a))
 	cmd.AddCommand(buildSubmitCsvFileCmd(a))
 	cmd.AddCommand(buildDescribeSeriesCommand(a))
+
 	return cmd
 }
 
 func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 
-	var seriesNumber int
-	var inputDir string
+	var n int
+	var i string
 	cmd := &cobra.Command{
 		Use:   "submit",
 		Short: "Submit the CSV file.",
 		Run: func(cmd *cobra.Command, args []string) {
-			filename := labradar.FilenameForSeries(inputDir, seriesNumber)
+			filename := labradar.FilenameForSeries(i, n)
 			err := a.SubmitLabradarCsv(filename)
 			if err != nil {
 				logrus.Error(err)
 			} else {
-				logrus.Info("Submitted the file " + labradar.FilenameForSeries(inputDir, seriesNumber) + ".")
+				logrus.Info("Submitted the file " + labradar.FilenameForSeries(i, n) + ".")
 			}
 		},
 	}
 
-	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
+	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the Device CSV file to read.")
 	setMandatoryFlags(cmd, "number")
 
-	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "", "", "The location of the input files.")
+	cmd.Flags().StringVarP(&i, "labradar.inputDir", "", "", "The location of the input files.")
 
 	return cmd
 }
 
 func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 
-	var inputDir string
-	var seriesNumber int
+	var i string
+	var n int
 
 	cmd := &cobra.Command{
 		Use:   "read",
 		Short: "Reads a Labradar CSV file and displays a summary to STDOUT.",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			logrus.Debug("Pre-run")
+		},
 		Run: func(cmd *cobra.Command, args []string) {
-			series, err := app.LoadLabradarCsv(inputDir, seriesNumber)
+			series, err := app.LoadLabradarCsv(i, n)
 			if err != nil {
 				logrus.Fatal(err)
 				return
@@ -67,12 +84,13 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 				logrus.Fatal(err)
 			}
 		},
+		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+			logrus.Debug("Post run.")
+		},
 	}
 
-	cmd.Flags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-	setMandatoryFlags(cmd, "number")
-
-	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "", "", "The location of the input files.")
+	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the Device CSV file to read.")
+	cmd.Flags().StringVarP(&i, "labradar.inputDir", "", "", "The location of the input files.")
 
 	return cmd
 }
