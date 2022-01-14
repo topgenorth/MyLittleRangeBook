@@ -13,7 +13,7 @@ func filenameForSeries(s labradar.Series, c *config.Config, ext string) (string,
 		return "", err
 	}
 	outputFileName := filepath.Join(dir, s.Labradar.SeriesName+"."+ext)
-	if !labradar.DeleteFile(outputFileName, c) {
+	if !DeleteFile(outputFileName, c) {
 		return "", labradar.SeriesError{Number: s.Number, Msg: fmt.Sprintf("The file %s exists.", outputFileName)}
 	}
 

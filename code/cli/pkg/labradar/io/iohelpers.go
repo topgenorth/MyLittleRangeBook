@@ -1,4 +1,4 @@
-package labradar
+package io
 
 import (
 	"opgenorth.net/mylittlerangebook/pkg/config"
