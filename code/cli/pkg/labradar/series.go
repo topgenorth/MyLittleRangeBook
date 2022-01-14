@@ -26,6 +26,17 @@ type Series struct {
 	RawData    map[int]*LineOfData `json:"data"`
 }
 
+// Filename infer the filename withing the LBR folder.
+func (s *Series) Filename() string {
+
+	stub := fmt.Sprintf("%04d", s.Number)
+	//goland:noinspection SpellCheckingInspection
+	subdir := fmt.Sprintf("SR%s", stub)
+	filename := fmt.Sprintf("SR%s Report.csv", stub)
+	p := path.Join(subdir, filename)
+	return p
+}
+
 type SeriesError struct {
 	Msg    string
 	Number int

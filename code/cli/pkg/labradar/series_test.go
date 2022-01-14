@@ -138,3 +138,31 @@ func Test_parseNameOfProjectileFromString(t *testing.T) {
 		})
 	}
 }
+
+func TestSeries_Filename(t *testing.T) {
+
+	s1 := NewSeries()
+	s1.Number = 45
+
+	tests := []struct {
+		name   string
+		series *Series
+		want   string
+	}{
+		{name: "Success for series number 0.",
+			series: NewSeries(),
+			want:   "SR0000/SR0000 Report.csv",
+		},
+		{name: "Success for series number 45.",
+			series: s1,
+			want:   "SR0045/SR0045 Report.csv",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.series.Filename(); got != tt.want {
+				t.Errorf("Filename() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	"path/filepath"
 )
 
 type JsonSeriesWriter1 struct {
@@ -13,16 +14,22 @@ type JsonSeriesWriter1 struct {
 }
 
 func (w *JsonSeriesWriter1) Write(s labradar.Series) error {
-	name, err := filenameForSeries(s, w.Config, "json")
+
+	dir, err := w.GetHomeDir()
 	if err != nil {
 		return err
 	}
 
-	err = w.FileSystem.WriteFile(name, s.ToJsonBytes(), 0644)
+	outputFileName := filepath.Join(dir, s.Labradar.SeriesName+".json")
+	if !DeleteFile(outputFileName, w.Config) {
+		return fmt.Errorf("cannot write to the file %s: %v", outputFileName, err)
+	}
+
+	err = w.FileSystem.WriteFile(outputFileName, s.ToJsonBytes(), 0644)
 	if err != nil {
 		return labradar.SeriesError{
 			Number: s.Number,
-			Msg:    fmt.Sprintf("Could not write to the file %s. %v", name, err),
+			Msg:    fmt.Sprintf("Could not write to the file %s. %v", outputFileName, err),
 		}
 	}
 
