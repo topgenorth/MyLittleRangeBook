@@ -79,3 +79,13 @@ func (w *ReadMeSeriesWriter) Write(s labradar.Series) error {
 
 	return nil
 }
+
+const TMPL_SUMMARIZE_SERIES = `----
+Labradar Series {{.Labradar.SeriesName}}
+
+Number of Shots: {{.TotalNumberOfShots}}
+Average Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}
+Standard Deviation: {{.Velocities.StandardDeviation}}{{.Labradar.Units.Velocity}}
+Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
+----
+`
