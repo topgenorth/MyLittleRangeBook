@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/io"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
@@ -43,12 +42,12 @@ func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		Use:   "submit",
 		Short: "Submit the CSV file.",
 		Run: func(cmd *cobra.Command, args []string) {
-			filename := labradar.FilenameForSeries(i, n)
+			filename := io.FilenameForSeries(i, n)
 			err := a.SubmitLabradarCsv(filename)
 			if err != nil {
 				logrus.Error(err)
 			} else {
-				logrus.Info("Submitted the file " + labradar.FilenameForSeries(i, n) + ".")
+				logrus.Info("Submitted the file " + io.FilenameForSeries(i, n) + ".")
 			}
 		},
 	}

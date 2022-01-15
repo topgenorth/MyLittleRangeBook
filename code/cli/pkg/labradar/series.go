@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/carolynvs/aferox"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/context"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/io"
 	"os"
 	"path"
 	"path/filepath"
@@ -188,21 +188,15 @@ func LoadLabradarDataFiles(c *config.Config, inputDir string) *LbrFiles {
 	return f
 }
 
-// CsvFile is a serialized Labradar CSV file.
-type CsvFile struct {
-	*Series
-	InputFile string
-	Error     error
-}
-
-func (f CsvFile) String() string {
-	return f.InputFile
-}
-
 // LoadCsv will read a single Labradar CSV file (identified by it's seriesNumber).
 func LoadCsv(c *config.Config, inputDir string, seriesNumber int) *CsvFile {
-	f := loadCsvInternal(c.FileSystem, FilenameForSeries(inputDir, seriesNumber))
-	return f
+	name := io.FilenameForSeries(inputDir, seriesNumber)
+	series, err := LoadSeries(name, c.FileSystem)
+	if err != nil {
+		return &CsvFile{Series: nil, InputFile: name, Error: err}
+	}
+
+	return &CsvFile{Series: series, InputFile: name, Error: nil}
 }
 
 // getLabradarCsvFiles will read all the Labradar CSV files from the given directory.
@@ -228,7 +222,7 @@ func loadCsvInternal(fs aferox.Aferox, filename string) *CsvFile {
 			err,
 		}
 	}
-	defer closeFile(f)
+	defer io.CloseFile(f)
 
 	sb := NewSeriesBuilder()
 	s := bufio.NewScanner(f)
@@ -246,16 +240,6 @@ func loadCsvInternal(fs aferox.Aferox, filename string) *CsvFile {
 	}
 }
 
-// FilenameForSeries Given the Number of a series and the root directory of the Labradar files, infer the filename of the Labradar
-// CSV file that holds the results of the series.
-func FilenameForSeries(labradarRootDirectory string, seriesNumber int) string {
-	stub := fmt.Sprintf("%04d", seriesNumber)
-	//goland:noinspection SpellCheckingInspection
-	subdir := fmt.Sprintf("SR%s", stub)
-	filename := fmt.Sprintf("SR%s Report.csv", stub)
-	p := path.Join(labradarRootDirectory, subdir, filename)
-	return p
-}
 func outputFileNameFor(seriesNumber int, outputDir string) string {
 	stub := fmt.Sprintf("%04d", seriesNumber)
 	filename := fmt.Sprintf("%s.json", stub)
@@ -296,9 +280,29 @@ func getCsvFilenamesInDirectory(inputDir string) []string {
 	return filenames
 }
 
-func closeFile(f afero.File) {
-	err := f.Close()
+//func closeFile(f afero.File) {
+//	err := f.Close()
+//	if err != nil {
+//		fmt.Println(err)
+//	}
+//}
+
+// LoadSeries will take the specified CSV file and return a Series.
+func LoadSeries(filename string, fs aferox.Aferox) (*Series, error) {
+	f, err := fs.Open(filename)
 	if err != nil {
-		fmt.Println(err)
+		return nil, fmt.Errorf("could not load the series at %s: %w", filename, err)
 	}
+	defer io.closeFile(f)
+
+	builder := NewSeriesBuilder()
+	scanner := bufio.NewScanner(f)
+	var lineNumber = 0
+	for scanner.Scan() {
+		l := NewLineOfData(lineNumber, scanner.Text())
+		builder.ParseLine(l)
+		lineNumber++
+	}
+
+	return builder.Series, nil
 }

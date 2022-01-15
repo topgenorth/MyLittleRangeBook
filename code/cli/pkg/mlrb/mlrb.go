@@ -62,7 +62,7 @@ func (a *MyLittleRangeBook) LoadLabradarCsv(inputDir string, seriesNumber int) (
 	r := labradar.LoadCsv(a.Config, inputDir, seriesNumber)
 
 	if r.Error != nil {
-		return nil, fmt.Errorf("could not read the Labradar file %s, %w: ", labradar.FilenameForSeries(inputDir, seriesNumber), r.Error)
+		return nil, fmt.Errorf("could not read the Labradar file %s, %w: ", lbrio.FilenameForSeries(inputDir, seriesNumber), r.Error)
 	}
 
 	return r.Series, nil
