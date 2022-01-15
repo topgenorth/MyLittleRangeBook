@@ -40,7 +40,7 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 			file := filepath.Join(p.inputDir, "README.md")
 			r, err := readme.Load(file, a.Config.FileSystem)
 			if err != nil {
-				logrus.Warnf("Will not append the series %s to the README file %s: %w", s, file, err)
+				logrus.Warnf("Will not append the series %d to the README file %s: %v", p.seriesNumber, file, err)
 			} else {
 				r.AppendSeries(*s, true)
 				if err = readme.Save(*r, a.Config.FileSystem); err != nil {

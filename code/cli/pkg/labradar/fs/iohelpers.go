@@ -3,11 +3,16 @@ package fs
 import (
 	"fmt"
 	"github.com/carolynvs/aferox"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/config"
+	"opgenorth.net/mylittlerangebook/pkg/math"
 	"os"
 	"path"
+	"path/filepath"
+	"sort"
+	"strings"
 )
 
 func DeleteFile(s string, c *config.Config) bool {
@@ -43,40 +48,37 @@ func FilenameForSeries(labradarRootDirectory string, seriesNumber int) string {
 	return p
 }
 
-/*
-// LoadDataFiles will attempt load and de-serialize the CSV files for a given Labradar instance.
-func LoadDataFiles(c *config.Config, inputDir string) *LbrFiles {
-	dir, err := os.Stat(inputDir)
+// ListLabradarFiles will return an array of all the full filenames of Labradar CSV files in the given
+// directory of Labradar files.
+func ListLabradarFiles(inputDir string, fs aferox.Aferox) []string {
+	result := make([]string, 0)
 
-	f := &LbrFiles{
-		inputDir,
-		make([]*CsvFile, 0),
-	}
+	// [TO20220115] Show a list of all the things in the inputDir.
+	labradarDir, err := fs.Open(inputDir)
 	if err != nil {
-		return f
+		logrus.Warnf("Could not list the contents of %s: %v", inputDir, err)
+		return result
+	}
+	subdirs, err := labradarDir.Readdir(0)
+	if err != nil {
+		logrus.Warnf("problem finding subdirs in %s: %v", inputDir, err)
+		return result
 	}
 
-	if !dir.IsDir() {
-		return f
-	}
-
-	f.Files = getLabradarCsvFiles(c, inputDir)
-	return f
-}
-
-// getLabradarCsvFiles will read all the Labradar CSV files from the given directory.
-func getLabradarCsvFiles(c *config.Config, inputDir string) []*CsvFile {
-	var files []*CsvFile
-	for _, filename := range getCsvFilenamesInDirectory(inputDir) {
-		logrus.Debugf("Trying to read the file %s.", filename)
-		f := loadCsvInternal(c.FileSystem, filename)
-		if f.Error == nil {
-			files = append(files, f)
+	for _, subdir := range subdirs {
+		s := subdir.Name()
+		if isLabradarSeriesName(s) {
+			d := filepath.Join(inputDir, s, fmt.Sprintf("%s Report.csv", s))
+			if fileExists(d) {
+				result = append(result, d)
+			}
 		}
 	}
-	return files
+
+	sort.Strings(result)
+
+	return result
 }
-*/
 
 func LoadCsv(filename string, fs aferox.Aferox) *CsvFile {
 	csv := &CsvFile{
@@ -106,4 +108,76 @@ func LoadCsv(filename string, fs aferox.Aferox) *CsvFile {
 	}
 
 	return csv
+}
+
+// isLabradarSeriesName will return true if the directory name looks like a valid Labradar series directory.
+// This is a case sensitive comparison.
+func isLabradarSeriesName(dirName string) bool {
+	if len(dirName) != 6 {
+		return false
+	}
+
+	if dirName[0:2] != "SR" {
+		return false
+	}
+
+	number := dirName[2:]
+	if !math.IsNumericOnly(number) {
+		return false
+	}
+
+	return true
+}
+
+// isLabradarCsvFile will perform some basic checking to see if a given filename could be that of a Labradar CSV file.
+// This is a case sensitive comparison.  Sample name: SR0001 Report.csv
+func isLabradarCsvFile(filenameWithExtension string) bool {
+
+	if len(filenameWithExtension) != 17 {
+		return false
+	}
+
+	b := filepath.Base(filenameWithExtension)
+	ext := filepath.Ext(b)
+
+	// Check extension
+	if ext != ".csv" {
+		return false
+	}
+
+	name := strings.Split(b, ".")[0]
+
+	// Check length of the filename
+	if len(name) != 13 {
+		return false
+	}
+
+	// Must end with ` Report`
+	if !strings.HasSuffix(name, " Report") {
+		return false
+	}
+
+	// Must start with a valid Labradar Series name
+	return isLabradarSeriesName(name[0:6])
+
+}
+
+func fileExists(filename string) bool {
+	if _, err := os.Stat(filename); err == nil {
+		// path/to/whatever exists
+		return true
+
+	} else if errors.Is(err, os.ErrNotExist) {
+		// path/to/whatever does *not* exist
+		return false
+
+	} else {
+		// Schrodinger: file may or may not exist. See err for details.
+
+		// Therefore, do *NOT* use !os.IsNotExist(err) to test for file existence
+		logrus.Errorf("Assuming the file %s does not exist. %v", filename, err)
+		return false
+	}
+
+	return true
 }

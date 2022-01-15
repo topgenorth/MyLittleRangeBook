@@ -60,20 +60,10 @@ func (a *MyLittleRangeBook) ListCartridges() {
 // LoadLabradarCsv will take a Labradar CSV file, and display relevant details to STDOUT.
 func (a *MyLittleRangeBook) LoadLabradarCsv(inputDir string, seriesNumber int) (*labradar.Series, error) {
 
-	//filename := fs.File
-	//s, err := labradar.LoadSeries(, a.Config.FileSystem)
-	//r := labradar.LoadCsv(a.Config, inputDir, seriesNumber)
-	//
-	//if err != nil {
-	//	return nil, fmt.Errorf("could not read the Labradar file %s, %w: ", lbrio.FilenameForSeries(inputDir, seriesNumber), r.Error)
-	//}
-	//
-	//return r.Series, nil
-
 	filename := fs.FilenameForSeries(inputDir, seriesNumber)
 	s, err := labradar.LoadSeries(filename, a.Config.FileSystem)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve series %d in %s: w", seriesNumber, inputDir, err)
+		return nil, fmt.Errorf("could not retrieve series %d in %s: %w", seriesNumber, inputDir, err)
 	}
 
 	return s, nil
@@ -89,9 +79,9 @@ func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
 }
 
 // GetListOfLabradarFiles will display all the CSV files in the Labradar directory.
-func (a *MyLittleRangeBook) GetListOfLabradarFiles() ([]string, error) {
-
-	return nil, nil
+func (a *MyLittleRangeBook) GetListOfLabradarFiles(inputDir string) ([]string, error) {
+	files := fs.ListLabradarFiles(inputDir, a.FileSystem)
+	return files, nil
 }
 
 // SubmitCartridge will add a new cartridge to the cartridges on record.

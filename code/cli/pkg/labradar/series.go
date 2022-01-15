@@ -5,12 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/carolynvs/aferox"
-	"github.com/sirupsen/logrus"
 	"opgenorth.net/mylittlerangebook/pkg/context"
-	"os"
 	"path"
-	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -191,40 +187,6 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 //	filename := fmt.Sprintf("%s.json", stub)
 //	return path.Join(outputDir, filename)
 //}
-
-// isLabradarCsvFile will perform some basic checking to see if a given filename could be that of a Labadar CSV file.
-func isLabradarCsvFile(path string) bool {
-	b := strings.ToLower(filepath.Base(path))
-	ext := filepath.Ext(b)
-	if ext == ".csv" {
-		sr := b[0:2]
-		if sr == "sr" {
-			return true
-		}
-	}
-
-	return false
-}
-
-// getCsvFilenamesInDirectory will return a list of Labradar CSV files in a given directory
-func getCsvFilenamesInDirectory(inputDir string) []string {
-
-	var filenames []string
-
-	// TODO [TO20211122] Can't really mock out filepath.Walk.
-	err := filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() && isLabradarCsvFile(path) {
-			filenames = append(filenames, path)
-		}
-		return nil
-	})
-	if err != nil {
-		logrus.Errorf("Could not list files in the directory %s. %v", inputDir, err)
-		return nil
-	}
-
-	return filenames
-}
 
 // LoadSeries will take the specified CSV file and return a Series.
 func LoadSeries(filename string, fs aferox.Aferox) (*Series, error) {

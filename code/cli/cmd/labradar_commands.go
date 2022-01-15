@@ -94,7 +94,7 @@ func buildListFilesCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 		Use:   "list",
 		Short: "Will display a list of all the CSV files in the input directory.",
 		Run: func(cmd *cobra.Command, args []string) {
-			files, err := app.GetListOfLabradarFiles()
+			files, err := app.GetListOfLabradarFiles(inputDir)
 			if err != nil {
 				logrus.Panicf("Could not list files!  %v", err)
 			}
