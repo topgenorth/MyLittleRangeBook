@@ -2,7 +2,7 @@ package labradar
 
 import (
 	. "github.com/onsi/ginkgo"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/io"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 )
 import . "github.com/onsi/gomega"
 import "testing"
@@ -51,7 +51,7 @@ func TestFilenameForSeries(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := io.FilenameForSeries(tt.args.labradarDirectory, tt.args.seriesNumber); got != tt.want {
+			if got := fs.FilenameForSeries(tt.args.labradarDirectory, tt.args.seriesNumber); got != tt.want {
 				t.Errorf("FilenameForSeries() = %v, want %v", got, tt.want)
 			}
 		})

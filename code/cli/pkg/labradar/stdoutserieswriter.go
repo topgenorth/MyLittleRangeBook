@@ -1,9 +1,8 @@
-package io
+package labradar
 
 import (
 	"bytes"
 	"fmt"
-	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"os"
 	"text/template"
 )
@@ -12,10 +11,10 @@ type StdOutSeriesWriter1 struct {
 	TemplateString string
 }
 
-func (w *StdOutSeriesWriter1) Write(s labradar.Series) error {
+func (w *StdOutSeriesWriter1) Write(s Series) error {
 	t, err := template.New("OldSeriesWriter").Parse(w.TemplateString)
 	if err != nil {
-		return labradar.SeriesError{
+		return SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error creating text.template: %v", err),
 		}
@@ -23,7 +22,7 @@ func (w *StdOutSeriesWriter1) Write(s labradar.Series) error {
 
 	err = t.Execute(os.Stdout, s)
 	if err != nil {
-		return labradar.SeriesError{
+		return SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error writing template: %v", err),
 		}
@@ -36,7 +35,7 @@ type ReadMeSeriesWriter struct {
 	OldFormat bool
 }
 
-func (w *ReadMeSeriesWriter) Write(s labradar.Series) error {
+func (w *ReadMeSeriesWriter) Write(s Series) error {
 	var tmpl string
 	if w.OldFormat {
 		tmpl = TMPL_README_LINE_OLD_FORMAT
@@ -46,7 +45,7 @@ func (w *ReadMeSeriesWriter) Write(s labradar.Series) error {
 
 	t, err := template.New("ToStringSerialWriter").Parse(tmpl)
 	if err != nil {
-		return labradar.SeriesError{
+		return SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error creating text.template: %v", err),
 		}
@@ -55,7 +54,7 @@ func (w *ReadMeSeriesWriter) Write(s labradar.Series) error {
 	var line bytes.Buffer
 	err = t.Execute(&line, s)
 	if err != nil {
-		return labradar.SeriesError{
+		return SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error writing template: %v", err),
 		}

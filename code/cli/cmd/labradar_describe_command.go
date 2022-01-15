@@ -4,35 +4,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/readme"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 	"path/filepath"
 )
 
-//
-type describeParameters struct {
-	seriesNumber int
-	notes        string
-	inputDir     string
-	firearm      string
-	cartridge    string
-	bullet       string
-	powder       string
-	cbto         float32
-}
-
-func (p *describeParameters) updateSeries(s *labradar.Series) {
-	s.Notes = p.notes
-	s.Firearm.Name = p.firearm
-	s.LoadData.Cartridge = p.cartridge
-	s.LoadData.CBTO = p.cbto
-
-	s.SetProjectile(p.bullet)
-	s.SetPowder(p.powder)
-
-}
-
+// buildDescribeSeriesCommand will create the Cobra command to describe what the Series is all about.
 func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 
 	p := describeParameters{
@@ -57,7 +34,8 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 			}
 			p.updateSeries(s)
 
-			_ = a.DescribeToStdOut(s)
+			logrus.Warning("DescribeToStdOut was here.")
+			//_ = a.DescribeToStdOut(s)
 
 			file := filepath.Join(p.inputDir, "README.md")
 			r, err := readme.Load(file, a.Config.FileSystem)
