@@ -2,6 +2,7 @@ package series
 
 import (
 	"fmt"
+	"opgenorth.net/mylittlerangebook/pkg/math"
 )
 
 // BallisticCoefficient captures the ballistics data about a specific projectile.
@@ -97,4 +98,24 @@ type UnitsOfMeasure struct {
 
 func (t UnitsOfMeasure) String() string {
 	return fmt.Sprintf("%s/%s/%s", t.Velocity, t.Distance, t.Weight)
+}
+
+type VelocityData struct {
+	Average           int     `json:"average"`
+	Max               int     `json:"max"`
+	Min               int     `json:"min"`
+	ExtremeSpread     int     `json:"extremeSpread"`
+	StandardDeviation float64 `json:"standardDeviation"`
+	Values            []int   `json:"values"`
+}
+
+func (stats *VelocityData) AddVelocity(velocity int) {
+	stats.Values = append(stats.Values, velocity)
+	min, max := math.GetMaxAndMin(stats.Values)
+
+	stats.Average = int(math.CalculateAverage(stats.Values))
+	stats.Max = max
+	stats.Min = min
+	stats.ExtremeSpread = max - min
+	stats.StandardDeviation = math.CalculateStandardDeviation(stats.Values)
 }

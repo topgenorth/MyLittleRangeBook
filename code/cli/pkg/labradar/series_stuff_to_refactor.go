@@ -25,13 +25,13 @@ func (t Device) String() string {
 }
 
 type Series struct {
-	Number     int                 `json:"number"`
-	Labradar   *Device             `json:"labradar"`
-	Velocities *VelocityData       `json:"velocities"`
-	Firearm    *series.Firearm     `json:"firearm"`
-	LoadData   *series.LoadData    `json:"loadData"`
-	Notes      string              `json:"notes"`
-	RawData    map[int]*LineOfData `json:"data"`
+	Number     int                  `json:"number"`
+	Labradar   *Device              `json:"labradar"`
+	Velocities *series.VelocityData `json:"velocities"`
+	Firearm    *series.Firearm      `json:"firearm"`
+	LoadData   *series.LoadData     `json:"loadData"`
+	Notes      string               `json:"notes"`
+	RawData    map[int]*LineOfData  `json:"data"`
 }
 
 // Filename infer the filename withing the LBR folder.
@@ -63,7 +63,7 @@ func NewSeries() *Series {
 		u,
 	}
 
-	vd := &VelocityData{
+	vd := &series.VelocityData{
 		Average:           0,
 		Max:               0,
 		Min:               0,
