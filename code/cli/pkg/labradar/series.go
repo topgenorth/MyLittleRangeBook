@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/carolynvs/aferox"
 	"opgenorth.net/mylittlerangebook/pkg/context"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"path"
 	"time"
 )
@@ -61,10 +62,10 @@ func NewSeries() *Series {
 		Name:      "",
 		Cartridge: "",
 	}
-	pr := &Projectile{
+	pr := &series.Projectile{
 		Name:   "",
 		Weight: 0,
-		BC: &BallisticCoefficient{
+		BC: &series.BallisticCoefficient{
 			DragModel: "",
 			Value:     0,
 		},

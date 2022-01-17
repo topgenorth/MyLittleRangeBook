@@ -1,12 +1,15 @@
 package labradar
 
-import "fmt"
+import (
+	"fmt"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
+)
 
 type LoadData struct {
-	Cartridge  string        `json:"cartridge"`
-	Projectile *Projectile   `json:"projectile"`
-	Powder     *PowderCharge `json:"powder"`
-	CBTO       float32       `json:cbto`
+	Cartridge  string             `json:"cartridge"`
+	Projectile *series.Projectile `json:"projectile"`
+	Powder     *PowderCharge      `json:"powder"`
+	CBTO       float32            `json:cbto`
 }
 
 func (l LoadData) String() string {

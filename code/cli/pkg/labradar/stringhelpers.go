@@ -1,6 +1,7 @@
 package labradar
 
 import (
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -37,14 +38,14 @@ func parsePowderString(powder string) *PowderCharge {
 	return p
 }
 
-func parseProjectileString(projectile string) *Projectile {
+func parseProjectileString(projectile string) *series.Projectile {
 	parts := RemoveEmptyStrings(strings.Split(projectile, " "))
 
 	if len(parts) < 1 {
-		return &Projectile{Name: "Unknown", Weight: 0, BC: nil}
+		return &series.Projectile{Name: "Unknown", Weight: 0, BC: nil}
 	}
 
-	p := &Projectile{
+	p := &series.Projectile{
 		Name:   parseNameOfProjectileFromString(strings.Join(parts[1:], " ")),
 		Weight: parseWeightFromProjectileString(parts[0]),
 		BC:     nil, // [TO20220106] We don't worry about BC right now.

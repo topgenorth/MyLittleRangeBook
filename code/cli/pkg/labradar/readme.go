@@ -1,6 +1,7 @@
 package labradar
 
 import (
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"strconv"
 	"strings"
 )
@@ -13,7 +14,6 @@ type ReadmeLine struct {
 	Text         string
 	Err          error
 }
-
 
 func getReadmeLine(text string) *ReadmeLine {
 
@@ -50,8 +50,8 @@ func getLoadData(ammoPart string) *LoadData {
 
 }
 
-func getProjectileFrom(s string) *Projectile {
-	p := &Projectile{
+func getProjectileFrom(s string) *series.Projectile {
+	p := &series.Projectile{
 		Name:   strings.TrimSpace(s),
 		Weight: 0,
 		BC:     nil,

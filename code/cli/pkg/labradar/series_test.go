@@ -2,6 +2,7 @@ package labradar
 
 import (
 	"opgenorth.net/mylittlerangebook/pkg/context"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"reflect"
 	"testing"
 	"time"
@@ -24,27 +25,27 @@ func Test_parse_string_makes_a_projectile(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *Projectile
+		want *series.Projectile
 	}{
 		{
 			name: "format 1",
 			args: args{projectile: "123gr Hornady ELD Match"},
-			want: &Projectile{Name: "Hornady ELD Match", Weight: 123, BC: nil},
+			want: &series.Projectile{Name: "Hornady ELD Match", Weight: 123, BC: nil},
 		},
 		{
 			name: "format 2",
 			args: args{projectile: "85 grain Speer SP"},
-			want: &Projectile{Name: "Speer SP", Weight: 85, BC: nil},
+			want: &series.Projectile{Name: "Speer SP", Weight: 85, BC: nil},
 		},
 		{
 			name: "format 3",
 			args: args{projectile: "120 gr Hornady SST"},
-			want: &Projectile{Name: "Hornady SST", Weight: 120, BC: nil},
+			want: &series.Projectile{Name: "Hornady SST", Weight: 120, BC: nil},
 		},
 		{
 			name: "format 4",
 			args: args{projectile: "120 Hornady SST"},
-			want: &Projectile{Name: "Hornady SST", Weight: 120, BC: nil},
+			want: &series.Projectile{Name: "Hornady SST", Weight: 120, BC: nil},
 		},
 	}
 	for _, tt := range tests {
