@@ -11,3 +11,16 @@ type SeriesError struct {
 func (s SeriesError) Error() string {
 	return fmt.Sprintf("There was a problem trying to process series %d: %s.", s.Number, s.Msg)
 }
+
+func New() {
+
+}
+
+type LabradarSeries struct {
+	Number     int             `json:"number"`
+	Labradar   *LabradarDevice `json:"labradar"`
+	Velocities *VelocityData   `json:"velocities"`
+	Firearm    *Firearm        `json:"firearm"`
+	LoadData   *LoadData       `json:"loadData"`
+	Notes      string          `json:"notes"`
+}

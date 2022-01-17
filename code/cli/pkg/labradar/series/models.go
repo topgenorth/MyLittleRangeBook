@@ -119,3 +119,17 @@ func (stats *VelocityData) AddVelocity(velocity int) {
 	stats.ExtremeSpread = max - min
 	stats.StandardDeviation = math.CalculateStandardDeviation(stats.Values)
 }
+
+// LabradarDevice holds the details about a specific Labradar device.
+type LabradarDevice struct {
+	DeviceId   string          `json:"deviceId"`
+	Date       string          `json:"date"`
+	Time       string          `json:"time"`
+	TimeZone   string          `json:"timezone"`
+	SeriesName string          `json:"seriesName"`
+	Units      *UnitsOfMeasure `json:"units"`
+}
+
+func (t LabradarDevice) String() string {
+	return t.DeviceId
+}
