@@ -1,22 +1,10 @@
 package labradar
 
 import (
-	"opgenorth.net/mylittlerangebook/pkg/context"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"reflect"
 	"testing"
-	"time"
 )
-
-func Test_initLabradarStruct(t *testing.T) {
-	loc, _ := time.LoadLocation(context.DefaultTimeZone)
-	ls := initDevice(42, loc)
-
-	if ls.SeriesName != "SR0042" {
-		t.Errorf("ls.SeriesName = %s; wanted SR0042.", ls.SeriesName)
-	}
-
-}
 
 func Test_parse_string_makes_a_projectile(t *testing.T) {
 	type args struct {
@@ -135,34 +123,6 @@ func Test_parseNameOfProjectileFromString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := parseNameOfProjectileFromString(tt.str); got != tt.want {
 				t.Errorf("parseNameOfProjectileFromString() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestSeries_Filename(t *testing.T) {
-
-	s1 := CreateOldSeries()
-	s1.Number = 45
-
-	tests := []struct {
-		name   string
-		series *OldSeries
-		want   string
-	}{
-		{name: "Success for series number 0.",
-			series: CreateOldSeries(),
-			want:   "SR0000/SR0000 Report.csv",
-		},
-		{name: "Success for series number 45.",
-			series: s1,
-			want:   "SR0045/SR0045 Report.csv",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.series.Filename(); got != tt.want {
-				t.Errorf("Filename() = %v, want %v", got, tt.want)
 			}
 		})
 	}
