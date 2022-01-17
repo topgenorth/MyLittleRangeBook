@@ -3,6 +3,7 @@ package labradar
 import (
 	"bytes"
 	"fmt"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"os"
 	"text/template"
 )
@@ -14,7 +15,7 @@ type StdOutSeriesWriter1 struct {
 func (w *StdOutSeriesWriter1) Write(s Series) error {
 	t, err := template.New("OldSeriesWriter").Parse(w.TemplateString)
 	if err != nil {
-		return SeriesError{
+		return series.SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error creating text.template: %v", err),
 		}
@@ -22,7 +23,7 @@ func (w *StdOutSeriesWriter1) Write(s Series) error {
 
 	err = t.Execute(os.Stdout, s)
 	if err != nil {
-		return SeriesError{
+		return series.SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error writing template: %v", err),
 		}
@@ -45,7 +46,7 @@ func (w *ReadMeSeriesWriter) Write(s Series) error {
 
 	t, err := template.New("ToStringSerialWriter").Parse(tmpl)
 	if err != nil {
-		return SeriesError{
+		return series.SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error creating text.template: %v", err),
 		}
@@ -54,7 +55,7 @@ func (w *ReadMeSeriesWriter) Write(s Series) error {
 	var line bytes.Buffer
 	err = t.Execute(&line, s)
 	if err != nil {
-		return SeriesError{
+		return series.SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error writing template: %v", err),
 		}

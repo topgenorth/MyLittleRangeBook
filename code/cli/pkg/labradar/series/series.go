@@ -1,4 +1,5 @@
-package labradar
+// Package series holds all the code for detailing with a Labradar series.
+package series
 
 import "fmt"
 

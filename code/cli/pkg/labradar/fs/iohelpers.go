@@ -1,3 +1,4 @@
+// Package fs encapsulates all of the code for manipulating the files created by a Labradar.
 package fs
 
 import (
@@ -15,6 +16,7 @@ import (
 	"strings"
 )
 
+// DeleteFile will try and delete the specific file, returning true if it can.
 func DeleteFile(s string, c *config.Config) bool {
 	exists, err := c.FileSystem.Exists(s)
 	if err != nil {
@@ -166,7 +168,6 @@ func fileExists(filename string) bool {
 	if _, err := os.Stat(filename); err == nil {
 		// path/to/whatever exists
 		return true
-
 	} else if errors.Is(err, os.ErrNotExist) {
 		// path/to/whatever does *not* exist
 		return false

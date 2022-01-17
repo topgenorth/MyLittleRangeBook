@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"text/template"
 )
 
@@ -25,7 +26,7 @@ func (w *StringWriter) Write(s labradar.Series) error {
 
 	t, err := template.New("labradarReadmeStringWriter").Parse(TMPL_README_SERIES_LINE)
 	if err != nil {
-		return labradar.SeriesError{
+		return series.SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error creating text.template: %v", err),
 		}
@@ -33,7 +34,7 @@ func (w *StringWriter) Write(s labradar.Series) error {
 
 	var tpl bytes.Buffer
 	if err := t.Execute(&tpl, s); err != nil {
-		return labradar.SeriesError{
+		return series.SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error writing template: %v", err),
 		}

@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"path/filepath"
 )
 
@@ -27,7 +28,7 @@ func (w *JsonSeriesWriter1) Write(s Series) error {
 
 	err = w.FileSystem.WriteFile(outputFileName, s.ToJsonBytes(), 0644)
 	if err != nil {
-		return SeriesError{
+		return series.SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Could not write to the file %s. %v", outputFileName, err),
 		}
