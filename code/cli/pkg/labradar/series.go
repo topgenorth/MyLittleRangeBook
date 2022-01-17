@@ -28,7 +28,7 @@ type Series struct {
 	Number     int                 `json:"number"`
 	Labradar   *Device             `json:"labradar"`
 	Velocities *VelocityData       `json:"velocities"`
-	Firearm    *Firearm            `json:"firearm"`
+	Firearm    *series.Firearm     `json:"firearm"`
 	LoadData   *series.LoadData    `json:"loadData"`
 	Notes      string              `json:"notes"`
 	RawData    map[int]*LineOfData `json:"data"`
@@ -71,7 +71,7 @@ func NewSeries() *Series {
 		StandardDeviation: 0,
 		Values:            nil,
 	}
-	f := &Firearm{
+	f := &series.Firearm{
 		Name:      "",
 		Cartridge: "",
 	}

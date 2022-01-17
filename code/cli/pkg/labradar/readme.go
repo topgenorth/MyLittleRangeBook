@@ -9,7 +9,7 @@ import (
 type ReadmeLine struct {
 	LineNumber   int
 	SeriesNumber int
-	Firearm      *Firearm
+	Firearm      *series.Firearm
 	Load         *series.LoadData
 	Text         string
 	Err          error
@@ -23,7 +23,7 @@ func getReadmeLine(text string) *ReadmeLine {
 
 	seriesNumber, err := strconv.Atoi(strings.TrimSpace(parts[0]))
 	ld := getLoadData(parts[1])
-	f := &Firearm{strings.TrimSpace(parts[2]), ld.Cartridge}
+	f := &series.Firearm{strings.TrimSpace(parts[2]), ld.Cartridge}
 
 	r := &ReadmeLine{
 		LineNumber:   0,
