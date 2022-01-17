@@ -12,12 +12,12 @@ import (
 )
 
 type Device struct {
-	DeviceId   string          `json:"deviceId"`
-	Date       string          `json:"date"`
-	Time       string          `json:"time"`
-	TimeZone   string          `json:"timezone"`
-	SeriesName string          `json:"seriesName"`
-	Units      *UnitsOfMeasure `json:"units"`
+	DeviceId   string                 `json:"deviceId"`
+	Date       string                 `json:"date"`
+	Time       string                 `json:"time"`
+	TimeZone   string                 `json:"timezone"`
+	SeriesName string                 `json:"seriesName"`
+	Units      *series.UnitsOfMeasure `json:"units"`
 }
 
 func (t Device) String() string {
@@ -49,7 +49,7 @@ func NewSeries() *Series {
 
 	now := time.Now()
 
-	u := &UnitsOfMeasure{
+	u := &series.UnitsOfMeasure{
 		Velocity: "fps",
 		Distance: "m",
 		Weight:   "gr (grains)",
@@ -142,7 +142,7 @@ func (s *Series) SetPowder(powderDescription string) {
 func initDevice(seriesNumber int, timezone *time.Location) *Device {
 	now := time.Now().In(timezone)
 
-	u := &UnitsOfMeasure{
+	u := &series.UnitsOfMeasure{
 		Velocity: "fps",
 		Distance: "m",
 		Weight:   "gr (grains)",
@@ -221,4 +221,9 @@ func LoadSeries(filename string, fs aferox.Aferox) (*Series, error) {
 	}
 
 	return builder.Series, nil
+}
+
+// SeriesWriter is an interface to persisting a Series to something a person might read (HTML, JSON, Markdown, etc).
+type SeriesWriter interface {
+	Write(s Series) error
 }

@@ -88,3 +88,13 @@ type Firearm struct {
 func (t Firearm) String() string {
 	return fmt.Sprintf("%s (%s)", t.Name, t.Cartridge)
 }
+
+type UnitsOfMeasure struct {
+	Velocity string `json:"velocity"`
+	Distance string `json:"distance"`
+	Weight   string `json:"weight"`
+}
+
+func (t UnitsOfMeasure) String() string {
+	return fmt.Sprintf("%s/%s/%s", t.Velocity, t.Distance, t.Weight)
+}
