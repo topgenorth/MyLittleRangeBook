@@ -159,7 +159,7 @@ func isLabradarCsvFile(filenameWithExtension string) bool {
 		return false
 	}
 
-	// Must start with a valid Labradar Series name
+	// Must start with a valid Labradar OldSeries name
 	return isLabradarSeriesName(name[0:6])
 
 }

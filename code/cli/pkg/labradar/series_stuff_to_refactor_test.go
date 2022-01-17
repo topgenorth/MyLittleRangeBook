@@ -142,16 +142,16 @@ func Test_parseNameOfProjectileFromString(t *testing.T) {
 
 func TestSeries_Filename(t *testing.T) {
 
-	s1 := NewSeries()
+	s1 := CreateOldSeries()
 	s1.Number = 45
 
 	tests := []struct {
 		name   string
-		series *Series
+		series *OldSeries
 		want   string
 	}{
 		{name: "Success for series number 0.",
-			series: NewSeries(),
+			series: CreateOldSeries(),
 			want:   "SR0000/SR0000 Report.csv",
 		},
 		{name: "Success for series number 45.",

@@ -58,7 +58,7 @@ func (a *MyLittleRangeBook) ListCartridges() {
 }
 
 // LoadLabradarCsv will take a Labradar CSV file, and display relevant details to STDOUT.
-func (a *MyLittleRangeBook) LoadLabradarCsv(inputDir string, seriesNumber int) (*labradar.Series, error) {
+func (a *MyLittleRangeBook) LoadLabradarCsv(inputDir string, seriesNumber int) (*labradar.OldSeries, error) {
 
 	filename := fs.FilenameForSeries(inputDir, seriesNumber)
 	s, err := labradar.LoadSeries(filename, a.Config.FileSystem)

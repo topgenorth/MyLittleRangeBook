@@ -14,7 +14,7 @@ type JsonSeriesWriter1 struct {
 	FileSystem *afero.Afero
 }
 
-func (w *JsonSeriesWriter1) Write(s Series) error {
+func (w *JsonSeriesWriter1) Write(s OldSeries) error {
 
 	dir, err := w.GetHomeDir()
 	if err != nil {

@@ -19,17 +19,17 @@ var _ = Describe("Lines of text from the Labradar CSV file", func() {
 	)
 	Context("parse the 1st line", func() {
 
-		It("should have the Device ID", func() {
-			lineOfData = NewLineOfData(1, "Device ID;LBR-0013797;;\u0000                                     \n")
-			Expect(lineOfData.Value).To(BeEquivalentTo("Device ID;LBR-0013797;;"))
+		It("should have the OldDevice ID", func() {
+			lineOfData = NewLineOfData(1, "OldDevice ID;LBR-0013797;;\u0000                                     \n")
+			Expect(lineOfData.Value).To(BeEquivalentTo("OldDevice ID;LBR-0013797;;"))
 		})
 	})
 
 	Context("parse the 3rd line", func() {
 
-		It("should have the Series Number", func() {
+		It("should have the OldSeries Number", func() {
 			lineOfData = NewLineOfData(3, "\u0000Series No;0001;;\u0000                                            \n")
-			Expect(lineOfData.Value).To(BeEquivalentTo("Series No;0001;;"))
+			Expect(lineOfData.Value).To(BeEquivalentTo("OldSeries No;0001;;"))
 		})
 	})
 

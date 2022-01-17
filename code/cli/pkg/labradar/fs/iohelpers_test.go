@@ -9,32 +9,32 @@ func Test_isLabradarSeriesDir(t *testing.T) {
 		want  bool
 	}{
 		{
-			name:  "Valid Labradar Series name",
+			name:  "Valid Labradar OldSeries name",
 			value: "SR0001",
 			want:  true,
 		},
 		{
-			name:  "Labradar Series doesn't start with SR",
+			name:  "Labradar OldSeries doesn't start with SR",
 			value: "TS0001",
 			want:  false,
 		},
 		{
-			name:  "Labradar Series starts with sr",
+			name:  "Labradar OldSeries starts with sr",
 			value: "sr0001",
 			want:  false,
 		},
 		{
-			name:  "Labradar Series name too short",
+			name:  "Labradar OldSeries name too short",
 			value: "SR001",
 			want:  false,
 		},
 		{
-			name:  "Labradar Series name too long",
+			name:  "Labradar OldSeries name too long",
 			value: "SR00001",
 			want:  false,
 		},
 		{
-			name:  "Labradar Series doesn't end with numbers",
+			name:  "Labradar OldSeries doesn't end with numbers",
 			value: "SR00o1",
 			want:  false,
 		},

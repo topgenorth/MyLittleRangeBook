@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-// buildDescribeSeriesCommand will create the Cobra command to describe what the Series is all about.
+// buildDescribeSeriesCommand will create the Cobra command to describe what the OldSeries is all about.
 func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 
 	p := describeParameters{

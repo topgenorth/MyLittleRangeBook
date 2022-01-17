@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type Device struct {
+type OldDevice struct {
 	DeviceId   string                 `json:"deviceId"`
 	Date       string                 `json:"date"`
 	Time       string                 `json:"time"`
@@ -20,13 +20,13 @@ type Device struct {
 	Units      *series.UnitsOfMeasure `json:"units"`
 }
 
-func (t Device) String() string {
+func (t OldDevice) String() string {
 	return t.DeviceId
 }
 
-type Series struct {
+type OldSeries struct {
 	Number     int                  `json:"number"`
-	Labradar   *Device              `json:"labradar"`
+	Labradar   *OldDevice           `json:"labradar"`
 	Velocities *series.VelocityData `json:"velocities"`
 	Firearm    *series.Firearm      `json:"firearm"`
 	LoadData   *series.LoadData     `json:"loadData"`
@@ -35,7 +35,7 @@ type Series struct {
 }
 
 // Filename infer the filename withing the LBR folder.
-func (s *Series) Filename() string {
+func (s *OldSeries) Filename() string {
 
 	stub := fmt.Sprintf("%04d", s.Number)
 	//goland:noinspection SpellCheckingInspection
@@ -45,7 +45,7 @@ func (s *Series) Filename() string {
 	return p
 }
 
-func NewSeries() *Series {
+func CreateOldSeries() *OldSeries {
 
 	now := time.Now()
 
@@ -54,7 +54,7 @@ func NewSeries() *Series {
 		Distance: "m",
 		Weight:   "gr (grains)",
 	}
-	d := &Device{
+	d := &OldDevice{
 		"",
 		now.Format("YYYY-MM-DD"),
 		now.Format("15:04"),
@@ -92,7 +92,7 @@ func NewSeries() *Series {
 		Projectile: pr,
 		Powder:     po,
 	}
-	ls := &Series{
+	ls := &OldSeries{
 		Number:     0,
 		Labradar:   d,
 		Velocities: vd,
@@ -105,11 +105,11 @@ func NewSeries() *Series {
 	return ls
 }
 
-func (s Series) TotalNumberOfShots() int {
+func (s OldSeries) TotalNumberOfShots() int {
 	return len(s.Velocities.Values)
 }
 
-func (s Series) ToJsonBytes() []byte {
+func (s OldSeries) ToJsonBytes() []byte {
 	jsonBytes, err := json.MarshalIndent(SortLinesOfData(s.RawData), "", "  ")
 	if err != nil {
 		return nil
@@ -118,7 +118,7 @@ func (s Series) ToJsonBytes() []byte {
 	return jsonBytes
 }
 
-func (s Series) ToJson() (string, error) {
+func (s OldSeries) ToJson() (string, error) {
 	jsonBytes, err := json.MarshalIndent(SortLinesOfData(s.RawData), "", "  ")
 	if err != nil {
 		return "", err
@@ -127,19 +127,19 @@ func (s Series) ToJson() (string, error) {
 	return fmt.Sprintf("%x", jsonBytes), nil
 }
 
-func (s *Series) SetProjectile(projectileDescription string) {
+func (s *OldSeries) SetProjectile(projectileDescription string) {
 	if len(projectileDescription) > 0 {
 		s.LoadData.Projectile = parseProjectileString(projectileDescription)
 	}
 }
 
-func (s *Series) SetPowder(powderDescription string) {
+func (s *OldSeries) SetPowder(powderDescription string) {
 	if len(powderDescription) > 0 {
 		s.LoadData.Powder = parsePowderString(powderDescription)
 	}
 }
 
-func initDevice(seriesNumber int, timezone *time.Location) *Device {
+func initDevice(seriesNumber int, timezone *time.Location) *OldDevice {
 	now := time.Now().In(timezone)
 
 	u := &series.UnitsOfMeasure{
@@ -147,7 +147,7 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 		Distance: "m",
 		Weight:   "gr (grains)",
 	}
-	return &Device{
+	return &OldDevice{
 		"",
 		now.Format("YYYY-MM-DD"),
 		now.Format("15:04"),
@@ -157,53 +157,8 @@ func initDevice(seriesNumber int, timezone *time.Location) *Device {
 	}
 }
 
-//// LoadCsv will read a single Labradar CSV file (identified by it's seriesNumber).
-//func LoadCsv(c *config.Config, inputDir string, seriesNumber int) *CsvFile {
-//	name := fs.FilenameForSeries(inputDir, seriesNumber)
-//	series, err := LoadSeries(name, c.FileSystem)
-//	if err != nil {
-//		return &CsvFile{Series: nil, InputFile: name, Error: err}
-//	}
-//
-//	return &CsvFile{Series: series, InputFile: name, Error: nil}
-//}
-
-// loadCsvInternal Will deserialize a Labaradar file into a CsvFile.
-//func loadCsvInternal(fs aferox.Aferox, filename string) *CsvFile {
-//	f, err := fs.Open(filename)
-//	if err != nil {
-//		return &CsvFile{
-//			nil,
-//			filename,
-//			err,
-//		}
-//	}
-//	defer fs.CloseFile(f)
-//
-//	sb := NewSeriesBuilder()
-//	s := bufio.NewScanner(f)
-//	var lineNumber = 0
-//	for s.Scan() {
-//		ld := NewLineOfData(lineNumber, s.Text())
-//		sb.ParseLine(ld)
-//		lineNumber++
-//	}
-//
-//	return &CsvFile{
-//		Series:    sb.Series,
-//		InputFile: filename,
-//		Error:     nil,
-//	}
-//}
-
-//func outputFileNameFor(seriesNumber int, outputDir string) string {
-//	stub := fmt.Sprintf("%04d", seriesNumber)
-//	filename := fmt.Sprintf("%s.json", stub)
-//	return path.Join(outputDir, filename)
-//}
-
-// LoadSeries will take the specified CSV file and return a Series.
-func LoadSeries(filename string, fs aferox.Aferox) (*Series, error) {
+// LoadSeries will take the specified CSV file and return a OldSeries.
+func LoadSeries(filename string, fs aferox.Aferox) (*OldSeries, error) {
 	f, err := fs.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("could not load the series at %s: %w", filename, err)
@@ -220,22 +175,22 @@ func LoadSeries(filename string, fs aferox.Aferox) (*Series, error) {
 		lineNumber++
 	}
 
-	return builder.Series, nil
+	return builder.OldSeries, nil
 }
 
-// SeriesWriter is an interface to persisting a Series to something a person might read (HTML, JSON, Markdown, etc).
+// SeriesWriter is an interface to persisting a OldSeries to something a person might read (HTML, JSON, Markdown, etc).
 type SeriesWriter interface {
-	Write(s Series) error
+	Write(s OldSeries) error
 }
 
 type SeriesBuilder struct {
-	*Series
+	*OldSeries
 	RawData map[int]*LineOfData `json:"data"`
 }
 
 func NewSeriesBuilder() *SeriesBuilder {
 	return &SeriesBuilder{
-		NewSeries(),
+		CreateOldSeries(),
 		make(map[int]*LineOfData),
 	}
 }
@@ -246,7 +201,7 @@ func (sb *SeriesBuilder) ParseLine(ld *LineOfData) {
 		sb.RawData[ld.LineNumber] = ld
 		sb.Labradar.DeviceId = ld.StringValue()
 	case 3:
-		sb.Series.Number = ld.IntValue()
+		sb.OldSeries.Number = ld.IntValue()
 		sb.Labradar.SeriesName = "SR" + ld.StringValue()
 		sb.RawData[ld.LineNumber] = ld
 	case 6:

@@ -12,7 +12,7 @@ type StdOutSeriesWriter1 struct {
 	TemplateString string
 }
 
-func (w *StdOutSeriesWriter1) Write(s Series) error {
+func (w *StdOutSeriesWriter1) Write(s OldSeries) error {
 	t, err := template.New("OldSeriesWriter").Parse(w.TemplateString)
 	if err != nil {
 		return series.SeriesError{
@@ -36,7 +36,7 @@ type ReadMeSeriesWriter struct {
 	OldFormat bool
 }
 
-func (w *ReadMeSeriesWriter) Write(s Series) error {
+func (w *ReadMeSeriesWriter) Write(s OldSeries) error {
 	var tmpl string
 	if w.OldFormat {
 		tmpl = TMPL_README_LINE_OLD_FORMAT
@@ -69,7 +69,7 @@ func (w *ReadMeSeriesWriter) Write(s Series) error {
 const TMPL_README_LINE = `| {{.Number}} | {{.LoadData}} | {{.Firearm.Name}} | {{.Notes}} | {{.Labradar.Date}} |`
 const TMPL_README_LINE_OLD_FORMAT = `| {{.Number}} | {{.LoadData}};{{.Notes}} | {{.Firearm.Name}} | {{.Labradar.Date}} |`
 const TMPL_SUMMARIZE_SERIES = `----
-Labradar Series {{.Labradar.SeriesName}}
+Labradar OldSeries {{.Labradar.SeriesName}}
 
 Number of Shots: {{.TotalNumberOfShots}}
 Average Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}
@@ -84,7 +84,7 @@ const TMPL_DESCRIBE_SERIES = `
 For ammo, stick with the format:
     Cartridge; Bullet; Powder; COAL or CBTO
 
-| Series Number | Ammo | Firearm | Notes | Date |
+| OldSeries Number | Ammo | Firearm | Notes | Date |
 | :---:         | :--- | :-----  | :--- | :---:
 | {{.Number}} | {{.LoadData}} | {{.Firearm.Name}} | {{.Notes}} | {{.Labradar.Date}} |
 `

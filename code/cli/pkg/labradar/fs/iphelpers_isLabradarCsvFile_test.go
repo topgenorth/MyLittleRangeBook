@@ -35,7 +35,7 @@ func Test_isLabradarCsvFile(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "Valid Labradar Series file (filename only)",
+			name: "Valid Labradar OldSeries file (filename only)",
 			path: "SR0001 Report.csv",
 			want: true,
 		},

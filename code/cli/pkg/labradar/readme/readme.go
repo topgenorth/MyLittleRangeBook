@@ -33,7 +33,7 @@ func New(filename string) *ReadmeMd {
 	r.lines[0] = &readmeLine{0, "# Description of Labradar series\n\n"}
 	r.lines[1] = &readmeLine{1, "For ammo, stick with the format:\n"}
 	r.lines[2] = &readmeLine{2, "`Cartridge; Bullet; Powder; COAL;Description`\n\n"}
-	r.lines[3] = &readmeLine{3, "| Series Number | Ammo | Firearm | Date |\n"}
+	r.lines[3] = &readmeLine{3, "| OldSeries Number | Ammo | Firearm | Date |\n"}
 	r.lines[4] = &readmeLine{4, "| :---:         | :--- | :-----  | :---: |\n"}
 
 	return r
@@ -60,7 +60,7 @@ func Load(filename string, fs aferox.Aferox) (*ReadmeMd, error) {
 	return r, nil
 }
 
-func (r *ReadmeMd) AppendSeries(s labradar.Series, oldformat bool) {
+func (r *ReadmeMd) AppendSeries(s labradar.OldSeries, oldformat bool) {
 	// [TO20220110] What happens if we duplicate a series number?
 
 	w := &labradar.ReadMeSeriesWriter{OldFormat: oldformat}

@@ -21,7 +21,7 @@ func (w *StringWriter) For(r *ReadmeMd) *StringWriter {
 func (w StringWriter) String() string {
 	return w.Value
 }
-func (w *StringWriter) Write(s labradar.Series) error {
+func (w *StringWriter) Write(s labradar.OldSeries) error {
 	w.Value = ""
 
 	t, err := template.New("labradarReadmeStringWriter").Parse(TMPL_README_SERIES_LINE)

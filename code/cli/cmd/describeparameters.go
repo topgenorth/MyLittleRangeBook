@@ -14,7 +14,7 @@ type describeParameters struct {
 	cbto         float32
 }
 
-func (p *describeParameters) updateSeries(s *labradar.Series) {
+func (p *describeParameters) updateSeries(s *labradar.OldSeries) {
 	s.Notes = p.notes
 	s.Firearm.Name = p.firearm
 	s.LoadData.Cartridge = p.cartridge

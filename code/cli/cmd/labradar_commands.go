@@ -43,7 +43,7 @@ func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the Device CSV file to read.")
+	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the OldDevice CSV file to read.")
 	setMandatoryFlags(cmd, "number")
 
 	cmd.Flags().StringVarP(&i, "labradar.inputDir", "", "", "The location of the input files.")
@@ -80,7 +80,7 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the Device CSV file to read.")
+	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the OldDevice CSV file to read.")
 	cmd.Flags().StringVarP(&i, "labradar.inputDir", "", "", "The location of the input files.")
 
 	return cmd
