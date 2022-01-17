@@ -11,12 +11,25 @@ import (
 	"time"
 )
 
+type Device struct {
+	DeviceId   string          `json:"deviceId"`
+	Date       string          `json:"date"`
+	Time       string          `json:"time"`
+	TimeZone   string          `json:"timezone"`
+	SeriesName string          `json:"seriesName"`
+	Units      *UnitsOfMeasure `json:"units"`
+}
+
+func (t Device) String() string {
+	return t.DeviceId
+}
+
 type Series struct {
 	Number     int                 `json:"number"`
 	Labradar   *Device             `json:"labradar"`
 	Velocities *VelocityData       `json:"velocities"`
 	Firearm    *Firearm            `json:"firearm"`
-	LoadData   *LoadData           `json:"loadData"`
+	LoadData   *series.LoadData    `json:"loadData"`
 	Notes      string              `json:"notes"`
 	RawData    map[int]*LineOfData `json:"data"`
 }
@@ -70,11 +83,11 @@ func NewSeries() *Series {
 			Value:     0,
 		},
 	}
-	po := &PowderCharge{
+	po := &series.PowderCharge{
 		Name:   "",
 		Amount: 0,
 	}
-	ld := &LoadData{
+	ld := &series.LoadData{
 		Cartridge:  "",
 		Projectile: pr,
 		Powder:     po,

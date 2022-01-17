@@ -10,7 +10,7 @@ type ReadmeLine struct {
 	LineNumber   int
 	SeriesNumber int
 	Firearm      *Firearm
-	Load         *LoadData
+	Load         *series.LoadData
 	Text         string
 	Err          error
 }
@@ -37,10 +37,10 @@ func getReadmeLine(text string) *ReadmeLine {
 	return r
 }
 
-func getLoadData(ammoPart string) *LoadData {
+func getLoadData(ammoPart string) *series.LoadData {
 	ammoParts := strings.Split(ammoPart, ";")
 
-	ld := &LoadData{
+	ld := &series.LoadData{
 		Cartridge:  strings.TrimSpace(ammoParts[0]),
 		Projectile: getProjectileFrom(ammoParts[1]),
 		Powder:     getPowderChargeFrom(ammoParts[2]),
@@ -59,8 +59,8 @@ func getProjectileFrom(s string) *series.Projectile {
 	return p
 }
 
-func getPowderChargeFrom(s string) *PowderCharge {
-	pc := &PowderCharge{
+func getPowderChargeFrom(s string) *series.PowderCharge {
+	pc := &series.PowderCharge{
 		Name:   strings.TrimSpace(s),
 		Amount: 0,
 	}

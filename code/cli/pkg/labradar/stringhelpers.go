@@ -25,13 +25,13 @@ func RemoveEmptyStrings(s []string) []string {
 	return r
 }
 
-func parsePowderString(powder string) *PowderCharge {
+func parsePowderString(powder string) *series.PowderCharge {
 	parts := RemoveEmptyStrings(strings.Split(powder, " "))
 	if len(parts) < 1 {
-		return &PowderCharge{Name: "Unknown", Amount: 0.0}
+		return &series.PowderCharge{Name: "Unknown", Amount: 0.0}
 	}
 
-	p := &PowderCharge{
+	p := &series.PowderCharge{
 		Name:   parseNameOfProjectileFromString(strings.Join(parts[1:], " ")),
 		Amount: parseAmountFromPowderString(parts[0]),
 	}
