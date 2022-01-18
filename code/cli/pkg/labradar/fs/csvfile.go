@@ -31,8 +31,8 @@ func (df LbrFiles) String() string {
 	return df.InputDir
 }
 
-// LoadCsv will read a file line at a time, capturing each line of test for future processing.
-func LoadCsv(filename string, fs aferox.Aferox) *CsvFile {
+// loadCsv will read a file line at a time, capturing each line of test for future processing.
+func loadCsv(filename string, fs aferox.Aferox) *CsvFile {
 	csv := &CsvFile{
 		InputFile: filename,
 		Error:     nil,
@@ -55,8 +55,11 @@ func LoadCsv(filename string, fs aferox.Aferox) *CsvFile {
 	return csv
 }
 
-func FromCsvFile(filename string, fs aferox.Aferox) ([]series.LabradarSeriesMutatorFunc, error) {
-	exists, err := fs.Exists(filename)
+// GetMutatorsToUpdateSeries will return an array of mutators to up date a LabradarSeries with the contents of a
+// CSV file.
+func GetMutatorsToUpdateSeries(seriesNumber int, directory string, af aferox.Aferox) ([]series.LabradarSeriesMutatorFunc, error) {
+	filename := FilenameForSeries(directory, seriesNumber)
+	exists, err := af.Exists(filename)
 	if err != nil {
 		return make([]series.LabradarSeriesMutatorFunc, 0), fmt.Errorf("could not load the file '%s': %w", filename, err)
 	}
@@ -64,42 +67,45 @@ func FromCsvFile(filename string, fs aferox.Aferox) ([]series.LabradarSeriesMuta
 		return make([]series.LabradarSeriesMutatorFunc, 0), fmt.Errorf("could not load the file '%s'", filename)
 	}
 
-	file := *LoadCsv(filename, fs)
+	// [TO20220118] We dereference file - the thought being that this could allow us to parallelize this? Probably
+	// a case of premature optimization though.
+	file := *loadCsv(filename, af)
 	return []series.LabradarSeriesMutatorFunc{
-		withDeviceId(file),
-		withSeriesNumber(file),
-		withUnitsOfMeasure(file),
-		addMuzzleVelocities(file),
-		//withSeriesDate(file),
+		withDeviceIdFrom(file),
+		withSeriesNumberFrom(file),
+		withUnitsOfMeasureFrom(file),
+		addMuzzleVelocitiesFrom(file),
+		withSeriesDateFrom(file),
 	}, nil
 
 }
 
-//func withSeriesDate(file CsvFile) series.LabradarSeriesMutatorFunc {
-//	return func(s *series.LabradarSeries) {
-//		d, t := getDateAndTime(file, 18)
-//		s.Labradar.Time = t
-//		s.Labradar.Date = d
-//	}
-//}
-func withDeviceId(csv CsvFile) series.LabradarSeriesMutatorFunc {
+func withSeriesDateFrom(file CsvFile) series.LabradarSeriesMutatorFunc {
 	return func(s *series.LabradarSeries) {
-		s.DeviceId = getStringValue(csv, 1)
+		d, t := getDateAndTime(file, 18)
+		s.Date = d
+		s.Time = t
 	}
 }
-func withSeriesNumber(csv CsvFile) series.LabradarSeriesMutatorFunc {
+
+func withDeviceIdFrom(file CsvFile) series.LabradarSeriesMutatorFunc {
 	return func(s *series.LabradarSeries) {
-		s.Number = getIntValue(csv, 3)
+		s.DeviceId = getStringValue(file, 1)
 	}
 }
-func withUnitsOfMeasure(file CsvFile) series.LabradarSeriesMutatorFunc {
+func withSeriesNumberFrom(file CsvFile) series.LabradarSeriesMutatorFunc {
+	return func(s *series.LabradarSeries) {
+		s.Number = getIntValue(file, 3)
+	}
+}
+func withUnitsOfMeasureFrom(file CsvFile) series.LabradarSeriesMutatorFunc {
 	return func(s *series.LabradarSeries) {
 		s.UnitsOfMeasure.Velocity = getStringValue(file, 6)
 		s.UnitsOfMeasure.Distance = getStringValue(file, 7)
 		s.UnitsOfMeasure.Weight = getStringValue(file, 9)
 	}
 }
-func addMuzzleVelocities(file CsvFile) series.LabradarSeriesMutatorFunc {
+func addMuzzleVelocitiesFrom(file CsvFile) series.LabradarSeriesMutatorFunc {
 	return func(s *series.LabradarSeries) {
 		for i := 18; i < len(file.lines); i++ {
 			velocity := getIntValue(file, i)

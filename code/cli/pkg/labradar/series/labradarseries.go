@@ -3,8 +3,6 @@ package series
 
 import (
 	"fmt"
-	//"opgenorth.net/mylittlerangebook/pkg/labradar"
-	//"opgenorth.net/mylittlerangebook/pkg/labradar"
 )
 
 type SeriesError struct {
@@ -17,9 +15,10 @@ func (s SeriesError) Error() string {
 }
 
 type LabradarSeries struct {
-	Number   int    `json:"number"`
-	DeviceId string `json:deviceId`
-	//Labradar       *labradar.Device `json:"labradar"`
+	Number         int             `json:"number"`
+	DeviceId       string          `json:"deviceId"`
+	Date           string          `json:"date"`
+	Time           string          `json:"time"`
 	Velocities     *VelocityData   `json:"velocities"`
 	Firearm        *Firearm        `json:"firearm"`
 	LoadData       *LoadData       `json:"loadData"`
@@ -37,18 +36,31 @@ func (s LabradarSeries) TotalNumberOfShots() int {
 	return len(s.Velocities.Values)
 }
 
-/*func LoadSeries(device *labradar.Device, seriesNumber int) (*LabradarSeries, error) {
-	//filename := fs.FilenameForSeries(device.Directory, seriesNumber)
-	//builders, err := fs.FromCsvFile(filename, device.af)
-	//
-	//if err != nil {
-	//	e := SeriesError{
-	//		Msg:    fmt.Sprintf("could not load the series %d from  device %s (%s): %w", seriesNumber, device.DeviceId, device.Directory, err),
-	//		Number: seriesNumber,
-	//	}
-	//	return nil, e
-	//}
-	//
-	//s := New(builders...)
-	return nil, nil
-}*/
+// New will take a collection of LabradarSeriesMutatorFunc functions, create a new LabradarSeries, and then
+// update it accordingly.
+func New(mutators ...LabradarSeriesMutatorFunc) *LabradarSeries {
+	s := newSeries()
+
+	for _, mutate := range mutators {
+		mutate(s)
+	}
+	return s
+}
+
+// newSeries should create new LabradarSeries that is initialized to primitive default values.
+func newSeries() *LabradarSeries {
+	s := &LabradarSeries{
+		Number:     0,
+		Velocities: newVelocityData(),
+		Firearm: &Firearm{
+			Name:      "",
+			Cartridge: "",
+		},
+		LoadData:       newLoadData(),
+		UnitsOfMeasure: newUnitsOfMeasure(),
+		Notes:          "",
+		Date:           "",
+		Time:           "",
+	}
+	return s
+}

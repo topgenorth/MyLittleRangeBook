@@ -119,3 +119,47 @@ func (stats *VelocityData) AddVelocity(velocity int) {
 	stats.ExtremeSpread = max - min
 	stats.StandardDeviation = math.CalculateStandardDeviation(stats.Values)
 }
+
+func newLoadData() *LoadData {
+	return &LoadData{
+		Cartridge:  "",
+		Projectile: newProjectile(),
+		Powder: &PowderCharge{
+			Name:   "",
+			Amount: 0,
+		},
+		CBTO: 0,
+	}
+}
+func newUnitsOfMeasure() *UnitsOfMeasure {
+	u := &UnitsOfMeasure{
+		Velocity: "",
+		Distance: "",
+		Weight:   "",
+	}
+	return u
+}
+func newVelocityData() *VelocityData {
+	v := &VelocityData{
+		Average:           0,
+		Max:               0,
+		Min:               0,
+		ExtremeSpread:     0,
+		StandardDeviation: 0,
+		Values:            nil,
+	}
+	return v
+}
+func newProjectile() *Projectile {
+	return &Projectile{
+		Name:   "",
+		Weight: 0,
+		BC:     newBC(),
+	}
+}
+func newBC() *BallisticCoefficient {
+	return &BallisticCoefficient{
+		DragModel: "",
+		Value:     0,
+	}
+}

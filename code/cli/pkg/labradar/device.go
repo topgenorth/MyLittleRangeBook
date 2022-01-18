@@ -31,7 +31,7 @@ func NewDevice(path string, ctx *context.AppContext) (*Device, error) {
 
 	file, err := findTheLabradarMarkerFile(path, ctx.FileSystem)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("does not seem to be a Labradar directory '%s': %w", path, err)
 	}
 	if file == nil {
 		return nil, fmt.Errorf("does not seem to be a Labradar directory '%s'", path)
@@ -45,8 +45,8 @@ func NewDevice(path string, ctx *context.AppContext) (*Device, error) {
 }
 
 func (d Device) LoadSeries(seriesNumber int) (*series.LabradarSeries, error) {
-	filename := fs.FilenameForSeries(d.Directory, seriesNumber)
-	builders, err := fs.FromCsvFile(filename, d.af)
+
+	csvValues, err := fs.GetMutatorsToUpdateSeries(seriesNumber, d.Directory, d.af)
 
 	if err != nil {
 		e := series.SeriesError{
@@ -56,18 +56,18 @@ func (d Device) LoadSeries(seriesNumber int) (*series.LabradarSeries, error) {
 		return nil, e
 	}
 
-	s := series.New(builders...)
+	mutators := MergeMutators(LabradarSeriesDefaults(), csvValues)
+	s := series.New(mutators...)
 	return s, nil
 
 }
 
-// WithDevice will initialize the Labradar device id and
-//func WithDevice(device *Device, tz *time.Location) series.LabradarSeriesMutatorFunc {
-//	return func(s *series.LabradarSeries) {
-//		s.Labradar = device
-//		s.Labradar.TimeZone = tz.String()
-//	}
-//}
+//UpdateDeviceForSeries will initialize the Labradar device id and
+func UpdateDeviceForSeries(device *Device) series.LabradarSeriesMutatorFunc {
+	return func(s *series.LabradarSeries) {
+		s.DeviceId = device.DeviceId
+	}
+}
 
 func findTheLabradarMarkerFile(path string, af aferox.Aferox) (os.FileInfo, error) {
 	b, err := af.Exists(path)
