@@ -91,9 +91,10 @@ func (t Firearm) String() string {
 }
 
 type UnitsOfMeasure struct {
-	Velocity string `json:"velocity"`
-	Distance string `json:"distance"`
-	Weight   string `json:"weight"`
+	Velocity    string `json:"velocity"`
+	Distance    string `json:"distance"`
+	Weight      string `json:"weight"`
+	Temperature string `json:"temperature"`
 }
 
 func (t UnitsOfMeasure) String() string {

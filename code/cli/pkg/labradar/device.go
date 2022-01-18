@@ -6,9 +6,9 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/context"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
+	"opgenorth.net/mylittlerangebook/pkg/math"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -50,13 +50,13 @@ func (d Device) LoadSeries(seriesNumber int) (*series.LabradarSeries, error) {
 
 	if err != nil {
 		e := series.SeriesError{
-			Msg:    fmt.Sprintf("could not load the series %d from  device %s (%s): %w", seriesNumber, d.DeviceId, d.Directory, err),
+			Msg:    fmt.Sprintf("could not load the series %d from  device %s (%s): %v", seriesNumber, d.DeviceId, d.Directory, err),
 			Number: seriesNumber,
 		}
 		return nil, e
 	}
 
-	mutators := MergeMutators(LabradarSeriesDefaults(), csvValues)
+	mutators := series.MergeMutators(series.LabradarSeriesDefaults(), csvValues)
 	s := series.New(mutators...)
 	return s, nil
 
@@ -69,6 +69,8 @@ func UpdateDeviceForSeries(device *Device) series.LabradarSeriesMutatorFunc {
 	}
 }
 
+// findTheLabradarMarkerFile will inspect all the files in a given directory and attempt to find an
+// *.LID file that all of the LBR data folders seem to have.
 func findTheLabradarMarkerFile(path string, af aferox.Aferox) (os.FileInfo, error) {
 	b, err := af.Exists(path)
 	if err != nil || !b {
@@ -101,26 +103,43 @@ func findTheLabradarMarkerFile(path string, af aferox.Aferox) (os.FileInfo, erro
 	return nil, nil
 }
 
-func getDeviceId(name string) string {
-	return fmt.Sprintf("%s-%s", name[0:3], name[3:6])
+// getDeviceId will parse a file name and extract the name of the device, which looks like LBR-0013797.
+func getDeviceId(filename string) string {
+	serialNumber, err := parseDeviceIdFromFilename(filename)
+	if err != nil {
+		return "LBR-0000000"
+	}
+	return fmt.Sprintf("%s-%s", filename[0:3], serialNumber)
 }
 
-func looksLikeTheLabradarMarkerFile(name string) bool {
-	// LBR0013797201909141617.LID
-	// LBR-0013797
+// parseDeviceIdFromFilename will pull out the device ID from a filename. An error will be thrown if the
+// device ID is not a number.
+func parseDeviceIdFromFilename(filename string) (string, error) {
+	serialNumber := filename[3:10]
 
-	if !strings.HasSuffix(name, "LBR") {
-		return false
-	}
-	if filepath.Ext(name) != ".LID" {
-		return false
+	if !math.IsNumericOnly(serialNumber) {
+		return "", fmt.Errorf("could not parse a numeric value for the device id from %s", filename)
 	}
 
-	if len(name) < 10 {
+	return serialNumber, nil
+}
+
+// looksLikeTheLabradarMarkerFile will inspect a filename and try to infer if the file is the Labradar .LID file.
+// The file looks like  LBR0013797201909141617.LID that is a zero-byte file.
+func looksLikeTheLabradarMarkerFile(filename string) bool {
+
+	if !strings.HasPrefix(filename, "LBR") {
 		return false
 	}
-	serialNumber := name[3:6]
-	_, err := strconv.Atoi(serialNumber)
+	if filepath.Ext(filename) != ".LID" {
+		return false
+	}
+
+	if len(filename) != 26 {
+		return false
+	}
+
+	_, err := parseDeviceIdFromFilename(filename)
 	if err != nil {
 		return false
 	}

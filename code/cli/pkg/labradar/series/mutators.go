@@ -77,3 +77,49 @@ func UsingFeetForDistance() LabradarSeriesMutatorFunc {
 		s.UnitsOfMeasure.Distance = "ft"
 	}
 }
+
+// LabradarSeriesDefaults returns the mutators that will set default values on a LabradarSeries.
+func LabradarSeriesDefaults() []LabradarSeriesMutatorFunc {
+	defaults := []LabradarSeriesMutatorFunc{
+		UsingGrainsForWeight(),
+		UsingMetresForDistance(),
+		UsingFeetPerSecondForMuzzleVelocity(),
+		UsingCurrentDateAndTime(),
+		UsingCelsiusForTemperature(),
+	}
+
+	return defaults
+}
+
+// UsingCelsiusForTemperature will return a mutator to set the temperature Units of Measure to Centigrade.
+func UsingCelsiusForTemperature() LabradarSeriesMutatorFunc {
+	return func(s *LabradarSeries) {
+		s.UnitsOfMeasure.Temperature = "Celsius"
+	}
+}
+
+// UsingFarenheitForTemperature will return a mutator to set the temperature Units of Measure to Fahrenheit.
+func UsingFarenheitForTemperature() LabradarSeriesMutatorFunc {
+	return func(s *LabradarSeries) {
+		s.UnitsOfMeasure.Temperature = "Fahrenheit"
+	}
+}
+
+// MergeMutators will combine two separate arrays of LabradarSeriesMutatorFunc into one.  The items in the first
+// array will appear first.
+func MergeMutators(first []LabradarSeriesMutatorFunc, second []LabradarSeriesMutatorFunc) []LabradarSeriesMutatorFunc {
+	mutators := make([]LabradarSeriesMutatorFunc, len(first)+len(second))
+	index := 0
+
+	for i := 0; i < len(first); i++ {
+		mutators[index] = first[i]
+		index++
+	}
+
+	for i := 0; i < len(second); i++ {
+		mutators[index] = second[i]
+		index++
+	}
+
+	return mutators
+}

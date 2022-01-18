@@ -14,6 +14,8 @@ func (s SeriesError) Error() string {
 	return fmt.Sprintf("There was a problem trying to process series %d: %s.", s.Number, s.Msg)
 }
 
+// LabradarSeries is a structure that holds the data from a Labradar series, and some details of the load
+// and firearm that was used.
 type LabradarSeries struct {
 	Number         int             `json:"number"`
 	DeviceId       string          `json:"deviceId"`
@@ -26,24 +28,34 @@ type LabradarSeries struct {
 	UnitsOfMeasure *UnitsOfMeasure `json:"unitsOfMeasure"`
 }
 
+// String is a simple string representation of the LabradarSeries
 func (s LabradarSeries) String() string {
-	return s.SeriesName()
+	return fmt.Sprintf("%s - %s", s.DeviceId, s.SeriesName())
 }
+
+// SeriesName is used to retrieve a Labradar formated name for the series.
 func (s LabradarSeries) SeriesName() string {
 	return fmt.Sprintf("%04d", s.Number)
 }
+
+// TotalNumberOfShots will retrieve the number of shots in the series.
 func (s LabradarSeries) TotalNumberOfShots() int {
 	return len(s.Velocities.Values)
+}
+
+// Update will use the provided mutators to update values in the LabradarSeries
+func (s *LabradarSeries) Update(mutators ...LabradarSeriesMutatorFunc) {
+	for _, mutate := range mutators {
+		mutate(s)
+	}
+
 }
 
 // New will take a collection of LabradarSeriesMutatorFunc functions, create a new LabradarSeries, and then
 // update it accordingly.
 func New(mutators ...LabradarSeriesMutatorFunc) *LabradarSeries {
 	s := newSeries()
-
-	for _, mutate := range mutators {
-		mutate(s)
-	}
+	s.Update(mutators...)
 	return s
 }
 
@@ -62,5 +74,6 @@ func newSeries() *LabradarSeries {
 		Date:           "",
 		Time:           "",
 	}
+
 	return s
 }
