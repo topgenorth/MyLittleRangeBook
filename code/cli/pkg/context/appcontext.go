@@ -32,6 +32,7 @@ func New() *AppContext {
 	pwd, _ := os.Getwd()
 
 	return &AppContext{
+		Debug:      true,
 		environ:    getEnviron(),
 		In:         os.Stdin,
 		Out:        os.Stdout,

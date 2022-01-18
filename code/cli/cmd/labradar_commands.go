@@ -17,9 +17,9 @@ func buildLabradarCommands(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	}
 
 	cmd.AddCommand(buildReadLabradarCsvCmd(a))
-	cmd.AddCommand(buildListFilesCmd(a))
-	cmd.AddCommand(buildSubmitCsvFileCmd(a))
-	cmd.AddCommand(buildDescribeSeriesCommand(a))
+	//cmd.AddCommand(buildListFilesCmd(a))
+	//cmd.AddCommand(buildSubmitCsvFileCmd(a))
+	//cmd.AddCommand(buildDescribeSeriesCommand(a))
 
 	return cmd
 }
@@ -32,14 +32,14 @@ func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit",
 		Short: "Submit the CSV file.",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			filename := fs.FilenameForSeries(i, n)
 			err := a.SubmitLabradarCsv(filename)
 			if err != nil {
-				logrus.Error(err)
-			} else {
-				logrus.Info("Submitted the file " + fs.FilenameForSeries(i, n) + ".")
+				return err
 			}
+			logrus.Info("Submitted the file " + fs.FilenameForSeries(i, n) + ".")
+			return nil
 		},
 	}
 
@@ -59,28 +59,28 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "read",
 		Short: "Reads a Labradar CSV file and displays a summary to STDOUT.",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			logrus.Debug("Pre-run")
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			logrus.Tracef("PreRunE: %s", cmd.Name())
+			return initializeCommand(cmd)
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			series, err := app.LoadSeriesFromLabradar(i, n)
 			if err != nil {
-				logrus.Fatal(err)
-				return
+				return err
 			}
 
 			sw := labradar.StdOutSeriesWriter1{TemplateString: labradar.TMPL_SUMMARIZE_SERIES}
 			if err := sw.Write(*series); err != nil {
-				logrus.Fatal(err)
+				return err
 			}
-		},
-		PersistentPostRun: func(cmd *cobra.Command, args []string) {
-			logrus.Debug("Post run.")
+
+			return nil
 		},
 	}
 
-	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the OldDevice CSV file to read.")
-	cmd.Flags().StringVarP(&i, "labradar.inputDir", "", "", "The location of the input files.")
+	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the labradar series CSV file to read.")
+	cmd.Flags().StringVarP(&i, "inputDir", "", "", "The location of the input files.")
+	setMandatoryFlags(cmd, "number", "inputDir")
 
 	return cmd
 }
