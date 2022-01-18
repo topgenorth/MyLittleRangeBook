@@ -8,27 +8,27 @@ import (
 	"time"
 )
 
-type LineOfData struct {
+type OldLineOfData struct {
 	LineNumber int    `json:"lineNumber"`
 	Raw        string `json:"raw"`
 	Value      string `json:"value"`
 }
 
-// NewLineOfData will create a new LineOfData, parsing out the value from it.
-func NewLineOfData(lineNumber int, s string) *LineOfData {
-	return &LineOfData{
+// NewLineOfData will create a new OldLineOfData, parsing out the value from it.
+func NewLineOfData(lineNumber int, s string) *OldLineOfData {
+	return &OldLineOfData{
 		LineNumber: lineNumber,
 		Raw:        s,
 		Value:      parseLabradarLineOfText(s),
 	}
 }
 
-func (l LineOfData) String() string {
+func (l OldLineOfData) String() string {
 	return l.Value
 }
 
 // StringValue will return the value of the line, as a string.
-func (l *LineOfData) StringValue() string {
+func (l *OldLineOfData) StringValue() string {
 	parts := strings.Split(l.Value, ";")
 	if len(parts) < 2 {
 		return ""
@@ -37,7 +37,7 @@ func (l *LineOfData) StringValue() string {
 }
 
 // IntValue will return the value of the line, as an integer
-func (l *LineOfData) IntValue() int {
+func (l *OldLineOfData) IntValue() int {
 	parts := strings.Split(l.Value, ";")
 	if len(parts) < 2 {
 		return -1
@@ -47,7 +47,7 @@ func (l *LineOfData) IntValue() int {
 }
 
 //DateAndTime will return the date and time of the line.
-func (l *LineOfData) DateAndTime() (string, string) {
+func (l *OldLineOfData) DateAndTime() (string, string) {
 	parts := strings.Split(l.Value, ";")
 	x := len(parts)
 	if x == 1 {
@@ -92,14 +92,14 @@ func parseLabradarLineOfText(line string) string {
 }
 
 // SortLinesOfData will sort the array according to their key (i.e. line Number)
-func SortLinesOfData(d map[int]*LineOfData) map[int]*LineOfData {
+func SortLinesOfData(d map[int]*OldLineOfData) map[int]*OldLineOfData {
 	keys := make([]int, 0, len(d))
 	for k := range d {
 		keys = append(keys, k)
 	}
 	sort.Ints(keys)
 
-	m := make(map[int]*LineOfData)
+	m := make(map[int]*OldLineOfData)
 	for _, k := range keys {
 		m[k] = d[k]
 	}

@@ -28,11 +28,11 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		Short: "Describe the series.",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			s, err := a.LoadLabradarCsv(p.inputDir, p.seriesNumber)
+			s, err := a.LoadSeriesFromLabradar(p.inputDir, p.seriesNumber)
 			if err != nil {
 				logrus.Fatal("Could not read the CSV file. %w", err)
 			}
-			p.updateSeries(s)
+			//p.updateSeries(s)
 
 			logrus.Warning("DescribeToStdOut was here.")
 			//_ = a.DescribeToStdOut(s)

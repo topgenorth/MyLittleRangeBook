@@ -82,36 +82,6 @@ func ListLabradarFiles(inputDir string, fs aferox.Aferox) []string {
 	return result
 }
 
-func LoadCsv(filename string, fs aferox.Aferox) *CsvFile {
-	csv := &CsvFile{
-		contents:  make([]byte, 0),
-		InputFile: filename,
-		Error:     nil,
-	}
-
-	f, err := fs.Open(filename)
-	defer CloseFile(f)
-	if err != nil {
-		csv.Error = err
-		return csv
-	}
-	fi, err := f.Stat()
-	if err != nil {
-		csv.Error = err
-		return csv
-	}
-
-	filesize := int(fi.Size())
-	csv.contents = make([]byte, filesize)
-
-	_, err = f.Read(csv.contents)
-	if err != nil {
-		csv.Error = err
-	}
-
-	return csv
-}
-
 // isLabradarSeriesName will return true if the directory name looks like a valid Labradar series directory.
 // This is a case sensitive comparison.
 func isLabradarSeriesName(dirName string) bool {

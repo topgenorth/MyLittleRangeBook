@@ -16,9 +16,9 @@ type describeParameters struct {
 
 func (p *describeParameters) updateSeries(s *labradar.OldSeries) {
 	s.Notes = p.notes
-	s.Firearm.Name = p.firearm
-	s.LoadData.Cartridge = p.cartridge
-	s.LoadData.CBTO = p.cbto
+	//s.Firearm.Name = p.firearm
+	//s.LoadData.Cartridge = p.cartridge
+	//s.LoadData.CBTO = p.cbto
 
 	s.SetProjectile(p.bullet)
 	s.SetPowder(p.powder)

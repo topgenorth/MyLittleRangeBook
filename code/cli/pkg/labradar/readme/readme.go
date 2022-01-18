@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"sort"
 )
 
@@ -60,7 +61,7 @@ func Load(filename string, fs aferox.Aferox) (*ReadmeMd, error) {
 	return r, nil
 }
 
-func (r *ReadmeMd) AppendSeries(s labradar.OldSeries, oldformat bool) {
+func (r *ReadmeMd) AppendSeries(s series.LabradarSeries, oldformat bool) {
 	// [TO20220110] What happens if we duplicate a series number?
 
 	w := &labradar.ReadMeSeriesWriter{OldFormat: oldformat}

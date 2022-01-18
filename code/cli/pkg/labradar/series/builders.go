@@ -1,10 +1,5 @@
 package series
 
-import (
-	"opgenorth.net/mylittlerangebook/pkg"
-	"time"
-)
-
 // LabradarSeriesMutatorFunc describes a function that can be used to manipulate the fields of a LabradarSeries
 type LabradarSeriesMutatorFunc = func(s *LabradarSeries)
 
@@ -12,14 +7,13 @@ type LabradarSeriesMutatorFunc = func(s *LabradarSeries)
 func New(builders ...LabradarSeriesMutatorFunc) *LabradarSeries {
 	s := &LabradarSeries{
 		Number:     0,
-		Labradar:   defaultDevice(),
-		Velocities: defaultVelocityData(),
+		Velocities: newVelocityData(),
 		Firearm: &Firearm{
 			Name:      "",
 			Cartridge: "",
 		},
-		LoadData:       defaultLoadData(),
-		unitsOfMeasure: defaultUnitsOfMeasure(),
+		LoadData:       newLoadData(),
+		UnitsOfMeasure: newUnitsOfMeasure(),
 		Notes:          "",
 	}
 
@@ -35,42 +29,10 @@ func New(builders ...LabradarSeriesMutatorFunc) *LabradarSeries {
 	return s
 }
 
-func mergeDefaultsAndCustomMutators(defaults []LabradarSeriesMutatorFunc, builders []LabradarSeriesMutatorFunc) []LabradarSeriesMutatorFunc {
-
-	mutators := make([]LabradarSeriesMutatorFunc, len(defaults)+len(builders))
-	index := 0
-
-	for _, m := range defaults {
-		mutators[index] = m
-		index = index + 1
-	}
-
-	for _, b := range builders {
-		mutators[index] = b
-		index = index + 1
-	}
-
-	return mutators
-}
-
 // WithSeriesNumber will initialize the number assigned by a specific Labradar device
 func WithSeriesNumber(n int) LabradarSeriesMutatorFunc {
 	return func(s *LabradarSeries) {
 		s.Number = n
-	}
-}
-
-// WithDevice will initialize the Labrader device id and
-func WithDevice(deviceId string, tz *time.Location) LabradarSeriesMutatorFunc {
-	return func(s *LabradarSeries) {
-		now := time.Now().In(tz)
-		d := &LabradarDevice{
-			DeviceId: deviceId,
-			Date:     now.Format("YYYY-MM-DD"),
-			Time:     now.Format("15:04"),
-			TimeZone: tz.String(),
-		}
-		s.Labradar = d
 	}
 }
 
@@ -89,52 +51,53 @@ func WithPowder(name string, weight float32) LabradarSeriesMutatorFunc {
 		s.LoadData.Powder.Amount = weight
 	}
 }
+
+// UsingGrainsForWeight sets the units of measure to grains.
 func UsingGrainsForWeight() LabradarSeriesMutatorFunc {
 	return func(s *LabradarSeries) {
-		s.unitsOfMeasure.Weight = "gr"
+		s.UnitsOfMeasure.Weight = "gr"
 	}
 }
+
+// UsingFeetPerSecondForMuzzleVelocity will set the default velocity units to FPS
 func UsingFeetPerSecondForMuzzleVelocity() LabradarSeriesMutatorFunc {
 	return func(s *LabradarSeries) {
-		s.unitsOfMeasure.Velocity = "fps"
+		s.UnitsOfMeasure.Velocity = "fps"
 	}
 }
+
+// UsingMetresPerSecondForMuzzleVelocity will set the default velocity units to m/s
 func UsingMetresPerSecondForMuzzleVelocity() LabradarSeriesMutatorFunc {
 	return func(s *LabradarSeries) {
-		s.unitsOfMeasure.Velocity = "m/s"
+		s.UnitsOfMeasure.Velocity = "m/s"
 	}
 }
 
+// UsingYardsForDistance will set the default distance units to yards.
 func UsingYardsForDistance() LabradarSeriesMutatorFunc {
 	return func(s *LabradarSeries) {
-		s.unitsOfMeasure.Distance = "y"
-	}
-}
-func UsingMetresForDistance() LabradarSeriesMutatorFunc {
-	return func(s *LabradarSeries) {
-		s.unitsOfMeasure.Distance = "m"
-	}
-}
-func UsingFeetForDistance() LabradarSeriesMutatorFunc {
-	return func(s *LabradarSeries) {
-		s.unitsOfMeasure.Distance = "ft"
+		s.UnitsOfMeasure.Distance = "y"
 	}
 }
 
-func defaultDevice() *LabradarDevice {
-	tz, _ := time.LoadLocation(pkg.DefaultTimeZone)
-	now := time.Now().In(tz)
-	return &LabradarDevice{
-		DeviceId: "",
-		Date:     now.Format("YYYY-MM-DD"),
-		Time:     now.Format("15:04"),
-		TimeZone: pkg.DefaultTimeZone,
+// UsingMetresForDistance will set the default distance units to metres.
+func UsingMetresForDistance() LabradarSeriesMutatorFunc {
+	return func(s *LabradarSeries) {
+		s.UnitsOfMeasure.Distance = "m"
 	}
 }
-func defaultLoadData() *LoadData {
+
+// UsingFeetForDistance will set the default distance units to feet.
+func UsingFeetForDistance() LabradarSeriesMutatorFunc {
+	return func(s *LabradarSeries) {
+		s.UnitsOfMeasure.Distance = "ft"
+	}
+}
+
+func newLoadData() *LoadData {
 	return &LoadData{
 		Cartridge:  "",
-		Projectile: defaultProjectile(),
+		Projectile: newProjectile(),
 		Powder: &PowderCharge{
 			Name:   "",
 			Amount: 0,
@@ -142,7 +105,7 @@ func defaultLoadData() *LoadData {
 		CBTO: 0,
 	}
 }
-func defaultUnitsOfMeasure() *UnitsOfMeasure {
+func newUnitsOfMeasure() *UnitsOfMeasure {
 	u := &UnitsOfMeasure{
 		Velocity: "",
 		Distance: "",
@@ -150,7 +113,7 @@ func defaultUnitsOfMeasure() *UnitsOfMeasure {
 	}
 	return u
 }
-func defaultVelocityData() *VelocityData {
+func newVelocityData() *VelocityData {
 	v := &VelocityData{
 		Average:           0,
 		Max:               0,
@@ -161,16 +124,33 @@ func defaultVelocityData() *VelocityData {
 	}
 	return v
 }
-func defaultProjectile() *Projectile {
+func newProjectile() *Projectile {
 	return &Projectile{
 		Name:   "",
 		Weight: 0,
-		BC:     defaultBC(),
+		BC:     newBC(),
 	}
 }
-func defaultBC() *BallisticCoefficient {
+func newBC() *BallisticCoefficient {
 	return &BallisticCoefficient{
 		DragModel: "",
 		Value:     0,
 	}
+}
+func mergeDefaultsAndCustomMutators(defaults []LabradarSeriesMutatorFunc, builders []LabradarSeriesMutatorFunc) []LabradarSeriesMutatorFunc {
+
+	mutators := make([]LabradarSeriesMutatorFunc, len(defaults)+len(builders))
+	index := 0
+
+	for _, m := range defaults {
+		mutators[index] = m
+		index = index + 1
+	}
+
+	for _, b := range builders {
+		mutators[index] = b
+		index = index + 1
+	}
+
+	return mutators
 }

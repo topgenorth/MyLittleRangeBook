@@ -1,49 +1,47 @@
 package labradar
 
 import (
-	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
-	"reflect"
 	"testing"
 )
 
-func Test_parse_string_makes_a_projectile(t *testing.T) {
-	type args struct {
-		projectile string
-	}
-	tests := []struct {
-		name string
-		args args
-		want *series.Projectile
-	}{
-		{
-			name: "format 1",
-			args: args{projectile: "123gr Hornady ELD Match"},
-			want: &series.Projectile{Name: "Hornady ELD Match", Weight: 123, BC: nil},
-		},
-		{
-			name: "format 2",
-			args: args{projectile: "85 grain Speer SP"},
-			want: &series.Projectile{Name: "Speer SP", Weight: 85, BC: nil},
-		},
-		{
-			name: "format 3",
-			args: args{projectile: "120 gr Hornady SST"},
-			want: &series.Projectile{Name: "Hornady SST", Weight: 120, BC: nil},
-		},
-		{
-			name: "format 4",
-			args: args{projectile: "120 Hornady SST"},
-			want: &series.Projectile{Name: "Hornady SST", Weight: 120, BC: nil},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := parseProjectileString(tt.args.projectile); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parseProjectileString() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+//func Test_parse_string_makes_a_projectile(t *testing.T) {
+//	type args struct {
+//		projectile string
+//	}
+//	tests := []struct {
+//		name string
+//		args args
+//		want *series.Projectile
+//	}{
+//		{
+//			name: "format 1",
+//			args: args{projectile: "123gr Hornady ELD Match"},
+//			want: &series.Projectile{Name: "Hornady ELD Match", Weight: 123, BC: nil},
+//		},
+//		{
+//			name: "format 2",
+//			args: args{projectile: "85 grain Speer SP"},
+//			want: &series.Projectile{Name: "Speer SP", Weight: 85, BC: nil},
+//		},
+//		{
+//			name: "format 3",
+//			args: args{projectile: "120 gr Hornady SST"},
+//			want: &series.Projectile{Name: "Hornady SST", Weight: 120, BC: nil},
+//		},
+//		{
+//			name: "format 4",
+//			args: args{projectile: "120 Hornady SST"},
+//			want: &series.Projectile{Name: "Hornady SST", Weight: 120, BC: nil},
+//		},
+//	}
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			if got := parseProjectileString(tt.args.projectile); !reflect.DeepEqual(got, tt.want) {
+//				t.Errorf("parseProjectileString() = %v, want %v", got, tt.want)
+//			}
+//		})
+//	}
+//}
 
 func Test_parseWeightFromProjectileString(t *testing.T) {
 	tests := []struct {

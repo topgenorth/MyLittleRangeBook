@@ -15,7 +15,7 @@ func TestNewLineOfData(t *testing.T) {
 
 var _ = Describe("Lines of text from the Labradar CSV file", func() {
 	var (
-		lineOfData *LineOfData
+		lineOfData *OldLineOfData
 	)
 	Context("parse the 1st line", func() {
 

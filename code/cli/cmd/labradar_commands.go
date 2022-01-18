@@ -53,7 +53,6 @@ func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 
 // buildReadLabradarCsvCmd will create the Cobra command to read a Labradar file and and display it to StdOut.
 func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
-
 	var i string
 	var n int
 
@@ -64,7 +63,7 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 			logrus.Debug("Pre-run")
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			series, err := app.LoadLabradarCsv(i, n)
+			series, err := app.LoadSeriesFromLabradar(i, n)
 			if err != nil {
 				logrus.Fatal(err)
 				return

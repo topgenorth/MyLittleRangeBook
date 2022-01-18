@@ -3,16 +3,54 @@ package labradar
 import (
 	"bytes"
 	"fmt"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
+	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"os"
 	"text/template"
 )
 
+// SeriesWriter is an interface to persisting a OldSeries to something a person might read (HTML, JSON, Markdown, etc).
+type SeriesWriter interface {
+	Write(s series.LabradarSeries) error
+}
+
+// JsonSeriesWriter will persist a given LabradarSeries to a JSON file.
+type JsonSeriesWriter struct {
+	*config.Config
+	FileSystem *afero.Afero
+}
+
+func (w *JsonSeriesWriter) Write(s series.LabradarSeries) error {
+
+	logrus.Warn("Not implemented.")
+	//dir, err := w.GetHomeDir()
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//outputFileName := filepath.Join(dir, s.Labradar.SeriesName+".json")
+	//if !fs.DeleteFile(outputFileName, w.Config) {
+	//	return fmt.Errorf("cannot write to the file %s: %v", outputFileName, err)
+	//}
+	//
+	//err = w.FileSystem.WriteFile(outputFileName, s.ToJsonBytes(), 0644)
+	//if err != nil {
+	//	return series.SeriesError{
+	//		Number: s.Number,
+	//		Msg:    fmt.Sprintf("Could not write to the file %s. %v", outputFileName, err),
+	//	}
+	//}
+
+	return nil
+}
+
 type StdOutSeriesWriter1 struct {
 	TemplateString string
 }
 
-func (w *StdOutSeriesWriter1) Write(s OldSeries) error {
+func (w *StdOutSeriesWriter1) Write(s series.LabradarSeries) error {
 	t, err := template.New("OldSeriesWriter").Parse(w.TemplateString)
 	if err != nil {
 		return series.SeriesError{
@@ -36,7 +74,7 @@ type ReadMeSeriesWriter struct {
 	OldFormat bool
 }
 
-func (w *ReadMeSeriesWriter) Write(s OldSeries) error {
+func (w *ReadMeSeriesWriter) Write(s series.LabradarSeries) error {
 	var tmpl string
 	if w.OldFormat {
 		tmpl = TMPL_README_LINE_OLD_FORMAT

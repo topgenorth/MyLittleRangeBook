@@ -9,6 +9,7 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"sort"
 )
 
@@ -57,11 +58,15 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	}
 }
 
-// LoadLabradarCsv will take a Labradar CSV file, and display relevant details to STDOUT.
-func (a *MyLittleRangeBook) LoadLabradarCsv(inputDir string, seriesNumber int) (*labradar.OldSeries, error) {
+// LoadSeriesFromLabradar will take a Labradar CSV file, and display relevant details to STDOUT.
+func (a *MyLittleRangeBook) LoadSeriesFromLabradar(inputDir string, seriesNumber int) (*series.LabradarSeries, error) {
 
-	filename := fs.FilenameForSeries(inputDir, seriesNumber)
-	s, err := labradar.LoadSeries(filename, a.Config.FileSystem)
+	device, err := labradar.NewDevice(inputDir, a.AppContext)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve series %d from '%s': %w", seriesNumber, inputDir, err)
+	}
+
+	s, err := device.LoadSeries(seriesNumber)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve series %d in %s: %w", seriesNumber, inputDir, err)
 	}
