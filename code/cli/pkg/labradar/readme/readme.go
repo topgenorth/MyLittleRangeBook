@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/io"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"sort"
 )
 
@@ -21,20 +21,20 @@ func (l readmeLine) String() string {
 	return l.value
 }
 
-// This structure holds the contents of a ReadMe file for the Labradar series.
+// ReadMe is a structure holds the contents of a ReadMe file for the Labradar series.
 type ReadmeMd struct {
 	Filename string
 	lines    []*readmeLine
 }
 
-// Create a new ReadMe file but with zero lines of content.
+// New will create a new ReadMe file but with zero lines of content.
 func New(filename string) *ReadmeMd {
 
 	r := &ReadmeMd{Filename: filename, lines: make([]*readmeLine, 5)}
 	r.lines[0] = &readmeLine{0, "# Description of Labradar series\n\n"}
 	r.lines[1] = &readmeLine{1, "For ammo, stick with the format:\n"}
 	r.lines[2] = &readmeLine{2, "`Cartridge; Bullet; Powder; COAL;Description`\n\n"}
-	r.lines[3] = &readmeLine{3, "| Series Number | Ammo | Firearm | Date |\n"}
+	r.lines[3] = &readmeLine{3, "| OldSeries Number | Ammo | Firearm | Date |\n"}
 	r.lines[4] = &readmeLine{4, "| :---:         | :--- | :-----  | :---: |\n"}
 
 	return r
@@ -61,10 +61,10 @@ func Load(filename string, fs aferox.Aferox) (*ReadmeMd, error) {
 	return r, nil
 }
 
-func (r *ReadmeMd) AppendSeries(s labradar.Series, oldformat bool) {
+func (r *ReadmeMd) AppendSeries(s series.LabradarSeries, oldformat bool) {
 	// [TO20220110] What happens if we duplicate a series number?
 
-	w := &io.ReadMeSeriesWriter{OldFormat: oldformat}
+	w := &labradar.ReadMeSeriesWriter{OldFormat: oldformat}
 	if err := w.Write(s); err != nil {
 		logrus.Error("could not serialize the series.")
 		return

@@ -36,7 +36,7 @@ func New() *AppContext {
 		In:         os.Stdin,
 		Out:        os.Stdout,
 		Err:        os.Stderr,
-		Timezone:   DefaultTimeZone,
+		Timezone:   inferDefaultTimeZone(),
 		FileSystem: aferox.NewAferox(pwd, afero.NewOsFs()),
 	}
 }
@@ -187,4 +187,10 @@ func (c *AppContext) CopyDirectory(srcDir, destDir string, includeBaseDir bool) 
 
 		return c.CopyFile(path, dest)
 	})
+}
+
+func inferDefaultTimeZone() string {
+	zone, _ := time.Now().Zone() // try to get my time zone...
+	loc, _ := time.LoadLocation(zone)
+	return loc.String()
 }

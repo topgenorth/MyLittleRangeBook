@@ -1,6 +1,7 @@
 package labradar
 
 import (
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"strconv"
 	"strings"
 )
@@ -8,12 +9,11 @@ import (
 type ReadmeLine struct {
 	LineNumber   int
 	SeriesNumber int
-	Firearm      *Firearm
-	Load         *LoadData
+	Firearm      *series.Firearm
+	Load         *series.LoadData
 	Text         string
 	Err          error
 }
-
 
 func getReadmeLine(text string) *ReadmeLine {
 
@@ -23,7 +23,7 @@ func getReadmeLine(text string) *ReadmeLine {
 
 	seriesNumber, err := strconv.Atoi(strings.TrimSpace(parts[0]))
 	ld := getLoadData(parts[1])
-	f := &Firearm{strings.TrimSpace(parts[2]), ld.Cartridge}
+	f := &series.Firearm{strings.TrimSpace(parts[2]), ld.Cartridge}
 
 	r := &ReadmeLine{
 		LineNumber:   0,
@@ -37,10 +37,10 @@ func getReadmeLine(text string) *ReadmeLine {
 	return r
 }
 
-func getLoadData(ammoPart string) *LoadData {
+func getLoadData(ammoPart string) *series.LoadData {
 	ammoParts := strings.Split(ammoPart, ";")
 
-	ld := &LoadData{
+	ld := &series.LoadData{
 		Cartridge:  strings.TrimSpace(ammoParts[0]),
 		Projectile: getProjectileFrom(ammoParts[1]),
 		Powder:     getPowderChargeFrom(ammoParts[2]),
@@ -50,8 +50,8 @@ func getLoadData(ammoPart string) *LoadData {
 
 }
 
-func getProjectileFrom(s string) *Projectile {
-	p := &Projectile{
+func getProjectileFrom(s string) *series.Projectile {
+	p := &series.Projectile{
 		Name:   strings.TrimSpace(s),
 		Weight: 0,
 		BC:     nil,
@@ -59,8 +59,8 @@ func getProjectileFrom(s string) *Projectile {
 	return p
 }
 
-func getPowderChargeFrom(s string) *PowderCharge {
-	pc := &PowderCharge{
+func getPowderChargeFrom(s string) *series.PowderCharge {
+	pc := &series.PowderCharge{
 		Name:   strings.TrimSpace(s),
 		Amount: 0,
 	}

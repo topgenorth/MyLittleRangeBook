@@ -2,14 +2,15 @@ package mlrb
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"io"
+	"log"
 	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
-	lbrio "opgenorth.net/mylittlerangebook/pkg/labradar/io"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"sort"
-	"strings"
 )
 
 type MyLittleRangeBook struct {
@@ -28,22 +29,22 @@ func NewWithConfig(cfg *config.Config) *MyLittleRangeBook {
 }
 
 func (a *MyLittleRangeBook) ConfigLogging() {
-	log.SetFormatter(&log.TextFormatter{})
+	logrus.SetFormatter(&logrus.TextFormatter{})
 	if a.Config.Debug {
-		log.Infoln("Debugging: true")
-		log.SetLevel(log.TraceLevel)
+		logrus.Infoln("Debugging: true")
+		logrus.SetLevel(logrus.TraceLevel)
 	} else {
-		log.Infoln("Debugging: false")
-		log.SetLevel(log.InfoLevel)
+		logrus.Infoln("Debugging: false")
+		logrus.SetLevel(logrus.InfoLevel)
 	}
 }
 
-// ListCartridges will do a simple dump of the cartridges to STDOUT.
+// ListCartridges will do a simple dump of the cartridges on record to STDOUT.
 func (a *MyLittleRangeBook) ListCartridges() {
 
 	cartridges, err := cloud.FetchAllCartridges()
 	if err != nil {
-		log.Error("Problem retrieving a list of cartridges. ", err)
+		logrus.Error("Problem retrieving a list of cartridges. ", err)
 	}
 	sort.Slice(cartridges[:], func(i, j int) bool {
 		return cartridges[i].Name < cartridges[j].Name
@@ -57,17 +58,23 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	}
 }
 
-// LoadLabradarCsv will take a Labradar CSV file, and display relevant details to STDOUT.
-func (a *MyLittleRangeBook) LoadLabradarCsv(inputDir string, seriesNumber int) (*labradar.Series, error) {
-	r := labradar.LoadCsv(a.Config, inputDir, seriesNumber)
+// LoadSeriesFromLabradar will take a Labradar CSV file, and display relevant details to STDOUT.
+func (a *MyLittleRangeBook) LoadSeriesFromLabradar(inputDir string, seriesNumber int) (*series.LabradarSeries, error) {
 
-	if r.Error != nil {
-		return nil, fmt.Errorf("could not read the Labradar file %s, %w: ", labradar.FilenameForSeries(inputDir, seriesNumber), r.Error)
+	device, err := labradar.NewDevice(inputDir, a.AppContext)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve series %d from '%s': %w", seriesNumber, inputDir, err)
 	}
 
-	return r.Series, nil
+	s, err := device.LoadSeries(seriesNumber)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve series %d in %s: %w", seriesNumber, inputDir, err)
+	}
+
+	return s, nil
 }
 
+// SubmitLabradarCsv file will upload the CSV file to cloud storage.
 func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
 	err := cloud.SubmitLabradarCsvFile(filename)
 	if err != nil {
@@ -76,32 +83,17 @@ func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
 	return nil
 }
 
-func (a *MyLittleRangeBook) ListLabradarCsvFiles(inputDir string) ([]labradar.CsvFile, error) {
-	files := labradar.LoadLabradarDataFiles(a.Config, inputDir)
-
-	fmt.Printf("Labradar files in %s:\n", inputDir)
-	for _, f := range files.Files {
-		fmt.Println(strings.ReplaceAll(f.String(), inputDir, " * "))
-	}
-	fmt.Printf("Done.\n")
-	return nil, nil
+// GetListOfLabradarFiles will display all the CSV files in the Labradar directory.
+func (a *MyLittleRangeBook) GetListOfLabradarFiles(inputDir string) ([]string, error) {
+	files := fs.ListLabradarFiles(inputDir, a.FileSystem)
+	return files, nil
 }
 
+// SubmitCartridge will add a new cartridge to the cartridges on record.
 func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Cartridge, error) {
 	c, err := cloud.AddCartridge(name, size)
 	if err != nil {
 		return nil, err
 	}
 	return c, nil
-}
-
-func (a *MyLittleRangeBook) AddSeriesToLabradarReadme(s *labradar.Series) error {
-
-	return nil
-}
-
-func (a *MyLittleRangeBook) DescribeToStdOut(s *labradar.Series) error {
-	w := lbrio.StdOutSeriesWriter1{TemplateString: lbrio.TMPL_DESCRIBE_SERIES}
-
-	return w.Write(*s)
 }

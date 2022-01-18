@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -10,6 +11,7 @@ import (
 	"strings"
 )
 
+// BuildRootCmd creates the root Cobra command that is the entry point to all the things in the application.
 func BuildRootCmd() *cobra.Command {
 	app := mlrb.New()
 
@@ -85,5 +87,23 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 			_ = cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
 		}
 	})
+}
 
+// Sets the specified flags as mandatory.  This is a helper method to reduce some of the repetitiveness with
+// setting mandatory flags. If there is an error setting the mandatory flag, then a warning would be logged.
+func setMandatoryFlags(cmd *cobra.Command, flagnames ...string) {
+	type f struct {
+		flagName string
+		success  bool
+		c        *cobra.Command
+	}
+
+	flags := make([]f, len(flagnames))
+	for _, n := range flagnames {
+		err := cmd.MarkFlagRequired(n)
+		flags = append(flags, f{flagName: n, success: err == nil, c: cmd})
+		if err != nil {
+			logrus.Warnf("Could not make the flag %s mandatory: %v.", n, err.Error())
+		}
+	}
 }

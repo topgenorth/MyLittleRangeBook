@@ -4,37 +4,27 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/io"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
 
+// buildLabradarCommands will create the Cobra command for detailing with files from a Labradar.
 func buildLabradarCommands(a *mlrb.MyLittleRangeBook) *cobra.Command {
-	var inputDir string
-	var seriesNumber int
 	cmd := &cobra.Command{
 		Use:              "labradar",
 		Short:            "All the commands for dealing with Labradar files via the command line.",
 		TraverseChildren: true,
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			logrus.Debug("Pre run!")
-		},
-		PersistentPostRun: func(cmd *cobra.Command, args []string) {
-			logrus.Debug("Post run!")
-		},
 	}
 
-	cmd.PersistentFlags().StringVarP(&inputDir, "labradar.inputDir", "", "", "The location of the input files.")
-	cmd.PersistentFlags().IntVarP(&seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-	setMandatoryFlags(cmd, "number", "labradar.inputDir")
-
 	cmd.AddCommand(buildReadLabradarCsvCmd(a))
-	cmd.AddCommand(buildListLabradarCsvFilesCmd(a))
+	cmd.AddCommand(buildListFilesCmd(a))
 	cmd.AddCommand(buildSubmitCsvFileCmd(a))
 	cmd.AddCommand(buildDescribeSeriesCommand(a))
 
 	return cmd
 }
 
+// buildSubmitCsvFileCmd will create the Cobra command to store/send the files to cloud storage.
 func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 
 	var n int
@@ -43,17 +33,17 @@ func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		Use:   "submit",
 		Short: "Submit the CSV file.",
 		Run: func(cmd *cobra.Command, args []string) {
-			filename := labradar.FilenameForSeries(i, n)
+			filename := fs.FilenameForSeries(i, n)
 			err := a.SubmitLabradarCsv(filename)
 			if err != nil {
 				logrus.Error(err)
 			} else {
-				logrus.Info("Submitted the file " + labradar.FilenameForSeries(i, n) + ".")
+				logrus.Info("Submitted the file " + fs.FilenameForSeries(i, n) + ".")
 			}
 		},
 	}
 
-	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the Device CSV file to read.")
+	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the OldDevice CSV file to read.")
 	setMandatoryFlags(cmd, "number")
 
 	cmd.Flags().StringVarP(&i, "labradar.inputDir", "", "", "The location of the input files.")
@@ -61,8 +51,8 @@ func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	return cmd
 }
 
+// buildReadLabradarCsvCmd will create the Cobra command to read a Labradar file and and display it to StdOut.
 func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
-
 	var i string
 	var n int
 
@@ -73,13 +63,13 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 			logrus.Debug("Pre-run")
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			series, err := app.LoadLabradarCsv(i, n)
+			series, err := app.LoadSeriesFromLabradar(i, n)
 			if err != nil {
 				logrus.Fatal(err)
 				return
 			}
 
-			sw := io.StdOutSeriesWriter1{TemplateString: io.TMPL_SUMMARIZE_SERIES}
+			sw := labradar.StdOutSeriesWriter1{TemplateString: labradar.TMPL_SUMMARIZE_SERIES}
 			if err := sw.Write(*series); err != nil {
 				logrus.Fatal(err)
 			}
@@ -89,48 +79,29 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the Device CSV file to read.")
+	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the OldDevice CSV file to read.")
 	cmd.Flags().StringVarP(&i, "labradar.inputDir", "", "", "The location of the input files.")
 
 	return cmd
 }
 
-func buildListLabradarCsvFilesCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
+// buildListFilesCmd will create the Cobra command to list all the CSV files in an LBR directory.
+func buildListFilesCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	var inputDir string
 
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Will display a list of all the CSV files in the input directory.",
 		Run: func(cmd *cobra.Command, args []string) {
-			_, err := app.ListLabradarCsvFiles(inputDir)
+			files, err := app.GetListOfLabradarFiles(inputDir)
 			if err != nil {
-				logrus.Fatal(err)
+				logrus.Panicf("Could not list files!  %v", err)
 			}
+			logrus.Infof("List %d files.", len(files))
 		},
 	}
 
 	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "", "", "The root directory of the labradar files (i.e. LBR).")
-
+	setMandatoryFlags(cmd, "labradar.inputDir")
 	return cmd
-}
-
-// Sets the specified flags as mandatory.  This is a helper method to reduce some of the repetitiveness with
-// setting mandatory flags. If there is an error setting the mandatory flag, then a warning would be logged.
-func setMandatoryFlags(cmd *cobra.Command, flagnames ...string) {
-	type f struct {
-		flagName string
-		success  bool
-		c        *cobra.Command
-	}
-
-	flags := make([]f, len(flagnames))
-	for _, n := range flagnames {
-		err := cmd.MarkFlagRequired(n)
-		flags = append(flags, f{flagName: n, success: err == nil, c: cmd})
-		if err != nil {
-			logrus.Warnf("Could not make the flag %s mandatory: %v.", n, err.Error())
-		}
-	}
-
-	// [TO20220110] Maybe do something like a warning if a flag could not be set?
 }

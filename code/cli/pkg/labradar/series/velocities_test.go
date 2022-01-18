@@ -1,4 +1,4 @@
-package labradar
+package series
 
 import (
 	"opgenorth.net/mylittlerangebook/pkg/math"

@@ -3,7 +3,7 @@ package readme
 import (
 	"bytes"
 	"fmt"
-	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"text/template"
 )
 
@@ -20,12 +20,12 @@ func (w *StringWriter) For(r *ReadmeMd) *StringWriter {
 func (w StringWriter) String() string {
 	return w.Value
 }
-func (w *StringWriter) Write(s labradar.Series) error {
+func (w *StringWriter) Write(s series.LabradarSeries) error {
 	w.Value = ""
 
 	t, err := template.New("labradarReadmeStringWriter").Parse(TMPL_README_SERIES_LINE)
 	if err != nil {
-		return labradar.SeriesError{
+		return series.SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error creating text.template: %v", err),
 		}
@@ -33,7 +33,7 @@ func (w *StringWriter) Write(s labradar.Series) error {
 
 	var tpl bytes.Buffer
 	if err := t.Execute(&tpl, s); err != nil {
-		return labradar.SeriesError{
+		return series.SeriesError{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error writing template: %v", err),
 		}
