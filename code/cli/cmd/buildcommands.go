@@ -60,28 +60,16 @@ func initializeCommand(cmd *cobra.Command) error {
 }
 
 func bindFlags(cmd *cobra.Command, v *viper.Viper) {
-	cmdName := fmt.Sprintf("'%s'", cmd.Name())
-
-	logrus.Tracef("Binding flags for the command %s.", cmdName)
 
 	var flags = cmd.Flags()
 	flags.VisitAll(func(f *pflag.Flag) {
-
-		logrus.Tracef("Processing the flag %s on command %s.", f.Name, cmdName)
 
 		// Environment variables can't have dashes in them, so bind them to their equivalent
 		// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
 		if strings.Contains(f.Name, "-") {
 			envVarSuffix := strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))
 			envVariableName := fmt.Sprintf("%s_%s", config.CONFIG_ENVIRONMENT_VARIABLE_PREFIX, envVarSuffix)
-			logrus.Tracef("Trying to bind the flag %s to the environment variable %s.", f.Name, envVariableName)
-
-			err := v.BindEnv(f.Name, envVariableName)
-			if err != nil {
-				logrus.Tracef("   > Error tring to bind the flag %s to the environment variable %s: %v.", f.Name, envVariableName, err)
-			}
-		} else {
-			logrus.Tracef("   > Not binding the flag %s to environment variables.", f.Name)
+			_ = v.BindEnv(f.Name, envVariableName)
 		}
 
 		// Apply the viper config value to the flag when the flag is not set and viper has a value
@@ -90,11 +78,7 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 			val := v.Get(f.Name)
 			err := cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
 			if err != nil {
-				logrus.Tracef("   > Error trying to the value for %s from : %v", err)
 			}
-
-		} else {
-			logrus.Tracef("   > Not setting the flag %s on the command", f.Name)
 		}
 	})
 }

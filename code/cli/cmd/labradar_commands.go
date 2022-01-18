@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
@@ -59,10 +60,6 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "read",
 		Short: "Reads a Labradar CSV file and displays a summary to STDOUT.",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			logrus.Tracef("PreRunE: %s", cmd.Name())
-			return initializeCommand(cmd)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			series, err := app.LoadSeriesFromLabradar(i, n)
 			if err != nil {
@@ -71,7 +68,7 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 
 			sw := labradar.StdOutSeriesWriter1{TemplateString: labradar.TMPL_SUMMARIZE_SERIES}
 			if err := sw.Write(*series); err != nil {
-				return err
+				return fmt.Errorf("could not write the series %d to StdOut", n)
 			}
 
 			return nil
