@@ -4,6 +4,7 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -101,4 +102,14 @@ func parseWeightFromProjectileString(weight string) int {
 	}
 
 	return int(w)
+}
+
+// ToTime will take two strings are return a time.Time value.
+func ToTime(d string, t string) time.Time {
+	myDate, err := time.Parse("01-02-2006 15:04:05", d+" "+t)
+	if err != nil {
+		panic(err)
+	}
+
+	return myDate
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"opgenorth.net/mylittlerangebook/pkg"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/math"
 	"os"
@@ -151,4 +152,34 @@ func fileExists(filename string) bool {
 	}
 
 	return true
+}
+
+// sanitizeLine will take a line of text (from a Labradar CSV file) and try to clean up some of the odd things
+// that the Labradar writes out.
+func sanitizeLine(line string) string {
+	parts := strings.Split(strings.TrimSpace(line), pkg.UnicodeNUL)
+
+	switch lengthOfParts := len(parts); lengthOfParts {
+	case 2:
+		// The string either started with a NUL or ended with a NUL
+		if len(parts[0]) == 0 {
+			return parts[1]
+		}
+		if len(parts[1]) == 0 {
+			return parts[0]
+		}
+
+		return line
+	case 3:
+		// The string started with NUL and ended with NUL
+		return parts[1]
+	default:
+		return line
+	}
+}
+
+// sanitizeCsvLine will clean up the line of text in the CSV file, hopefully return the most interesting portion to us.
+func sanitizeCsvLine(file CsvFile, lineNumber int) string {
+	line := file.lines[lineNumber]
+	return sanitizeLine(line)
 }
