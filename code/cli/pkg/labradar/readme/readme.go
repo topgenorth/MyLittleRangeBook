@@ -21,13 +21,13 @@ func (l readmeLine) String() string {
 	return l.value
 }
 
-// This structure holds the contents of a ReadMe file for the Labradar series.
+// ReadMe is a structure holds the contents of a ReadMe file for the Labradar series.
 type ReadmeMd struct {
 	Filename string
 	lines    []*readmeLine
 }
 
-// Create a new ReadMe file but with zero lines of content.
+// New will create a new ReadMe file but with zero lines of content.
 func New(filename string) *ReadmeMd {
 
 	r := &ReadmeMd{Filename: filename, lines: make([]*readmeLine, 5)}

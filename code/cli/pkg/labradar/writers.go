@@ -13,6 +13,7 @@ import (
 
 // SeriesWriter is an interface to persisting a OldSeries to something a person might read (HTML, JSON, Markdown, etc).
 type SeriesWriter interface {
+	// Write is used to persist a series.LabradarSeries value to something that a person might read.
 	Write(s series.LabradarSeries) error
 }
 

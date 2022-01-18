@@ -1,6 +1,6 @@
 package cmd
 
-import "opgenorth.net/mylittlerangebook/pkg/labradar"
+import "opgenorth.net/mylittlerangebook/pkg/labradar/series"
 
 // describeParameters holds the values that are necessary to describe a give Labradar series.
 type describeParameters struct {
@@ -14,13 +14,16 @@ type describeParameters struct {
 	cbto         float32
 }
 
-func (p *describeParameters) updateSeries(s *labradar.OldSeries) {
-	s.Notes = p.notes
-	//s.Firearm.Name = p.firearm
-	//s.LoadData.Cartridge = p.cartridge
-	//s.LoadData.CBTO = p.cbto
+func (p *describeParameters) updateSeries(s series.LabradarSeries) {
 
-	s.SetProjectile(p.bullet)
-	s.SetPowder(p.powder)
+	// TODO [TO20220118] Setup the mutators and apply them.
+
+	//s.Notes = p.notes
+	////s.Firearm.Name = p.firearm
+	////s.LoadData.Cartridge = p.cartridge
+	////s.LoadData.CBTO = p.cbto
+	//
+	//s.SetProjectile(p.bullet)
+	//s.SetPowder(p.powder)
 
 }
