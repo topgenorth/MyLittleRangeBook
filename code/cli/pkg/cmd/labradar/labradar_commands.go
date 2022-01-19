@@ -1,28 +1,29 @@
-package cmd
+package labradar
 
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"opgenorth.net/mylittlerangebook/pkg/cmd"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
 
-// buildLabradarCommands will create the Cobra command for detailing with files from a Labradar.
-func buildLabradarCommands(a *mlrb.MyLittleRangeBook) *cobra.Command {
-	cmd := &cobra.Command{
+// BuildLabradarCommands will create the Cobra command for detailing with files from a Labradar.
+func BuildLabradarCommands(a *mlrb.MyLittleRangeBook) *cobra.Command {
+	c := &cobra.Command{
 		Use:              "labradar",
 		Short:            "All the commands for dealing with Labradar files via the command line.",
 		TraverseChildren: true,
 	}
 
-	cmd.AddCommand(buildReadLabradarCsvCmd(a))
-	//cmd.AddCommand(buildListFilesCmd(a))
-	//cmd.AddCommand(buildSubmitCsvFileCmd(a))
-	//cmd.AddCommand(buildDescribeSeriesCommand(a))
+	c.AddCommand(buildReadLabradarCsvCmd(a))
+	//c.AddCommand(buildListFilesCmd(a))
+	//c.AddCommand(buildSubmitCsvFileCmd(a))
+	//c.AddCommand(buildDescribeSeriesCommand(a))
 
-	return cmd
+	return c
 }
 
 // buildSubmitCsvFileCmd will create the Cobra command to store/send the files to cloud storage.
@@ -30,7 +31,7 @@ func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 
 	var n int
 	var i string
-	cmd := &cobra.Command{
+	c := &cobra.Command{
 		Use:   "submit",
 		Short: "Submit the CSV file.",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -44,12 +45,12 @@ func buildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the OldDevice CSV file to read.")
-	setMandatoryFlags(cmd, "number")
+	c.Flags().IntVarP(&n, "number", "n", 0, "The number of the OldDevice CSV file to read.")
+	cmd.SetMandatoryFlags(c, "number")
 
-	cmd.Flags().StringVarP(&i, "labradar.inputDir", "", "", "The location of the input files.")
+	c.Flags().StringVarP(&i, "labradar.inputDir", "", "", "The location of the input files.")
 
-	return cmd
+	return c
 }
 
 // buildReadLabradarCsvCmd will create the Cobra command to read a Labradar file and and display it to StdOut.
@@ -57,7 +58,7 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	var i string
 	var n int
 
-	cmd := &cobra.Command{
+	c := &cobra.Command{
 		Use:   "read",
 		Short: "Reads a Labradar CSV file and displays a summary to STDOUT.",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -75,18 +76,18 @@ func buildReadLabradarCsvCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVarP(&n, "number", "n", 0, "The number of the labradar series CSV file to read.")
-	cmd.Flags().StringVarP(&i, "inputDir", "", "", "The location of the input files.")
-	setMandatoryFlags(cmd, "number", "inputDir")
+	c.Flags().IntVarP(&n, "number", "n", 0, "The number of the labradar series CSV file to read.")
+	c.Flags().StringVarP(&i, "inputDir", "", "", "The location of the input files.")
+	cmd.SetMandatoryFlags(c, "number", "inputDir")
 
-	return cmd
+	return c
 }
 
 // buildListFilesCmd will create the Cobra command to list all the CSV files in an LBR directory.
 func buildListFilesCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	var inputDir string
 
-	cmd := &cobra.Command{
+	c := &cobra.Command{
 		Use:   "list",
 		Short: "Will display a list of all the CSV files in the input directory.",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -98,7 +99,7 @@ func buildListFilesCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&inputDir, "labradar.inputDir", "", "", "The root directory of the labradar files (i.e. LBR).")
-	setMandatoryFlags(cmd, "labradar.inputDir")
-	return cmd
+	c.Flags().StringVarP(&inputDir, "labradar.inputDir", "", "", "The root directory of the labradar files (i.e. LBR).")
+	cmd.SetMandatoryFlags(c, "labradar.inputDir")
+	return c
 }

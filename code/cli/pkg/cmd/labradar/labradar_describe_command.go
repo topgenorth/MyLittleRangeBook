@@ -1,9 +1,10 @@
-package cmd
+package labradar
 
 import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"opgenorth.net/mylittlerangebook/pkg/cmd"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/readme"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
@@ -24,7 +25,7 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		cbto:         0.0,
 	}
 
-	cmd := &cobra.Command{
+	c := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe the series.",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -55,22 +56,22 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVarP(&p.seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
-	cmd.Flags().StringVarP(&p.cartridge, "cartridge", "", "", "The cartridge that was measured. e.g. 6.5 Grendel.")
-	cmd.Flags().StringVarP(&p.firearm, "firearm", "", "", "The name of the firearm.")
-	cmd.Flags().StringVarP(&p.inputDir, "labradar.inputDir", "", "", "The location of the input files.")
-	setMandatoryFlags(cmd, "cartridge", "firearm")
+	c.Flags().IntVarP(&p.seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
+	c.Flags().StringVarP(&p.cartridge, "cartridge", "", "", "The cartridge that was measured. e.g. 6.5 Grendel.")
+	c.Flags().StringVarP(&p.firearm, "firearm", "", "", "The name of the firearm.")
+	c.Flags().StringVarP(&p.inputDir, "labradar.inputDir", "", "", "The location of the input files.")
+	cmd.SetMandatoryFlags(c, "cartridge", "firearm")
 
-	cmd.Flags().StringVarP(&p.notes, "notes", "", "", "Some text to describe what this series is about.")
-	cmd.Flags().StringVarP(&p.bullet, "bullet", "", "", "The bullet that was used. e.g. 123gr Hornady ELD Match.")
-	cmd.Flags().StringVarP(&p.powder, "powder", "", "", "The weight and powder that was used. e.g. 29.1gr BL-C(2).")
-	cmd.Flags().Float32VarP(&p.cbto, "cbto", "", 0, "The cartridge-to-base-ogive length, in inches.  e.g. 1.666")
+	c.Flags().StringVarP(&p.notes, "notes", "", "", "Some text to describe what this series is about.")
+	c.Flags().StringVarP(&p.bullet, "bullet", "", "", "The bullet that was used. e.g. 123gr Hornady ELD Match.")
+	c.Flags().StringVarP(&p.powder, "powder", "", "", "The weight and powder that was used. e.g. 29.1gr BL-C(2).")
+	c.Flags().Float32VarP(&p.cbto, "cbto", "", 0, "The cartridge-to-base-ogive length, in inches.  e.g. 1.666")
 
-	if err := initializeCommand(cmd); err != nil {
-		logrus.Errorf("There is a problem trying to initialize the commnad %s: %v", cmd.Name(), err)
+	if err := cmd.InitializeCommand(c); err != nil {
+		logrus.Errorf("There is a problem trying to initialize the commnad %s: %v", c.Name(), err)
 	}
 
-	return cmd
+	return c
 }
 
 // describeParameters holds the values that are necessary to describe a give Labradar series.
