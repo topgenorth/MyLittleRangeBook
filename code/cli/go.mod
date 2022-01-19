@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/aws/aws-sdk-go v1.40.26
-	github.com/carolynvs/aferox v0.3.0
 	github.com/google/uuid v1.2.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0

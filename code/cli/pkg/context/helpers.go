@@ -3,6 +3,7 @@ package context
 import (
 	"bytes"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"opgenorth.net/mylittlerangebook/pkg/test"
@@ -12,10 +13,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/carolynvs/aferox"
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	TestPrefix     = "mlrb"
+	TempDirForTest = "mlrb-test"
 )
 
 type TestContext struct {
@@ -25,6 +30,9 @@ type TestContext struct {
 	capturedErr *bytes.Buffer
 	capturedOut *bytes.Buffer
 	T           *testing.T
+	afs         *afero.Afero
+
+	TestDir string
 }
 
 // NewTestContext initializes a configuration suitable for testing, with the
@@ -38,18 +46,21 @@ func NewTestContext(t *testing.T) *TestContext {
 	out := &bytes.Buffer{}
 	aggOut := io.MultiWriter(out, test.Logger{T: t})
 
+	appContext := &AppContext{
+		Debug:      true,
+		environ:    getEnviron(),
+		Filesystem: &afero.Afero{Fs: afero.NewMemMapFs()},
+		In:         &bytes.Buffer{},
+		Out:        aggOut,
+		Err:        aggErr,
+		Timezone:   inferDefaultTimeZone(),
+	}
 	c := &TestContext{
-		AppContext: &AppContext{
-			Debug:      true,
-			environ:    getEnviron(),
-			FileSystem: aferox.NewAferox("/", afero.NewMemMapFs()),
-			In:         &bytes.Buffer{},
-			Out:        aggOut,
-			Err:        aggErr,
-		},
+		AppContext:  appContext,
 		capturedOut: out,
 		capturedErr: err,
 		T:           t,
+		afs:         &afero.Afero{Fs: appContext.Filesystem},
 	}
 
 	return c
@@ -69,15 +80,15 @@ func (c *TestContext) GetTestDefinitionDirectory() string {
 	return ""
 }
 
-// UseFilesystem has porter's context use the OS filesystem instead of an in-memory filesystem
-// Returns the test directory, and the temp porter home directory.
+// UseFilesystem has AppContext use the OS filesystem instead of an in-memory filesystem
+// Returns the test directory, and the temp mlrb home directory.
 func (c *TestContext) UseFilesystem() (testDir string, homeDir string) {
-	homeDir, err := ioutil.TempDir("", "porter-test")
+	homeDir, err := ioutil.TempDir("", TempDirForTest)
 	require.NoError(c.T, err)
-	c.cleanupDirs = append(c.cleanupDirs, homeDir)
+	c.TestDir = c.GetTestDefinitionDirectory()
 
-	testDir = c.GetTestDefinitionDirectory()
-	c.FileSystem = aferox.NewAferox(testDir, afero.NewOsFs())
+	c.cleanupDirs = append(c.cleanupDirs, homeDir)
+	c.cleanupDirs = append(c.cleanupDirs, c.TestDir)
 
 	return testDir, homeDir
 }
@@ -88,11 +99,16 @@ func (c *TestContext) AddCleanupDir(dir string) {
 
 func (c *TestContext) Cleanup() {
 	for _, dir := range c.cleanupDirs {
-		c.FileSystem.RemoveAll(dir)
+
+		err := c.Filesystem.RemoveAll(dir)
+		if err != nil {
+			logrus.Warnf("Could not delete the directory %s: %v", dir, err)
+		}
 	}
 }
 
-// mode is optional and only the first one passed is used.
+// AddTestFile will add a new file to the testing context.
+//mode is optional and only the first one passed is used.
 func (c *TestContext) AddTestFile(src, dest string, mode ...os.FileMode) []byte {
 	data, err := ioutil.ReadFile(src)
 	if err != nil {
@@ -111,7 +127,7 @@ func (c *TestContext) AddTestFile(src, dest string, mode ...os.FileMode) []byte 
 		perms = mode[0]
 	}
 
-	err = c.FileSystem.WriteFile(dest, data, perms)
+	err = c.afs.WriteFile(dest, data, perms)
 	if err != nil {
 		c.T.Fatal(errors.Wrapf(err, "error writing file %s to test filesystem", dest))
 	}
@@ -120,7 +136,7 @@ func (c *TestContext) AddTestFile(src, dest string, mode ...os.FileMode) []byte 
 }
 
 func (c *TestContext) AddTestFileContents(file []byte, dest string) error {
-	return c.FileSystem.WriteFile(dest, file, 0600)
+	return c.afs.WriteFile(dest, file, 0600)
 }
 
 // mode is optional and should only be specified once
@@ -139,7 +155,7 @@ func (c *TestContext) AddTestDirectory(srcDir, destDir string, mode ...os.FileMo
 		dest := filepath.Join(destDir, strings.TrimPrefix(path, srcDir))
 
 		if info.IsDir() {
-			return c.FileSystem.MkdirAll(dest, 0700)
+			return c.afs.MkdirAll(dest, 0700)
 		}
 
 		c.AddTestFile(path, dest, mode...)
@@ -156,7 +172,7 @@ func (c *TestContext) AddTestDriver(src, name string) string {
 		c.T.Fatal(err)
 	}
 
-	dirname, err := c.FileSystem.TempDir("", "porter")
+	dirname, err := c.afs.TempDir("", TestPrefix)
 	if err != nil {
 		c.T.Fatal(err)
 	}
@@ -164,7 +180,7 @@ func (c *TestContext) AddTestDriver(src, name string) string {
 	// filename in accordance with cnab-go's command driver expectations
 	filename := fmt.Sprintf("%s/cnab-%s", dirname, name)
 
-	newfile, err := c.FileSystem.Create(filename)
+	newfile, err := c.afs.Create(filename)
 	if err != nil {
 		c.T.Fatal(err)
 	}
@@ -176,7 +192,7 @@ func (c *TestContext) AddTestDriver(src, name string) string {
 		}
 	}
 
-	err = c.FileSystem.Chmod(newfile.Name(), 0700)
+	err = c.afs.Chmod(newfile.Name(), 0700)
 	if err != nil {
 		c.T.Fatal(err)
 	}
@@ -208,7 +224,7 @@ func (c *TestContext) ClearOutputs() {
 	c.capturedErr.Truncate(0)
 }
 
-// FindRepoRoot returns the path to the porter repository where the test is currently running
+// FindRepoRoot returns the path to the mlrb repository where the test is currently running
 func (c *TestContext) FindRepoRoot() string {
 	goMod := c.findRepoFile("go.mod")
 	return filepath.Dir(goMod)
@@ -219,7 +235,7 @@ func (c *TestContext) FindBinDir() string {
 	return c.findRepoFile("bin")
 }
 
-// Finds a file in the porter repository, does not use the mock filesystem
+// Finds a file in the mlrb repository, does not use the mock filesystem
 func (c *TestContext) findRepoFile(wantFile string) string {
 	d := c.GetTestDefinitionDirectory()
 	for {

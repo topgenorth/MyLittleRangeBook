@@ -2,7 +2,7 @@ package labradar
 
 import (
 	"fmt"
-	"github.com/carolynvs/aferox"
+	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/context"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
@@ -20,16 +20,18 @@ type Device struct {
 	TimeZone string `json:"timezone"`
 	// Directory is the name of the folder that holds the Labradar files.
 	Directory string `json:"directory"`
-	af        aferox.Aferox
+	af        *afero.Afero
 }
 
 func (d Device) String() string {
 	return d.DeviceId
 }
 
+// NewDevice will initialize a Device structure. The path parameter is the path to the LBR folder
+// of the Labradar device.
 func NewDevice(path string, ctx *context.AppContext) (*Device, error) {
 
-	file, err := findTheLabradarMarkerFile(path, ctx.FileSystem)
+	file, err := findTheLabradarMarkerFile(path, ctx.Filesystem)
 	if err != nil {
 		return nil, fmt.Errorf("does not seem to be a Labradar directory '%s': %w", path, err)
 	}
@@ -41,9 +43,11 @@ func NewDevice(path string, ctx *context.AppContext) (*Device, error) {
 		DeviceId:  getDeviceId(file.Name()),
 		TimeZone:  ctx.Timezone,
 		Directory: path,
-		af:        ctx.FileSystem}, nil
+		af:        ctx.Filesystem,
+	}, nil
 }
 
+// LoadSeries will load the specified series from the Labradar Device.
 func (d Device) LoadSeries(seriesNumber int) (*series.LabradarSeries, error) {
 
 	csvValues, err := fs.GetMutatorsToUpdateSeries(seriesNumber, d.Directory, d.af)
@@ -62,7 +66,7 @@ func (d Device) LoadSeries(seriesNumber int) (*series.LabradarSeries, error) {
 
 }
 
-//UpdateDeviceForSeries will initialize the Labradar device id and
+//UpdateDeviceForSeries will update the series.LabradarSeries with the device id of the specified device.
 func UpdateDeviceForSeries(device *Device) series.LabradarSeriesMutatorFunc {
 	// TODO [TO20220119] Needs unit tests
 	return func(s *series.LabradarSeries) {
@@ -72,7 +76,7 @@ func UpdateDeviceForSeries(device *Device) series.LabradarSeriesMutatorFunc {
 
 // findTheLabradarMarkerFile will inspect all the files in a given directory and attempt to find an
 // *.LID file that all of the LBR data folders seem to have.
-func findTheLabradarMarkerFile(path string, af aferox.Aferox) (os.FileInfo, error) {
+func findTheLabradarMarkerFile(path string, af *afero.Afero) (os.FileInfo, error) {
 	b, err := af.Exists(path)
 	if err != nil || !b {
 		return nil, fmt.Errorf("could not determine if '%s' is Labradar directory: %w", path, err)

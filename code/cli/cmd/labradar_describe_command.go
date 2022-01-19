@@ -39,12 +39,12 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 			//_ = a.DescribeToStdOut(s)
 
 			file := filepath.Join(p.inputDir, "README.md")
-			r, err := readme.Load(file, a.Config.FileSystem)
+			r, err := readme.Load(file, a.Config.Filesystem)
 			if err != nil {
 				logrus.Warnf("Will not append the series %d to the README file %s: %v", p.seriesNumber, file, err)
 			} else {
 				r.AppendSeries(*s, true)
-				if err = readme.Save(*r, a.Config.FileSystem); err != nil {
+				if err = readme.Save(*r, a.Config.Filesystem); err != nil {
 					logrus.Errorf("Could not update the README %s: %v", file, errors.Unwrap(err))
 					return
 				}

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"opgenorth.net/mylittlerangebook/pkg/context"
 	"path/filepath"
 	"testing"
@@ -27,12 +28,12 @@ func NewTestConfig(t *testing.T) *TestConfig {
 // SetupUnitTest initializes the unit test filesystem with the supporting files in the MLRB)HOME directory.
 func (c *TestConfig) SetupUnitTest() {
 	// Set up the test MLRB home directory
-	home := "/root/.mlrb"
+	home := fmt.Sprintf("/root/.%s", context.TestPrefix)
 	c.SetHomeDir(home)
 
 	// Fake out the mlrb home directory
-	c.FileSystem.Create(filepath.Join(home, "mlrb"))
-	c.FileSystem.Create(filepath.Join(home, "runtimes", "mlrb-runtime"))
+	_, _ = c.Filesystem.Create(filepath.Join(home, context.TestPrefix))
+	_, _ = c.Filesystem.Create(filepath.Join(home, "runtimes", "mlrb-runtime"))
 
 }
 
@@ -46,7 +47,7 @@ func (c *TestConfig) SetupIntegrationTest() (testDir string, homeDir string) {
 	// and not the go test binary that is generated when we run integration tests.
 	// This way when mlrb calls back to itself, e.g. for internal plugins,
 	// it is calling the normal mlrb binary.
-	c.SetMlrbPath(filepath.Join(homeDir, "mlrb"))
+	c.SetMlrbPath(filepath.Join(homeDir, context.TestPrefix))
 
 	// Copy bin dir contents to the home directory
 	c.TestContext.AddTestDirectory(c.TestContext.FindBinDir(), homeDir, 0700)

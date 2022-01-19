@@ -1,10 +1,8 @@
 package readme
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/carolynvs/aferox"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
@@ -40,25 +38,27 @@ func New(filename string) *ReadmeMd {
 	return r
 }
 
-func Load(filename string, fs aferox.Aferox) (*ReadmeMd, error) {
-	file, err := fs.Open(filename)
-	defer func(f afero.File) {
-		_ = f.Close()
-	}(file)
+func Load(filename string, fs *afero.Afero) (*ReadmeMd, error) {
+	/*	file, err := fs.Open(filename)
+		defer func(f afero.File) {
+			_ = f.Close()
+		}(file)
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to open the README file %s: %w", filename, err)
-	}
+		if err != nil {
+			return nil, fmt.Errorf("failed to open the README file %s: %w", filename, err)
+		}
 
-	r := &ReadmeMd{Filename: filename}
-	scanner := bufio.NewScanner(file)
-	i := 0
-	for scanner.Scan() {
-		r.lines = append(r.lines, &readmeLine{index: i, value: scanner.Text()})
-		i = i + 1
-	}
+		r := &ReadmeMd{Filename: filename}
+		scanner := bufio.NewScanner(file)
+		i := 0
+		for scanner.Scan() {
+			r.lines = append(r.lines, &readmeLine{index: i, value: scanner.Text()})
+			i = i + 1
+		}
 
-	return r, nil
+		return r, nil
+	*/
+	return nil, nil
 }
 
 func (r *ReadmeMd) AppendSeries(s series.LabradarSeries, oldformat bool) {
@@ -74,7 +74,7 @@ func (r *ReadmeMd) AppendSeries(s series.LabradarSeries, oldformat bool) {
 	r.lines = append(r.lines, &readmeLine{index: i, value: w.Output})
 }
 
-func Save(r ReadmeMd, fs aferox.Aferox) error {
+func Save(r ReadmeMd, fs *afero.Afero) error {
 
 	if len(r.lines) > 1 {
 		sort.SliceStable(r.lines, func(i, j int) bool {

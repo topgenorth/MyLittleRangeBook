@@ -3,7 +3,7 @@ package fs
 import (
 	"bufio"
 	"fmt"
-	"github.com/carolynvs/aferox"
+	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"strconv"
 	"strings"
@@ -23,7 +23,7 @@ func (f CsvFile) String() string {
 }
 
 // loadCsv will read a file line at a time, capturing each line of test for future processing.
-func loadCsv(filename string, fs aferox.Aferox) *CsvFile {
+func loadCsv(filename string, fs *afero.Afero) *CsvFile {
 	csv := &CsvFile{
 		InputFile: filename,
 		Error:     nil,
@@ -48,7 +48,7 @@ func loadCsv(filename string, fs aferox.Aferox) *CsvFile {
 
 // GetMutatorsToUpdateSeries will return an array of mutators to update a series.LabradarSeries with the contents of a
 // CSV file.
-func GetMutatorsToUpdateSeries(seriesNumber int, directory string, af aferox.Aferox) ([]series.LabradarSeriesMutatorFunc, error) {
+func GetMutatorsToUpdateSeries(seriesNumber int, directory string, af *afero.Afero) ([]series.LabradarSeriesMutatorFunc, error) {
 	filename := FilenameForSeries(directory, seriesNumber)
 	exists, err := af.Exists(filename)
 	if err != nil {

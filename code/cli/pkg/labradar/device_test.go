@@ -1,6 +1,8 @@
 package labradar
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_getDeviceId(t *testing.T) {
 	type args struct {
@@ -80,4 +82,35 @@ func Test_looksLikeTheLabradarMarkerFile(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_UpdateDeviceForSeries(t *testing.T) {
+
+	t.Fail()
+
+	//d := &Device{
+	//	DeviceId:  "LBR-1234567",
+	//	TimeZone:  pkg.DefaultTimeZone,
+	//	Directory: "",
+	//	af:        aferox.NewAferox(pwd, afero.NewMemMapFs()),
+	//}
+
+	//type args struct {
+	//	device *Device
+	//}
+	//tests := []struct {
+	//	name string
+	//	args args
+	//	want series.LabradarSeriesMutatorFunc
+	//}{
+	//
+	//
+	//}
+	//for _, tt := range tests {
+	//	t.Run(tt.name, func(t *testing.T) {
+	//		if got := UpdateDeviceForSeries(tt.args.device); !reflect.DeepEqual(got, tt.want) {
+	//			t.Errorf("UpdateDeviceForSeries() = %v, want %v", got, tt.want)
+	//		}
+	//	})
+	//}
 }

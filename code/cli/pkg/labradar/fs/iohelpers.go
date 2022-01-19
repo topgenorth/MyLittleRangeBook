@@ -3,12 +3,10 @@ package fs
 
 import (
 	"fmt"
-	"github.com/carolynvs/aferox"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg"
-	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/math"
 	"os"
 	"path"
@@ -16,21 +14,6 @@ import (
 	"sort"
 	"strings"
 )
-
-// DeleteFile will try and delete the specific file, returning true if it can.
-func DeleteFile(s string, c *config.Config) bool {
-	exists, err := c.FileSystem.Exists(s)
-	if err != nil {
-		return false
-	}
-	if exists {
-		err := os.Remove(s)
-		if err != nil {
-			return false
-		}
-	}
-	return true
-}
 
 func CloseFile(f afero.File) {
 	err := f.Close()
@@ -52,7 +35,7 @@ func FilenameForSeries(labradarRootDirectory string, seriesNumber int) string {
 
 // ListLabradarFiles will return an array of all the full filenames of Labradar CSV files in the given
 // directory of Labradar files.
-func ListLabradarFiles(inputDir string, fs aferox.Aferox) []string {
+func ListLabradarFiles(inputDir string, fs *afero.Afero) []string {
 	result := make([]string, 0)
 
 	// [TO20220115] Show a list of all the things in the inputDir.

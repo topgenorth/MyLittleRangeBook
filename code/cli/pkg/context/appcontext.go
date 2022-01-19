@@ -2,43 +2,43 @@ package context
 
 import (
 	"fmt"
-	"github.com/carolynvs/aferox"
-	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"io"
+	"opgenorth.net/mylittlerangebook/pkg"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
 
-const (
-	DefaultTimeZone = "America/Edmonton"
-)
-
+// AppContext is the
 type AppContext struct {
-	Debug      bool
-	verbose    bool
-	environ    map[string]string
-	FileSystem aferox.Aferox
-	In         io.Reader
-	Out        io.Writer
-	Err        io.Writer
-	Timezone   string
+	// Filesystem is the afero wrapper around the filesystem.
+	Filesystem *afero.Afero
+
+	// Timezone is the string representation of the time.Location that the app is running in.
+	Timezone string
+
+	// Debug is a flag that is set when dev
+	Debug   bool
+	verbose bool
+
+	// environ holds a list of all environment variables
+	environ map[string]string
+
+	In  io.Reader
+	Out io.Writer
+	Err io.Writer
 }
 
 func New() *AppContext {
-
-	pwd, _ := os.Getwd()
-
 	return &AppContext{
-		Debug:      true,
+		Debug:      false,
 		environ:    getEnviron(),
 		In:         os.Stdin,
 		Out:        os.Stdout,
 		Err:        os.Stderr,
 		Timezone:   inferDefaultTimeZone(),
-		FileSystem: aferox.NewAferox(pwd, afero.NewOsFs()),
+		Filesystem: &afero.Afero{Fs: afero.NewOsFs()},
 	}
 }
 
@@ -113,27 +113,19 @@ func (c *AppContext) ClearEnv() {
 	c.environ = make(map[string]string, 0)
 }
 
-// Getwd returns a rooted path name corresponding to the current directory.
-func (c *AppContext) Getwd() string {
-	return c.FileSystem.Getwd()
-}
-
-// Chdir changes the current working directory to the named directory.
-func (c *AppContext) Chdir(dir string) {
-	c.FileSystem.Chdir(dir)
-}
-
+// TimeLocation will return a pointer to a time.Location structure.
 func (c *AppContext) TimeLocation() *time.Location {
 	tz, err := time.LoadLocation(c.Timezone)
 	if err == nil {
 		return tz
 	} else {
-		c.Timezone = DefaultTimeZone
-		tz, _ := time.LoadLocation(DefaultTimeZone)
+		c.Timezone = pkg.DefaultTimeZone
+		tz, _ := time.LoadLocation(pkg.DefaultTimeZone)
 		return tz
 	}
 }
 
+// getEnviron will populate
 func getEnviron() map[string]string {
 	environ := map[string]string{}
 	for _, env := range os.Environ() {
@@ -148,7 +140,7 @@ func getEnviron() map[string]string {
 	return environ
 }
 
-func (c *AppContext) CopyFile(src, dest string) error {
+/*func (c *AppContext) CopyFile(src, dest string) error {
 	info, err := c.FileSystem.Stat(src)
 	if err != nil {
 		return errors.WithStack(err)
@@ -189,7 +181,7 @@ func (c *AppContext) CopyDirectory(srcDir, destDir string, includeBaseDir bool) 
 		return c.CopyFile(path, dest)
 	})
 }
-
+*/
 func inferDefaultTimeZone() string {
 	zone, _ := time.Now().Zone() // try to get my time zone...
 	loc, _ := time.LoadLocation(zone)
