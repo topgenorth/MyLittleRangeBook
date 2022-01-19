@@ -25,7 +25,6 @@ func DeleteFile(s string, c *config.Config) bool {
 	}
 	if exists {
 		err := os.Remove(s)
-		// TODO [TO20220105] Log a warning.
 		if err != nil {
 			return false
 		}

@@ -17,7 +17,6 @@ func Test_trimLastChar(t *testing.T) {
 		args args
 		want string
 	}{
-		// TODO: Add test cases.
 		{"Stripped the last character", args{"Remove the Plus+"}, "Remove the Plus"},
 		{"Stripped the last NUL (unicode)", args{"Remove the unicode NUL" + pkg.UnicodeNUL}, "Remove the unicode NUL"},
 		{"Stripped the last NUL (hex)", args{"Remove the hex NUL" + pkg.HexNUL}, "Remove the hex NUL"},
