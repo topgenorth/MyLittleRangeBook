@@ -102,23 +102,28 @@ func (t UnitsOfMeasure) String() string {
 }
 
 type VelocityData struct {
-	Average           int     `json:"average"`
-	Max               int     `json:"max"`
-	Min               int     `json:"min"`
-	ExtremeSpread     int     `json:"extremeSpread"`
-	StandardDeviation float64 `json:"standardDeviation"`
-	Values            []int   `json:"values"`
+	Values []int `json:"values"`
 }
 
-func (stats *VelocityData) AddVelocity(velocity int) {
-	stats.Values = append(stats.Values, velocity)
-	min, max := math.GetMaxAndMin(stats.Values)
+func (vd VelocityData) StdDev() float64 {
+	return math.CalculateStdDevOfInts(vd.Values)
+}
 
-	stats.Average = int(math.CalculateAverage(stats.Values))
-	stats.Max = max
-	stats.Min = min
-	stats.ExtremeSpread = max - min
-	stats.StandardDeviation = math.CalculateStandardDeviation(stats.Values)
+func (vd VelocityData) ExtremeSpread() int {
+	min, max := math.GetMinAndMaxForInts(vd.Values)
+	return max - min
+}
+func (vd VelocityData) Average() int {
+	return int(math.CalculateAverageOfInts(vd.Values))
+}
+
+func (vd VelocityData) Min() int {
+	_, min := math.GetMinAndMaxForInts(vd.Values)
+	return min
+}
+func (vd VelocityData) Max() int {
+	max, _ := math.GetMinAndMaxForInts(vd.Values)
+	return max
 }
 
 func newLoadData() *LoadData {
@@ -142,12 +147,7 @@ func newUnitsOfMeasure() *UnitsOfMeasure {
 }
 func newVelocityData() *VelocityData {
 	v := &VelocityData{
-		Average:           0,
-		Max:               0,
-		Min:               0,
-		ExtremeSpread:     0,
-		StandardDeviation: 0,
-		Values:            nil,
+		Values: nil,
 	}
 	return v
 }

@@ -12,12 +12,12 @@ func Test_average_of_array(t *testing.T) {
 		want float64
 	}{
 		// TODO: Add test cases.
-		{"Should calculate CalculateAverage for velocities", []int{1200, 1247, 1190, 1222}, 1214.8},
+		{"Should calculate CalculateAverageOfInts for velocities", []int{1200, 1247, 1190, 1222}, 1214.8},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := math.CalculateAverage(tt.args); got != tt.want {
-				t.Errorf("CalculateAverage() = %v, want %v", got, tt.want)
+			if got := math.CalculateAverageOfInts(tt.args); got != tt.want {
+				t.Errorf("CalculateAverageOfInts() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -35,12 +35,12 @@ func Test_getMaxAndMin_of_array(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			min, max := math.GetMaxAndMin(tt.args)
+			min, max := math.GetMinAndMaxForInts(tt.args)
 			if min != tt.wantMin {
-				t.Errorf("GetMaxAndMin() min = %v, want %v", min, tt.wantMin)
+				t.Errorf("GetMinAndMaxForInts() min = %v, want %v", min, tt.wantMin)
 			}
 			if max != tt.wantMax {
-				t.Errorf("GetMaxAndMin() max = %v, want %v", max, tt.wantMax)
+				t.Errorf("GetMinAndMaxForInts() max = %v, want %v", max, tt.wantMax)
 			}
 		})
 	}
@@ -57,8 +57,8 @@ func Test_standardDeviation_for_array(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := math.CalculateStandardDeviation(tt.args); got != tt.want {
-				t.Errorf("CalculateStandardDeviation() = %v, want %v", got, tt.want)
+			if got := math.CalculateStdDevOfInts(tt.args); got != tt.want {
+				t.Errorf("CalculateStdDevOfInts() = %v, want %v", got, tt.want)
 			}
 		})
 	}

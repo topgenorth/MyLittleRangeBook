@@ -77,7 +77,7 @@ Date            : {{.Date}} {{.Time}}
 
 Number of Shots : {{.TotalNumberOfShots}}
 Avg Velocity    : {{.Velocities.Average}}{{.UnitsOfMeasure.Velocity}}
-Standard Dev    : {{.Velocities.StandardDeviation}}{{.UnitsOfMeasure.Velocity}}
+Standard Dev    : {{.Velocities.StdDev}}{{.UnitsOfMeasure.Velocity}}
 Extreme Spread  : {{.Velocities.ExtremeSpread}}{{.UnitsOfMeasure.Velocity}}
 ----
 
