@@ -1,6 +1,8 @@
 package series
 
-import "time"
+import (
+	"time"
+)
 
 // LabradarSeriesMutatorFunc describes a function that can be used to manipulate the values of a LabradarSeries
 type LabradarSeriesMutatorFunc = func(s *LabradarSeries)
@@ -35,6 +37,7 @@ func UsingGrainsForWeight() LabradarSeriesMutatorFunc {
 	}
 }
 
+// UsingCurrentDateAndTime will use the time from this process as the default.
 func UsingCurrentDateAndTime() LabradarSeriesMutatorFunc {
 	return func(s *LabradarSeries) {
 		now := time.Now()

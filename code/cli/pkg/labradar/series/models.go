@@ -15,6 +15,14 @@ func (t BallisticCoefficient) String() string {
 	return fmt.Sprintf("%s 0.3%f", t.DragModel, t.Value)
 }
 
+// emptyBC will initialize an empty BallisticCoefficient struct.
+func emptyBC() *BallisticCoefficient {
+	return &BallisticCoefficient{
+		DragModel: "",
+		Value:     0,
+	}
+}
+
 type Projectile struct {
 	Name   string                `json:"name"`
 	Weight int                   `json:"weight"`
@@ -25,6 +33,16 @@ func (t Projectile) String() string {
 	return fmt.Sprintf("%dgr %s", t.Weight, t.Name)
 }
 
+// emptyProjectile will initialize an empty Projecticle struct.
+func emptyProjectile() *Projectile {
+	return &Projectile{
+		Name:   "",
+		Weight: 0,
+		BC:     emptyBC(),
+	}
+}
+
+// PowderCharge holds the data to describe the gun powder in a given LoadData struct
 type PowderCharge struct {
 	Name   string  `json:"name"`
 	Amount float32 `json:"amount"`
@@ -81,6 +99,20 @@ func (l LoadData) String() string {
 	return str
 }
 
+// emptyLoadData will initialize an empty LoadData struct.
+func emptyLoadData() *LoadData {
+	return &LoadData{
+		Cartridge:  "",
+		Projectile: emptyProjectile(),
+		Powder: &PowderCharge{
+			Name:   "",
+			Amount: 0,
+		},
+		CBTO: 0,
+	}
+}
+
+// Firearm holds the data to describe a firearm.
 type Firearm struct {
 	Name      string `json:"name"`
 	Cartridge string `json:"cartridge"`
@@ -90,6 +122,7 @@ func (t Firearm) String() string {
 	return fmt.Sprintf("%s (%s)", t.Name, t.Cartridge)
 }
 
+// UnitsOfMeasure is used to capture the default units of measure for different pieces of data.
 type UnitsOfMeasure struct {
 	Velocity    string `json:"velocity"`
 	Distance    string `json:"distance"`
@@ -98,41 +131,11 @@ type UnitsOfMeasure struct {
 }
 
 func (t UnitsOfMeasure) String() string {
-	return fmt.Sprintf("%s/%s/%s", t.Velocity, t.Distance, t.Weight)
+	return fmt.Sprintf("%s/%s/%s/%s", t.Velocity, t.Distance, t.Weight, t.Temperature)
 }
 
-type VelocityData struct {
-	Average           int     `json:"average"`
-	Max               int     `json:"max"`
-	Min               int     `json:"min"`
-	ExtremeSpread     int     `json:"extremeSpread"`
-	StandardDeviation float64 `json:"standardDeviation"`
-	Values            []int   `json:"values"`
-}
-
-func (stats *VelocityData) AddVelocity(velocity int) {
-	stats.Values = append(stats.Values, velocity)
-	min, max := math.GetMaxAndMin(stats.Values)
-
-	stats.Average = int(math.CalculateAverage(stats.Values))
-	stats.Max = max
-	stats.Min = min
-	stats.ExtremeSpread = max - min
-	stats.StandardDeviation = math.CalculateStandardDeviation(stats.Values)
-}
-
-func newLoadData() *LoadData {
-	return &LoadData{
-		Cartridge:  "",
-		Projectile: newProjectile(),
-		Powder: &PowderCharge{
-			Name:   "",
-			Amount: 0,
-		},
-		CBTO: 0,
-	}
-}
-func newUnitsOfMeasure() *UnitsOfMeasure {
+// emptyUnitsOfMeasure will initialize an empty UnitsOfMeasure struct.
+func emptyUnitsOfMeasure() *UnitsOfMeasure {
 	u := &UnitsOfMeasure{
 		Velocity: "",
 		Distance: "",
@@ -140,27 +143,53 @@ func newUnitsOfMeasure() *UnitsOfMeasure {
 	}
 	return u
 }
-func newVelocityData() *VelocityData {
+
+// VelocityData holds a list of velocities.
+type VelocityData struct {
+	Values []int `json:"values"`
+}
+
+func (vd VelocityData) String() string {
+	return fmt.Sprintf("%d velocities with an average of %d", len(vd.Values), vd.Average())
+}
+
+// Append will append the new velocity value to the set.
+func (vd *VelocityData) Append(velocity int) {
+	vd.Values = append(vd.Values, velocity)
+}
+
+// StdDev will return the standard deviation for a set of VelocityData.
+func (vd VelocityData) StdDev() float64 {
+	return math.CalculateStdDevOfInts(vd.Values)
+}
+
+// emptyVelocityData will initialize an empty VelocityData struct.
+func emptyVelocityData() *VelocityData {
 	v := &VelocityData{
-		Average:           0,
-		Max:               0,
-		Min:               0,
-		ExtremeSpread:     0,
-		StandardDeviation: 0,
-		Values:            nil,
+		Values: nil,
 	}
 	return v
 }
-func newProjectile() *Projectile {
-	return &Projectile{
-		Name:   "",
-		Weight: 0,
-		BC:     newBC(),
-	}
+
+// ExtremeSpread will return the extreme spread for a set of VelocityData.
+func (vd VelocityData) ExtremeSpread() int {
+	min, max := math.GetMinAndMaxForInts(vd.Values)
+	return max - min
 }
-func newBC() *BallisticCoefficient {
-	return &BallisticCoefficient{
-		DragModel: "",
-		Value:     0,
-	}
+
+// Average will return the average for a set of VelocityData.
+func (vd VelocityData) Average() int {
+	return int(math.CalculateAverageOfInts(vd.Values))
+}
+
+// Min will return the minimum velocity in a set of VelocityData.
+func (vd VelocityData) Min() int {
+	_, min := math.GetMinAndMaxForInts(vd.Values)
+	return min
+}
+
+// Max will return the maximum velocity in a set of VelocityData.
+func (vd VelocityData) Max() int {
+	max, _ := math.GetMinAndMaxForInts(vd.Values)
+	return max
 }

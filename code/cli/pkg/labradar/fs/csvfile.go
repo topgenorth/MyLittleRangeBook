@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/carolynvs/aferox"
-	"opgenorth.net/mylittlerangebook/pkg"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"strconv"
 	"strings"
@@ -114,36 +113,6 @@ func addMuzzleVelocitiesFrom(file CsvFile) series.LabradarSeriesMutatorFunc {
 	}
 }
 
-// sanitizeLine will take a line of text (from a Labradar CSV file) and try to clean up some of the odd things
-// that the Labradar writes out.
-func sanitizeLine(line string) string {
-	parts := strings.Split(strings.TrimSpace(line), pkg.UnicodeNUL)
-
-	switch lengthOfParts := len(parts); lengthOfParts {
-	case 2:
-		// The string either started with a NUL or ended with a NUL
-		if len(parts[0]) == 0 {
-			return parts[1]
-		}
-		if len(parts[1]) == 0 {
-			return parts[0]
-		}
-
-		return line
-	case 3:
-		// The string started with NUL and ended with NUL
-		return parts[1]
-	default:
-		return line
-	}
-}
-
-// sanitizeCsvLine will clean up the line of text in the CSV file, hopefully return the most interesting portion to us.
-func sanitizeCsvLine(file CsvFile, lineNumber int) string {
-	line := file.lines[lineNumber]
-	return sanitizeLine(line)
-}
-
 // getDateAndTimeStrings will attempt to parse the date & time from a line in a CSV file.
 func getDateAndTimeStrings(file CsvFile, lineNumber int) (string, string) {
 	parts := strings.Split(sanitizeCsvLine(file, lineNumber), ";")
@@ -158,16 +127,6 @@ func getDateAndTimeStrings(file CsvFile, lineNumber int) (string, string) {
 	mydate, _ := time.Parse("01-02-2006 15:04:05", d+" "+t)
 
 	return mydate.Format("2006-Jan-02"), mydate.Format("15:04")
-}
-
-// toTime will take two strings are return a time.Time value.
-func toTime(d string, t string) time.Time {
-	myDate, err := time.Parse("01-02-2006 15:04:05", d+" "+t)
-	if err != nil {
-		panic(err)
-	}
-
-	return myDate
 }
 
 // getIntValue will attempt to parse an integer value from a line in the CSV file.

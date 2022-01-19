@@ -64,6 +64,7 @@ func (d Device) LoadSeries(seriesNumber int) (*series.LabradarSeries, error) {
 
 //UpdateDeviceForSeries will initialize the Labradar device id and
 func UpdateDeviceForSeries(device *Device) series.LabradarSeriesMutatorFunc {
+	// TODO [TO20220119] Needs unit tests
 	return func(s *series.LabradarSeries) {
 		s.DeviceId = device.DeviceId
 	}
@@ -115,6 +116,7 @@ func getDeviceId(filename string) string {
 // parseDeviceIdFromFilename will pull out the device ID from a filename. An error will be thrown if the
 // device ID is not a number.
 func parseDeviceIdFromFilename(filename string) (string, error) {
+	// TODO [TO20220119] Needs unit tests
 	serialNumber := filename[3:10]
 
 	if !math.IsNumericOnly(serialNumber) {

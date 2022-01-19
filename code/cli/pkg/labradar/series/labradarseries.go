@@ -63,13 +63,13 @@ func New(mutators ...LabradarSeriesMutatorFunc) *LabradarSeries {
 func newSeries() *LabradarSeries {
 	s := &LabradarSeries{
 		Number:     0,
-		Velocities: newVelocityData(),
+		Velocities: emptyVelocityData(),
 		Firearm: &Firearm{
 			Name:      "",
 			Cartridge: "",
 		},
-		LoadData:       newLoadData(),
-		UnitsOfMeasure: newUnitsOfMeasure(),
+		LoadData:       emptyLoadData(),
+		UnitsOfMeasure: emptyUnitsOfMeasure(),
 		Notes:          "",
 		Date:           "",
 		Time:           "",

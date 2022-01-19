@@ -9,20 +9,16 @@ import (
 )
 
 const (
-	// Filename is the file name of the  configuration file.
-	Filename = "mlrb"
+	// CONFIG_FILENAME is the file name of the  configuration file, but without any extension
+	CONFIG_FILENAME = "mlrb"
 
-	// EnvPREFIX is the prefix for all environment variables.
-	EnvPREFIX = "MLRB"
+	// CONFIG_ENVIRONMENT_VARIABLE_PREFIX is the prefix for all environment variables.
+	CONFIG_ENVIRONMENT_VARIABLE_PREFIX = "MLRB"
 
-	// EnvHOME is the name of the environment variable containing the mlrb home directory path.
-	EnvHOME = "MLRB_HOME"
+	// CONFIG_ENVIRONMENT_HOME_DIRECTORY is the name of the environment variable containing the mlrb home directory path.
+	CONFIG_ENVIRONMENT_HOME_DIRECTORY = "MLRB_HOME"
 
-	// EnvDEBUG is a custom  parameter that signals that --debug flag has been passed through from the client to the runtime.
-	EnvDEBUG = "MLRB_DEBUG"
-
-	// EnvTIMEZONE is the name of the environment variable that holds the IANA Timezone of the Labradar.
-	EnvTIMEZONE = "MLRB_TIMEZONE"
+	CONFIG_ENVIRONMENT_HOME = "MLRB_HOME"
 )
 
 // These are functions that afero doesn't support, so this lets us stub them out for tests to set the
@@ -71,7 +67,7 @@ func (c *Config) GetHomeDir() (string, error) {
 		return c.mlrbHome, nil
 	}
 
-	home := c.GetEnv(EnvHOME)
+	home := c.GetEnv(CONFIG_ENVIRONMENT_HOME_DIRECTORY)
 	if home == "" {
 		userHome, err := os.UserHomeDir()
 		if err != nil {
@@ -89,9 +85,9 @@ func (c *Config) GetHomeDir() (string, error) {
 func (c *Config) SetHomeDir(home string) {
 	c.mlrbHome = home
 
-	// Set this as an environment variable so that when we spawn new processes
-	// such as a mixin or plugin, that they can find LABRADAR_HOME too
-	c.SetEnv(EnvHOME, home)
+	// Set this as an environment variable so that when we spawn new processes such as a mixin or plugin, that they can
+	// find LABRADAR_HOME too
+	c.SetEnv(CONFIG_ENVIRONMENT_HOME, home)
 }
 
 func (c *Config) GetMlrbPath() (string, error) {

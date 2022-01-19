@@ -56,7 +56,7 @@ func (w *StdOutSeriesWriter1) Write(s series.LabradarSeries) error {
 	if err != nil {
 		return series.SeriesError{
 			Number: s.Number,
-			Msg:    fmt.Sprintf("Error creating text.template: %v", err),
+			Msg:    "Could not load the template.",
 		}
 	}
 
@@ -64,11 +64,24 @@ func (w *StdOutSeriesWriter1) Write(s series.LabradarSeries) error {
 	if err != nil {
 		return series.SeriesError{
 			Number: s.Number,
-			Msg:    fmt.Sprintf("Error writing template: %v", err),
+			Msg:    fmt.Sprintf("Could not render the template."),
 		}
 	}
 	return nil
 }
+
+const TMPL_SUMMARIZE_SERIES = `
+----
+Labradar Series : SR{{.SeriesName}}
+Date            : {{.Date}} {{.Time}}
+
+Number of Shots : {{.TotalNumberOfShots}}
+Avg Velocity    : {{.Velocities.Average}}{{.UnitsOfMeasure.Velocity}}
+Standard Dev    : {{.Velocities.StdDev}}{{.UnitsOfMeasure.Velocity}}
+Extreme Spread  : {{.Velocities.ExtremeSpread}}{{.UnitsOfMeasure.Velocity}}
+----
+
+`
 
 type ReadMeSeriesWriter struct {
 	Output    string
@@ -107,15 +120,6 @@ func (w *ReadMeSeriesWriter) Write(s series.LabradarSeries) error {
 
 const TMPL_README_LINE = `| {{.Number}} | {{.LoadData}} | {{.Firearm.Name}} | {{.Notes}} | {{.Labradar.Date}} |`
 const TMPL_README_LINE_OLD_FORMAT = `| {{.Number}} | {{.LoadData}};{{.Notes}} | {{.Firearm.Name}} | {{.Labradar.Date}} |`
-const TMPL_SUMMARIZE_SERIES = `----
-Labradar OldSeries {{.Labradar.SeriesName}}
-
-Number of Shots: {{.TotalNumberOfShots}}
-Average Velocity: {{.Velocities.Average}}{{.Labradar.Units.Velocity}}
-Standard Deviation: {{.Velocities.StandardDeviation}}{{.Labradar.Units.Velocity}}
-Extreme Spread: {{.Velocities.ExtremeSpread}}{{.Labradar.Units.Velocity}}
-----
-`
 
 const TMPL_DESCRIBE_SERIES = `
 # Description of Labradar series
