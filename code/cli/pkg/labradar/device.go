@@ -31,9 +31,21 @@ func (d Device) String() string {
 // of the Labradar device.
 func NewDevice(path string, ctx *context.AppContext) (*Device, error) {
 
+	if len(path) == 0 {
+		return nil, fmt.Errorf("must provide a path to the LBR directory")
+	}
+
+	isDir, err := ctx.Filesystem.IsDir(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not determine if '%s' is a directory")
+	}
+	if !isDir {
+		return nil, fmt.Errorf("'%s' is not a directory")
+	}
+
 	file, err := findTheLabradarMarkerFile(path, ctx.Filesystem)
 	if err != nil {
-		return nil, fmt.Errorf("does not seem to be a Labradar directory '%s': %w", path, err)
+		return nil, fmt.Errorf(" '%s' does not seem to be an LBR directory", path)
 	}
 	if file == nil {
 		return nil, fmt.Errorf("does not seem to be a Labradar directory '%s'", path)

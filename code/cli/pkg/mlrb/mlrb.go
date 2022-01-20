@@ -51,12 +51,12 @@ func (a *MyLittleRangeBook) LoadSeriesFromLabradar(inputDir string, seriesNumber
 
 	device, err := labradar.NewDevice(inputDir, a.AppContext)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve series %d from '%s': %w", seriesNumber, inputDir, err)
+		return nil, err
 	}
 
 	s, err := device.LoadSeries(seriesNumber)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve series %d in %s: %w", seriesNumber, inputDir, err)
+		return nil, err
 	}
 
 	return s, nil
