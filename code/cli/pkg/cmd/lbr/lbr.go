@@ -3,22 +3,32 @@ package lbr
 
 import (
 	"github.com/spf13/cobra"
-	cmd2 "opgenorth.net/mylittlerangebook/pkg/cmd/lbr/read"
+	lbrRead "opgenorth.net/mylittlerangebook/pkg/cmd/lbr/read"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
 
-// NewCmd will create the Cobra command for detailing with files from a Labradar.
-func NewCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
+// LabradarOptions holds the options that all subcommands will need.
+type LabradarOptions struct {
+	SeriesNumber int
+	LbrDirectory string
+}
+
+// NewLabradarCmd will create the Cobra command for detailing with files from a Labradar.
+func NewLabradarCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	c := &cobra.Command{
-		Use:   "lbr <command>",
+		Use:   "labradar <command>",
 		Short: "Manage Labradar data files.",
 		Long:  "View, upload, and describe the Labradar series.",
 	}
 
-	c.AddCommand(cmd2.BuildReadLabradarCsvCmd(a))
+	c.AddCommand(lbrRead.NewCmdRead())
 	//c.AddCommand(BuildListFilesCmd(a))
 	//c.AddCommand(BuildSubmitCsvFileCmd(a))
 	//c.AddCommand(BuildDescribeSeriesCommand(a))
 
 	return c
+}
+
+func AddMandatoryFlags(c *cobra.Command) {
+
 }

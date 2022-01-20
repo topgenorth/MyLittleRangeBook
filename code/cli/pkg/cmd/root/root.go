@@ -3,6 +3,7 @@ package root
 
 import (
 	"github.com/spf13/cobra"
+	"opgenorth.net/mylittlerangebook/pkg/cmd/lbr"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
 
@@ -18,6 +19,8 @@ func NewRootCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	rootCmd.SetOut(a.Out)
 	rootCmd.SetIn(a.In)
 	rootCmd.SetErr(a.Err)
+
+	rootCmd.AddCommand(lbr.NewLabradarCmd(a))
 
 	return rootCmd
 }

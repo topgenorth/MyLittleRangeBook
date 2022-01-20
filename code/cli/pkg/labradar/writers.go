@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
-	"os"
 	"text/template"
 )
 
@@ -46,42 +45,6 @@ func (w *JsonSeriesWriter) Write(s series.LabradarSeries) error {
 
 	return nil
 }
-
-type StdOutSeriesWriter1 struct {
-	TemplateString string
-}
-
-func (w *StdOutSeriesWriter1) Write(s series.LabradarSeries) error {
-	t, err := template.New("OldSeriesWriter").Parse(w.TemplateString)
-	if err != nil {
-		return series.SeriesError{
-			Number: s.Number,
-			Msg:    "Could not load the template.",
-		}
-	}
-
-	err = t.Execute(os.Stdout, s)
-	if err != nil {
-		return series.SeriesError{
-			Number: s.Number,
-			Msg:    fmt.Sprintf("Could not render the template."),
-		}
-	}
-	return nil
-}
-
-const TMPL_SUMMARIZE_SERIES = `
-----
-Labradar Series : SR{{.SeriesName}}
-Date            : {{.Date}} {{.Time}}
-
-Number of Shots : {{.TotalNumberOfShots}}
-Avg Velocity    : {{.Velocities.Average}}{{.UnitsOfMeasure.Velocity}}
-Standard Dev    : {{.Velocities.StdDev}}{{.UnitsOfMeasure.Velocity}}
-Extreme Spread  : {{.Velocities.ExtremeSpread}}{{.UnitsOfMeasure.Velocity}}
-----
-
-`
 
 type ReadMeSeriesWriter struct {
 	Output    string

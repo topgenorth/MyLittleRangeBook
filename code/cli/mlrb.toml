@@ -1,5 +1,4 @@
 debug = true
 
-[labradar]
 outputDir = "<PATH FOR JSON FILES>"
 inputDir = "<PATH FOR LABRADAR CSV FILES>"
