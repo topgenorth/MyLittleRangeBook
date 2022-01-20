@@ -7,7 +7,7 @@ import (
 	"log"
 	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
-	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/device"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"sort"
@@ -46,15 +46,20 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	}
 }
 
-// LoadSeriesFromLabradar will take a Labradar CSV file, and display relevant details to STDOUT.
-func (a *MyLittleRangeBook) LoadSeriesFromLabradar(inputDir string, seriesNumber int) (*series.LabradarSeries, error) {
+func (a *MyLittleRangeBook) Device(lbrDir string) (*device.Device, error) {
+	d, err := device.New(lbrDir, a.Filesystem, a.Timezone)
+	return d, err
+}
 
-	device, err := labradar.NewDevice(inputDir, a.AppContext)
+// LoadSeriesFromLabradar will take a Labradar CSV file, and display relevant details to STDOUT.
+func (a *MyLittleRangeBook) LoadSeriesFromLabradar(lbrDirectory string, seriesNumber int) (*series.LabradarSeries, error) {
+
+	d, err := a.Device(lbrDirectory)
 	if err != nil {
 		return nil, err
 	}
 
-	s, err := device.LoadSeries(seriesNumber)
+	s, err := d.LoadSeries(seriesNumber)
 	if err != nil {
 		return nil, err
 	}

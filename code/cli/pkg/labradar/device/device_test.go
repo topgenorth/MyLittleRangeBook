@@ -1,4 +1,4 @@
-package labradar
+package device
 
 import (
 	"testing"
