@@ -8,10 +8,10 @@ import (
 type exitCode int
 
 const (
-	exitOK     exitCode = 0
-	exitError  exitCode = 1
-	exitCancel exitCode = 2
-	exitAuth   exitCode = 4
+	exitOK    exitCode = 0
+	exitError exitCode = 1
+	//exitCancel exitCode = 2
+	//exitAuth   exitCode = 4
 )
 
 func main() {

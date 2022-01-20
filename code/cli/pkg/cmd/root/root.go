@@ -10,7 +10,6 @@ import (
 // NewRootCmd creates the root Cobra command that is the entry point to all the things in the application.
 func NewRootCmd() *cobra.Command {
 	app := mlrb.New()
-	app.ConfigLogging()
 
 	rootCmd := &cobra.Command{
 		Use:  "mlrb [command]",

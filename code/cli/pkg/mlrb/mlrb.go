@@ -17,26 +17,14 @@ type MyLittleRangeBook struct {
 	*config.Config
 }
 
+// New will return a pointer to a new mlrb.MyLittleRangeBook structure.
 func New() *MyLittleRangeBook {
 	cfg := config.New()
-	return NewWithConfig(cfg)
-}
-
-func NewWithConfig(cfg *config.Config) *MyLittleRangeBook {
-	return &MyLittleRangeBook{
+	app := &MyLittleRangeBook{
 		cfg,
 	}
-}
-
-func (a *MyLittleRangeBook) ConfigLogging() {
-	logrus.SetFormatter(&logrus.TextFormatter{})
-	if a.Config.Debug {
-		logrus.Infoln("Debugging: true")
-		logrus.SetLevel(logrus.TraceLevel)
-	} else {
-		logrus.Infoln("Debugging: false")
-		logrus.SetLevel(logrus.InfoLevel)
-	}
+	configureLogging(app)
+	return app
 }
 
 // ListCartridges will do a simple dump of the cartridges on record to STDOUT.
@@ -96,4 +84,15 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 		return nil, err
 	}
 	return c, nil
+}
+
+func configureLogging(a *MyLittleRangeBook) {
+	logrus.SetFormatter(&logrus.TextFormatter{})
+	if a.Config.Debug {
+		logrus.Infoln("Debugging: true")
+		logrus.SetLevel(logrus.TraceLevel)
+	} else {
+		logrus.Infoln("Debugging: false")
+		logrus.SetLevel(logrus.InfoLevel)
+	}
 }

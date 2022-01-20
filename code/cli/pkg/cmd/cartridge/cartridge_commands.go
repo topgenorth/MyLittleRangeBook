@@ -24,7 +24,6 @@ func buildListCartridgesCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 		Use:   "list",
 		Short: "List the cartridges in the datastore.",
 		Run: func(cmd *cobra.Command, args []string) {
-			a.ConfigLogging()
 			a.ListCartridges()
 		},
 	}
