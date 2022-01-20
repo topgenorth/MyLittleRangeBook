@@ -1,29 +1,23 @@
+// Package root will build the root cobra.Command for the mlrb app.
 package root
 
 import (
 	"github.com/spf13/cobra"
-	"opgenorth.net/mylittlerangebook/pkg/cmd"
-	"opgenorth.net/mylittlerangebook/pkg/cmd/labradar"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
 
 // NewRootCmd creates the root Cobra command that is the entry point to all the things in the application.
-func NewRootCmd() *cobra.Command {
-	app := mlrb.New()
+func NewRootCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 
 	rootCmd := &cobra.Command{
-		Use:  "mlrb [command]",
-		Long: "mlrb is my app for the various reloading things.",
-		PersistentPreRunE: func(cc *cobra.Command, args []string) error {
-			return cmd.InitializeCommand(cc)
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmd.Help()
-		},
+		Use:   "mlrb <command> <subcommand> [flags]",
+		Short: "MyLittleRangeBook CLI",
+		Long:  "Testing ground for learning Go and managing data around handloading.",
 	}
 
-	//rootCmd.AddCommand(buildCartridgeCommands(app))
-	rootCmd.AddCommand(labradar.BuildLabradarCommands(app))
+	rootCmd.SetOut(a.Out)
+	rootCmd.SetIn(a.In)
+	rootCmd.SetErr(a.Err)
 
 	return rootCmd
 }

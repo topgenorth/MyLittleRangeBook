@@ -1,3 +1,4 @@
+// Package cmd holds the code to configure the various cobra.Command structures for an app.
 package cmd
 
 import (

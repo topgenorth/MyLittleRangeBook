@@ -1,4 +1,4 @@
-package labradar
+package describe
 
 import (
 	"github.com/pkg/errors"
@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 )
 
-// buildDescribeSeriesCommand will create the Cobra command to describe what the OldSeries is all about.
-func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
+// BuildDescribeSeriesCommand will create the Cobra command to describe what the OldSeries is all about.
+func BuildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 
 	p := describeParameters{
 		seriesNumber: 0,
@@ -59,7 +59,7 @@ func buildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	c.Flags().IntVarP(&p.seriesNumber, "number", "n", 0, "The number of the Device CSV file to read.")
 	c.Flags().StringVarP(&p.cartridge, "cartridge", "", "", "The cartridge that was measured. e.g. 6.5 Grendel.")
 	c.Flags().StringVarP(&p.firearm, "firearm", "", "", "The name of the firearm.")
-	c.Flags().StringVarP(&p.inputDir, "labradar.inputDir", "", "", "The location of the input files.")
+	c.Flags().StringVarP(&p.inputDir, "lbr.inputDir", "", "", "The location of the input files.")
 	cmd.SetMandatoryFlags(c, "cartridge", "firearm")
 
 	c.Flags().StringVarP(&p.notes, "notes", "", "", "Some text to describe what this series is about.")

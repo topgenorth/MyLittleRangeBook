@@ -92,7 +92,6 @@ func configureLogging(a *MyLittleRangeBook) {
 		logrus.Infoln("Debugging: true")
 		logrus.SetLevel(logrus.TraceLevel)
 	} else {
-		logrus.Infoln("Debugging: false")
 		logrus.SetLevel(logrus.InfoLevel)
 	}
 }
