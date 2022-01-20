@@ -7,12 +7,6 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
 
-// LabradarOptions holds the options that all subcommands will need.
-type LabradarOptions struct {
-	SeriesNumber int
-	LbrDirectory string
-}
-
 // NewLabradarCmd will create the Cobra command for detailing with files from a Labradar.
 func NewLabradarCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	c := &cobra.Command{
@@ -27,8 +21,4 @@ func NewLabradarCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	//c.AddCommand(BuildDescribeSeriesCommand(a))
 
 	return c
-}
-
-func AddMandatoryFlags(c *cobra.Command) {
-
 }

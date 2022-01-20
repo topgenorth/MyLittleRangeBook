@@ -8,35 +8,27 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
 
-type ReadOptions struct {
+// LabradarReadCmdOptions is all the parameters for labradar read.
+type LabradarReadCmdOptions struct {
 	SeriesNumber int
 	LbrDirectory string
 }
 
-func (t ReadOptions) String() string {
+func (t LabradarReadCmdOptions) String() string {
 	return fmt.Sprintf("series %d in directory '%s'", t.SeriesNumber, t.LbrDirectory)
 }
 
 // NewCmdRead will create the Cobra command to read a Labradar file and display a summary to StdOut.
 func NewCmdRead() *cobra.Command {
 
-	opts := &ReadOptions{}
+	opts := &LabradarReadCmdOptions{}
 
 	c := &cobra.Command{
 		Use:   "read",
 		Short: "Reads a Labradar CSV file and displays a summary.",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			return readLabradarCsvFile(opts)
 
-			a := mlrb.New()
-
-			s, err := a.LoadSeriesFromLabradar(opts.LbrDirectory, opts.SeriesNumber)
-			if err != nil {
-				return err
-			}
-
-			logrus.Tracef("Loaded '%s", s)
-
-			return nil
 		},
 	}
 	c.Flags().IntVarP(&opts.SeriesNumber, "number", "n", 0, "The number of the lbr series CSV file to read.")
@@ -44,4 +36,17 @@ func NewCmdRead() *cobra.Command {
 	cmd.SetMandatoryFlags(c, "number")
 
 	return c
+}
+
+func readLabradarCsvFile(opts *LabradarReadCmdOptions) error {
+	a := mlrb.New()
+
+	s, err := a.LoadSeriesFromLabradar(opts.LbrDirectory, opts.SeriesNumber)
+	if err != nil {
+		return err
+	}
+
+	logrus.Tracef("Loaded '%s", s)
+
+	return nil
 }
