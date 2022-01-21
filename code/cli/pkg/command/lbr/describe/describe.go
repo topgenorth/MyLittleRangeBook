@@ -4,7 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"opgenorth.net/mylittlerangebook/pkg/cmd"
+	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/readme"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
@@ -60,16 +60,12 @@ func BuildDescribeSeriesCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	c.Flags().StringVarP(&p.cartridge, "cartridge", "", "", "The cartridge that was measured. e.g. 6.5 Grendel.")
 	c.Flags().StringVarP(&p.firearm, "firearm", "", "", "The name of the firearm.")
 	c.Flags().StringVarP(&p.inputDir, "lbr.inputDir", "", "", "The location of the input files.")
-	cmd.SetMandatoryFlags(c, "cartridge", "firearm")
+	command.SetMandatoryFlags(c, "cartridge", "firearm")
 
 	c.Flags().StringVarP(&p.notes, "notes", "", "", "Some text to describe what this series is about.")
 	c.Flags().StringVarP(&p.bullet, "bullet", "", "", "The bullet that was used. e.g. 123gr Hornady ELD Match.")
 	c.Flags().StringVarP(&p.powder, "powder", "", "", "The weight and powder that was used. e.g. 29.1gr BL-C(2).")
 	c.Flags().Float32VarP(&p.cbto, "cbto", "", 0, "The cartridge-to-base-ogive length, in inches.  e.g. 1.666")
-
-	if err := cmd.InitializeCommand(c); err != nil {
-		logrus.Errorf("There is a problem trying to initialize the commnad %s: %v", c.Name(), err)
-	}
 
 	return c
 }

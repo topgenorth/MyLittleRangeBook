@@ -2,8 +2,8 @@
 package main
 
 import (
-	"opgenorth.net/mylittlerangebook/pkg/cmd/root"
-	"opgenorth.net/mylittlerangebook/pkg/mlrb"
+	"opgenorth.net/mylittlerangebook/pkg/command/root"
+	"opgenorth.net/mylittlerangebook/pkg/config"
 	"os"
 )
 
@@ -22,8 +22,9 @@ func main() {
 }
 
 func mainRun() exitCode {
-	app := mlrb.New()
-	rootCmd := root.NewRootCmd(app)
+
+	c := config.New()
+	rootCmd := root.NewRootCmd(c)
 
 	if err := rootCmd.Execute(); err != nil {
 		return exitError

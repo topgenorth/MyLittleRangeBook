@@ -3,7 +3,7 @@ package submit
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"opgenorth.net/mylittlerangebook/pkg/cmd"
+	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
@@ -28,7 +28,7 @@ func BuildSubmitCsvFileCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	}
 
 	c.Flags().IntVarP(&n, "number", "n", 0, "The number of the OldDevice CSV file to read.")
-	cmd.SetMandatoryFlags(c, "number")
+	command.SetMandatoryFlags(c, "number")
 
 	c.Flags().StringVarP(&i, "lbr.inputDir", "", "", "The location of the input files.")
 

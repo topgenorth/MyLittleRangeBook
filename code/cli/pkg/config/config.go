@@ -1,28 +1,22 @@
 package config
 
 import (
+	"github.com/sirupsen/logrus"
 	"opgenorth.net/mylittlerangebook/pkg/context"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 const (
-	// CONFIG_FILENAME is the file name of the  configuration file, but without any extension
-	CONFIG_FILENAME = "mlrb"
+	// MlrbConfigFileName is the file name of the  configuration file, but without any extension
+	MlrbConfigFileName = "mlrb"
+	MlrbConfigFileType = "toml"
 
-	// CONFIG_ENVIRONMENT_VARIABLE_PREFIX is the prefix for all environment variables.
-	CONFIG_ENVIRONMENT_VARIABLE_PREFIX = "MLRB"
-
-	// CONFIG_ENVIRONMENT_HOME_DIRECTORY is the name of the environment variable containing the mlrb home directory path.
-	CONFIG_ENVIRONMENT_HOME_DIRECTORY = "MLRB_HOME"
-
-	CONFIG_ENVIRONMENT_HOME = "MLRB_HOME"
+	// MlrbEnvironmentVariablePrefix is the prefix for all environment variables.
+	MlrbEnvironmentVariablePrefix = "MLRB"
 )
-
-// These are functions that afero doesn't support, so this lets us stub them out for tests to set the
-// location of the current executable mlrb binary and resolve MLRB_HOME.
-var getExecutable = os.Executable
-var evalSymlinks = filepath.EvalSymlinks
 
 // Config holds the current context.AppContext along with some other configuration specific stuff.
 type Config struct {
@@ -32,11 +26,68 @@ type Config struct {
 	ConfigFilePath string
 }
 
+// New will create a new Config structure.
 func New() *Config {
 	ctx := context.New()
 	c := &Config{
-		AppContext: ctx,
+		AppContext:     ctx,
+		ConfigFilePath: defaultConfigFile(),
 	}
 
 	return c
+}
+
+func absPathify(inPath string) string {
+
+	// [TO20220121] Shamelessly stolen from Viper
+	logrus.Tracef("Trying to resolve absolute path to %s.", inPath)
+
+	if inPath == "$HOME" || strings.HasPrefix(inPath, "$HOME"+string(os.PathSeparator)) {
+		inPath = userHomeDir() + inPath[5:]
+	}
+
+	if strings.HasPrefix(inPath, "$") {
+		end := strings.Index(inPath, string(os.PathSeparator))
+
+		var value, suffix string
+		if end == -1 {
+			value = os.Getenv(inPath[1:])
+		} else {
+			value = os.Getenv(inPath[1:end])
+			suffix = inPath[end:]
+		}
+
+		inPath = value + suffix
+	}
+
+	if filepath.IsAbs(inPath) {
+		return filepath.Clean(inPath)
+	}
+
+	p, err := filepath.Abs(inPath)
+	if err == nil {
+		return filepath.Clean(p)
+	}
+
+	logrus.Errorf("Couldn't discover absolute path %v", err)
+	return ""
+}
+
+func userHomeDir() string {
+	if runtime.GOOS == "windows" {
+		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
+		if home == "" {
+			home = os.Getenv("USERPROFILE")
+		}
+		return home
+	}
+	return os.Getenv("HOME")
+}
+
+func defaultConfigFile() string {
+
+	d := absPathify(".")
+	filename := MlrbConfigFileName + MlrbConfigFileType
+
+	return filepath.Join(d, filename)
 }

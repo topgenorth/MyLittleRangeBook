@@ -4,8 +4,13 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"opgenorth.net/mylittlerangebook/pkg/cmd"
+	"opgenorth.net/mylittlerangebook/pkg/command"
+	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
+)
+
+const (
+	SeriesNumberFlag = "number"
 )
 
 // LabradarReadCmdOptions is all the parameters for labradar read.
@@ -19,23 +24,23 @@ func (t LabradarReadCmdOptions) String() string {
 }
 
 // NewCmdRead will create the Cobra command to read a Labradar file and display a summary to StdOut.
-func NewCmdRead() *cobra.Command {
+func NewCmdRead(cfg *config.Config) *cobra.Command {
 
 	opts := &LabradarReadCmdOptions{}
 
-	c := &cobra.Command{
+	readCmd := &cobra.Command{
 		Use:   "read",
 		Short: "Reads a Labradar CSV file and displays a summary.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return readLabradarCsvFile(opts)
-
 		},
 	}
-	c.Flags().IntVarP(&opts.SeriesNumber, "number", "n", 0, "The number of the lbr series CSV file to read.")
-	c.Flags().StringVarP(&opts.LbrDirectory, "inputDir", "d", "", "The path to the LBR folder of the Labradar.")
-	cmd.SetMandatoryFlags(c, "number")
 
-	return c
+	// TODO [TO20220121] Maybe the default should be the current directory (working directory) with LBR appended?
+	readCmd.Flags().IntVarP(&opts.SeriesNumber, SeriesNumberFlag, "n", 0, "The number of the lbr series CSV file to read.")
+	command.SetMandatoryFlags(readCmd, SeriesNumberFlag)
+
+	return readCmd
 }
 
 func readLabradarCsvFile(opts *LabradarReadCmdOptions) error {

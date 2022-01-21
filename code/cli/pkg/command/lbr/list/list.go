@@ -3,7 +3,7 @@ package list
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"opgenorth.net/mylittlerangebook/pkg/cmd"
+	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
 
@@ -24,6 +24,6 @@ func BuildListFilesCmd(app *mlrb.MyLittleRangeBook) *cobra.Command {
 	}
 
 	c.Flags().StringVarP(&inputDir, "lbr.inputDir", "", "", "The root directory of the lbr files (i.e. LBR).")
-	cmd.SetMandatoryFlags(c, "lbr.inputDir")
+	command.SetMandatoryFlags(c, "lbr.inputDir")
 	return c
 }
