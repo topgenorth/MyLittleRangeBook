@@ -18,8 +18,7 @@ type MyLittleRangeBook struct {
 }
 
 // New will return a pointer to a new mlrb.MyLittleRangeBook structure.
-func New() *MyLittleRangeBook {
-	cfg := config.New()
+func New(cfg *config.Config) *MyLittleRangeBook {
 	app := &MyLittleRangeBook{
 		cfg,
 	}

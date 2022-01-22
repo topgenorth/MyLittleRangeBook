@@ -12,24 +12,22 @@ const (
 	LbrDirectoryFlagParam = "lbr_dir"
 )
 
-type labradarOptions struct {
-	LabradarDirectory string
-}
-
 // NewLabradarCmd will create the Cobra command for detailing with files from a Labradar.
 func NewLabradarCmd(cfg *config.Config) *cobra.Command {
-	opts := labradarOptions{}
+	var labradarDirectory = ""
 
 	lbrCmd := &cobra.Command{
-		Use:   "labradar <command>",
-		Short: "Manage Labradar data files.",
-		Long:  "View, upload, and describe the Labradar series.",
+		Use:              "labradar <command>",
+		Short:            "Manage Labradar data files.",
+		Long:             "View, upload, and describe the Labradar series.",
+		TraverseChildren: true,
 	}
 
-	lbrCmd.PersistentFlags().StringVarP(&opts.LabradarDirectory, LbrDirectoryFlagParam, "d", "", "The directory holding the LBR files.")
+	lbrCmd.PersistentFlags().StringVarP(&labradarDirectory, LbrDirectoryFlagParam, "d", "", "The directory holding the LBR files.")
 	command.SetMandatoryFlags(lbrCmd, LbrDirectoryFlagParam)
 
-	lbrCmd.AddCommand(lbrRead.NewCmdRead(cfg))
+	lbrCmd.AddCommand(lbrRead.NewCmdRead(cfg, func() string { return labradarDirectory }))
+
 	//c.AddCommand(BuildListFilesCmd(a))
 	//c.AddCommand(BuildSubmitCsvFileCmd(a))
 	//c.AddCommand(BuildDescribeSeriesCommand(a))

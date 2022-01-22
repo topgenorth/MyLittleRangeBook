@@ -6,7 +6,6 @@ import (
 	"io"
 	"opgenorth.net/mylittlerangebook/pkg"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -37,7 +36,7 @@ func New() *AppContext {
 		In:         os.Stdin,
 		Out:        os.Stdout,
 		Err:        os.Stderr,
-		Timezone:   inferDefaultTimeZone(),
+		Timezone:   InferTimeZone(),
 		Filesystem: &afero.Afero{Fs: afero.NewOsFs()},
 	}
 }
@@ -123,67 +122,4 @@ func (c *AppContext) TimeLocation() *time.Location {
 		tz, _ := time.LoadLocation(pkg.DefaultTimeZone)
 		return tz
 	}
-}
-
-// getEnviron will populate
-func getEnviron() map[string]string {
-	environ := map[string]string{}
-	for _, env := range os.Environ() {
-		envParts := strings.SplitN(env, "=", 2)
-		key := envParts[0]
-		value := ""
-		if len(envParts) > 1 {
-			value = envParts[1]
-		}
-		environ[key] = value
-	}
-	return environ
-}
-
-/*func (c *AppContext) CopyFile(src, dest string) error {
-	info, err := c.FileSystem.Stat(src)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	data, err := c.FileSystem.ReadFile(src)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	err = c.FileSystem.WriteFile(dest, data, info.Mode())
-	return errors.WithStack(err)
-}
-
-func (c *AppContext) CopyDirectory(srcDir, destDir string, includeBaseDir bool) error {
-	var stripPrefix string
-	if includeBaseDir {
-		stripPrefix = filepath.Dir(srcDir)
-	} else {
-		stripPrefix = srcDir
-	}
-
-	return c.FileSystem.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		// Translate the path from the src to the final destination
-		dest := filepath.Join(destDir, strings.TrimPrefix(path, stripPrefix))
-		if dest == "" {
-			return nil
-		}
-
-		if info.IsDir() {
-			return errors.WithStack(c.FileSystem.MkdirAll(dest, info.Mode()))
-		}
-
-		return c.CopyFile(path, dest)
-	})
-}
-*/
-func inferDefaultTimeZone() string {
-	zone, _ := time.Now().Zone() // try to get my time zone...
-	loc, _ := time.LoadLocation(zone)
-	return loc.String()
 }

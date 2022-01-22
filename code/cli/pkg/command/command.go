@@ -11,12 +11,6 @@ import (
 	"strings"
 )
 
-type configFile struct {
-	Debug     bool   `mapstructure:"DEBUG"`
-	OutputDir string `mapstructure:"OUTPUT_DIR"`
-	LbrDir    string `mapstructure:"LBR_DIR"`
-}
-
 // SetMandatoryFlags Sets the specified flags as mandatory.  This is a helper method to reduce some of the repetitiveness with
 // setting mandatory flags. If there is an error setting the mandatory flag, then a warning would be logged.
 func SetMandatoryFlags(cmd *cobra.Command, flagnames ...string) {
@@ -54,11 +48,6 @@ func ConfigureCmd(cmd *cobra.Command) error {
 		}
 	}
 
-	toml := configFile{}
-	if err := v.Unmarshal(&toml); err != nil {
-		logrus.Errorf("Error reading the config file %s: %v", v.ConfigFileUsed(), err)
-	}
-
 	// When we bind flags to environment variables expect that the environment variables are prefixed, e.g. a flag like
 	// --number binds to an environment variable MLRB_NUMBER. This helps avoid conflicts.
 	v.SetEnvPrefix(config.MlrbEnvironmentVariablePrefix)
@@ -92,7 +81,10 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 			envVariableName := fmt.Sprintf("%s_%s", config.MlrbEnvironmentVariablePrefix, envVarSuffix)
 
 			logrus.Tracef("envVarSuffix='%s'; envVariableName='%s'", envVarSuffix, envVariableName)
-			_ = v.BindEnv(f.Name, envVariableName)
+			if err := v.BindEnv(f.Name, envVariableName); err != nil {
+				logrus.Tracef("Will not get the value '%s' for command %s from environment variables.", f.Name, getType(cmd))
+			}
+
 		}
 
 		// Apply the viper config value to the flag when the flag is not set and viper has a value
@@ -101,10 +93,22 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 			val := v.Get(f.Name)
 			err := cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
 			if err != nil {
-				logrus.Errorf("Trying to get the value '%s' from Viper: %v", f.Name, err)
+				logrus.Errorf("Trying to get the value '%s' for the command %s from config: %v", f.Name, err, getType(cmd))
 			}
 		} else {
-			logrus.Errorf("Will not get the value %s via Viper.")
+			logrus.Errorf("Will not get the value '%s' for the command %s from config.", f.Name, getType(cmd))
 		}
 	})
+}
+
+func getType(cmd *cobra.Command) string {
+
+	return fmt.Sprintf("`%s`", cmd.Name())
+
+	//return reflect.TypeOf(myvar).String()
+	//if t := reflect.TypeOf(myvar); t.Kind() == reflect.Ptr {
+	//	return "*" + t.Elem().Name()
+	//} else {
+	//	return t.Name()
+	//}
 }

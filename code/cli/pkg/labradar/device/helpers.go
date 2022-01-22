@@ -97,10 +97,14 @@ func tryParseLbrDirectory(path string, af *afero.Afero) (LbrDirectory, error) {
 	}
 	isDir, err := af.IsDir(path)
 	if err != nil {
-		return emptyLbrDirectory, fmt.Errorf("could not determine if '%s' is af directory")
+		if isDir {
+			return emptyLbrDirectory, fmt.Errorf("could not determine if '%s' is a directory", path)
+		} else {
+			return emptyLbrDirectory, fmt.Errorf("%s does not exist", path)
+		}
 	}
 	if !isDir {
-		return emptyLbrDirectory, fmt.Errorf("'%s' is not af directory")
+		return emptyLbrDirectory, fmt.Errorf("'%s' is not a directory", path)
 	}
 
 	return LbrDirectory(path), nil
