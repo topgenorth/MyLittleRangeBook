@@ -45,6 +45,7 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	}
 }
 
+// Device will return a new device.Device struct using the provided LBR directory.
 func (a *MyLittleRangeBook) Device(lbrDir string) (*device.Device, error) {
 	d, err := device.New(lbrDir, a.Filesystem, a.Timezone)
 	return d, err
@@ -75,9 +76,9 @@ func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
 	return nil
 }
 
-// GetListOfLabradarFiles will display all the CSV files in the Labradar directory.
-func (a *MyLittleRangeBook) GetListOfLabradarFiles(inputDir string) ([]string, error) {
-	files := fs.ListLabradarFiles(inputDir, a.Filesystem)
+// GetListOfLabradarFiles will display all the CSV files in the LBR directory.
+func (a *MyLittleRangeBook) GetListOfLabradarFiles(lbrDirectory string) ([]string, error) {
+	files := fs.ListLabradarFiles(lbrDirectory, a.Filesystem)
 	return files, nil
 }
 

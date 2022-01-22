@@ -27,17 +27,17 @@ func findTheLabradarMarkerFile(path string, af *afero.Afero) (os.FileInfo, error
 	}
 
 	for _, f := range files {
-		if f.IsDir() {
-			break
+
+		// TODO [TO20220122] Look at this icky arrowhead!
+		if !f.IsDir() {
+			if f.Size() == 0 {
+				if looksLikeTheLabradarMarkerFile(f.Name()) {
+					return f, nil
+				}
+
+			}
 		}
 
-		if f.Size() != 0 {
-			break
-		}
-
-		if looksLikeTheLabradarMarkerFile(f.Name()) {
-			return f, nil
-		}
 	}
 
 	return nil, nil

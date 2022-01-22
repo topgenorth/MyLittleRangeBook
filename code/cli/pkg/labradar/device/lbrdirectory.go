@@ -21,7 +21,7 @@ func (d LbrDirectory) GetLabradarMarkerFile(af *afero.Afero) (os.FileInfo, error
 		return nil, fmt.Errorf(" '%s' does not seem to be an LBR directory", d.String())
 	}
 	if f == nil {
-		return nil, fmt.Errorf("does not seem to be af Labradar directory '%s'", d.String())
+		return nil, fmt.Errorf("does not seem to be a LBR directory '%s'", d.String())
 	}
 
 	return f, nil

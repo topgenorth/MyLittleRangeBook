@@ -37,7 +37,7 @@ func New() *Config {
 	return c
 }
 
-func absPathify(inPath string) string {
+func AbsPathify(inPath string) string {
 
 	// [TO20220121] Shamelessly stolen from Viper
 	logrus.Tracef("Trying to resolve absolute path to %s.", inPath)
@@ -86,7 +86,7 @@ func userHomeDir() string {
 
 func defaultConfigFile() string {
 
-	d := absPathify(".")
+	d := AbsPathify(".")
 	filename := MlrbConfigFileName + MlrbConfigFileType
 
 	return filepath.Join(d, filename)
