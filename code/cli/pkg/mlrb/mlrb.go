@@ -78,7 +78,7 @@ func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
 
 // GetListOfLabradarFiles will display all the CSV files in the LBR directory.
 func (a *MyLittleRangeBook) GetListOfLabradarFiles(lbrDirectory string) ([]string, error) {
-	files := fs.ListLabradarFiles(lbrDirectory, a.Filesystem)
+	files := fs.ListLabradarSeriesReportFiles(lbrDirectory, a.Filesystem)
 	return files, nil
 }
 

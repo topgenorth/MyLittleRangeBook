@@ -33,9 +33,9 @@ func FilenameForSeries(labradarRootDirectory string, seriesNumber int) string {
 	return p
 }
 
-// ListLabradarFiles will return an array of all the full filenames of Labradar CSV files in the given
+// ListLabradarSeriesReportFiles will return an array of all the full filenames of Labradar CSV files in the given
 // directory of Labradar files.
-func ListLabradarFiles(inputDir string, fs *afero.Afero) []string {
+func ListLabradarSeriesReportFiles(inputDir string, fs *afero.Afero) []string {
 	result := make([]string, 0)
 
 	// [TO20220115] Show a list of all the things in the inputDir.

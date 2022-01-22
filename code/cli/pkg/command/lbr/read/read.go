@@ -14,7 +14,7 @@ const (
 	SeriesNumberFlag = "number"
 )
 
-type LabradarDirectoryProvider = func() string
+type LabradarDirectoryProvider = func() string // TODO [TO20220122] Duplication with list.NewListLbrFilesCmd
 
 // LabradarReadCommandOptions is all the parameters for labradar read.
 type LabradarReadCommandOptions struct {
@@ -44,7 +44,6 @@ func NewCmdRead(cfg *config.Config, lbrDir LabradarDirectoryProvider) *cobra.Com
 	}
 
 	readCmd.Flags().IntVarP(&opts.SeriesNumber, SeriesNumberFlag, "n", 0, "The number of the lbr series CSV file to read.")
-
 	command.SetMandatoryFlags(readCmd, SeriesNumberFlag)
 
 	return readCmd
