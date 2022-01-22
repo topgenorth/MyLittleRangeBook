@@ -7,7 +7,7 @@ import (
 	"log"
 	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
-	"opgenorth.net/mylittlerangebook/pkg/labradar"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/device"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"sort"
@@ -18,8 +18,7 @@ type MyLittleRangeBook struct {
 }
 
 // New will return a pointer to a new mlrb.MyLittleRangeBook structure.
-func New() *MyLittleRangeBook {
-	cfg := config.New()
+func New(cfg *config.Config) *MyLittleRangeBook {
 	app := &MyLittleRangeBook{
 		cfg,
 	}
@@ -46,17 +45,23 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	}
 }
 
-// LoadSeriesFromLabradar will take a Labradar CSV file, and display relevant details to STDOUT.
-func (a *MyLittleRangeBook) LoadSeriesFromLabradar(inputDir string, seriesNumber int) (*series.LabradarSeries, error) {
+// Device will return a new device.Device struct using the provided LBR directory.
+func (a *MyLittleRangeBook) Device(lbrDir string) (*device.Device, error) {
+	d, err := device.New(lbrDir, a.Filesystem, a.Timezone)
+	return d, err
+}
 
-	device, err := labradar.NewDevice(inputDir, a.AppContext)
+// LoadSeriesFromLabradar will take a Labradar CSV file, and display relevant details to STDOUT.
+func (a *MyLittleRangeBook) LoadSeriesFromLabradar(lbrDirectory string, seriesNumber int) (*series.LabradarSeries, error) {
+
+	d, err := a.Device(lbrDirectory)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve series %d from '%s': %w", seriesNumber, inputDir, err)
+		return nil, err
 	}
 
-	s, err := device.LoadSeries(seriesNumber)
+	s, err := d.LoadSeries(seriesNumber)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve series %d in %s: %w", seriesNumber, inputDir, err)
+		return nil, err
 	}
 
 	return s, nil
@@ -71,9 +76,9 @@ func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
 	return nil
 }
 
-// GetListOfLabradarFiles will display all the CSV files in the Labradar directory.
-func (a *MyLittleRangeBook) GetListOfLabradarFiles(inputDir string) ([]string, error) {
-	files := fs.ListLabradarFiles(inputDir, a.Filesystem)
+// GetListOfLabradarFiles will display all the CSV files in the LBR directory.
+func (a *MyLittleRangeBook) GetListOfLabradarFiles(lbrDirectory string) ([]string, error) {
+	files := fs.ListLabradarFiles(lbrDirectory, a.Filesystem)
 	return files, nil
 }
 
@@ -92,7 +97,6 @@ func configureLogging(a *MyLittleRangeBook) {
 		logrus.Infoln("Debugging: true")
 		logrus.SetLevel(logrus.TraceLevel)
 	} else {
-		logrus.Infoln("Debugging: false")
 		logrus.SetLevel(logrus.InfoLevel)
 	}
 }

@@ -1,7 +1,9 @@
+// Package main is the entry point for the mlrb app.
 package main
 
 import (
-	"opgenorth.net/mylittlerangebook/pkg/cmd/root"
+	"opgenorth.net/mylittlerangebook/pkg/command/root"
+	"opgenorth.net/mylittlerangebook/pkg/config"
 	"os"
 )
 
@@ -20,7 +22,9 @@ func main() {
 }
 
 func mainRun() exitCode {
-	rootCmd := root.NewRootCmd()
+
+	c := config.New()
+	rootCmd := root.NewRootCmd(c)
 
 	if err := rootCmd.Execute(); err != nil {
 		return exitError

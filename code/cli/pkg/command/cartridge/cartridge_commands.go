@@ -3,14 +3,14 @@ package cartridge
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"opgenorth.net/mylittlerangebook/pkg/cmd"
+	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
 
 func buildCartridgeCommands(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "cartridge",
-		Short: "All the commands for dealing with cartridges via the command line.",
+		Short: "All the command for dealing with cartridges via the command line.",
 	}
 
 	c.AddCommand(buildListCartridgesCmd(a))
@@ -51,7 +51,7 @@ func buildAddCartridgeCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	}
 	c.Flags().StringVarP(&name, "name", "n", "", "A unique name for the cartridge.")
 	c.Flags().StringVarP(&size, "size", "", "", "The size of the cartridge (metric).")
-	cmd.SetMandatoryFlags(c, "name", "size")
+	command.SetMandatoryFlags(c, "name", "size")
 
 	return c
 }
