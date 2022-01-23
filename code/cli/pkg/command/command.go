@@ -82,7 +82,7 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 
 			logrus.Tracef("envVarSuffix='%s'; envVariableName='%s'", envVarSuffix, envVariableName)
 			if err := v.BindEnv(f.Name, envVariableName); err != nil {
-				logrus.Tracef("Will not get the value '%s' for command %s from environment variables.", f.Name, getType(cmd))
+				logrus.WithError(err).Tracef("Will not get the value '%s' for command %s from environment variables.", f.Name, getType(cmd))
 			}
 
 		}
@@ -93,10 +93,10 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 			val := v.Get(f.Name)
 			err := cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
 			if err != nil {
-				logrus.Errorf("Trying to get the value '%s' for the command %s from config: %v", f.Name, err, getType(cmd))
+				logrus.WithError(err).Tracef("Trying to get the value '%s' for the command %s from config: %v", f.Name, err, getType(cmd))
 			}
 		} else {
-			logrus.Errorf("Will not get the value '%s' for the command %s from config.", f.Name, getType(cmd))
+			logrus.Tracef("Will not get the value '%s' for the command %s from config.", f.Name, getType(cmd))
 		}
 	})
 }

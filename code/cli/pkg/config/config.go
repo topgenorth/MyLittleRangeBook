@@ -12,6 +12,7 @@ import (
 const (
 	// MlrbConfigFileName is the file name of the  configuration file, but without any extension
 	MlrbConfigFileName = "mlrb"
+	// MlrbConfigFileType is the type of config file used, TOML in this case.
 	MlrbConfigFileType = "toml"
 
 	// MlrbEnvironmentVariablePrefix is the prefix for all environment variables.

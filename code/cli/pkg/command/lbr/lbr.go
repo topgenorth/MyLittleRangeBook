@@ -4,8 +4,9 @@ package lbr
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	describeseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/describe"
 	listseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/list"
-	readfile "opgenorth.net/mylittlerangebook/pkg/command/lbr/read"
+	readseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/read"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 )
 
@@ -30,15 +31,11 @@ func NewLabradarCmd(cfg *config.Config) *cobra.Command {
 		logrus.Warnf("Could not make the persistent flag '%s' required.", LbrDirectoryFlagParam)
 	}
 
-	var lbrDirProvider = func() string {
-		return config.AbsPathify(labradarDirectory)
-	}
+	var lbrDirProvider = func() string { return config.AbsPathify(labradarDirectory) }
 
-	lbrCmd.AddCommand(readfile.NewCmdRead(cfg, lbrDirProvider))
+	lbrCmd.AddCommand(readseries.NewCmdRead(cfg, lbrDirProvider))
 	lbrCmd.AddCommand(listseries.NewListLbrFilesCmd(cfg, lbrDirProvider))
-
-	//c.AddCommand(BuildSubmitCsvFileCmd(a))
-	//c.AddCommand(BuildDescribeSeriesCommand(a))
+	lbrCmd.AddCommand(describeseries.NewDescribeSeriesCmd(cfg, lbrDirProvider))
 
 	return lbrCmd
 }

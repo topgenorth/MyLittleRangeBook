@@ -92,11 +92,13 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 }
 
 func configureLogging(a *MyLittleRangeBook) {
-	logrus.SetFormatter(&logrus.TextFormatter{})
 	if a.Config.Debug {
-		logrus.Infoln("Debugging: true")
+		logrus.SetReportCaller(true)
 		logrus.SetLevel(logrus.TraceLevel)
 	} else {
-		logrus.SetLevel(logrus.InfoLevel)
+		logrus.SetLevel(logrus.WarnLevel)
 	}
+
+	logrus.SetFormatter(&logrus.TextFormatter{})
+	logrus.Tracef("Debugging: %t", a.Debug)
 }
