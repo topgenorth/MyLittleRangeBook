@@ -48,8 +48,8 @@ type PowderCharge struct {
 	Amount float32 `json:"amount"`
 }
 
-func (t PowderCharge) String() string {
-	return fmt.Sprintf("3.1%fgr %s", t.Amount, t.Name)
+func (pc PowderCharge) String() string {
+	return fmt.Sprintf("%3.1fgr %s", pc.Amount, pc.Name)
 }
 
 //LoadData holds a reloading recipe
