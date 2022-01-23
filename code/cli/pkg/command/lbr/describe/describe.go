@@ -22,13 +22,14 @@ const (
 // describeSeriesOptions holds the values that are necessary to describe a give Labradar series.
 type describeSeriesOptions struct {
 	seriesNumber int
-	notes        string
-	firearm      string
-	cartridge    string
-	bullet       string
-	powder       string
-	cbto         float32
 	labradarDir  func() string
+
+	bullet    string
+	cartridge string
+	cbto      float32
+	firearm   string
+	notes     string
+	powder    string
 }
 
 // NewDescribeSeriesCmd will create the Cobra command to describe what the OldSeries is all about.
@@ -97,9 +98,11 @@ func loadAndUpdateSeries(cfg *config.Config, opts describeSeriesOptions) (*mlrb.
 	a := mlrb.New(cfg)
 	s, err := a.LoadSeriesFromLabradar(lbrDir, opts.seriesNumber)
 	if err != nil {
-		logrus.WithError(err).Errorf("Could not load series %d  from %s.", opts.seriesNumber, lbrDir)
+		logrus.WithError(err).Errorf("Could not load series %d from %s.", opts.seriesNumber, lbrDir)
 		return a, nil, err
 	}
+
+	opts.updateSeries(s)
 
 	return a, s, nil
 }
@@ -126,4 +129,44 @@ func updateReadme(a *mlrb.MyLittleRangeBook, series *series.LabradarSeries, opts
 func saveDescription(a *mlrb.MyLittleRangeBook, labradarSeries *series.LabradarSeries, opts describeSeriesOptions) error {
 	logrus.Info("TODO: save the series and description to it's own file.")
 	return nil
+}
+
+func (opts *describeSeriesOptions) updateSeries(s *series.LabradarSeries) {
+
+	mutators := make([]series.LabradarSeriesMutatorFunc, 0)
+
+	if len(opts.cartridge) > 0 {
+		mutators = append(mutators, series.WithCartridge(opts.cartridge))
+	}
+
+	if len(opts.bullet) > 0 {
+		weight := -1
+		name := "unknown projectile"
+		mutators = append(mutators, series.WithProjecticle(name, weight))
+	}
+
+	if len(opts.cartridge) > 0 {
+		mutators = append(mutators, series.WithCartridge(opts.cartridge))
+	}
+
+	if opts.cbto > 0 {
+		f := func(s *series.LabradarSeries) { s.LoadData.CBTO = opts.cbto }
+		mutators = append(mutators, f)
+	}
+
+	if len(opts.firearm) > 0 {
+		mutators = append(mutators, series.WithFirearm(opts.firearm))
+	}
+
+	if len(opts.notes) > 0 {
+		mutators = append(mutators, series.WithNotes(opts.notes))
+	}
+
+	if len(opts.powder) > 0 {
+		weight := float32(-1)
+		name := "unknown powder"
+		mutators = append(mutators, series.WithPowder(name, weight))
+	}
+
+	s.Update(mutators...)
 }
