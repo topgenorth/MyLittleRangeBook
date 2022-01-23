@@ -1,33 +1,14 @@
-package labradar
+package describe
 
 import (
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
+	"opgenorth.net/mylittlerangebook/pkg/util"
 	"strconv"
 	"strings"
-	"time"
-	"unicode/utf8"
 )
 
-func TrimLastChar(s string) string {
-	r, size := utf8.DecodeLastRuneInString(s)
-	if r == utf8.RuneError && (size == 0 || size == 1) {
-		size = 0
-	}
-	return s[:len(s)-size]
-}
-
-func RemoveEmptyStrings(s []string) []string {
-	var r []string
-	for _, str := range s {
-		if str != "" {
-			r = append(r, str)
-		}
-	}
-	return r
-}
-
 func parsePowderString(powder string) *series.PowderCharge {
-	parts := RemoveEmptyStrings(strings.Split(powder, " "))
+	parts := util.RemoveEmptyStrings(strings.Split(powder, " "))
 	if len(parts) < 1 {
 		return &series.PowderCharge{Name: "Unknown", Amount: 0.0}
 	}
@@ -40,7 +21,7 @@ func parsePowderString(powder string) *series.PowderCharge {
 }
 
 func parseProjectileString(projectile string) *series.Projectile {
-	parts := RemoveEmptyStrings(strings.Split(projectile, " "))
+	parts := util.RemoveEmptyStrings(strings.Split(projectile, " "))
 
 	if len(parts) < 1 {
 		return &series.Projectile{Name: "Unknown", Weight: 0, BC: nil}
@@ -102,14 +83,4 @@ func parseWeightFromProjectileString(weight string) int {
 	}
 
 	return int(w)
-}
-
-// ToTime will take two strings are return a time.Time value.
-func ToTime(d string, t string) time.Time {
-	myDate, err := time.Parse("01-02-2006 15:04:05", d+" "+t)
-	if err != nil {
-		panic(err)
-	}
-
-	return myDate
 }

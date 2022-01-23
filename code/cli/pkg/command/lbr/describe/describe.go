@@ -24,12 +24,12 @@ type describeSeriesOptions struct {
 	seriesNumber int
 	labradarDir  func() string
 
-	bullet    string
-	cartridge string
-	cbto      float32
-	firearm   string
-	notes     string
-	powder    string
+	projectile string
+	cartridge  string
+	cbto       float32
+	firearm    string
+	notes      string
+	powder     string
 }
 
 // NewDescribeSeriesCmd will create the Cobra command to describe what the OldSeries is all about.
@@ -40,7 +40,7 @@ func NewDescribeSeriesCmd(cfg *config.Config, lbrDir func() string) *cobra.Comma
 		notes:        "",
 		firearm:      "",
 		cartridge:    "",
-		bullet:       "",
+		projectile:   "",
 		powder:       "",
 		cbto:         0.0,
 		labradarDir:  lbrDir,
@@ -60,7 +60,7 @@ func NewDescribeSeriesCmd(cfg *config.Config, lbrDir func() string) *cobra.Comma
 	command.SetMandatoryFlags(c, CartridgeParamName, "firearm", "number")
 
 	c.Flags().StringVarP(&p.notes, NotesParamName, "", "", "Some text to describe what this series is about.")
-	c.Flags().StringVarP(&p.bullet, BulletParamName, "", "", "The bullet that was used. e.g. \"123gr Hornady ELD Match\".")
+	c.Flags().StringVarP(&p.projectile, BulletParamName, "", "", "The bullet that was used. e.g. \"123gr Hornady ELD Match\".")
 	c.Flags().StringVarP(&p.powder, PowderParamName, "", "", "The weight and powder that was used. e.g. \"29.1gr BL-C(2)\".")
 	c.Flags().Float32VarP(&p.cbto, CbtoParamName, "", 0, "The cartridge-to-base-ogive length, in inches.  e.g. 1.666")
 
@@ -139,10 +139,10 @@ func (opts *describeSeriesOptions) updateSeries(s *series.LabradarSeries) {
 		mutators = append(mutators, series.WithCartridge(opts.cartridge))
 	}
 
-	if len(opts.bullet) > 0 {
-		weight := -1
-		name := "unknown projectile"
-		mutators = append(mutators, series.WithProjecticle(name, weight))
+	if len(opts.projectile) > 0 {
+
+		p := parseProjectileString(opts.projectile)
+		mutators = append(mutators, series.WithProjecticle(p.Name, p.Weight))
 	}
 
 	if len(opts.cartridge) > 0 {
@@ -163,9 +163,8 @@ func (opts *describeSeriesOptions) updateSeries(s *series.LabradarSeries) {
 	}
 
 	if len(opts.powder) > 0 {
-		weight := float32(-1)
-		name := "unknown powder"
-		mutators = append(mutators, series.WithPowder(name, weight))
+		pc := parsePowderString(opts.powder)
+		mutators = append(mutators, series.WithPowder(pc.Name, pc.Amount))
 	}
 
 	s.Update(mutators...)
