@@ -1,12 +1,15 @@
 package describe
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series/jsonwriter"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
+	"path/filepath"
 )
 
 const (
@@ -18,19 +21,6 @@ const (
 	PowderParamName       = "powder"
 	CbtoParamName         = "cbto"
 )
-
-// describeSeriesOptions holds the values that are necessary to describe a give Labradar series.
-type describeSeriesOptions struct {
-	seriesNumber int
-	labradarDir  func() string
-
-	projectile string
-	cartridge  string
-	cbto       float32
-	firearm    string
-	notes      string
-	powder     string
-}
 
 // NewDescribeSeriesCmd will create the Cobra command to describe what the OldSeries is all about.
 func NewDescribeSeriesCmd(cfg *config.Config, lbrDir func() string) *cobra.Command {
@@ -57,7 +47,7 @@ func NewDescribeSeriesCmd(cfg *config.Config, lbrDir func() string) *cobra.Comma
 	c.Flags().IntVarP(&p.seriesNumber, SeriesNumberParamName, "n", 0, "The series number to read.")
 	c.Flags().StringVarP(&p.cartridge, CartridgeParamName, "", "", "The cartridge that was measured. e.g. \"6.5 Grendel\".")
 	c.Flags().StringVarP(&p.firearm, FirearmParamName, "", "", "The name of the firearm.")
-	command.SetMandatoryFlags(c, CartridgeParamName, "firearm", "number")
+	command.SetMandatoryFlags(c, CartridgeParamName, FirearmParamName, "number")
 
 	c.Flags().StringVarP(&p.notes, NotesParamName, "", "", "Some text to describe what this series is about.")
 	c.Flags().StringVarP(&p.projectile, BulletParamName, "", "", "The bullet that was used. e.g. \"123gr Hornady ELD Match\".")
@@ -69,12 +59,19 @@ func NewDescribeSeriesCmd(cfg *config.Config, lbrDir func() string) *cobra.Comma
 
 func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
 	// TODO [TO20220123] clean up the repetition in the error handling.
-	a, s, err := loadAndUpdateSeries(cfg, opts)
+
+	a := mlrb.New(cfg)
+	s, err := loadSeries(a, opts)
 	if err != nil {
 		return err
 	}
+	opts.updateSeries(s)
 
-	if err := displaySeries(cfg, opts); err != nil {
+	if err := saveSeriesToJsonFile(a, s, opts.labradarDir()); err != nil {
+		return err
+	}
+
+	if err := displaySeries(); err != nil {
 		return err
 	}
 
@@ -82,29 +79,21 @@ func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
 		return err
 	}
 
-	if err := saveDescription(a, s, opts); err != nil {
-		return err
-	}
 	return nil
 }
 
-func displaySeries(cfg *config.Config, opts describeSeriesOptions) error {
+func loadSeries(a *mlrb.MyLittleRangeBook, opts describeSeriesOptions) (*series.LabradarSeries, error) {
+	s, err := a.LoadSeriesFromLabradar(opts.labradarDir(), opts.seriesNumber)
+	if err != nil {
+		return nil, err
+	}
+
+	return s, err
+}
+
+func displaySeries() error {
 	logrus.Info("TODO: display the updated series to stdout.")
 	return nil
-}
-
-func loadAndUpdateSeries(cfg *config.Config, opts describeSeriesOptions) (*mlrb.MyLittleRangeBook, *series.LabradarSeries, error) {
-	lbrDir := opts.labradarDir()
-	a := mlrb.New(cfg)
-	s, err := a.LoadSeriesFromLabradar(lbrDir, opts.seriesNumber)
-	if err != nil {
-		logrus.WithError(err).Errorf("Could not load series %d from %s.", opts.seriesNumber, lbrDir)
-		return a, nil, err
-	}
-
-	opts.updateSeries(s)
-
-	return a, s, nil
 }
 
 func updateReadme(a *mlrb.MyLittleRangeBook, series *series.LabradarSeries, opts describeSeriesOptions) error {
@@ -126,9 +115,42 @@ func updateReadme(a *mlrb.MyLittleRangeBook, series *series.LabradarSeries, opts
 	return nil
 }
 
-func saveDescription(a *mlrb.MyLittleRangeBook, labradarSeries *series.LabradarSeries, opts describeSeriesOptions) error {
-	logrus.Info("TODO: save the series and description to it's own file.")
+// saveSeriesToJsonFile will save the JSON file to disk.  It will delete any existing file.
+func saveSeriesToJsonFile(a *mlrb.MyLittleRangeBook, s *series.LabradarSeries, dir string) error {
+
+	seriesname := fmt.Sprintf("SR%s", s.SeriesName())
+	filename := filepath.Join(dir, seriesname, seriesname+".json")
+
+	exists, err := a.Filesystem.Exists(filename)
+	if err != nil {
+		return err
+	}
+	if exists {
+		if err = a.Filesystem.Remove(filename); err != nil {
+			return err
+		}
+		logrus.Debugf("Deleting the file `%s`.", filename)
+	}
+
+	w := jsonwriter.New(a.Filesystem, func() string { return filename })
+	if err := w.Write(*s); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+// describeSeriesOptions holds the values that are necessary to describe a given series.LabradarSeries.
+type describeSeriesOptions struct {
+	seriesNumber int
+	labradarDir  func() string
+
+	projectile string
+	cartridge  string
+	cbto       float32
+	firearm    string
+	notes      string
+	powder     string
 }
 
 func (opts *describeSeriesOptions) updateSeries(s *series.LabradarSeries) {

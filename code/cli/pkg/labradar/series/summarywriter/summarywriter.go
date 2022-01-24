@@ -1,4 +1,4 @@
-package summary
+package summarywriter
 
 import (
 	"fmt"
@@ -16,14 +16,21 @@ const (
 
 // SummaryWriter is used to display the summary of a given series.
 type SummaryWriter struct {
-	Out  io.Writer
-	Type SummaryTemplateType
+	Out      io.Writer
+	Template SummaryTemplateType
+}
+
+func New(out io.Writer, template SummaryTemplateType) SummaryWriter {
+	return SummaryWriter{
+		Out:      out,
+		Template: template,
+	}
 }
 
 func (w *SummaryWriter) Write(s series.LabradarSeries) error {
 
-	if w.Type != PlainText {
-		return fmt.Errorf("cannot write the series; unknown type %s", w.Type)
+	if w.Template != PlainText {
+		return fmt.Errorf("cannot write the series; unknown type %s", w.Template)
 	}
 
 	t, err := template.New("SeriesSummary").Parse(tmplPlainText)
