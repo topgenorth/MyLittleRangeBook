@@ -10,6 +10,7 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/labradar/device"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series/jsonwriter"
 	"sort"
 )
 
@@ -51,8 +52,8 @@ func (a *MyLittleRangeBook) Device(lbrDir string) (*device.Device, error) {
 	return d, err
 }
 
-// LoadSeriesFromLabradar will take a Labradar CSV file, and display relevant details to STDOUT.
-func (a *MyLittleRangeBook) LoadSeriesFromLabradar(lbrDirectory string, seriesNumber int) (*series.LabradarSeries, error) {
+// ReadLabradarSeries will take a Labradar CSV file, and display relevant details to STDOUT.
+func (a *MyLittleRangeBook) ReadLabradarSeries(lbrDirectory string, seriesNumber int) (*series.LabradarSeries, error) {
 
 	d, err := a.Device(lbrDirectory)
 	if err != nil {
@@ -65,6 +66,30 @@ func (a *MyLittleRangeBook) LoadSeriesFromLabradar(lbrDirectory string, seriesNu
 	}
 
 	return s, nil
+}
+
+// SaveLabradarSeriesToJson will write the series.LabradarSeries to a JSON file in the specified directory.
+func (a *MyLittleRangeBook) SaveLabradarSeriesToJson(dir string, series *series.LabradarSeries) error {
+
+	filename := jsonwriter.DefaultJsonFileProvider(dir, series.Number)
+
+	exists, err := a.Filesystem.Exists(filename())
+	if err != nil {
+		return err
+	}
+	if exists {
+		if err = a.Filesystem.Remove(filename()); err != nil {
+			return err
+		}
+		logrus.Debugf("Deleting the file `%s`.", filename())
+	}
+
+	w := jsonwriter.New(a.Filesystem, func() string { return filename() })
+	if err := w.Write(*series); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // SubmitLabradarCsv file will upload the CSV file to cloud storage.

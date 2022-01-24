@@ -6,7 +6,6 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/series/jsonwriter"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series/summarywriter"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
@@ -60,13 +59,13 @@ func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
 
 	a := mlrb.New(cfg)
 	// TODO [TO20220123] How do we reconcile difference between an existing JSON file and the CSV file?
-	s, err := a.LoadSeriesFromLabradar(opts.labradarDir(), opts.seriesNumber)
+	s, err := a.ReadLabradarSeries(opts.labradarDir(), opts.seriesNumber)
 	if err != nil {
 		return err
 	}
 	opts.updateSeries(s)
 
-	if err := saveSeriesToJsonFile(a, s, opts.labradarDir()); err != nil {
+	if err := a.SaveLabradarSeriesToJson(opts.labradarDir(), s); err != nil {
 		return err
 	}
 
@@ -104,30 +103,6 @@ func updateReadme(a *mlrb.MyLittleRangeBook, series *series.LabradarSeries, opts
 	//	logrus.Errorf("Could not update the README %s: %v", file, errors.Unwrap(err))
 	//	return err
 	//}
-
-	return nil
-}
-
-// saveSeriesToJsonFile will save the JSON file to disk.  It will delete any existing file.
-func saveSeriesToJsonFile(a *mlrb.MyLittleRangeBook, s *series.LabradarSeries, dir string) error {
-
-	filename := jsonwriter.DefaultJsonFileProvider(dir, s.Number)
-
-	exists, err := a.Filesystem.Exists(filename())
-	if err != nil {
-		return err
-	}
-	if exists {
-		if err = a.Filesystem.Remove(filename()); err != nil {
-			return err
-		}
-		logrus.Debugf("Deleting the file `%s`.", filename())
-	}
-
-	w := jsonwriter.New(a.Filesystem, func() string { return filename() })
-	if err := w.Write(*s); err != nil {
-		return err
-	}
 
 	return nil
 }
