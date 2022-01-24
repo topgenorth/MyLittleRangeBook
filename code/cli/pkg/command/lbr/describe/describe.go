@@ -5,9 +5,10 @@ import (
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/config"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/readme"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/series/summarywriter"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
+	"path/filepath"
 )
 
 const (
@@ -56,9 +57,10 @@ func NewDescribeSeriesCmd(cfg *config.Config, lbrDir func() string) *cobra.Comma
 }
 
 func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
-
 	a := mlrb.New(cfg)
+
 	// TODO [TO20220123] How do we reconcile difference between an existing JSON file and the CSV file?
+
 	s, err := a.ReadLabradarSeries(opts.labradarDir(), opts.seriesNumber)
 	if err != nil {
 		return err
@@ -69,7 +71,7 @@ func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
 		return err
 	}
 
-	if err := displaySeries(a, s); err != nil {
+	if err := a.DisplaySeries(*s, true); err != nil {
 		return err
 	}
 
@@ -80,29 +82,23 @@ func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
 	return nil
 }
 
-func displaySeries(a *mlrb.MyLittleRangeBook, s *series.LabradarSeries) error {
-	w := summarywriter.New(a.Out, summarywriter.DescriptivePlainText)
-	if err := w.Write(*s); err != nil {
-		return err
-	}
-	return nil
-}
-
 func updateReadme(a *mlrb.MyLittleRangeBook, series *series.LabradarSeries, opts describeSeriesOptions) error {
 
-	logrus.Info("TODO: need to update the README.md")
+	// TODO [TO20220123] How do we reconcile difference between an existing JSON file and the CSV file?
 
-	//file := filepath.Join(opts.labradarDir(), "README.md")
-	//r, err := readme.Load(file, a.Filesystem)
-	//if err != nil {
-	//	logrus.WithError(err).Warnf("Will not append the series %d to the README file %s.", series.Number, file)
-	//	return err
-	//}
-	//r.AppendSeries(*series, true)
-	//if err = readme.Save(*r, a.Filesystem); err != nil {
-	//	logrus.Errorf("Could not update the README %s: %v", file, errors.Unwrap(err))
-	//	return err
-	//}
+	file := filepath.Join(opts.labradarDir(), "README.md")
+
+	logrus.Tracef("Updating the README.md (%s).", file)
+
+	r, err := readme.Load(file, a.Filesystem)
+	if err != nil {
+		return err
+	}
+	r.AppendSeries(*series, true)
+
+	if err = readme.Save(*r, a.Filesystem); err != nil {
+		return err
+	}
 
 	return nil
 }

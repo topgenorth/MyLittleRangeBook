@@ -8,29 +8,28 @@ import (
 	"text/template"
 )
 
-type SummaryTemplateType string
+type SeriesTemplateType string
 
 const (
-	SimplePlainText      SummaryTemplateType = "SimplePlainText"
-	DescriptivePlainText SummaryTemplateType = "DescriptivePlainText"
-
-	JSON SummaryTemplateType = "Json"
+	SimplePlainText      SeriesTemplateType = "SimplePlainText"
+	DescriptivePlainText SeriesTemplateType = "DescriptivePlainText"
+	JSON                 SeriesTemplateType = "Json"
 )
 
 // SummaryWriter is used to display the summary of a given series.
 type SummaryWriter struct {
 	Out      io.Writer
-	Template SummaryTemplateType
+	Template SeriesTemplateType
 }
 
-func New(out io.Writer, template SummaryTemplateType) SummaryWriter {
+func New(out io.Writer, template SeriesTemplateType) SummaryWriter {
 	return SummaryWriter{
 		Out:      out,
 		Template: template,
 	}
 }
 
-func parseTemplateType(t SummaryTemplateType) string {
+func parseTemplateType(t SeriesTemplateType) string {
 	if t == SimplePlainText {
 		return tmplSimplePlainText
 	}

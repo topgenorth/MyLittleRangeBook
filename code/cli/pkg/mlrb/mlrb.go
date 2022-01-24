@@ -11,6 +11,7 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series/jsonwriter"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series/summarywriter"
 	"sort"
 )
 
@@ -66,6 +67,23 @@ func (a *MyLittleRangeBook) ReadLabradarSeries(lbrDirectory string, seriesNumber
 	}
 
 	return s, nil
+}
+
+func (a *MyLittleRangeBook) DisplaySeries(series series.LabradarSeries, verbose bool) error {
+
+	var w summarywriter.SummaryWriter
+	if verbose {
+		w = summarywriter.New(a.Out, summarywriter.DescriptivePlainText)
+	} else {
+		w = summarywriter.New(a.Out, summarywriter.SimplePlainText)
+	}
+
+	if err := w.Write(series); err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 // SaveLabradarSeriesToJson will write the series.LabradarSeries to a JSON file in the specified directory.

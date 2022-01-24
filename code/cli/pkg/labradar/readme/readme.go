@@ -1,6 +1,7 @@
 package readme
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"github.com/sirupsen/logrus"
@@ -39,26 +40,23 @@ func New(filename string) *ReadmeMd {
 }
 
 func Load(filename string, fs *afero.Afero) (*ReadmeMd, error) {
-	/*	file, err := fs.Open(filename)
-		defer func(f afero.File) {
-			_ = f.Close()
-		}(file)
+	file, err := fs.Open(filename)
+	defer func(f afero.File) { _ = f.Close() }(file)
 
-		if err != nil {
-			return nil, fmt.Errorf("failed to open the README file %s: %w", filename, err)
-		}
+	if err != nil {
+		return nil, fmt.Errorf("failed to open the README file %s: %w", filename, err)
+	}
 
-		r := &ReadmeMd{Filename: filename}
-		scanner := bufio.NewScanner(file)
-		i := 0
-		for scanner.Scan() {
-			r.lines = append(r.lines, &readmeLine{index: i, value: scanner.Text()})
-			i = i + 1
-		}
+	r := &ReadmeMd{Filename: filename}
+	scanner := bufio.NewScanner(file)
+	i := 0
+	for scanner.Scan() {
+		r.lines = append(r.lines, &readmeLine{index: i, value: scanner.Text()})
+		i = i + 1
+	}
 
-		return r, nil
-	*/
-	return nil, nil
+	return r, nil
+
 }
 
 func (r *ReadmeMd) AppendSeries(s series.LabradarSeries, oldformat bool) {
@@ -82,15 +80,18 @@ func Save(r ReadmeMd, fs *afero.Afero) error {
 		})
 	}
 
+	// Dump the new Readme.MD to a byte array.
 	var b bytes.Buffer
 	for _, line := range r.lines {
 		b.WriteString(line.value)
 		b.WriteString("\n")
 	}
+
 	err := fs.WriteFile(r.Filename, b.Bytes(), 0644)
 	if err != nil {
-		return fmt.Errorf("could not open the README.MD %s:%w", r.Filename, err)
+		return err
 	}
 
+	logrus.Tracef("Updated %s.", r.Filename)
 	return nil
 }
