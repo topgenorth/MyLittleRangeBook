@@ -1,15 +1,14 @@
 package describe
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series/jsonwriter"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series/summarywriter"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
-	"path/filepath"
 )
 
 const (
@@ -58,10 +57,10 @@ func NewDescribeSeriesCmd(cfg *config.Config, lbrDir func() string) *cobra.Comma
 }
 
 func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
-	// TODO [TO20220123] clean up the repetition in the error handling.
 
 	a := mlrb.New(cfg)
-	s, err := loadSeries(a, opts)
+	// TODO [TO20220123] How do we reconcile difference between an existing JSON file and the CSV file?
+	s, err := a.LoadSeriesFromLabradar(opts.labradarDir(), opts.seriesNumber)
 	if err != nil {
 		return err
 	}
@@ -71,7 +70,7 @@ func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
 		return err
 	}
 
-	if err := displaySeries(); err != nil {
+	if err := displaySeries(a, s); err != nil {
 		return err
 	}
 
@@ -82,17 +81,11 @@ func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
 	return nil
 }
 
-func loadSeries(a *mlrb.MyLittleRangeBook, opts describeSeriesOptions) (*series.LabradarSeries, error) {
-	s, err := a.LoadSeriesFromLabradar(opts.labradarDir(), opts.seriesNumber)
-	if err != nil {
-		return nil, err
+func displaySeries(a *mlrb.MyLittleRangeBook, s *series.LabradarSeries) error {
+	w := summarywriter.New(a.Out, summarywriter.DescriptivePlainText)
+	if err := w.Write(*s); err != nil {
+		return err
 	}
-
-	return s, err
-}
-
-func displaySeries() error {
-	logrus.Info("TODO: display the updated series to stdout.")
 	return nil
 }
 
@@ -118,21 +111,20 @@ func updateReadme(a *mlrb.MyLittleRangeBook, series *series.LabradarSeries, opts
 // saveSeriesToJsonFile will save the JSON file to disk.  It will delete any existing file.
 func saveSeriesToJsonFile(a *mlrb.MyLittleRangeBook, s *series.LabradarSeries, dir string) error {
 
-	seriesname := fmt.Sprintf("SR%s", s.SeriesName())
-	filename := filepath.Join(dir, seriesname, seriesname+".json")
+	filename := jsonwriter.DefaultJsonFileProvider(dir, s.Number)
 
-	exists, err := a.Filesystem.Exists(filename)
+	exists, err := a.Filesystem.Exists(filename())
 	if err != nil {
 		return err
 	}
 	if exists {
-		if err = a.Filesystem.Remove(filename); err != nil {
+		if err = a.Filesystem.Remove(filename()); err != nil {
 			return err
 		}
-		logrus.Debugf("Deleting the file `%s`.", filename)
+		logrus.Debugf("Deleting the file `%s`.", filename())
 	}
 
-	w := jsonwriter.New(a.Filesystem, func() string { return filename })
+	w := jsonwriter.New(a.Filesystem, func() string { return filename() })
 	if err := w.Write(*s); err != nil {
 		return err
 	}
@@ -162,7 +154,6 @@ func (opts *describeSeriesOptions) updateSeries(s *series.LabradarSeries) {
 	}
 
 	if len(opts.projectile) > 0 {
-
 		p := parseProjectileString(opts.projectile)
 		mutators = append(mutators, series.WithProjecticle(p.Name, p.Weight))
 	}

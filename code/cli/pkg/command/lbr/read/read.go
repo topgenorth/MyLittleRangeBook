@@ -58,7 +58,7 @@ func summarizeLabradarFile(cfg *config.Config, opts *LabradarReadCommandOptions)
 		return err
 	}
 
-	w := summarywriter.New(cfg.Out, summarywriter.PlainText)
+	w := summarywriter.New(cfg.Out, summarywriter.SimplePlainText)
 
 	if err := w.Write(*s); err != nil {
 		logrus.WithError(err).Errorf("Could not summarize the series %s.", s.String())
