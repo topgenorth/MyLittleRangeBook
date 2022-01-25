@@ -94,7 +94,7 @@ func updateReadme(a *mlrb.MyLittleRangeBook, series *series.LabradarSeries, opts
 	if err != nil {
 		return err
 	}
-	r.AppendSeries(*series, true)
+	r.AppendSeries(series, false)
 
 	if err = readme.Save(*r, a.Filesystem); err != nil {
 		return err
