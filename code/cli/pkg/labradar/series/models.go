@@ -2,7 +2,7 @@ package series
 
 import (
 	"fmt"
-	"opgenorth.net/mylittlerangebook/pkg/math"
+	"opgenorth.net/mylittlerangebook/pkg/util"
 )
 
 // BallisticCoefficient captures the ballistics data about a specific projectile.
@@ -48,8 +48,8 @@ type PowderCharge struct {
 	Amount float32 `json:"amount"`
 }
 
-func (t PowderCharge) String() string {
-	return fmt.Sprintf("3.1%fgr %s", t.Amount, t.Name)
+func (pc PowderCharge) String() string {
+	return fmt.Sprintf("%3.1fgr %s", pc.Amount, pc.Name)
 }
 
 //LoadData holds a reloading recipe
@@ -160,7 +160,7 @@ func (vd *VelocityData) Append(velocity int) {
 
 // StdDev will return the standard deviation for a set of VelocityData.
 func (vd VelocityData) StdDev() float64 {
-	return math.CalculateStdDevOfInts(vd.Values)
+	return util.CalculateStdDevOfInts(vd.Values)
 }
 
 // emptyVelocityData will initialize an empty VelocityData struct.
@@ -173,23 +173,23 @@ func emptyVelocityData() *VelocityData {
 
 // ExtremeSpread will return the extreme spread for a set of VelocityData.
 func (vd VelocityData) ExtremeSpread() int {
-	min, max := math.GetMinAndMaxForInts(vd.Values)
+	min, max := util.GetMinAndMaxForInts(vd.Values)
 	return max - min
 }
 
 // Average will return the average for a set of VelocityData.
 func (vd VelocityData) Average() int {
-	return int(math.CalculateAverageOfInts(vd.Values))
+	return int(util.CalculateAverageOfInts(vd.Values))
 }
 
 // Min will return the minimum velocity in a set of VelocityData.
 func (vd VelocityData) Min() int {
-	_, min := math.GetMinAndMaxForInts(vd.Values)
+	_, min := util.GetMinAndMaxForInts(vd.Values)
 	return min
 }
 
 // Max will return the maximum velocity in a set of VelocityData.
 func (vd VelocityData) Max() int {
-	max, _ := math.GetMinAndMaxForInts(vd.Values)
+	max, _ := util.GetMinAndMaxForInts(vd.Values)
 	return max
 }

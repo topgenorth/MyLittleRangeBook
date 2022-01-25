@@ -3,7 +3,7 @@ package device
 import (
 	"fmt"
 	"github.com/spf13/afero"
-	"opgenorth.net/mylittlerangebook/pkg/math"
+	"opgenorth.net/mylittlerangebook/pkg/util"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,17 +27,14 @@ func findTheLabradarMarkerFile(path string, af *afero.Afero) (os.FileInfo, error
 	}
 
 	for _, f := range files {
-
 		// TODO [TO20220122] Look at this icky arrowhead!
 		if !f.IsDir() {
 			if f.Size() == 0 {
 				if looksLikeTheLabradarMarkerFile(f.Name()) {
 					return f, nil
 				}
-
 			}
 		}
-
 	}
 
 	return nil, nil
@@ -58,7 +55,7 @@ func parseDeviceIdFromFilename(filename string) (string, error) {
 	// TODO [TO20220119] Needs unit tests
 	serialNumber := filename[3:10]
 
-	if !math.IsNumericOnly(serialNumber) {
+	if !util.IsNumericOnly(serialNumber) {
 		return "", fmt.Errorf("could not parse a numeric value for the device id from %s", filename)
 	}
 

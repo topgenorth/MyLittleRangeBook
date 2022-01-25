@@ -14,19 +14,42 @@ func WithSeriesNumber(n int) LabradarSeriesMutatorFunc {
 	}
 }
 
-// WithFirearm will set the cartridge and name of the firearm.
-func WithFirearm(name string, cartridge string) LabradarSeriesMutatorFunc {
+// WithFirearm will set the cartridge and name of the firearm.  This does not update the cartridge on the LoadData
+func WithFirearm(name string) LabradarSeriesMutatorFunc {
 	return func(s *LabradarSeries) {
-		s.Firearm = &Firearm{Name: name, Cartridge: cartridge}
+		s.Firearm.Name = name
+	}
+}
+
+// WithCartridge will set the cartridge of the LoadData. This does update the cartridge on the Firearm.
+func WithCartridge(cartridge string) LabradarSeriesMutatorFunc {
+	// TODO [TO20220123] What should we do if the cartridge cartridge doesn't match the cartridge on the firearm?
+	return func(s *LabradarSeries) {
+		s.Firearm.Cartridge = cartridge
 		s.LoadData.Cartridge = cartridge
 	}
 }
 
-// WithPowder will set the name of the gunpowder used and weight of the powder charge
+// WithNotes will update the notes field.
+func WithNotes(notes string) LabradarSeriesMutatorFunc {
+	return func(s *LabradarSeries) {
+		s.Notes = notes
+	}
+}
+
+// WithPowder will set the name of the gunpowder used and weight on the PowderCharge.
 func WithPowder(name string, weight float32) LabradarSeriesMutatorFunc {
 	return func(s *LabradarSeries) {
 		s.LoadData.Powder.Name = name
 		s.LoadData.Powder.Amount = weight
+	}
+}
+
+// WithProjecticle will set the name and weight of the projectile on the Projectile.
+func WithProjecticle(name string, weight int) LabradarSeriesMutatorFunc {
+	return func(s *LabradarSeries) {
+		s.LoadData.Projectile.Name = name
+		s.LoadData.Projectile.Weight = weight
 	}
 }
 

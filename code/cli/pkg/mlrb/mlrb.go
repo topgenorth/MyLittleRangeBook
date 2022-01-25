@@ -10,6 +10,8 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/labradar/device"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series/jsonwriter"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series/summarywriter"
 	"sort"
 )
 
@@ -51,8 +53,8 @@ func (a *MyLittleRangeBook) Device(lbrDir string) (*device.Device, error) {
 	return d, err
 }
 
-// LoadSeriesFromLabradar will take a Labradar CSV file, and display relevant details to STDOUT.
-func (a *MyLittleRangeBook) LoadSeriesFromLabradar(lbrDirectory string, seriesNumber int) (*series.LabradarSeries, error) {
+// ReadLabradarSeries will take a Labradar CSV file, and display relevant details to STDOUT.
+func (a *MyLittleRangeBook) ReadLabradarSeries(lbrDirectory string, seriesNumber int) (*series.LabradarSeries, error) {
 
 	d, err := a.Device(lbrDirectory)
 	if err != nil {
@@ -65,6 +67,47 @@ func (a *MyLittleRangeBook) LoadSeriesFromLabradar(lbrDirectory string, seriesNu
 	}
 
 	return s, nil
+}
+
+func (a *MyLittleRangeBook) DisplaySeries(series series.LabradarSeries, verbose bool) error {
+
+	var w summarywriter.SummaryWriter
+	if verbose {
+		w = summarywriter.New(a.Out, summarywriter.DescriptivePlainText)
+	} else {
+		w = summarywriter.New(a.Out, summarywriter.SimplePlainText)
+	}
+
+	if err := w.Write(series); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// SaveLabradarSeriesToJson will write the series.LabradarSeries to a JSON file in the specified directory.
+func (a *MyLittleRangeBook) SaveLabradarSeriesToJson(dir string, series *series.LabradarSeries) error {
+
+	filename := jsonwriter.DefaultJsonFileProvider(dir, series.Number)
+
+	exists, err := a.Filesystem.Exists(filename())
+	if err != nil {
+		return err
+	}
+	if exists {
+		if err = a.Filesystem.Remove(filename()); err != nil {
+			return err
+		}
+		logrus.Debugf("Deleting the file `%s`.", filename())
+	}
+
+	w := jsonwriter.New(a.Filesystem, func() string { return filename() })
+	if err := w.Write(*series); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // SubmitLabradarCsv file will upload the CSV file to cloud storage.
@@ -92,11 +135,13 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 }
 
 func configureLogging(a *MyLittleRangeBook) {
-	logrus.SetFormatter(&logrus.TextFormatter{})
 	if a.Config.Debug {
-		logrus.Infoln("Debugging: true")
+		logrus.SetReportCaller(true)
 		logrus.SetLevel(logrus.TraceLevel)
 	} else {
-		logrus.SetLevel(logrus.InfoLevel)
+		logrus.SetLevel(logrus.WarnLevel)
 	}
+
+	logrus.SetFormatter(&logrus.TextFormatter{})
+	logrus.Tracef("Debugging: %t", a.Debug)
 }

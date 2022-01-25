@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg"
-	"opgenorth.net/mylittlerangebook/pkg/math"
+	"opgenorth.net/mylittlerangebook/pkg/util"
 	"os"
 	"path"
 	"path/filepath"
@@ -77,7 +77,7 @@ func isLabradarSeriesName(dirName string) bool {
 	}
 
 	number := dirName[2:]
-	if !math.IsNumericOnly(number) {
+	if !util.IsNumericOnly(number) {
 		return false
 	}
 

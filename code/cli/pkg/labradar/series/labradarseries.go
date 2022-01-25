@@ -48,7 +48,6 @@ func (s *LabradarSeries) Update(mutators ...LabradarSeriesMutatorFunc) {
 	for _, mutate := range mutators {
 		mutate(s)
 	}
-
 }
 
 // New will take a collection of LabradarSeriesMutatorFunc functions, create a new LabradarSeries, and then

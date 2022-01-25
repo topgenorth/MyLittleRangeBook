@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/config"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/series/writers/summary"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series/summarywriter"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
 
@@ -52,16 +52,13 @@ func NewCmdRead(cfg *config.Config, lbrDir LabradarDirectoryProvider) *cobra.Com
 func summarizeLabradarFile(cfg *config.Config, opts *LabradarReadCommandOptions) error {
 	a := mlrb.New(cfg)
 
-	s, err := a.LoadSeriesFromLabradar(opts.LabradarDirectory(), opts.SeriesNumber)
+	s, err := a.ReadLabradarSeries(opts.LabradarDirectory(), opts.SeriesNumber)
 	if err != nil {
 		logrus.WithError(err).Errorf("Could not read series %d from %s.", opts.SeriesNumber, opts.LabradarDirectory())
 		return err
 	}
 
-	w := summary.SummaryWriter{
-		Out:  cfg.Out,
-		Type: summary.PlainText,
-	}
+	w := summarywriter.New(cfg.Out, summarywriter.SimplePlainText)
 
 	if err := w.Write(*s); err != nil {
 		logrus.WithError(err).Errorf("Could not summarize the series %s.", s.String())
