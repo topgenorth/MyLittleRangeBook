@@ -2,42 +2,42 @@ package context
 
 import (
 	"fmt"
-	"github.com/carolynvs/aferox"
-	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"io"
+	"opgenorth.net/mylittlerangebook/pkg"
 	"os"
-	"path/filepath"
-	"strings"
 	"time"
 )
 
-const (
-	DefaultTimeZone = "America/Edmonton"
-)
-
+// AppContext is the
 type AppContext struct {
-	Debug      bool
-	verbose    bool
-	environ    map[string]string
-	FileSystem aferox.Aferox
-	In         io.Reader
-	Out        io.Writer
-	Err        io.Writer
-	Timezone   string
+	// Filesystem is the afero wrapper around the filesystem.
+	Filesystem *afero.Afero
+
+	// Timezone is the string representation of the time.Location that the app is running in.
+	Timezone string
+
+	// Debug is a flag that is set when dev
+	Debug   bool
+	verbose bool
+
+	// environ holds a list of all environment variables
+	environ map[string]string
+
+	In  io.Reader
+	Out io.Writer
+	Err io.Writer
 }
 
 func New() *AppContext {
-
-	pwd, _ := os.Getwd()
-
 	return &AppContext{
+		Debug:      false,
 		environ:    getEnviron(),
 		In:         os.Stdin,
 		Out:        os.Stdout,
 		Err:        os.Stderr,
-		Timezone:   DefaultTimeZone,
-		FileSystem: aferox.NewAferox(pwd, afero.NewOsFs()),
+		Timezone:   InferTimeZone(),
+		Filesystem: &afero.Afero{Fs: afero.NewOsFs()},
 	}
 }
 
@@ -112,79 +112,14 @@ func (c *AppContext) ClearEnv() {
 	c.environ = make(map[string]string, 0)
 }
 
-// Getwd returns a rooted path name corresponding to the current directory.
-func (c *AppContext) Getwd() string {
-	return c.FileSystem.Getwd()
-}
-
-// Chdir changes the current working directory to the named directory.
-func (c *AppContext) Chdir(dir string) {
-	c.FileSystem.Chdir(dir)
-}
-
+// TimeLocation will return a pointer to a time.Location structure.
 func (c *AppContext) TimeLocation() *time.Location {
 	tz, err := time.LoadLocation(c.Timezone)
 	if err == nil {
 		return tz
 	} else {
-		c.Timezone = DefaultTimeZone
-		tz, _ := time.LoadLocation(DefaultTimeZone)
+		c.Timezone = pkg.DefaultTimeZone
+		tz, _ := time.LoadLocation(pkg.DefaultTimeZone)
 		return tz
 	}
-}
-
-func getEnviron() map[string]string {
-	environ := map[string]string{}
-	for _, env := range os.Environ() {
-		envParts := strings.SplitN(env, "=", 2)
-		key := envParts[0]
-		value := ""
-		if len(envParts) > 1 {
-			value = envParts[1]
-		}
-		environ[key] = value
-	}
-	return environ
-}
-
-func (c *AppContext) CopyFile(src, dest string) error {
-	info, err := c.FileSystem.Stat(src)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	data, err := c.FileSystem.ReadFile(src)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	err = c.FileSystem.WriteFile(dest, data, info.Mode())
-	return errors.WithStack(err)
-}
-
-func (c *AppContext) CopyDirectory(srcDir, destDir string, includeBaseDir bool) error {
-	var stripPrefix string
-	if includeBaseDir {
-		stripPrefix = filepath.Dir(srcDir)
-	} else {
-		stripPrefix = srcDir
-	}
-
-	return c.FileSystem.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		// Translate the path from the src to the final destination
-		dest := filepath.Join(destDir, strings.TrimPrefix(path, stripPrefix))
-		if dest == "" {
-			return nil
-		}
-
-		if info.IsDir() {
-			return errors.WithStack(c.FileSystem.MkdirAll(dest, info.Mode()))
-		}
-
-		return c.CopyFile(path, dest)
-	})
 }

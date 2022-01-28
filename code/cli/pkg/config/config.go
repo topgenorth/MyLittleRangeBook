@@ -1,125 +1,94 @@
 package config
 
 import (
-	"fmt"
-	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"opgenorth.net/mylittlerangebook/pkg/context"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 const (
-	// Filename is the file name of the  configuration file.
-	Filename = "mlrb"
+	// MlrbConfigFileName is the file name of the  configuration file, but without any extension
+	MlrbConfigFileName = "mlrb"
+	// MlrbConfigFileType is the type of config file used, TOML in this case.
+	MlrbConfigFileType = "toml"
 
-	// EnvPREFIX is the prefix for all environment variables.
-	EnvPREFIX = "MLRB"
-
-	// EnvHOME is the name of the environment variable containing the mlrb home directory path.
-	EnvHOME = "MLRB_HOME"
-
-	// EnvDEBUG is a custom  parameter that signals that --debug flag has been passed through from the client to the runtime.
-	EnvDEBUG = "MLRB_DEBUG"
-
-	// EnvTIMEZONE is the name of the environment variable that holds the IANA Timezone of the Labradar.
-	EnvTIMEZONE = "MLRB_TIMEZONE"
+	// MlrbEnvironmentVariablePrefix is the prefix for all environment variables.
+	MlrbEnvironmentVariablePrefix = "MLRB"
 )
 
-// These are functions that afero doesn't support, so this lets us stub them out for tests to set the
-// location of the current executable mlrb binary and resolve MLRB_HOME.
-var getExecutable = os.Executable
-var evalSymlinks = filepath.EvalSymlinks
-
+// Config holds the current context.AppContext along with some other configuration specific stuff.
 type Config struct {
 	*context.AppContext
 
 	// ConfigFilePath is the path the loaded configuration file.
 	ConfigFilePath string
-
-	// store the resolved home directory for MLRB
-	mlrbHome string
-
-	// Store the path to the executable.
-	mlrbPath string
 }
 
+// New will create a new Config structure.
 func New() *Config {
 	ctx := context.New()
 	c := &Config{
-		AppContext: ctx,
-	}
-
-	p, err := c.GetHomeDir()
-	if err != nil {
-		c.mlrbHome = ""
-	} else {
-		c.mlrbHome = p
-	}
-
-	p, err = c.GetMlrbPath()
-	if err != nil {
-		c.mlrbPath = ""
-	} else {
-		c.mlrbPath = p
+		AppContext:     ctx,
+		ConfigFilePath: defaultConfigFile(),
 	}
 
 	return c
 }
 
-func (c *Config) GetHomeDir() (string, error) {
-	if c.mlrbHome != "" {
-		return c.mlrbHome, nil
+func AbsPathify(inPath string) string {
+
+	// [TO20220121] Shamelessly stolen from Viper
+	logrus.Tracef("Trying to resolve absolute path to %s.", inPath)
+
+	if inPath == "$HOME" || strings.HasPrefix(inPath, "$HOME"+string(os.PathSeparator)) {
+		inPath = userHomeDir() + inPath[5:]
 	}
 
-	home := c.GetEnv(EnvHOME)
-	if home == "" {
-		userHome, err := os.UserHomeDir()
-		if err != nil {
-			return "", errors.Wrap(err, "could not get user home directory")
+	if strings.HasPrefix(inPath, "$") {
+		end := strings.Index(inPath, string(os.PathSeparator))
+
+		var value, suffix string
+		if end == -1 {
+			value = os.Getenv(inPath[1:])
+		} else {
+			value = os.Getenv(inPath[1:end])
+			suffix = inPath[end:]
 		}
-		home = filepath.Join(userHome, ".mlrb")
+
+		inPath = value + suffix
 	}
 
-	c.SetHomeDir(home)
-	return c.mlrbHome, nil
+	if filepath.IsAbs(inPath) {
+		return filepath.Clean(inPath)
+	}
+
+	p, err := filepath.Abs(inPath)
+	if err == nil {
+		return filepath.Clean(p)
+	}
+
+	logrus.Errorf("Couldn't discover absolute path %v", err)
+	return ""
 }
 
-// SetHomeDir is a test function that allows tests to use an alternate
-// mlrb home directory.
-func (c *Config) SetHomeDir(home string) {
-	c.mlrbHome = home
-
-	// Set this as an environment variable so that when we spawn new processes
-	// such as a mixin or plugin, that they can find LABRADAR_HOME too
-	c.SetEnv(EnvHOME, home)
-}
-
-func (c *Config) GetMlrbPath() (string, error) {
-	if c.mlrbPath != "" {
-		return c.mlrbPath, nil
-	}
-
-	path, err := getExecutable()
-	if err != nil {
-		return "", errors.Wrap(err, "could not get path to the executing mlrb binary")
-	}
-	// We try to resolve back to the original location
-	hardPath, err := evalSymlinks(path)
-	if err != nil { // if we have trouble resolving symlinks, skip trying to help people who used symlinks
-		fmt.Fprintln(c.Err, errors.Wrapf(err, "WARNING could not resolve %s for symbolic links\n", path))
-	} else if hardPath != path {
-		if c.Debug {
-			fmt.Fprintf(c.Err, "Resolved mlrb binary from %s to %s\n", path, hardPath)
+func userHomeDir() string {
+	if runtime.GOOS == "windows" {
+		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
+		if home == "" {
+			home = os.Getenv("USERPROFILE")
 		}
-		path = hardPath
+		return home
 	}
-
-	c.mlrbPath = path
-	return path, nil
+	return os.Getenv("HOME")
 }
 
-// SetMlrbPath is a test function that allows tests to use an alternate
-// Mlrb binary location.
-func (c *Config) SetMlrbPath(path string) {
-	c.mlrbPath = path
+func defaultConfigFile() string {
+
+	d := AbsPathify(".")
+	filename := MlrbConfigFileName + MlrbConfigFileType
+
+	return filepath.Join(d, filename)
 }

@@ -2,48 +2,38 @@ package mlrb
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"io"
+	"log"
 	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
-	"opgenorth.net/mylittlerangebook/pkg/labradar"
-	lbrio "opgenorth.net/mylittlerangebook/pkg/labradar/io"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/device"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series/jsonwriter"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series/summarywriter"
 	"sort"
-	"strings"
 )
 
 type MyLittleRangeBook struct {
 	*config.Config
 }
 
-func New() *MyLittleRangeBook {
-	cfg := config.New()
-	return NewWithConfig(cfg)
-}
-
-func NewWithConfig(cfg *config.Config) *MyLittleRangeBook {
-	return &MyLittleRangeBook{
+// New will return a pointer to a new mlrb.MyLittleRangeBook structure.
+func New(cfg *config.Config) *MyLittleRangeBook {
+	app := &MyLittleRangeBook{
 		cfg,
 	}
+	configureLogging(app)
+	return app
 }
 
-func (a *MyLittleRangeBook) ConfigLogging() {
-	log.SetFormatter(&log.TextFormatter{})
-	if a.Config.Debug {
-		log.Infoln("Debugging: true")
-		log.SetLevel(log.TraceLevel)
-	} else {
-		log.Infoln("Debugging: false")
-		log.SetLevel(log.InfoLevel)
-	}
-}
-
-// ListCartridges will do a simple dump of the cartridges to STDOUT.
+// ListCartridges will do a simple dump of the cartridges on record to STDOUT.
 func (a *MyLittleRangeBook) ListCartridges() {
 
 	cartridges, err := cloud.FetchAllCartridges()
 	if err != nil {
-		log.Error("Problem retrieving a list of cartridges. ", err)
+		logrus.Error("Problem retrieving a list of cartridges. ", err)
 	}
 	sort.Slice(cartridges[:], func(i, j int) bool {
 		return cartridges[i].Name < cartridges[j].Name
@@ -57,17 +47,70 @@ func (a *MyLittleRangeBook) ListCartridges() {
 	}
 }
 
-// LoadLabradarCsv will take a Labradar CSV file, and display relevant details to STDOUT.
-func (a *MyLittleRangeBook) LoadLabradarCsv(inputDir string, seriesNumber int) (*labradar.Series, error) {
-	r := labradar.LoadCsv(a.Config, inputDir, seriesNumber)
-
-	if r.Error != nil {
-		return nil, fmt.Errorf("could not read the Labradar file %s, %w: ", labradar.FilenameForSeries(inputDir, seriesNumber), r.Error)
-	}
-
-	return r.Series, nil
+// Device will return a new device.Device struct using the provided LBR directory.
+func (a *MyLittleRangeBook) Device(lbrDir string) (*device.Device, error) {
+	d, err := device.New(lbrDir, a.Filesystem, a.Timezone)
+	return d, err
 }
 
+// ReadLabradarSeries will take a Labradar CSV file, and display relevant details to STDOUT.
+func (a *MyLittleRangeBook) ReadLabradarSeries(lbrDirectory string, seriesNumber int) (*series.LabradarSeries, error) {
+
+	d, err := a.Device(lbrDirectory)
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := d.LoadSeries(seriesNumber)
+	if err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}
+
+func (a *MyLittleRangeBook) DisplaySeries(series series.LabradarSeries, verbose bool) error {
+
+	var w summarywriter.SummaryWriter
+	if verbose {
+		w = summarywriter.New(a.Out, summarywriter.DescriptivePlainText)
+	} else {
+		w = summarywriter.New(a.Out, summarywriter.SimplePlainText)
+	}
+
+	if err := w.Write(series); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// SaveLabradarSeriesToJson will write the series.LabradarSeries to a JSON file in the specified directory.
+func (a *MyLittleRangeBook) SaveLabradarSeriesToJson(dir string, series *series.LabradarSeries) error {
+
+	filename := jsonwriter.DefaultJsonFileProvider(dir, series.Number)
+
+	exists, err := a.Filesystem.Exists(filename())
+	if err != nil {
+		return err
+	}
+	if exists {
+		if err = a.Filesystem.Remove(filename()); err != nil {
+			return err
+		}
+		logrus.Debugf("Deleting the file `%s`.", filename())
+	}
+
+	w := jsonwriter.New(a.Filesystem, func() string { return filename() })
+	if err := w.Write(*series); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SubmitLabradarCsv file will upload the CSV file to cloud storage.
 func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
 	err := cloud.SubmitLabradarCsvFile(filename)
 	if err != nil {
@@ -76,17 +119,13 @@ func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
 	return nil
 }
 
-func (a *MyLittleRangeBook) ListLabradarCsvFiles(inputDir string) ([]labradar.CsvFile, error) {
-	files := labradar.LoadLabradarDataFiles(a.Config, inputDir)
-
-	fmt.Printf("Labradar files in %s:\n", inputDir)
-	for _, f := range files.Files {
-		fmt.Println(strings.ReplaceAll(f.String(), inputDir, " * "))
-	}
-	fmt.Printf("Done.\n")
-	return nil, nil
+// GetListOfLabradarFiles will display all the CSV files in the LBR directory.
+func (a *MyLittleRangeBook) GetListOfLabradarFiles(lbrDirectory string) ([]string, error) {
+	files := fs.ListLabradarSeriesReportFiles(lbrDirectory, a.Filesystem)
+	return files, nil
 }
 
+// SubmitCartridge will add a new cartridge to the cartridges on record.
 func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Cartridge, error) {
 	c, err := cloud.AddCartridge(name, size)
 	if err != nil {
@@ -95,13 +134,14 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 	return c, nil
 }
 
-func (a *MyLittleRangeBook) AddSeriesToLabradarReadme(s *labradar.Series) error {
+func configureLogging(a *MyLittleRangeBook) {
+	if a.Config.Debug {
+		logrus.SetReportCaller(true)
+		logrus.SetLevel(logrus.TraceLevel)
+	} else {
+		logrus.SetLevel(logrus.WarnLevel)
+	}
 
-	return nil
-}
-
-func (a *MyLittleRangeBook) DescribeToStdOut(s *labradar.Series) error {
-	w := lbrio.StdOutSeriesWriter1{TemplateString: lbrio.TMPL_DESCRIBE_SERIES}
-
-	return w.Write(*s)
+	logrus.SetFormatter(&logrus.TextFormatter{})
+	logrus.Tracef("Debugging: %t", a.Debug)
 }
