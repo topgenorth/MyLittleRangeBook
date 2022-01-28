@@ -13,13 +13,15 @@ import (
 
 const (
 	compiledApp = "C:\\Users\\tom.opgenorth\\code\\MyLittleRangeBook\\bin\\mlrb.exe"
+	mainGo      = "C:\\Users\\tom.opgenorth\\code\\MyLittleRangeBook\\code\\cli\\cmd\\mlrb\\main.go"
+	installApp  = "C:\\Users\\tom.opgenorth\\code\\MyLittleRangeBook\\data\\mlrb.exe"
 )
 
 // A build step that requires additional params, or platform specific steps for example
 func Build() error {
 	mg.Deps(InstallDeps)
 	fmt.Printf("Building %s...\n", compiledApp)
-	cmd := exec.Command("go", "build", "-o", compiledApp, "C:\\Users\\tom.opgenorth\\code\\MyLittleRangeBook\\code\\cli\\cmd\\mlrb\\main.go")
+	cmd := exec.Command("go", "build", "-o", compiledApp, mainGo)
 	return cmd.Run()
 }
 
@@ -27,7 +29,7 @@ func Build() error {
 func Install() error {
 	mg.Deps(Build)
 	fmt.Printf("Installing %s...\n", compiledApp)
-	return os.Rename(compiledApp, "C:\\Users\\tom.opgenorth\\code\\MyLittleRangeBook\\data\\mlrb.exe")
+	return os.Rename(compiledApp, installApp)
 }
 
 // Manage your deps, or running package managers.
