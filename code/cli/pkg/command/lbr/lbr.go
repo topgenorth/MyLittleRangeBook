@@ -27,7 +27,7 @@ func NewLabradarCmd(cfg *config.Config) *cobra.Command {
 		if len(defaultLbrDir) == 0 {
 			logrus.Warn("There is no LBR folder in the directory; hopefully one is provided.")
 		} else {
-			logrus.Tracef("Will use %s as the default directory if one is not provided.")
+			logrus.Tracef("Will use %s as the default directory if one is not provided.", defaultLbrDir)
 		}
 	}
 
