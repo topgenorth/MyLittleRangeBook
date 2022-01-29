@@ -5,6 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+	"opgenorth.net/mylittlerangebook/fs"
 	describeseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/describe"
 	listseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/list"
 	readseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/read"
@@ -41,7 +42,7 @@ func NewLabradarCmd(cfg *config.Config) *cobra.Command {
 	usageMsg := "The directory holding the LBR series."
 	lbrCmd.PersistentFlags().StringVarP(&lbrDir, LbrDirectoryFlagParam, "d", defaultLbrDir, usageMsg)
 
-	addSubcommands(lbrCmd, cfg, func() string { return config.AbsPathify(lbrDir) })
+	addSubcommands(lbrCmd, cfg, func() string { return fs.AbsPathify(lbrDir) })
 
 	return lbrCmd
 }
