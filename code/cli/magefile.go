@@ -8,7 +8,7 @@ import (
 	"os"
 	"os/exec"
 
-	mg "github.com/magefile/mage/mg"
+	"github.com/magefile/mage/mg"
 )
 
 const (
