@@ -8,3 +8,6 @@
 /code/cli/bin/mlrb
 .DS_Store
 /data/mlrb.exe
+/bin/mlrb.exe
+/code/cli/output
+/bin
