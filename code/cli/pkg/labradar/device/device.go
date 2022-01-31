@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/fs"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
+	"path/filepath"
 )
 
 // Device holds the details about a specific Labradar device.
@@ -45,14 +46,27 @@ func New(path string, af *afero.Afero, timezone string) (*Device, error) {
 }
 
 // LoadSeries will load the specified series from the Labradar Device.
-func (d Device) LoadSeries(seriesNumber int) (*series.LabradarSeries, error) {
+func (d Device) LoadSeries(n series.Number) (*series.LabradarSeries, error) {
 
-	csvValues, err := fs.GetMutatorsToUpdateSeries(seriesNumber, d.Directory.String(), d.af)
+	b, err := d.HasSeries(n)
+	if err != nil {
+
+		return nil, err
+	}
+	if !b {
+		e := series.SeriesError{
+			Msg:    fmt.Sprintf("%d is not a valid series on the device %s (%s): %v", n, d.DeviceId, d.Directory, err),
+			Number: int(n),
+		}
+		return nil, e
+	}
+
+	csvValues, err := fs.GetMutatorsToUpdateSeries(int(n), d.Directory.String(), d.af)
 
 	if err != nil {
 		e := series.SeriesError{
-			Msg:    fmt.Sprintf("could not load the series %d from  device %s (%s): %v", seriesNumber, d.DeviceId, d.Directory, err),
-			Number: seriesNumber,
+			Msg:    fmt.Sprintf("could not load the series %d from  device %s (%s): %v", n, d.DeviceId, d.Directory, err),
+			Number: int(n),
 		}
 		return nil, e
 	}
@@ -61,4 +75,36 @@ func (d Device) LoadSeries(seriesNumber int) (*series.LabradarSeries, error) {
 	s := series.New(mutators...)
 	return s, nil
 
+}
+
+// HasSeries
+func (d Device) HasSeries(number series.Number) (bool, error) {
+	seriesDir := filepath.Join(d.Directory.String(), number.SeriesName())
+
+	b, e := d.af.Exists(seriesDir)
+	if e != nil {
+		return false, e
+	}
+	if !b {
+		return false, nil
+	}
+
+	b, e = d.af.IsDir(seriesDir)
+	if e != nil {
+		return false, e
+	}
+	if !b {
+		return false, nil
+	}
+
+	fn := fmt.Sprintf("%s Report.csv", number.SeriesName())
+	b, e = d.af.Exists(fn)
+	if e != nil {
+		return false, e
+	}
+	if !b {
+		return false, nil
+	}
+
+	return true, nil
 }

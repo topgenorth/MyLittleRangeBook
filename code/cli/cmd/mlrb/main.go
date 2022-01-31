@@ -17,11 +17,11 @@ const (
 )
 
 func main() {
-	code := mainRun()
+	code := runMyLittleRangeBook()
 	os.Exit(int(code))
 }
 
-func mainRun() exitCode {
+func runMyLittleRangeBook() exitCode {
 
 	c := config.New()
 	rootCmd := root.NewRootCmd(c)

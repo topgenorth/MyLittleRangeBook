@@ -61,7 +61,15 @@ func (a *MyLittleRangeBook) ReadLabradarSeries(lbrDirectory string, seriesNumber
 		return nil, err
 	}
 
-	s, err := d.LoadSeries(seriesNumber)
+	b, err := d.HasSeries(series.Number(seriesNumber))
+	if err != nil {
+		return nil, err
+	}
+	if !b {
+		return nil, series.SeriesError{Msg: fmt.Sprintf("%d is not a valid series.", seriesNumber)}
+	}
+
+	s, err := d.LoadSeries(series.Number(seriesNumber))
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +91,6 @@ func (a *MyLittleRangeBook) DisplaySeries(series series.LabradarSeries, verbose 
 	}
 
 	return nil
-
 }
 
 // SaveLabradarSeriesToJson will write the series.LabradarSeries to a JSON file in the specified directory.

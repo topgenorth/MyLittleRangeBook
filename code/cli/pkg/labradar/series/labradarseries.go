@@ -33,9 +33,9 @@ func (s LabradarSeries) String() string {
 	return fmt.Sprintf("%s - %s", s.DeviceId, s.SeriesName())
 }
 
-// SeriesName is used to retrieve a Labradar formated name for the series.
+// SeriesName is used to retrieve a Labradar formatted name for the series.
 func (s LabradarSeries) SeriesName() string {
-	return fmt.Sprintf("%04d", s.Number)
+	return Number(s.Number).SeriesName()
 }
 
 // TotalNumberOfShots will retrieve the number of shots in the series.
@@ -75,4 +75,16 @@ func newSeries() *LabradarSeries {
 	}
 
 	return s
+}
+
+// Number represents the series number of a device.
+type Number int
+
+// String will return a SeriesName formatted as a string.
+func (t Number) String() string {
+	return fmt.Sprintf("SR%04d", t)
+}
+
+func (t Number) SeriesName() string {
+	return t.String()
 }
