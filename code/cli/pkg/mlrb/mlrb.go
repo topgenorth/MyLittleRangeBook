@@ -56,20 +56,21 @@ func (a *MyLittleRangeBook) Device(lbrDir string) (*device.Device, error) {
 // ReadLabradarSeries will take a Labradar CSV file, and display relevant details to STDOUT.
 func (a *MyLittleRangeBook) ReadLabradarSeries(lbrDirectory string, seriesNumber int) (*series.LabradarSeries, error) {
 
+	n := series.Number(seriesNumber)
 	d, err := a.Device(lbrDirectory)
 	if err != nil {
 		return nil, err
 	}
 
-	b, err := d.HasSeries(series.Number(seriesNumber))
+	b, err := d.HasSeries(n)
 	if err != nil {
 		return nil, err
 	}
 	if !b {
-		return nil, series.SeriesError{Msg: fmt.Sprintf("%d is not a valid series.", seriesNumber)}
+		return nil, series.NewNotFoundError(lbrDirectory, seriesNumber)
 	}
 
-	s, err := d.LoadSeries(series.Number(seriesNumber))
+	s, err := d.LoadSeries(n)
 	if err != nil {
 		return nil, err
 	}

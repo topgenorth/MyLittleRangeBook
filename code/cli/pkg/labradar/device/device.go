@@ -54,7 +54,7 @@ func (d Device) LoadSeries(n series.Number) (*series.LabradarSeries, error) {
 		return nil, err
 	}
 	if !b {
-		e := series.SeriesError{
+		e := series.Error{
 			Msg:    fmt.Sprintf("%d is not a valid series on the device %s (%s): %v", n, d.DeviceId, d.Directory, err),
 			Number: int(n),
 		}
@@ -64,7 +64,7 @@ func (d Device) LoadSeries(n series.Number) (*series.LabradarSeries, error) {
 	csvValues, err := fs.GetMutatorsToUpdateSeries(int(n), d.Directory.String(), d.af)
 
 	if err != nil {
-		e := series.SeriesError{
+		e := series.Error{
 			Msg:    fmt.Sprintf("could not load the series %d from  device %s (%s): %v", n, d.DeviceId, d.Directory, err),
 			Number: int(n),
 		}

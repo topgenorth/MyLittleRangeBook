@@ -5,13 +5,31 @@ import (
 	"fmt"
 )
 
-type SeriesError struct {
+type Error struct {
 	Msg    string
 	Number int
 }
 
-func (s SeriesError) Error() string {
+func (s Error) Error() string {
 	return fmt.Sprintf("There was a problem trying to process series %d: %s.", s.Number, s.Msg)
+}
+
+type NotFoundError struct {
+	// The series.Number
+	N      Number
+	lbrDir string
+}
+
+// NewNotFound error will return a NotFoundError
+func NewNotFoundError(directory string, number int) NotFoundError {
+	return NotFoundError{
+		N:      Number(number),
+		lbrDir: directory,
+	}
+}
+
+func (e NotFoundError) Error() string {
+	return fmt.Sprintf("%s could not be found in %s", e.N.SeriesName(), e.lbrDir)
 }
 
 // LabradarSeries is a structure that holds the data from a Labradar series, and some details of the load
@@ -85,6 +103,7 @@ func (t Number) String() string {
 	return fmt.Sprintf("SR%04d", t)
 }
 
+// SeriesName is just an alias for Number.String()
 func (t Number) SeriesName() string {
 	return t.String()
 }
