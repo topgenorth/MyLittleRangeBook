@@ -37,7 +37,7 @@ func (w *JsonSeriesWriter) Write(s series.LabradarSeries) error {
 	//
 	//err = w.FileSystem.WriteFile(outputFileName, s.ToJsonBytes(), 0644)
 	//if err != nil {
-	//	return series.SeriesError{
+	//	return series.Error{
 	//		Number: s.Number,
 	//		Msg:    fmt.Sprintf("Could not write to the file %s. %v", outputFileName, err),
 	//	}
@@ -61,7 +61,7 @@ func (w *ReadMeSeriesWriter) Write(s series.LabradarSeries) error {
 
 	t, err := template.New("ToStringSerialWriter").Parse(tmpl)
 	if err != nil {
-		return series.SeriesError{
+		return series.Error{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error creating text.template: %v", err),
 		}
@@ -70,7 +70,7 @@ func (w *ReadMeSeriesWriter) Write(s series.LabradarSeries) error {
 	var line bytes.Buffer
 	err = t.Execute(&line, s)
 	if err != nil {
-		return series.SeriesError{
+		return series.Error{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error writing template: %v", err),
 		}

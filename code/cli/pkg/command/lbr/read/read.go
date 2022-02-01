@@ -2,10 +2,12 @@ package read
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/config"
+	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series/summarywriter"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 )
@@ -54,7 +56,11 @@ func summarizeLabradarFile(cfg *config.Config, opts *LabradarReadCommandOptions)
 
 	s, err := a.ReadLabradarSeries(opts.LabradarDirectory(), opts.SeriesNumber)
 	if err != nil {
-		logrus.WithError(err).Errorf("Could not read series %d from %s.", opts.SeriesNumber, opts.LabradarDirectory())
+		if errors.Is(err, series.NotFoundError{}) {
+			logrus.WithError(err).Errorf("Could not find the series.")
+		} else {
+			logrus.WithError(err).Errorf("Could not read series %d from %s.", opts.SeriesNumber, opts.LabradarDirectory())
+		}
 		return err
 	}
 

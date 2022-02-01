@@ -48,7 +48,7 @@ func (w *SummaryWriter) Write(s series.LabradarSeries) error {
 
 	t, err := template.New("SeriesSummary").Parse(parseTemplateType(w.Template))
 	if err != nil {
-		return series.SeriesError{
+		return series.Error{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("could not load the template %s", w.Template),
 		}
@@ -58,7 +58,7 @@ func (w *SummaryWriter) Write(s series.LabradarSeries) error {
 	if err != nil {
 		m := fmt.Sprintf("could not render the template %s", w.Template)
 		logrus.WithError(err).Errorf(m)
-		return series.SeriesError{
+		return series.Error{
 			Number: s.Number,
 			Msg:    m,
 		}
