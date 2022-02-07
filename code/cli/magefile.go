@@ -56,7 +56,7 @@ func Install() error {
 
 // Manage your deps, or running package managers.
 func InstallDeps() error {
-	fmt.Println("Installing Deps...")
+	fmt.Println("This doesn't actually do anything right now.")
 	//b := buildArtifacts()
 
 	//cmd := exec.Command("go", "get", "github.com/stretchr/piglatin")
@@ -68,11 +68,18 @@ func InstallDeps() error {
 func Clean() {
 	b := buildArtifacts()
 
-	fmt.Println("Cleaning")
-	fmt.Printf("  > deleting %s\n", b.ExecutableName)
-	fmt.Printf("  > deleting %s\n", b.OutputDir)
-	err := os.RemoveAll(b.OutputDir)
-	if err != nil {
-		return
+	filesToDelete := []string{b.CompiledApp, b.InstalledApp}
+
+	fmt.Println("Cleaning: ")
+
+	for _, f := range filesToDelete {
+		fmt.Printf("  > deleting ")
+		fmt.Print(f)
+		fmt.Println()
+
+		err := os.RemoveAll(b.CompiledApp)
+		if err != nil {
+			fmt.Printf("    ! there was a problem deleting %s: %s", f, err)
+		}
 	}
 }

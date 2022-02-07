@@ -15,14 +15,13 @@ type Artifacts struct {
 }
 
 func New(dir string) Artifacts {
-
 	exec := executableName()
 	id := filepath.Join(dir, "..", "..", "bin")
 
 	a := Artifacts{
 		ExecutableName: exec,
-		CompiledApp:    filepath.Join(dir, "output", exec),
 		MainGo:         filepath.Join(dir, "cmd", "mlrb", "main.go"),
+		CompiledApp:    filepath.Join(dir, "output", exec),
 		InstalledApp:   filepath.Join(id, exec),
 	}
 	return a
