@@ -77,7 +77,8 @@ func (d Device) LoadSeries(n series.Number) (*series.LabradarSeries, error) {
 
 }
 
-// HasSeries
+// HasSeries will check the LBR directory for series.
+// First check for the existence of a SR9999 folder, and then check inside that folder for a SR9999 Report.csv file.
 func (d Device) HasSeries(number series.Number) (bool, error) {
 	seriesDir := filepath.Join(d.Directory.String(), number.SeriesName())
 
@@ -97,8 +98,12 @@ func (d Device) HasSeries(number series.Number) (bool, error) {
 		return false, nil
 	}
 
-	fn := fmt.Sprintf("%s Report.csv", number.SeriesName())
-	b, e = d.af.Exists(fn)
+	return d.hasReportCsv(seriesDir, number)
+}
+
+func (d Device) hasReportCsv(dir string, number series.Number) (bool, error) {
+	fn := filepath.Join(dir, fmt.Sprintf("%s Report.csv", number.SeriesName()))
+	b, e := d.af.Exists(fn)
 	if e != nil {
 		return false, e
 	}

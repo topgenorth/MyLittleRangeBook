@@ -68,7 +68,7 @@ func (w *SummaryWriter) Write(s series.LabradarSeries) error {
 
 const tmplSimplePlainText = `
 ----
-Labradar Series : SR{{.SeriesName}}
+Labradar Series : {{.SeriesName}}
 Date            : {{.Date}} {{.Time}}
 
 Number of Shots : {{.TotalNumberOfShots}}
@@ -81,7 +81,7 @@ Extreme Spread  : {{.Velocities.ExtremeSpread}}{{.UnitsOfMeasure.Velocity}}
 
 const tmplDescriptivePlainText = `
 ---
-Labradar Series : SR{{.SeriesName}}
+Labradar Series : {{.SeriesName}}
 Firearm         : {{.Firearm}}
 Load            : {{.LoadData.Projectile }}, {{.LoadData.Powder}}
 Notes:          : {{.Notes}}
