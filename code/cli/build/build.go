@@ -7,6 +7,7 @@ import (
 )
 
 type Artifacts struct {
+	CurrentDir     string
 	CompiledApp    string
 	ExecutableName string
 	OutputDir      string
@@ -19,6 +20,7 @@ func New(dir string) Artifacts {
 	id := filepath.Join(dir, "..", "..", "bin")
 
 	a := Artifacts{
+		CurrentDir:     dir,
 		ExecutableName: exec,
 		MainGo:         filepath.Join(dir, "cmd", "mlrb", "main.go"),
 		CompiledApp:    filepath.Join(dir, "output", exec),

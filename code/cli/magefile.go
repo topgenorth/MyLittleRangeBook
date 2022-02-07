@@ -33,6 +33,12 @@ func buildArtifacts() build.Artifacts {
 	return b
 }
 
+func dataMlrbExe(b build.Artifacts) string {
+
+	dataExe := filepath.Join(b.CurrentDir, "..", "..", "data", b.ExecutableName)
+	return dataExe
+}
+
 // A custom install step if you need your bin someplace other than go/bin
 func Install() error {
 	b := buildArtifacts()
@@ -68,7 +74,7 @@ func InstallDeps() error {
 func Clean() {
 	b := buildArtifacts()
 
-	filesToDelete := []string{b.CompiledApp, b.InstalledApp}
+	filesToDelete := []string{b.CompiledApp, b.InstalledApp, dataMlrbExe(b)}
 
 	fmt.Println("Cleaning: ")
 
