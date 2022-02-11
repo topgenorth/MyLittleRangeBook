@@ -12,6 +12,7 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series/jsonwriter"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series/summarywriter"
+	"opgenorth.net/mylittlerangebook/pkg/persistence"
 	"sort"
 )
 
@@ -140,6 +141,15 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 		return nil, err
 	}
 	return c, nil
+}
+
+func (a *MyLittleRangeBook) SaveCartridge(n string, c string, s string) error {
+	cartridge := persistence.NewCartridge(n, c, s)
+	err := persistence.UpsertCartridge(cartridge)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func configureLogging(a *MyLittleRangeBook) {
