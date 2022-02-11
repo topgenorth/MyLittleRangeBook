@@ -7,16 +7,14 @@ import (
 
 type Cartridge struct {
 	gorm.Model
-	Name      string
-	Cartridge string
-	Size      string
+	Name string `gorm:"index:idx_cartridges__name,unique,not null"`
+	Size string `gorm:"index:idx_cartridges__size"`
 }
 
-func NewCartridge(n string, c string, s string) Cartridge {
+func NewCartridge(name string, size string) Cartridge {
 	return Cartridge{
-		Name:      n,
-		Cartridge: c,
-		Size:      s,
+		Name: name,
+		Size: size,
 	}
 }
 

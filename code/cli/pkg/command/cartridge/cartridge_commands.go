@@ -4,17 +4,19 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/command"
+	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
+	"opgenorth.net/mylittlerangebook/pkg/persistence"
 )
 
-func buildCartridgeCommands(a *mlrb.MyLittleRangeBook) *cobra.Command {
+func NewCartridgeCommand(cfg *config.Config) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "cartridge",
 		Short: "All the command for dealing with cartridges via the command line.",
 	}
 
-	c.AddCommand(buildListCartridgesCmd(a))
-	c.AddCommand(buildAddCartridgeCommand(a))
+	//c.AddCommand(buildListCartridgesCmd(a))
+	c.AddCommand(buildAddCartridgeCommand(cfg))
 
 	return c
 }
@@ -31,7 +33,7 @@ func buildListCartridgesCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	return c
 }
 
-func buildAddCartridgeCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
+func buildAddCartridgeCommand(cfg *config.Config) *cobra.Command {
 	var (
 		name string
 		size string
@@ -39,19 +41,30 @@ func buildAddCartridgeCommand(a *mlrb.MyLittleRangeBook) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
 		Short: "Add a new cartridge to the list.",
-		Run: func(cmd *cobra.Command, args []string) {
-
-			c2, err := a.SubmitCartridge(name, size)
-			if err != nil {
-				logrus.Fatal(err)
-			}
-
-			logrus.Infof("Added %s to the list.", c2)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return saveCartridge(cfg, name, size)
 		},
 	}
-	c.Flags().StringVarP(&name, "name", "n", "", "A unique name for the cartridge.")
+	c.Flags().StringVarP(&name, "name", "", "", "A unique name for the cartridge.")
 	c.Flags().StringVarP(&size, "size", "", "", "The size of the cartridge (metric).")
 	command.SetMandatoryFlags(c, "name", "size")
 
 	return c
+}
+
+func saveCartridge(cfg *config.Config, name string, size string) error {
+
+	err := persistence.Bootstrap()
+	if err != nil {
+		return err
+	}
+
+	a := mlrb.New(cfg)
+
+	if err = a.SaveCartridgeToSqlLite(name, size); err != nil {
+		return err
+	}
+
+	logrus.Tracef("Saved %s, %s to the Sqlite.", name, size)
+	return nil
 }
