@@ -3,6 +3,8 @@ package cartridge
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"io"
+	"log"
 	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
@@ -21,12 +23,12 @@ func NewCartridgeCommand(cfg *config.Config) *cobra.Command {
 	return c
 }
 
-func buildListCartridgesCmd(a *mlrb.MyLittleRangeBook) *cobra.Command {
+func buildListCartridgesCmd(cfg *config.Config) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "list",
 		Short: "List the cartridges in the datastore.",
-		Run: func(cmd *cobra.Command, args []string) {
-			a.ListCartridges()
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return listCartridges(cfg)
 		},
 	}
 
@@ -52,14 +54,35 @@ func buildAddCartridgeCommand(cfg *config.Config) *cobra.Command {
 	return c
 }
 
-func saveCartridge(cfg *config.Config, name string, size string) error {
-
+func getApp(cfg *config.Config) (*mlrb.MyLittleRangeBook, error) {
 	err := persistence.Bootstrap()
+	if err != nil {
+		return nil, err
+	}
+
+	return mlrb.New(cfg), nil
+}
+
+func listCartridges(cfg *config.Config) error {
+	a, err := getApp(cfg)
 	if err != nil {
 		return err
 	}
 
-	a := mlrb.New(cfg)
+	cartridges, err := a.ListCartridges()
+	for _, c := range cartridges {
+		_, err := io.WriteString(a.Config.Out, c.String())
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return nil
+}
+
+func saveCartridge(cfg *config.Config, name string, size string) error {
+
+	a, err := getApp(cfg)
 
 	if err = a.SaveCartridgeToSqlLite(name, size); err != nil {
 		return err

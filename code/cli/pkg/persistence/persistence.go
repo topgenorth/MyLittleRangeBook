@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"fmt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -11,11 +12,29 @@ type Cartridge struct {
 	Size string `gorm:"index:idx_cartridges__size"`
 }
 
+func (t Cartridge) String() string {
+	return fmt.Sprintf("%s (%s)", t.Name, t.Size)
+}
+
 func NewCartridge(name string, size string) Cartridge {
 	return Cartridge{
 		Name: name,
 		Size: size,
 	}
+}
+
+func GetCartridges() ([]Cartridge, error) {
+	var c []Cartridge
+	db, err := gorm.Open(sqlite.Open("mlrb.db3"), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+
+	if result := db.Find(c); result.Error != nil {
+		return nil, result.Error
+	}
+
+	return c, nil
 }
 
 func UpsertCartridge(c Cartridge) error {

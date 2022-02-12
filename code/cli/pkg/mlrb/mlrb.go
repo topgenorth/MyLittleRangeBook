@@ -3,8 +3,6 @@ package mlrb
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"io"
-	"log"
 	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/device"
@@ -30,9 +28,9 @@ func New(cfg *config.Config) *MyLittleRangeBook {
 }
 
 // ListCartridges will do a simple dump of the cartridges on record to STDOUT.
-func (a *MyLittleRangeBook) ListCartridges() {
-
-	cartridges, err := cloud.FetchAllCartridges()
+func (a *MyLittleRangeBook) ListCartridges() ([]persistence.Cartridge, error) {
+	//cartridges, err := cloud.FetchAllCartridges()
+	cartridges, err := persistence.GetCartridges()
 	if err != nil {
 		logrus.Error("Problem retrieving a list of cartridges. ", err)
 	}
@@ -40,12 +38,7 @@ func (a *MyLittleRangeBook) ListCartridges() {
 		return cartridges[i].Name < cartridges[j].Name
 	})
 
-	for _, c := range cartridges {
-		_, err := io.WriteString(a.Config.Out, c.String())
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+	return cartridges, nil
 }
 
 // Device will return a new device.Device struct using the provided LBR directory.
