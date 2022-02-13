@@ -11,7 +11,6 @@ const (
 	MlrbConfigFileName = "mlrb"
 	// MlrbConfigFileType is the type of config file used, TOML in this case.
 	MlrbConfigFileType = "toml"
-
 	// MlrbEnvironmentVariablePrefix is the prefix for all environment variables.
 	MlrbEnvironmentVariablePrefix = "MLRB"
 )

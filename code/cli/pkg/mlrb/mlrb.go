@@ -136,8 +136,8 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 	return c, nil
 }
 
-func (a *MyLittleRangeBook) SaveCartridgeToSqlLite(name string, size string) error {
-	c := persistence.NewCartridge(name, size)
+func (a *MyLittleRangeBook) SaveCartridgeToSqlLite(name string, size string, bore float64) error {
+	c := persistence.NewCartridge(name, size, bore)
 	err := persistence.UpsertCartridge(c)
 	if err != nil {
 		return err

@@ -39,17 +39,19 @@ func buildAddCartridgeCommand(cfg *config.Config) *cobra.Command {
 	var (
 		name string
 		size string
+		bore float64
 	)
 	c := &cobra.Command{
 		Use:   "add",
 		Short: "Add a new cartridge to the list.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return saveCartridge(cfg, name, size)
+			return saveCartridge(cfg, name, size, bore)
 		},
 	}
 	c.Flags().StringVarP(&name, "name", "", "", "A unique name for the cartridge.")
-	c.Flags().StringVarP(&size, "size", "", "", "The size of the cartridge (metric).")
-	command.SetMandatoryFlags(c, "name", "size")
+	c.Flags().StringVarP(&size, "size", "", "", "The size of the cartridge (7.62x39mm).")
+	c.Flags().Float64VarP(&bore, "bore", "", 0.0, "The bore diameter, in inches.")
+	command.SetMandatoryFlags(c, "name", "size", "bore")
 
 	return c
 }
@@ -80,11 +82,11 @@ func listCartridges(cfg *config.Config) error {
 	return nil
 }
 
-func saveCartridge(cfg *config.Config, name string, size string) error {
+func saveCartridge(cfg *config.Config, name string, size string, bore float64) error {
 
 	a, err := getApp(cfg)
 
-	if err = a.SaveCartridgeToSqlLite(name, size); err != nil {
+	if err = a.SaveCartridgeToSqlLite(name, size, bore); err != nil {
 		return err
 	}
 

@@ -8,18 +8,20 @@ import (
 
 type Cartridge struct {
 	gorm.Model
-	Name string `gorm:"index:idx_cartridges__name,unique,not null"`
-	Size string `gorm:"index:idx_cartridges__size"`
+	BoreDiameter float64 `gorm:"index:idx_cartridges__borediameter,not null"`
+	Name         string  `gorm:"index:idx_cartridges__name,unique,not null"`
+	Size         string  `gorm:"index:idx_cartridges__size"`
 }
 
 func (t Cartridge) String() string {
 	return fmt.Sprintf("%s (%s)", t.Name, t.Size)
 }
 
-func NewCartridge(name string, size string) Cartridge {
+func NewCartridge(name string, size string, bore float64) Cartridge {
 	return Cartridge{
-		Name: name,
-		Size: size,
+		Name:         name,
+		Size:         size,
+		BoreDiameter: bore,
 	}
 }
 
