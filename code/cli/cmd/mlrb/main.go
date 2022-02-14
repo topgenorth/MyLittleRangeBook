@@ -2,6 +2,7 @@
 package main
 
 import (
+	"github.com/sirupsen/logrus"
 	"opgenorth.net/mylittlerangebook/pkg/command/root"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"os"
@@ -27,6 +28,7 @@ func runMyLittleRangeBook() exitCode {
 	rootCmd := root.NewRootCmd(c)
 
 	if err := rootCmd.Execute(); err != nil {
+		logrus.WithError(err).Errorln("Well, that didn't go well.")
 		return exitError
 	}
 

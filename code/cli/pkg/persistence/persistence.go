@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -49,7 +50,11 @@ func UpsertCartridge(c Cartridge) error {
 	if err != nil {
 		return err
 	}
-	db.Create(&c)
+
+	gormdb := db.Create(&c)
+	if gormdb.Error != nil {
+		logrus.WithError(gormdb.Error).Errorf("There was a problem trying to upsert the cartridge %s.", gormdb.Error)
+	}
 
 	return nil
 

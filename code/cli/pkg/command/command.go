@@ -48,10 +48,6 @@ func ConfigureCmd(cmd *cobra.Command) error {
 		}
 	}
 
-	// When we bind flags to environment variables expect that the environment variables are prefixed, e.g. a flag like
-	// --number binds to an environment variable MLRB_NUMBER. This helps avoid conflicts.
-	v.SetEnvPrefix(config.MlrbEnvironmentVariablePrefix)
-
 	// Bind to environment variables. Works great for simple config names, but needs help for names like --favorite-color
 	// which we fix in the bindFlags function
 	v.AutomaticEnv()
@@ -65,6 +61,11 @@ func releaseTheViper() *viper.Viper {
 	v.AddConfigPath(".")
 	v.SetConfigName(config.MlrbConfigFileName)
 	v.SetConfigType(config.MlrbConfigFileType)
+
+	// When we bind flags to environment variables expect that the environment variables are prefixed, e.g. a flag like
+	// --number binds to an environment variable MLRB_NUMBER. This helps avoid conflicts.
+	v.SetEnvPrefix(config.MlrbEnvironmentVariablePrefix)
+
 	return v
 }
 
