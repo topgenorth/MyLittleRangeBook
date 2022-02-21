@@ -4,7 +4,11 @@ This is the course code for the CLI stuff.
 
 ## Requirements
 
-Go v1.17
+Go v1.17. Using SQLite with Go requires CGo, which requires GCC. To install GCC on Windows 10, the simplest thing is to use Chocolately: 
+
+```bash
+choco install mingw
+```
 
 ## Building the app
 

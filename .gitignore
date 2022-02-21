@@ -10,3 +10,6 @@
 /bin/mlrb.exe
 /code/cli/output
 /bin
+/data/mlrb.db3
+/data/mlrb
+/data/mlrb.toml

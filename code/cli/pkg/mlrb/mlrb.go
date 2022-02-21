@@ -3,8 +3,6 @@ package mlrb
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"io"
-	"log"
 	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/device"
@@ -12,7 +10,7 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series/jsonwriter"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series/summarywriter"
-	"sort"
+	"opgenorth.net/mylittlerangebook/pkg/persistence"
 )
 
 type MyLittleRangeBook struct {
@@ -29,22 +27,14 @@ func New(cfg *config.Config) *MyLittleRangeBook {
 }
 
 // ListCartridges will do a simple dump of the cartridges on record to STDOUT.
-func (a *MyLittleRangeBook) ListCartridges() {
-
-	cartridges, err := cloud.FetchAllCartridges()
-	if err != nil {
-		logrus.Error("Problem retrieving a list of cartridges. ", err)
+func (a *MyLittleRangeBook) ListCartridges() ([]persistence.Cartridge, error) {
+	//cartridges, err := cloud.FetchAllCartridges()
+	c := persistence.Cartridges()
+	cartridges := c.GetAll()
+	if c.RecentErr != nil {
+		return nil, c.RecentErr
 	}
-	sort.Slice(cartridges[:], func(i, j int) bool {
-		return cartridges[i].Name < cartridges[j].Name
-	})
-
-	for _, c := range cartridges {
-		_, err := io.WriteString(a.Config.Out, c.String())
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+	return cartridges, nil
 }
 
 // Device will return a new device.Device struct using the provided LBR directory.
@@ -140,6 +130,27 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 		return nil, err
 	}
 	return c, nil
+}
+
+func (a *MyLittleRangeBook) DeleteCartridge(cartridgeId uint) error {
+	cartridges := persistence.Cartridges()
+	cartridges.DeleteById(cartridgeId)
+	if cartridges.RecentErr != nil {
+		return cartridges.RecentErr
+	}
+	return nil
+}
+func (a *MyLittleRangeBook) SaveCartridgeToSqlLite(name string, size string, bore float64, cartridgeId uint) error {
+	cartridges := persistence.Cartridges()
+	c := cartridges.New(name, size, bore)
+	if cartridgeId > 0 {
+		c.ID = cartridgeId
+	}
+	cartridges.Save(c)
+	if cartridges.RecentErr != nil {
+		return cartridges.RecentErr
+	}
+	return nil
 }
 
 func configureLogging(a *MyLittleRangeBook) {
