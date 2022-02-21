@@ -1,35 +1,65 @@
 package persistence
 
-type Cartridges struct {
+import "gorm.io/gorm"
+
+type CartridgesGORM struct {
+	db        *gorm.DB
+	RecentErr error
 }
 
-func (c Cartridges) New(name string, size string, bore float64) Cartridge {
+func Cartridges() *CartridgesGORM {
+	gormDb, err := getDb()
+
+	if err != nil {
+		return &CartridgesGORM{
+			db:        nil,
+			RecentErr: err,
+		}
+	}
+	return &CartridgesGORM{
+		db:        gormDb,
+		RecentErr: nil,
+	}
+}
+
+func (c CartridgesGORM) New(name string, size string, bore float64) Cartridge {
 	return Cartridge{
 		Name:         name,
 		Size:         size,
 		BoreDiameter: bore,
 	}
 }
-func (c Cartridges) Save(cartridge Cartridge) error {
-	db, err := getDb()
-	if err != nil {
-		return err
+func (c CartridgesGORM) Save(cartridge Cartridge) {
+
+	var tx *gorm.DB
+	if cartridge.ID < 1 {
+		tx = c.db.Create(&cartridge)
+	} else {
+		tx = c.db.Save(&cartridge)
 	}
 
-	dbc := db.Create(&cartridge)
-	return handleSqlite3Error(dbc.Error)
+	if tx.Error != nil {
+		c.RecentErr = handleSqlite3Error(c.RecentErr)
+	} else {
+		c.RecentErr = nil
+	}
+
 }
-func (c Cartridges) GetAll() ([]Cartridge, error) {
-	db, err := getDb()
 
-	if err != nil {
-		return nil, err
-	}
+// GetAll will return an array of persistence.Cartridge that is sorted by the bore diameter.
+func (c CartridgesGORM) GetAll() []Cartridge {
 
 	var cartridges []Cartridge
-	if result := db.Order("bore_diameter asc").Find(&cartridges); result.Error != nil {
-		return nil, result.Error
+	if result := c.db.Order("bore_diameter asc").Find(&cartridges); result.Error != nil {
+		c.RecentErr = result.Error
+		return nil
 	}
 
-	return cartridges, nil
+	return cartridges
+}
+
+func (c CartridgesGORM) Delete(cartridge *Cartridge) {
+	if result := c.db.Delete(cartridge); result.Error != nil {
+		c.RecentErr = result.Error
+	}
 }

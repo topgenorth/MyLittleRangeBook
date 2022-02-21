@@ -12,6 +12,6 @@ type Cartridge struct {
 	Size         string  `gorm:"index:idx_cartridges__size,not null"`
 }
 
-func (t Cartridge) String() string {
-	return fmt.Sprintf("%s (%s)", t.Name, t.Size)
+func (c Cartridge) String() string {
+	return fmt.Sprintf("%s (%s)", c.Name, c.Size)
 }

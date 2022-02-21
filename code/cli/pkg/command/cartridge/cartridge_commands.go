@@ -18,7 +18,7 @@ func NewCartridgeCommand(cfg *config.Config) *cobra.Command {
 	}
 
 	c.AddCommand(buildListCartridgesCmd(cfg))
-	c.AddCommand(buildAddCartridgeCommand(cfg))
+	c.AddCommand(buildSaveCartridgeCmd(cfg))
 
 	return c
 }
@@ -35,22 +35,24 @@ func buildListCartridgesCmd(cfg *config.Config) *cobra.Command {
 	return c
 }
 
-func buildAddCartridgeCommand(cfg *config.Config) *cobra.Command {
+func buildSaveCartridgeCmd(cfg *config.Config) *cobra.Command {
 	var (
-		name string
-		size string
-		bore float64
+		name        string
+		size        string
+		bore        float64
+		cartridgeId uint
 	)
 	c := &cobra.Command{
-		Use:   "add",
-		Short: "Add a new cartridge to the list.",
+		Use:   "save",
+		Short: "Create or update a cartridge with the command line parameters.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return saveCartridge(cfg, name, size, bore)
+			return saveCartridge(cfg, name, size, bore, cartridgeId)
 		},
 	}
 	c.Flags().StringVarP(&name, "name", "", "", "A unique name for the cartridge.")
 	c.Flags().StringVarP(&size, "size", "", "", "The size of the cartridge (7.62x39mm).")
 	c.Flags().Float64VarP(&bore, "bore", "", 0.0, "The bore diameter, in inches.")
+	c.Flags().UintVarP(&cartridgeId, "id", "", 0, "The id of the cartridge to update. Must be provide if you want to update an existing cartridge.")
 	command.SetMandatoryFlags(c, "name", "size", "bore")
 
 	return c
@@ -82,11 +84,11 @@ func listCartridges(cfg *config.Config) error {
 	return nil
 }
 
-func saveCartridge(cfg *config.Config, name string, size string, bore float64) error {
+func saveCartridge(cfg *config.Config, name string, size string, bore float64, cartridgeId uint) error {
 
 	a, err := getApp(cfg)
 
-	if err = a.SaveCartridgeToSqlLite(name, size, bore); err != nil {
+	if err = a.SaveCartridgeToSqlLite(name, size, bore, cartridgeId); err != nil {
 		return err
 	}
 

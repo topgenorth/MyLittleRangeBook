@@ -29,15 +29,11 @@ func New(cfg *config.Config) *MyLittleRangeBook {
 // ListCartridges will do a simple dump of the cartridges on record to STDOUT.
 func (a *MyLittleRangeBook) ListCartridges() ([]persistence.Cartridge, error) {
 	//cartridges, err := cloud.FetchAllCartridges()
-	c := persistence.Cartridges{}
-	cartridges, err := c.GetAll()
-	if err != nil {
-		return nil, err
+	c := persistence.Cartridges()
+	cartridges := c.GetAll()
+	if c.RecentErr != nil {
+		return nil, c.RecentErr
 	}
-	//sort.Slice(cartridges[:], func(i, j int) bool {
-	//	return cartridges[i].Name < cartridges[j].Name
-	//})
-
 	return cartridges, nil
 }
 
@@ -136,13 +132,15 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 	return c, nil
 }
 
-func (a *MyLittleRangeBook) SaveCartridgeToSqlLite(name string, size string, bore float64) error {
-	c := persistence.Cartridges{}
-
-	newC := c.New(name, size, bore)
-	err := c.Save(newC)
-	if err != nil {
-		return err
+func (a *MyLittleRangeBook) SaveCartridgeToSqlLite(name string, size string, bore float64, cartridgeId uint) error {
+	cartridges := persistence.Cartridges()
+	c := cartridges.New(name, size, bore)
+	if cartridgeId > 0 {
+		c.ID = cartridgeId
+	}
+	cartridges.Save(c)
+	if cartridges.RecentErr != nil {
+		return cartridges.RecentErr
 	}
 	return nil
 }
