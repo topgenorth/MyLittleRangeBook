@@ -27,6 +27,7 @@ func handleSqlite3Error(err error) error {
 			return nil
 		}
 	default:
+		logrus.WithError(sqliteError).Debug("Unexpected error.")
 		return sqliteError
 	}
 

@@ -132,6 +132,14 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 	return c, nil
 }
 
+func (a *MyLittleRangeBook) DeleteCartridge(cartridgeId uint) error {
+	cartridges := persistence.Cartridges()
+	cartridges.DeleteById(cartridgeId)
+	if cartridges.RecentErr != nil {
+		return cartridges.RecentErr
+	}
+	return nil
+}
 func (a *MyLittleRangeBook) SaveCartridgeToSqlLite(name string, size string, bore float64, cartridgeId uint) error {
 	cartridges := persistence.Cartridges()
 	c := cartridges.New(name, size, bore)

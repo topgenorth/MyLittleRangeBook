@@ -19,6 +19,7 @@ func NewCartridgeCommand(cfg *config.Config) *cobra.Command {
 
 	c.AddCommand(buildListCartridgesCmd(cfg))
 	c.AddCommand(buildSaveCartridgeCmd(cfg))
+	c.AddCommand(buildDeleteCartridgeCmd(cfg))
 
 	return c
 }
@@ -58,6 +59,23 @@ func buildSaveCartridgeCmd(cfg *config.Config) *cobra.Command {
 	return c
 }
 
+func buildDeleteCartridgeCmd(cfg *config.Config) *cobra.Command {
+	var (
+		cartridgeId uint
+	)
+	c := &cobra.Command{
+		Use:   "delete",
+		Short: "Delete the cartridge.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return deleteCartridge(cfg, cartridgeId)
+		},
+	}
+	c.Flags().UintVarP(&cartridgeId, "id", "", 0, "The id of the cartridge to update. Must be provide if you want to update an existing cartridge.")
+	command.SetMandatoryFlags(c, "id")
+
+	return c
+}
+
 func getApp(cfg *config.Config) (*mlrb.MyLittleRangeBook, error) {
 	err := persistence.Bootstrap()
 	if err != nil {
@@ -84,6 +102,17 @@ func listCartridges(cfg *config.Config) error {
 	return nil
 }
 
+func deleteCartridge(cfg *config.Config, cartridgeId uint) error {
+
+	a, err := getApp(cfg)
+
+	if err = a.DeleteCartridge(cartridgeId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func saveCartridge(cfg *config.Config, name string, size string, bore float64, cartridgeId uint) error {
 
 	a, err := getApp(cfg)
@@ -92,6 +121,5 @@ func saveCartridge(cfg *config.Config, name string, size string, bore float64, c
 		return err
 	}
 
-	//logrus.Tracef("Saved %s, %s to the Sqlite.", name, size)
 	return nil
 }

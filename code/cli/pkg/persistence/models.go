@@ -58,6 +58,10 @@ func (c CartridgesGORM) GetAll() []Cartridge {
 	return cartridges
 }
 
+func (c CartridgesGORM) DeleteById(id uint) {
+	tx := c.db.Delete(&Cartridge{}, id)
+	c.RecentErr = handleSqlite3Error(tx.Error)
+}
 func (c CartridgesGORM) Delete(cartridge *Cartridge) {
 	if result := c.db.Delete(cartridge); result.Error != nil {
 		c.RecentErr = result.Error
