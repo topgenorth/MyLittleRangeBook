@@ -3,7 +3,6 @@ package persistence
 import (
 	"fmt"
 	"github.com/mattn/go-sqlite3"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -54,18 +53,29 @@ func UpsertCartridge(c Cartridge) error {
 	}
 
 	dbc := db.Create(&c)
-	if dbc.Error != nil {
-		if errors.Is(dbc.Error, sqlite3.Error) {
+	return handleSqlite3Error(dbc.Error)
+}
 
-			// Code = 19 | ExtendedCode = 2067 | err = UNIQUE constraint failed: cartridges.name
-			logrus.WithError(dbc.Error).Warnf("This cartridge name already exists %s", c.Name)
-		} else {
-			logrus.WithError(dbc.Error).Errorf("There was a problem trying to upsert the cartridge %s.", dbc.Error)
-		}
+func handleSqlite3Error(err error) error {
+	if err == nil {
+		return nil
 	}
 
-	return nil
+	sqliteError, ok := err.(sqlite3.Error)
+	if !ok {
+		return err
+	}
+	switch sqliteError.Code {
+	case sqlite3.ErrConstraint:
+		if sqliteError.ExtendedCode == 2067 {
+			logrus.WithError(sqliteError).Debug("Cartridge exists.")
+			return nil
+		}
+	default:
+		return sqliteError
+	}
 
+	return err
 }
 
 func getDb() (*gorm.DB, error) {
