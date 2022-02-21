@@ -1,7 +1,7 @@
 package cartridge
 
 import (
-	"github.com/sirupsen/logrus"
+	"fmt"
 	"github.com/spf13/cobra"
 	"io"
 	"log"
@@ -17,7 +17,7 @@ func NewCartridgeCommand(cfg *config.Config) *cobra.Command {
 		Short: "All the command for dealing with cartridges via the command line.",
 	}
 
-	//c.AddCommand(buildListCartridgesCmd(a))
+	c.AddCommand(buildListCartridgesCmd(cfg))
 	c.AddCommand(buildAddCartridgeCommand(cfg))
 
 	return c
@@ -73,7 +73,7 @@ func listCartridges(cfg *config.Config) error {
 
 	cartridges, err := a.ListCartridges()
 	for _, c := range cartridges {
-		_, err := io.WriteString(a.Config.Out, c.String())
+		_, err := io.WriteString(a.Config.Out, fmt.Sprintf("%04d - %s\n", c.ID, c.String()))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -90,6 +90,6 @@ func saveCartridge(cfg *config.Config, name string, size string, bore float64) e
 		return err
 	}
 
-	logrus.Tracef("Saved %s, %s to the Sqlite.", name, size)
+	//logrus.Tracef("Saved %s, %s to the Sqlite.", name, size)
 	return nil
 }

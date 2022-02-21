@@ -11,7 +11,6 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series/jsonwriter"
 	"opgenorth.net/mylittlerangebook/pkg/labradar/series/summarywriter"
 	"opgenorth.net/mylittlerangebook/pkg/persistence"
-	"sort"
 )
 
 type MyLittleRangeBook struct {
@@ -30,13 +29,14 @@ func New(cfg *config.Config) *MyLittleRangeBook {
 // ListCartridges will do a simple dump of the cartridges on record to STDOUT.
 func (a *MyLittleRangeBook) ListCartridges() ([]persistence.Cartridge, error) {
 	//cartridges, err := cloud.FetchAllCartridges()
-	cartridges, err := persistence.GetCartridges()
+	c := persistence.Cartridges{}
+	cartridges, err := c.GetAll()
 	if err != nil {
-		logrus.Error("Problem retrieving a list of cartridges. ", err)
+		return nil, err
 	}
-	sort.Slice(cartridges[:], func(i, j int) bool {
-		return cartridges[i].Name < cartridges[j].Name
-	})
+	//sort.Slice(cartridges[:], func(i, j int) bool {
+	//	return cartridges[i].Name < cartridges[j].Name
+	//})
 
 	return cartridges, nil
 }
@@ -137,8 +137,10 @@ func (a *MyLittleRangeBook) SubmitCartridge(name string, size string) (*cloud.Ca
 }
 
 func (a *MyLittleRangeBook) SaveCartridgeToSqlLite(name string, size string, bore float64) error {
-	c := persistence.NewCartridge(name, size, bore)
-	err := persistence.UpsertCartridge(c)
+	c := persistence.Cartridges{}
+
+	newC := c.New(name, size, bore)
+	err := c.Save(newC)
 	if err != nil {
 		return err
 	}
