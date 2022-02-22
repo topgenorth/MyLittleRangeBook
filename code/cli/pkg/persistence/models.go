@@ -1,6 +1,10 @@
 package persistence
 
-import "gorm.io/gorm"
+import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+	"time"
+)
 
 type CartridgesGORM struct {
 	db        *gorm.DB
@@ -66,4 +70,18 @@ func (c CartridgesGORM) Delete(cartridge *Cartridge) {
 	if result := c.db.Delete(cartridge); result.Error != nil {
 		c.RecentErr = result.Error
 	}
+}
+
+type SeriesGORM struct {
+	db        *gorm.DB
+	RecentErr error
+}
+
+func (s SeriesGORM) New() *Series {
+	series := &Series{
+		Date: time.Now(),
+		UUID: uuid.New(),
+	}
+
+	return series
 }
