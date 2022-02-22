@@ -6,13 +6,28 @@ package main
 import (
 	"fmt"
 	"github.com/magefile/mage/mg"
+	"github.com/magefile/mage/sh"
 	"github.com/sirupsen/logrus"
 	"opgenorth.net/mylittlerangebook/build"
 	"opgenorth.net/mylittlerangebook/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 )
+
+// allow user to override go executable by running as GOEXE=xxx make ... on unix-like systems
+var goexe = "go"
+
+func init() {
+	if exe := os.Getenv("GOEXE"); exe != "" {
+		goexe = exe
+	}
+
+	// We want to use Go 1.11 modules even if the source lives inside GOPATH.
+	// The default is "auto".
+	os.Setenv("GO111MODULE", "on")
+}
 
 // A build step that requires additional params, or platform specific steps for example
 func Build() error {
@@ -88,4 +103,69 @@ func Clean() {
 			fmt.Printf("    ! there was a problem deleting %s: %s", f, err)
 		}
 	}
+}
+
+// Run tests
+func Test() error {
+	env := map[string]string{"GOFLAGS": testGoFlags()}
+	return runCmd(env, goexe, "test", "./...", buildFlags())
+}
+
+// based on https://github.com/watson/ci-info/blob/HEAD/index.js
+func isCI() bool {
+	return os.Getenv("CI") != "" || // GitHub Actions, Travis CI, CircleCI, Cirrus CI, GitLab CI, AppVeyor, CodeShip, dsari
+		os.Getenv("BUILD_NUMBER") != "" || // Jenkins, TeamCity
+		os.Getenv("RUN_ID") != "" // TaskCluster, dsari
+}
+
+func testGoFlags() string {
+	if isCI() {
+		return ""
+	}
+
+	return "-test.short"
+}
+
+func buildFlags() []string {
+	if runtime.GOOS == "windows" {
+		return []string{"-buildmode", "exe"}
+	}
+	return nil
+}
+
+func runCmd(env map[string]string, cmd string, args ...interface{}) error {
+	if mg.Verbose() {
+		return runWith(env, cmd, args...)
+	}
+	output, err := sh.OutputWith(env, cmd, argsToStrings(args...)...)
+	if err != nil {
+		fmt.Fprint(os.Stderr, output)
+	}
+
+	return err
+}
+
+func runWith(env map[string]string, cmd string, inArgs ...interface{}) error {
+	s := argsToStrings(inArgs...)
+	return sh.RunWith(env, cmd, s...)
+}
+
+func argsToStrings(v ...interface{}) []string {
+	var args []string
+	for _, arg := range v {
+		switch v := arg.(type) {
+		case string:
+			if v != "" {
+				args = append(args, v)
+			}
+		case []string:
+			if v != nil {
+				args = append(args, v...)
+			}
+		default:
+			panic("invalid type")
+		}
+	}
+
+	return args
 }

@@ -34,10 +34,3 @@ func runMyLittleRangeBook() exitCode {
 
 	return exitOK
 }
-
-// based on https://github.com/watson/ci-info/blob/HEAD/index.js
-func isCI() bool {
-	return os.Getenv("CI") != "" || // GitHub Actions, Travis CI, CircleCI, Cirrus CI, GitLab CI, AppVeyor, CodeShip, dsari
-		os.Getenv("BUILD_NUMBER") != "" || // Jenkins, TeamCity
-		os.Getenv("RUN_ID") != "" // TaskCluster, dsari
-}
