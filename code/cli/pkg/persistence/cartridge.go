@@ -1,10 +1,22 @@
 package persistence
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"time"
 )
+
+type Cartridge struct {
+	gorm.Model
+	BoreDiameter float64   `gorm:"index:idx_cartridges__borediameter,not null"`
+	Name         string    `gorm:"index:idx_cartridges__name,unique,not null"`
+	Size         string    `gorm:"index:idx_cartridges__size,not null"`
+	UUID         uuid.UUID `gorm:"index:idx_cartridges__uuid,unique,not null"`
+}
+
+func (c Cartridge) String() string {
+	return fmt.Sprintf("%s (%s)", c.Name, c.Size)
+}
 
 type CartridgesGORM struct {
 	db        *gorm.DB
@@ -31,6 +43,7 @@ func (c CartridgesGORM) New(name string, size string, bore float64) Cartridge {
 		Name:         name,
 		Size:         size,
 		BoreDiameter: bore,
+		UUID:         uuid.New(),
 	}
 }
 func (c CartridgesGORM) Save(cartridge Cartridge) {
@@ -70,18 +83,4 @@ func (c CartridgesGORM) Delete(cartridge *Cartridge) {
 	if result := c.db.Delete(cartridge); result.Error != nil {
 		c.RecentErr = result.Error
 	}
-}
-
-type SeriesGORM struct {
-	db        *gorm.DB
-	RecentErr error
-}
-
-func (s SeriesGORM) New() *Series {
-	series := &Series{
-		Date: time.Now(),
-		UUID: uuid.New(),
-	}
-
-	return series
 }

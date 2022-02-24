@@ -7,18 +7,6 @@ import (
 	"time"
 )
 
-type Cartridge struct {
-	gorm.Model
-	BoreDiameter float64   `gorm:"index:idx_cartridges__borediameter,not null"`
-	Name         string    `gorm:"index:idx_cartridges__name,unique,not null"`
-	Size         string    `gorm:"index:idx_cartridges__size,not null"`
-	UUID         uuid.UUID `gorm:"index:idx_cartridges__uuid,unique,not null"`
-}
-
-func (c Cartridge) String() string {
-	return fmt.Sprintf("%s (%s)", c.Name, c.Size)
-}
-
 type Series struct {
 	gorm.Model
 	Device        string    `gorm:"index:idx_series__device,not null,index:idx_series__devicename,unique,not null,priority:1"`
@@ -37,4 +25,18 @@ type Series struct {
 
 func (t Series) String() string {
 	return fmt.Sprintf("%s (%s)", t.Name, t.Device)
+}
+
+type SeriesGORM struct {
+	db        *gorm.DB
+	RecentErr error
+}
+
+func (s SeriesGORM) New() *Series {
+	series := &Series{
+		Date: time.Now(),
+		UUID: uuid.New(),
+	}
+
+	return series
 }
