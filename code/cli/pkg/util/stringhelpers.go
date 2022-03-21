@@ -1,6 +1,9 @@
 package util
 
 import (
+	"math"
+	"strconv"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -46,4 +49,36 @@ func IsNumericOnly(str string) bool {
 		}
 	}
 	return true
+}
+
+// PadLeft will take an integer and return a string of length characters.  It will pad left with zeros.
+func PadLeft(v int64, length int) string {
+	abs := math.Abs(float64(v))
+	var padding int
+	if v != 0 {
+		min := math.Pow10(length - 1)
+
+		if min-abs > 0 {
+			l := math.Log10(abs)
+			if l == float64(int64(l)) {
+				l++
+			}
+			padding = length - int(math.Ceil(l))
+		}
+	} else {
+		padding = length - 1
+	}
+	builder := strings.Builder{}
+	if v < 0 {
+		length = length + 1
+	}
+	builder.Grow(length * 4)
+	if v < 0 {
+		builder.WriteRune('-')
+	}
+	for i := 0; i < padding; i++ {
+		builder.WriteRune('0')
+	}
+	builder.WriteString(strconv.FormatInt(int64(abs), 10))
+	return builder.String()
 }

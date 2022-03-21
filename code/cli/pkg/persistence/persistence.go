@@ -16,7 +16,6 @@ var gormConfig *gorm.Config
 func init() {
 
 	gormConfig = &gorm.Config{}
-
 	err := Bootstrap()
 	if err != nil {
 		logrus.WithError(err).Panicf("Could not bootstrap the database %s.", DatabaseName)

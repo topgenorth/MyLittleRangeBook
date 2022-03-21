@@ -91,7 +91,7 @@ func listCartridges(cfg *config.Config) error {
 		return err
 	}
 
-	cartridges, err := a.ListCartridges()
+	cartridges, err := a.Listcartridges()
 	for _, c := range cartridges {
 		_, err := io.WriteString(a.Config.Out, fmt.Sprintf("%04d - %s\n", c.ID, c.String()))
 		if err != nil {

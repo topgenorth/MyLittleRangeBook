@@ -1,8 +1,8 @@
 package config
 
 import (
-	"opgenorth.net/mylittlerangebook/fs"
 	"opgenorth.net/mylittlerangebook/pkg/context"
+	"opgenorth.net/mylittlerangebook/pkg/fs"
 	"path/filepath"
 )
 

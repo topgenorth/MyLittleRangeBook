@@ -1,4 +1,4 @@
-package series
+package labradar
 
 import (
 	"fmt"

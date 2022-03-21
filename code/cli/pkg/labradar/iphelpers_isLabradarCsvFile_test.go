@@ -1,4 +1,4 @@
-package fs
+package labradar
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -12,17 +12,17 @@ var _ = Describe("isLabradarCsvFile", func() {
 
 		Context("Has correct prefix and extension", func() {
 			It("should pass.", func() {
-				Expect(isLabradarCsvFile("SR0001 Report.csv")).To(BeTrue())
+				Expect(IsLabradarCsvFile("SR0001 Report.csv")).To(BeTrue())
 			})
 		})
 		Context("Has invalid extension", func() {
 			It("should not pass", func() {
-				Expect(isLabradarCsvFile("/tmp/data/LBR/SR0001/SR0001 Report.txt")).To(BeFalse())
+				Expect(IsLabradarCsvFile("/tmp/data/LBR/SR0001/SR0001 Report.txt")).To(BeFalse())
 			})
 		})
 		Context("Does not start with SR", func() {
 			It("should not pass", func() {
-				Expect(isLabradarCsvFile("/tmp/data/LBR/SR0001/0001 Report.csv")).To(BeFalse())
+				Expect(IsLabradarCsvFile("/tmp/data/LBR/SR0001/0001 Report.csv")).To(BeFalse())
 			})
 		})
 	})
@@ -77,7 +77,7 @@ func Test_isLabradarCsvFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isLabradarCsvFile(tt.path); got != tt.want {
+			if got := IsLabradarCsvFile(tt.path); got != tt.want {
 				t.Errorf("isLabradarCsvFile() = %v, want %v", got, tt.want)
 			}
 		})

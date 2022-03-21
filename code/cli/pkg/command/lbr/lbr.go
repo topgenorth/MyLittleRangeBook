@@ -5,11 +5,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"opgenorth.net/mylittlerangebook/fs"
 	describeseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/describe"
 	listseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/list"
 	readseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/read"
 	"opgenorth.net/mylittlerangebook/pkg/config"
+	"opgenorth.net/mylittlerangebook/pkg/fs"
 	"os"
 	"path/filepath"
 )

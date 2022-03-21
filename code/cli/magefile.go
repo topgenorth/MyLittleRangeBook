@@ -9,7 +9,7 @@ import (
 	"github.com/magefile/mage/sh"
 	"github.com/sirupsen/logrus"
 	"opgenorth.net/mylittlerangebook/build"
-	"opgenorth.net/mylittlerangebook/fs"
+	"opgenorth.net/mylittlerangebook/pkg/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -29,6 +29,16 @@ func init() {
 	os.Setenv("GO111MODULE", "on")
 }
 
+// Manage your deps, or running package managers.
+func InstallDeps() error {
+	fmt.Println("This doesn't actually do anything right now.")
+	//b := buildArtifacts()
+
+	//cmd := exec.Command("go", "get", "github.com/stretchr/piglatin")
+	//return cmd.Run()
+	return nil
+}
+
 // A build step that requires additional params, or platform specific steps for example
 func Build() error {
 	b := buildArtifacts()
@@ -37,21 +47,6 @@ func Build() error {
 	fmt.Printf("Compiling %s...\n", b.CompiledApp)
 	cmd := exec.Command("go", "build", "-o", b.CompiledApp, b.MainGo)
 	return cmd.Run()
-}
-
-func buildArtifacts() build.Artifacts {
-	currentDir, err := fs.CurrentWd()
-	if err != nil {
-		logrus.WithError(err).Panicf("Problem figuring out our build environment.")
-	}
-	b := build.New(currentDir)
-	return b
-}
-
-func dataMlrbExe(b build.Artifacts) string {
-
-	dataExe := filepath.Join(b.CurrentDir, "..", "..", "data", b.ExecutableName)
-	return dataExe
 }
 
 // A custom install step if you need your bin someplace other than go/bin
@@ -75,14 +70,12 @@ func Install() error {
 	return fs.CopyFile(b.CompiledApp, b.InstalledApp)
 }
 
-// Manage your deps, or running package managers.
-func InstallDeps() error {
-	fmt.Println("This doesn't actually do anything right now.")
-	//b := buildArtifacts()
+// SeedData will add some test data to the SQLite database.
 
-	//cmd := exec.Command("go", "get", "github.com/stretchr/piglatin")
-	//return cmd.Run()
-	return nil
+// Run tests
+func Test() error {
+	env := map[string]string{"GOFLAGS": testGoFlags()}
+	return runCmd(env, goexe, "test", "./...", buildFlags())
 }
 
 // Clean up after yourself
@@ -105,10 +98,19 @@ func Clean() {
 	}
 }
 
-// Run tests
-func Test() error {
-	env := map[string]string{"GOFLAGS": testGoFlags()}
-	return runCmd(env, goexe, "test", "./...", buildFlags())
+func buildArtifacts() build.Artifacts {
+	currentDir, err := fs.CurrentWd()
+	if err != nil {
+		logrus.WithError(err).Panicf("Problem figuring out our build environment.")
+	}
+	b := build.New(currentDir)
+	return b
+}
+
+func dataMlrbExe(b build.Artifacts) string {
+
+	dataExe := filepath.Join(b.CurrentDir, "..", "..", "data", b.ExecutableName)
+	return dataExe
 }
 
 // based on https://github.com/watson/ci-info/blob/HEAD/index.js

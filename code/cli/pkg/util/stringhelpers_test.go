@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func Test_trimLastChar(t *testing.T) {
+func Test_TrimLastChar(t *testing.T) {
 	type args struct {
 		s string
 	}
@@ -29,7 +29,7 @@ func Test_trimLastChar(t *testing.T) {
 	}
 }
 
-func Test_toTime(t *testing.T) {
+func Test_ToTime(t *testing.T) {
 	type args struct {
 		d string
 		t string
@@ -83,6 +83,36 @@ func TestIsNumericOnly(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsNumericOnly(tt.str); got != tt.isNumeric {
 				t.Errorf("IsNumericOnly() = %v, want %v", got, tt.isNumeric)
+			}
+		})
+	}
+}
+
+func TestPadLeft(t *testing.T) {
+	type args struct {
+		v      int64
+		length int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "Should return a string of 4 characters: 1",
+			args: args{1, 4},
+			want: "0001",
+		},
+		{
+			name: "Should return a string of 4 characters: 9999",
+			args: args{9999, 4},
+			want: "9999",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := PadLeft(tt.args.v, tt.args.length); got != tt.want {
+				t.Errorf("PadLeft() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -2,7 +2,7 @@ package readme
 
 import (
 	"bytes"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
+	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"text/template"
 )
 
@@ -12,7 +12,7 @@ type SeriesLineWriter struct {
 	OldFormat bool
 }
 
-func (w *SeriesLineWriter) Write(s series.LabradarSeries) error {
+func (w *SeriesLineWriter) Write(s labradar.Series) error {
 	var tmpl string
 	if w.OldFormat {
 		tmpl = tmplReadmeLineV1

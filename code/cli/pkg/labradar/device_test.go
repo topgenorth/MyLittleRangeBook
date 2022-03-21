@@ -1,6 +1,7 @@
-package device
+package labradar
 
 import (
+	"github.com/sirupsen/logrus"
 	"testing"
 )
 
@@ -86,7 +87,7 @@ func Test_looksLikeTheLabradarMarkerFile(t *testing.T) {
 
 func Test_UpdateDeviceForSeries(t *testing.T) {
 
-	t.Fail()
+	logrus.Panicf("Not working")
 
 	//d := &Device{
 	//	DeviceId:  "LBR-1234567",
@@ -101,7 +102,7 @@ func Test_UpdateDeviceForSeries(t *testing.T) {
 	//tests := []struct {
 	//	name string
 	//	args args
-	//	want series.LabradarSeriesMutatorFunc
+	//	want series.SeriesMutatorFn
 	//}{
 	//
 	//

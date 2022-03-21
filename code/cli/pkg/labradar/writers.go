@@ -6,23 +6,22 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/config"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"text/template"
 )
 
 // SeriesWriter is an interface to persisting a OldSeries to something a person might read (HTML, JSON, Markdown, etc).
 type SeriesWriter interface {
-	// Write is used to persist a series.LabradarSeries value to something that a person might read.
-	Write(s series.LabradarSeries) error
+	// Write is used to persist a series.Series value to something that a person might read.
+	Write(s Series) error
 }
 
-// JsonSeriesWriter will persist a given LabradarSeries to a JSON file.
+// JsonSeriesWriter will persist a given Series to a JSON file.
 type JsonSeriesWriter struct {
 	*config.Config
 	FileSystem *afero.Afero
 }
 
-func (w *JsonSeriesWriter) Write(s series.LabradarSeries) error {
+func (w *JsonSeriesWriter) Write(s Series) error {
 
 	logrus.Warn("Not implemented.")
 	//dir, err := w.GetHomeDir()
@@ -51,7 +50,7 @@ type ReadMeSeriesWriter struct {
 	OldFormat bool
 }
 
-func (w *ReadMeSeriesWriter) Write(s series.LabradarSeries) error {
+func (w *ReadMeSeriesWriter) Write(s Series) error {
 	var tmpl string
 	if w.OldFormat {
 		tmpl = TMPL_README_LINE_OLD_FORMAT
@@ -61,7 +60,7 @@ func (w *ReadMeSeriesWriter) Write(s series.LabradarSeries) error {
 
 	t, err := template.New("ToStringSerialWriter").Parse(tmpl)
 	if err != nil {
-		return series.Error{
+		return Error{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error creating text.template: %v", err),
 		}
@@ -70,7 +69,7 @@ func (w *ReadMeSeriesWriter) Write(s series.LabradarSeries) error {
 	var line bytes.Buffer
 	err = t.Execute(&line, s)
 	if err != nil {
-		return series.Error{
+		return Error{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("Error writing template: %v", err),
 		}

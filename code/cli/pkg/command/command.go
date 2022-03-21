@@ -43,7 +43,7 @@ func ConfigureCmd(cmd *cobra.Command) error {
 	// if we cannot parse the config file.
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			// It's okay if there isn't a config file. Otherwise we returnthe error.
+			// It's okay if there isn't a config file. Otherwise we return the error.
 			return err
 		}
 	}

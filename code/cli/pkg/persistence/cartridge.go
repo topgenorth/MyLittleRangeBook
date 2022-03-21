@@ -38,7 +38,7 @@ func Cartridges() *CartridgesGORM {
 	}
 }
 
-func (c CartridgesGORM) New(name string, size string, bore float64) Cartridge {
+func (c CartridgesGORM) NewCartridge(name string, size string, bore float64) Cartridge {
 	return Cartridge{
 		Name:         name,
 		Size:         size,
@@ -46,7 +46,7 @@ func (c CartridgesGORM) New(name string, size string, bore float64) Cartridge {
 		UUID:         uuid.New(),
 	}
 }
-func (c CartridgesGORM) Save(cartridge Cartridge) {
+func (c CartridgesGORM) SaveCartridge(cartridge Cartridge) {
 
 	var tx *gorm.DB
 	if cartridge.ID < 1 {

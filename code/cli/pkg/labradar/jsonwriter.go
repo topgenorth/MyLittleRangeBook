@@ -1,21 +1,13 @@
-package jsonwriter
+package labradar
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/afero"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"path/filepath"
 )
 
-// JsonFileNameProvider is a function that will return the name of the JSON file for a series.
-type JsonFileNameProvider = func() string
-type JsonWriter struct {
-	afs      afero.Fs
-	filename JsonFileNameProvider
-}
-
-func New(aferoFs afero.Fs, nameProvider JsonFileNameProvider) JsonWriter {
+func NewJsonWriter(aferoFs afero.Fs, nameProvider JsonFileNameProvider) JsonWriter {
 	return JsonWriter{
 		afs:      aferoFs,
 		filename: nameProvider,
@@ -32,7 +24,7 @@ func DefaultJsonFileProvider(dir string, seriesNumber int) JsonFileNameProvider 
 
 }
 
-func (w *JsonWriter) Write(s series.LabradarSeries) error {
+func (w *JsonWriter) Write(s Series) error {
 	bytes, err := json.MarshalIndent(s, "", "    ")
 	if err != nil {
 		return err

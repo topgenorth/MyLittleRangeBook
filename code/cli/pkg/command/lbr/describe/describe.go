@@ -1,13 +1,14 @@
 package describe
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/config"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/readme"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
+	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
+	"opgenorth.net/mylittlerangebook/pkg/readme"
 	"path/filepath"
 )
 
@@ -57,32 +58,34 @@ func NewDescribeSeriesCmd(cfg *config.Config, lbrDir func() string) *cobra.Comma
 }
 
 func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
-	a := mlrb.New(cfg)
 
-	// TODO [TO20220123] How do we reconcile difference between an existing JSON file and the CSV file?
-
-	s, err := a.ReadLabradarSeries(opts.labradarDir(), opts.seriesNumber)
-	if err != nil {
-		return err
-	}
-	opts.updateSeries(s)
-
-	if err := a.SaveLabradarSeriesToJson(opts.labradarDir(), s); err != nil {
-		return err
-	}
-
-	if err := a.DisplaySeries(*s, true); err != nil {
-		return err
-	}
-
-	if err := updateReadme(a, s, opts); err != nil {
-		return err
-	}
-
-	return nil
+	return fmt.Errorf("Not implemented.")
+	//a := mlrb.New(cfg)
+	//
+	//// TODO [TO20220123] How do we reconcile difference between an existing JSON file and the CSV file?
+	//
+	//s, err := a.ReadLabradarSeries(opts.labradarDir(), opts.seriesNumber)
+	//if err != nil {
+	//	return err
+	//}
+	//opts.updateSeries(s)
+	//
+	//if err := a.SaveLabradarSeriesToJson(opts.labradarDir(), s); err != nil {
+	//	return err
+	//}
+	//
+	//if err := a.DisplaySeries(*s, true); err != nil {
+	//	return err
+	//}
+	//
+	//if err := updateReadme(a, s, opts); err != nil {
+	//	return err
+	//}
+	//
+	//return nil
 }
 
-func updateReadme(a *mlrb.MyLittleRangeBook, series *series.LabradarSeries, opts describeSeriesOptions) error {
+func updateReadme(a *mlrb.MyLittleRangeBook, series *labradar.Series, opts describeSeriesOptions) error {
 
 	// TODO [TO20220123] How do we reconcile difference between an existing JSON file and the CSV file?
 
@@ -103,7 +106,7 @@ func updateReadme(a *mlrb.MyLittleRangeBook, series *series.LabradarSeries, opts
 	return nil
 }
 
-// describeSeriesOptions holds the values that are necessary to describe a given series.LabradarSeries.
+// describeSeriesOptions holds the values that are necessary to describe a given series.Series.
 type describeSeriesOptions struct {
 	seriesNumber int
 	labradarDir  func() string
@@ -116,39 +119,39 @@ type describeSeriesOptions struct {
 	powder     string
 }
 
-func (opts *describeSeriesOptions) updateSeries(s *series.LabradarSeries) {
+func (opts *describeSeriesOptions) updateSeries(s *labradar.Series) {
 
-	mutators := make([]series.LabradarSeriesMutatorFunc, 0)
+	mutators := make([]labradar.SeriesMutatorFn, 0)
 
 	if len(opts.cartridge) > 0 {
-		mutators = append(mutators, series.WithCartridge(opts.cartridge))
+		mutators = append(mutators, labradar.WithCartridge(opts.cartridge))
 	}
 
 	if len(opts.projectile) > 0 {
 		p := parseProjectileString(opts.projectile)
-		mutators = append(mutators, series.WithProjecticle(p.Name, p.Weight))
+		mutators = append(mutators, labradar.WithProjecticle(p.Name, p.Weight))
 	}
 
 	if len(opts.cartridge) > 0 {
-		mutators = append(mutators, series.WithCartridge(opts.cartridge))
+		mutators = append(mutators, labradar.WithCartridge(opts.cartridge))
 	}
 
 	if opts.cbto > 0 {
-		f := func(s *series.LabradarSeries) { s.LoadData.CBTO = opts.cbto }
+		f := func(s *labradar.Series) { s.LoadData.CBTO = opts.cbto }
 		mutators = append(mutators, f)
 	}
 
 	if len(opts.firearm) > 0 {
-		mutators = append(mutators, series.WithFirearm(opts.firearm))
+		mutators = append(mutators, labradar.WithFirearm(opts.firearm))
 	}
 
 	if len(opts.notes) > 0 {
-		mutators = append(mutators, series.WithNotes(opts.notes))
+		mutators = append(mutators, labradar.WithNotes(opts.notes))
 	}
 
 	if len(opts.powder) > 0 {
 		pc := parsePowderString(opts.powder)
-		mutators = append(mutators, series.WithPowder(pc.Name, pc.Amount))
+		mutators = append(mutators, labradar.WithPowder(pc.Name, pc.Amount))
 	}
 
 	s.Update(mutators...)

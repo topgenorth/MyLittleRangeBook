@@ -1,10 +1,9 @@
-package summarywriter
+package labradar
 
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"io"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
 	"text/template"
 )
 
@@ -40,7 +39,7 @@ func parseTemplateType(t SeriesTemplateType) string {
 
 	return ""
 }
-func (w *SummaryWriter) Write(s series.LabradarSeries) error {
+func (w *SummaryWriter) Write(s Series) error {
 
 	if w.Template == JSON {
 		return fmt.Errorf("cannot write the series; unknown type %s", w.Template)
@@ -48,7 +47,7 @@ func (w *SummaryWriter) Write(s series.LabradarSeries) error {
 
 	t, err := template.New("SeriesSummary").Parse(parseTemplateType(w.Template))
 	if err != nil {
-		return series.Error{
+		return Error{
 			Number: s.Number,
 			Msg:    fmt.Sprintf("could not load the template %s", w.Template),
 		}
@@ -58,7 +57,7 @@ func (w *SummaryWriter) Write(s series.LabradarSeries) error {
 	if err != nil {
 		m := fmt.Sprintf("could not render the template %s", w.Template)
 		logrus.WithError(err).Errorf(m)
-		return series.Error{
+		return Error{
 			Number: s.Number,
 			Msg:    m,
 		}

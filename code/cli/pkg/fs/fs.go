@@ -3,6 +3,7 @@ package fs
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io"
 	"os"
@@ -72,13 +73,32 @@ func CurrentWd() (string, error) {
 
 }
 
+func FileExists(filename string) bool {
+	if _, err := os.Stat(filename); err == nil {
+		// path/to/whatever exists
+		return true
+	} else if errors.Is(err, os.ErrNotExist) {
+		// path/to/whatever does *not* exist
+		return false
+
+	} else {
+		// Schrodinger: file may or may not exist. See err for details.
+
+		// Therefore, do *NOT* use !os.IsNotExist(err) to test for file existence
+		logrus.Errorf("Assuming the file %s does not exist. %v", filename, err)
+		return false
+	}
+
+	return true
+}
+
 // CopyFile copies a file from src to dst. If src and dst files exist, and are
-// the same, then return success. Otherise, attempt to create a hard link
+// the same, then return success. Otherwise, attempt to create a hard link
 // between the two files. If that fail, copy the file contents from src to dst.
 func CopyFile(src, dst string) (err error) {
 	sfi, err := os.Stat(src)
 	if err != nil {
-		return
+		return err
 	}
 	if !sfi.Mode().IsRegular() {
 		// cannot copy non-regular files (e.g., directories,
