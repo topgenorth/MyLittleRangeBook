@@ -61,7 +61,7 @@ func (w *ReadMeSeriesWriter) Write(s Series) error {
 	t, err := template.New("ToStringSerialWriter").Parse(tmpl)
 	if err != nil {
 		return Error{
-			Number: s.Number,
+			Number: s.Number.Int(),
 			Msg:    fmt.Sprintf("Error creating text.template: %v", err),
 		}
 	}
@@ -70,7 +70,7 @@ func (w *ReadMeSeriesWriter) Write(s Series) error {
 	err = t.Execute(&line, s)
 	if err != nil {
 		return Error{
-			Number: s.Number,
+			Number: s.Number.Int(),
 			Msg:    fmt.Sprintf("Error writing template: %v", err),
 		}
 	}

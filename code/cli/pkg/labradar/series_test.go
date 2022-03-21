@@ -5,7 +5,7 @@ import "testing"
 func TestNumber_String(t *testing.T) {
 	tests := []struct {
 		name string
-		t    Number
+		t    SeriesNumber
 		want string
 	}{
 		{"Should return formatted name.", 55, "SR0055"},
@@ -20,7 +20,7 @@ func TestNumber_String(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.t.SeriesName(); got != tt.want {
+			if got := tt.t.String(); got != tt.want {
 				t.Errorf("SeriesName() = %v, want %v", got, tt.want)
 			}
 		})

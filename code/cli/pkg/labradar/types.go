@@ -57,7 +57,7 @@ type JsonWriter struct {
 
 type Error struct {
 	Msg    string
-	Number int
+	Number int64
 }
 
 func (s Error) Error() string {
@@ -82,4 +82,29 @@ type Device struct {
 	// Directory is the name of the folder that holds the Labradar files.
 	directory Directory
 	af        *afero.Afero
+}
+
+type DeviceId string
+
+func (t DeviceId) String() string {
+	return string(t)
+}
+
+func (t DeviceId) SerialNumber() string {
+	return t.String()[4:10]
+}
+
+func TryParseDeviceId(s string) (DeviceId, bool) {
+	const emptyDeviceID = DeviceId("LBR-0000000") // 11 characters
+
+	if len(s) != len(emptyDeviceID) {
+		return emptyDeviceID, false
+	}
+
+	if s[0:4] != "LBR-" {
+		return emptyDeviceID, false
+	}
+
+	return DeviceId(s), true
+
 }

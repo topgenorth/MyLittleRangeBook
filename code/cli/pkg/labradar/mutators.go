@@ -15,7 +15,7 @@ func UpdateDeviceForSeries(device *Device) SeriesMutatorFn {
 // WithSeriesNumber will initialize the number assigned by a specific Labradar device
 func WithSeriesNumber(n int) SeriesMutatorFn {
 	return func(s *Series) {
-		s.Number = n
+		s.Number = SeriesNumber(n)
 	}
 }
 

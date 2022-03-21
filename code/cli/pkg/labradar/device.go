@@ -50,16 +50,16 @@ func (d Device) String() string {
 	return d.deviceId
 }
 
-// SeriesNumber will retrieve the specified series from the Labradar Device.
-func (d Device) SeriesNumber(n Number) (*Series, error) {
+// Series will retrieve the specified series from the Labradar Device.
+func (d Device) Series(n SeriesNumber) (*Series, error) {
 
 	directory := d.Directory()
-	csvValues, err := updateSeriesFromCsvFile(int(n), directory.String(), d.af)
+	csvValues, err := updateSeriesFromCsvFile(n, directory.String(), d.af)
 
 	if err != nil {
 		e := Error{
 			Msg:    fmt.Sprintf("could not load the series %d from  device %s (%s): %v", n, d.DeviceId(), d.Directory(), err),
-			Number: int(n),
+			Number: n.Int(),
 		}
 		return nil, e
 	}
@@ -70,8 +70,8 @@ func (d Device) SeriesNumber(n Number) (*Series, error) {
 
 }
 
-func (d Device) hasReportCsv(dir string, number Number) (bool, error) {
-	fn := filepath.Join(dir, fmt.Sprintf("%s Report.csv", number.SeriesName()))
+func (d Device) hasReportCsv(n SeriesNumber) (bool, error) {
+	fn := filepath.Join(d.directory.String(), n.ReportCsv())
 	b, e := d.af.Exists(fn)
 	if e != nil {
 		return false, e
@@ -83,7 +83,7 @@ func (d Device) hasReportCsv(dir string, number Number) (bool, error) {
 	return true, nil
 }
 
-// getDeviceId will parse a file name and extract the name of the device, which looks like LBR-0013797.
+// getDeviceId will parse a file name and extract the ID of the device, which looks like LBR-0013797.
 func getDeviceId(filename string) string {
 	serialNumber, err := parseDeviceIdFromFilename(filename)
 	if err != nil {

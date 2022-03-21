@@ -84,3 +84,32 @@ func TestTryParseSeriesNumber(t *testing.T) {
 		})
 	}
 }
+
+func TestTryParseDeviceId(t *testing.T) {
+	const emptyDeviceID = DeviceId("LBR-0000000")
+
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  DeviceId
+		want1 bool
+	}{
+		{"Should not parse if less than 11 characters", args{"LBR-000000"}, emptyDeviceID, false},
+		{"Should not parse if greater than 11 characters", args{"LBR-00000000"}, emptyDeviceID, false},
+		{"Should not parse if does not start with LBR-", args{"ABC-0000000"}, emptyDeviceID, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := TryParseDeviceId(tt.args.s)
+			if got != tt.want {
+				t.Errorf("TryParseDeviceId() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("TryParseDeviceId() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}

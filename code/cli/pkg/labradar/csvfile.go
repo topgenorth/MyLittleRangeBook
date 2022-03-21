@@ -48,8 +48,8 @@ func loadCsv(filename string, fs *afero.Afero) *CsvFile {
 
 // updateSeriesFromCsvFile will return an array of mutators to update a series.Series with the contents of a
 // CSV file.
-func updateSeriesFromCsvFile(seriesNumber int, directory string, af *afero.Afero) ([]SeriesMutatorFn, error) {
-	filename := FilenameForSeries(directory, seriesNumber)
+func updateSeriesFromCsvFile(seriesNumber SeriesNumber, directory string, af *afero.Afero) ([]SeriesMutatorFn, error) {
+	filename := filepath.Join(directory, seriesNumber.String())
 	exists, err := af.Exists(filename)
 	if err != nil {
 		return make([]SeriesMutatorFn, 0), fmt.Errorf("could not load the file '%s': %w", filename, err)
@@ -90,7 +90,7 @@ func withDeviceIdFrom(file CsvFile) SeriesMutatorFn {
 // withSeriesNumberFrom will extract the device ID from the CSV file.
 func withSeriesNumberFrom(file CsvFile) SeriesMutatorFn {
 	return func(s *Series) {
-		s.Number = getIntValue(file, 3)
+		s.Number = SeriesNumber(getIntValue(file, 3))
 	}
 }
 
