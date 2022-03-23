@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"opgenorth.net/mylittlerangebook/pkg/fs"
 	"path/filepath"
 )
 
@@ -21,6 +20,9 @@ func (d *Directory) String() string {
 // SeriesNumbers will return a list of SeriesNumbers in the directory.
 func (d *Directory) SeriesNumbers(afs afero.Fs) []SeriesNumber {
 	result := make([]SeriesNumber, 0)
+	if *d == EmptyLabradarDirectory {
+		return result
+	}
 
 	inputDir := d.String()
 	// [TO20220115] Show a list of all the things in the inputDir.
@@ -37,9 +39,10 @@ func (d *Directory) SeriesNumbers(afs afero.Fs) []SeriesNumber {
 
 	for _, subdir := range subdirs {
 		s := subdir.Name()
-
 		d := filepath.Join(inputDir, s, fmt.Sprintf("%s Report.csv", s))
-		if fs.FileExists(d) {
+
+		exists, _ := afero.Exists(afs, d)
+		if exists {
 			sn, parsed := TryParseSeriesNumber(s)
 			if parsed {
 				result = append(result, sn)

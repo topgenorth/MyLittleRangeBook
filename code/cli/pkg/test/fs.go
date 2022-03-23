@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"opgenorth.net/mylittlerangebook/pkg/fs"
 	"path/filepath"
+	"runtime"
+	"strings"
 )
 
-const lbrDir = "LBR/"
+const LBRDirectory = "LBR/"
 const markerFile = "LBR0013797201909141617.LID"
-const testFiles = "../../data/LBR/"
+const testFileDirectory = "../../data/LBR/"
 
 var testFs = afero.NewMemMapFs()
 var appFs = afero.NewOsFs()
@@ -17,7 +20,7 @@ var appFs = afero.NewOsFs()
 // InitLabradarFilesystemForTest will create some Labradar test data
 func InitLabradarFilesystemForTest() afero.Fs {
 
-	err := testFs.Mkdir(lbrDir, 0644)
+	err := testFs.Mkdir(LBRDirectory, 0644)
 	if err != nil {
 		logrus.WithError(err).Error("Could not create the Labradar directory for the tests.")
 		return testFs
@@ -28,9 +31,10 @@ func InitLabradarFilesystemForTest() afero.Fs {
 	if err != nil {
 		logrus.WithError(err).Error("Could not create the LID marker file.")
 	}
-
-	_ = putLabradarSeriesIntoMemoryForTests()
-
+	err = putLabradarSeriesIntoMemoryForTests()
+	if err != nil {
+		logrus.WithError(err).Error("There was a problem setting up MemFs like a Labradar.")
+	}
 	return testFs
 }
 
@@ -53,14 +57,15 @@ func putLabradarSeriesIntoMemoryForTests() error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("There was a problem trying to setup the Labrader series for the test.")
+
+		return fmt.Errorf("There was a problem trying to setup the Labrader series for the test. %w", err)
 	}
 	return nil
 }
 
 func copySeriesFilesForTest(name string) error {
 	// [TO20220320] Copy each of the SRxxxx directories from the disk to the in memory filesystem.
-	err := testFs.Mkdir(filepath.Join(lbrDir, name), 0644)
+	err := testFs.Mkdir(filepath.Join(LBRDirectory, name), 0644)
 	if err != nil {
 		return err
 	}
@@ -80,34 +85,72 @@ func copySeriesFilesForTest(name string) error {
 }
 
 func copyReportCsvFile(srName string) error {
-	// [TO20220320] Copy the *Report.csv file
+	dataDir, err := getTestDataDir()
+	if err != nil {
+		return err
+	}
+
 	csvName := srName + " Report.csv"
-	csvInFilename := filepath.Join(testFiles, srName, csvName)
-	csvBytes, err := afero.ReadFile(appFs, csvInFilename)
+	srcFile := filepath.Join(dataDir, srName, csvName)
+	csvBytes, err := afero.ReadFile(appFs, srcFile)
+
 	if err != nil {
 		return err
 	}
-	csvOutFilename := filepath.Join(lbrDir, srName, csvName)
-	err = afero.WriteFile(testFs, csvOutFilename, csvBytes, 0644)
+	dstFile := filepath.Join(LBRDirectory, srName, csvName)
+	err = afero.WriteFile(testFs, dstFile, csvBytes, 0644)
 	if err != nil {
 		return err
 	}
+
+	logrus.Tracef("Copied the file %s to %s.", srcFile, dstFile)
 	return nil
 }
 
+func getTestDataDir() (string, error) {
+	// C:\Users\tom.opgenorth\code\MyLittleRangeBook\data\LBR\SR0001\SR0001.lbr
+	// C:\Users\tom.opgenorth\code\MyLittleRangeBook\code\cli\data\LBR\SR0001\SR0001.lbr
+	// C:Users\tom.opgenorth\code\MyLittleRangeBook\data\LBR\SR0001\SR0001.lbr
+	wd, err := fs.CurrentWd()
+	if err != nil {
+		return "", err
+	}
+
+	parts := strings.Split(wd, string(filepath.Separator))
+	if runtime.GOOS == "windows" {
+		// [TO20220323] A bit of a hack - if this is windows then we have to add the \ to the drive letter.
+		parts[0] = parts[0] + "\\"
+	}
+
+	for i := range parts {
+		if parts[i] == "MyLittleRangeBook" {
+			path := filepath.Join(parts[0 : i+1]...)
+			return filepath.Join(path, "data", "LBR"), nil
+		}
+	}
+
+	return "", fmt.Errorf("This does not seem to be a MyLittleRangeBook directory: %s.", wd)
+}
 func copyLbrFileForSeries(srName string) error {
-	// [TO20220320] Copy the LBR file first
+	dataDir, err := getTestDataDir()
+	if err != nil {
+		return err
+	}
 	lbrName := srName + ".lbr"
-	lbrInFilename := filepath.Join(testFiles, srName, lbrName)
-	inBytes, err := afero.ReadFile(appFs, lbrInFilename)
+	srcFile := filepath.Join(dataDir, srName, lbrName)
+
+	inBytes, err := afero.ReadFile(appFs, srcFile)
+	if err != nil {
+
+		return err
+	}
+	dstFile := filepath.Join(LBRDirectory, srName, LBRDirectory)
+	err = afero.WriteFile(testFs, dstFile, inBytes, 0644)
 	if err != nil {
 		return err
 	}
-	lbrOutFilename := filepath.Join(lbrDir, srName, lbrDir)
-	err = afero.WriteFile(testFs, lbrOutFilename, inBytes, 0644)
-	if err != nil {
-		return err
-	}
+
+	logrus.Tracef("Copied the file %s to %s.", srcFile, dstFile)
 
 	return nil
 }

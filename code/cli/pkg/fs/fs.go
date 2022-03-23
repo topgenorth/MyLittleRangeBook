@@ -65,9 +65,6 @@ func CurrentWd() (string, error) {
 	currentDir, err := os.Getwd()
 	if err != nil {
 		return "", err
-	} else {
-		fmt.Println("Current working directory: ", currentDir)
-		fmt.Println("")
 	}
 	return currentDir, nil
 

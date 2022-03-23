@@ -108,3 +108,5 @@ func TryParseDeviceId(s string) (DeviceId, bool) {
 	return DeviceId(s), true
 
 }
+
+const LBRDirectory = "LBR/"

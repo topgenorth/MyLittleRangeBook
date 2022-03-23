@@ -8,14 +8,15 @@ import (
 )
 
 func TestDirectory_SeriesNumbers(t *testing.T) {
-
-	testFs := test.InitLabradarFilesystemForTest()
-
-	emptyList := make([]SeriesNumber, 0)
-
+	const testFsDir = Directory(LBRDirectory)
 	type args struct {
 		afs afero.Fs
 	}
+
+	testFs := test.InitLabradarFilesystemForTest()
+	emptyList := make([]SeriesNumber, 0)
+	testFsArgs := args{afs: testFs}
+
 	tests := []struct {
 		name string
 		d    Directory
@@ -25,8 +26,14 @@ func TestDirectory_SeriesNumbers(t *testing.T) {
 		{
 			name: "Should return an empty list of SeriesNumbers for empty Directory.",
 			d:    EmptyLabradarDirectory,
-			args: args{afs: testFs},
+			args: testFsArgs,
 			want: emptyList,
+		},
+		{
+			name: "Should get list of SeriesNumbers.",
+			d:    testFsDir,
+			args: testFsArgs,
+			want: []SeriesNumber{SeriesNumber(1), SeriesNumber(2), SeriesNumber(3), SeriesNumber(4), SeriesNumber(5), SeriesNumber(6)},
 		},
 	}
 	for _, tt := range tests {
