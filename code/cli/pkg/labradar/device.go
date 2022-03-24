@@ -2,39 +2,31 @@ package labradar
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/util"
-	"os"
 	"path/filepath"
+	"strings"
 )
 
 // NewDevice will initialize a Device structure. The path parameter is the path to the LBR folder
 // of the Labradar device.
-func NewDevice(path string, af *afero.Afero, timezone string) (*Device, error) {
+func NewDevice(lbrDirectory Directory, fs afero.Fs) (*Device, error) {
 
-	lbrDirectory, err := TryParseDirectory(path, af)
-	if err != nil {
-		return nil, err
-	}
-
-	f, err := lbrDirectory.getLabradarMarkerFile(af)
+	f, err := lbrDirectory.getLabradarMarkerFile(fs)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Device{
 		deviceId:  getDeviceId(f.Name()),
-		timeZone:  timezone,
+		timeZone:  "America/Edmonton",
 		directory: lbrDirectory,
-		af:        af,
+		af:        &afero.Afero{Fs: fs},
 	}, nil
 }
 
-func init() {
-
-}
-
-func (d *Device) DeviceId() string {
+func (d *Device) DeviceId() DeviceId {
 	return d.deviceId
 }
 
@@ -47,12 +39,11 @@ func (d *Device) Directory() Directory {
 }
 
 func (d Device) String() string {
-	return d.deviceId
+	return d.deviceId.String()
 }
 
 // Series will retrieve the specified series from the Labradar Device.
 func (d Device) Series(n SeriesNumber) (*Series, error) {
-
 	directory := d.Directory()
 	csvValues, err := updateSeriesFromCsvFile(n, directory.String(), d.af)
 
@@ -64,7 +55,7 @@ func (d Device) Series(n SeriesNumber) (*Series, error) {
 		return nil, e
 	}
 
-	mutators := MergeMutators(LabradarSeriesDefaults(), csvValues)
+	mutators := combineMutators(LabradarSeriesDefaults(), csvValues)
 	s := NewSeries(mutators...)
 	return s, nil
 
@@ -84,12 +75,12 @@ func (d Device) hasReportCsv(n SeriesNumber) (bool, error) {
 }
 
 // getDeviceId will parse a file name and extract the ID of the device, which looks like LBR-0013797.
-func getDeviceId(filename string) string {
+func getDeviceId(filename string) DeviceId {
 	serialNumber, err := parseDeviceIdFromFilename(filename)
 	if err != nil {
 		return "LBR-0000000"
 	}
-	return fmt.Sprintf("%s-%s", filename[0:3], serialNumber)
+	return DeviceId(fmt.Sprintf("%s-%s", filename[0:3], serialNumber))
 }
 
 // parseDeviceIdFromFilename will pull out the device ID from a filename. An error will be thrown if the
@@ -118,13 +109,33 @@ func (d Directory) GetSerialNumber(af *afero.Afero) string {
 		return ""
 	}
 
-	return getDeviceId(fn)
+	return getDeviceId(fn).String()
 }
 
 // getLabradarMarkerFile will inspect all the files in the LbrDirectory and attempt to find an
 // *.LID file that all LBR data folders seem to have.
-func (d Directory) getLabradarMarkerFile(af *afero.Afero) (os.FileInfo, error) {
-	f, err := findTheLabradarMarkerFile(d.String(), af)
+func (d Directory) getLabradarMarkerFile(af afero.Fs) (afero.File, error) {
+
+	//pattern := filepath.Join(d.String(), "LBR*.LID")
+	pattern := "LBR*.LID"
+	glob, err := afero.Glob(af, pattern)
+	if err != nil {
+		return nil, err
+	}
+
+	if glob == nil || len(glob) == 0 {
+		return nil, fmt.Errorf("Could not find any *.LID files in %s", d.String())
+	}
+	if len(glob) != 1 {
+		logrus.Debugf("Found multiple LID files - grabbing the first one.")
+	}
+
+	lidFile := glob[0]
+	if !looksLikeTheLabradarMarkerFile(lidFile) {
+		return nil, fmt.Errorf("not a valid LID file %s", lidFile)
+	}
+
+	f, err := af.Open(lidFile)
 	if err != nil {
 		return nil, fmt.Errorf(" '%s' does not seem to be an LBR directory", d.String())
 	}
@@ -133,4 +144,26 @@ func (d Directory) getLabradarMarkerFile(af *afero.Afero) (os.FileInfo, error) {
 	}
 
 	return f, nil
+}
+
+// looksLikeTheLabradarMarkerFile will inspect a filename and try to infer if the file is the Labradar .LID file.
+// The file looks like  LBR0013797201909141617.LID that is a zero-byte file.
+func looksLikeTheLabradarMarkerFile(filename string) bool {
+
+	if !strings.HasPrefix(filename, "LBR") {
+		return false
+	}
+	if filepath.Ext(filename) != ".LID" {
+		return false
+	}
+
+	if len(filename) != 26 {
+		return false
+	}
+
+	_, err := parseDeviceIdFromFilename(filename)
+	if err != nil {
+		return false
+	}
+	return true
 }

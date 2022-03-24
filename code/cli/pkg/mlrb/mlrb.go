@@ -5,9 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"opgenorth.net/mylittlerangebook/pkg/cloud"
 	"opgenorth.net/mylittlerangebook/pkg/config"
-	"opgenorth.net/mylittlerangebook/pkg/fs"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
-	"opgenorth.net/mylittlerangebook/pkg/persistence"
 )
 
 func init() {
@@ -16,12 +14,6 @@ func init() {
 
 type MyLittleRangeBook struct {
 	*config.Config
-}
-
-func GetListOfLabradarFiles(d *labradar.Device) ([]string, error) {
-	files := make([]string, 0)
-
-	return files, nil
 }
 
 // New will return a pointer to a new mlrb.MyLittleRangeBook structure.
@@ -34,45 +26,47 @@ func GetListOfLabradarFiles(d *labradar.Device) ([]string, error) {
 //}
 
 // Listcartridges will do a simple dump of the cartridges on record to STDOUT.
-func (a *MyLittleRangeBook) Listcartridges() ([]persistence.Cartridge, error) {
-	//cartridges, err := cloud.FetchAllCartridges()
-	c := persistence.Cartridges()
-	cartridges := c.GetAll()
-	if c.RecentErr != nil {
-		return nil, c.RecentErr
-	}
-	return cartridges, nil
-}
+//func (a *MyLittleRangeBook) Listcartridges() ([]persistence.Cartridge, error) {
+//	//cartridges, err := cloud.FetchAllCartridges()
+//	c := persistence.Cartridges()
+//	cartridges := c.GetAll()
+//	if c.RecentErr != nil {
+//		return nil, c.RecentErr
+//	}
+//	return cartridges, nil
+//}
 
 // Device will return a new device.Device struct using the provided LBR directory.
 func (a *MyLittleRangeBook) Device(lbrDir string) (*labradar.Device, error) {
-	d, err := labradar.New(lbrDir, a.Filesystem, a.Timezone)
-	return d, err
+	return labradar.WithDirectory(lbrDir), nil
 }
 
 // ReadLabradarSeries will take a Labradar CSV file, and display relevant details to STDOUT.
 func (a *MyLittleRangeBook) ReadLabradarSeries(lbrDirectory string, seriesNumber int) (*labradar.Series, error) {
 
-	n := labradar.Number(seriesNumber)
-	d, err := a.Device(lbrDirectory)
-	if err != nil {
-		return nil, err
-	}
+	logrus.Panic("Not implemented.")
+	return nil, nil
 
-	b, err := d.HasSeries(n)
-	if err != nil {
-		return nil, err
-	}
-	if !b {
-		return nil, labradar.NewNotFoundError(lbrDirectory, seriesNumber)
-	}
-
-	s, err := d.Series(n)
-	if err != nil {
-		return nil, err
-	}
-
-	return s, nil
+	//n := labradar.Number(seriesNumber)
+	//d, err := a.Device(lbrDirectory)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//b, err := d.HasSeries(n)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//if !b {
+	//	return nil, labradar.NewNotFoundError(lbrDirectory, seriesNumber)
+	//}
+	//
+	//s, err := d.Series(n)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//return s, nil
 }
 
 func (a *MyLittleRangeBook) DisplaySeries(series labradar.Series, verbose bool) error {
@@ -94,25 +88,28 @@ func (a *MyLittleRangeBook) DisplaySeries(series labradar.Series, verbose bool) 
 // SaveLabradarSeriesToJson will write the series.Series to a JSON file in the specified directory.
 func (a *MyLittleRangeBook) SaveLabradarSeriesToJson(dir string, series *labradar.Series) error {
 
-	filename := labradar.DefaultJsonFileProvider(dir, series.Number)
-
-	exists, err := a.Filesystem.Exists(filename())
-	if err != nil {
-		return err
-	}
-	if exists {
-		if err = a.Filesystem.Remove(filename()); err != nil {
-			return err
-		}
-		logrus.Debugf("Deleting the file `%s`.", filename())
-	}
-
-	w := labradar.New(a.Filesystem, func() string { return filename() })
-	if err := w.Write(*series); err != nil {
-		return err
-	}
-
+	logrus.Panicln("Not implemented")
 	return nil
+
+	//filename := labradar.DefaultJsonFileProvider(dir, series.Number)
+	//
+	//exists, err := a.Filesystem.Exists(filename())
+	//if err != nil {
+	//	return err
+	//}
+	//if exists {
+	//	if err = a.Filesystem.Remove(filename()); err != nil {
+	//		return err
+	//	}
+	//	logrus.Debugf("Deleting the file `%s`.", filename())
+	//}
+	//
+	//w := labradar.New(a.Filesystem, func() string { return filename() })
+	//if err := w.Write(*series); err != nil {
+	//	return err
+	//}
+	//
+	//return nil
 }
 
 // SubmitLabradarCsv file will upload the CSV file to cloud storage.
@@ -126,8 +123,11 @@ func (a *MyLittleRangeBook) SubmitLabradarCsv(filename string) error {
 
 // Getlistoflabradarfiles will display all the CSV files in the LBR directory.
 func (a *MyLittleRangeBook) Getlistoflabradarfiles(lbrDirectory string) ([]string, error) {
-	files := fs.ListLabradarSeriesReportFiles(lbrDirectory, a.Filesystem)
-	return files, nil
+	logrus.Panicln("Not implemented.")
+	return []string{}, nil
+
+	//files := fs.ListLabradarSeriesReportFiles(lbrDirectory, a.Filesystem)
+	//return files, nil
 }
 
 // SubmitCartridge will add a new cartridge to the cartridges on record.

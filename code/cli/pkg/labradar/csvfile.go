@@ -83,7 +83,8 @@ func withSeriesDateFrom(file CsvFile) SeriesMutatorFn {
 // withDeviceIdFrom will extract the device ID from within the CSV file.
 func withDeviceIdFrom(file CsvFile) SeriesMutatorFn {
 	return func(s *Series) {
-		s.DeviceId = getStringValue(file, 1)
+		did := getStringValue(file, 1)
+		s.deviceId = DeviceId(did)
 	}
 }
 

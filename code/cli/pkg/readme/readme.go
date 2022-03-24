@@ -63,7 +63,7 @@ func (r *ReadmeMd) AppendSeries(s *labradar.Series, oldformat bool) {
 
 	w := &SeriesLineWriter{OldFormat: oldformat}
 	if err := w.Write(*s); err != nil {
-		logrus.WithError(err).Errorf("Could not append the series %s to `%s`.", s.SeriesName(), r.Filename)
+		logrus.WithError(err).Errorf("Could not append the series %v to `%s`.", s.Number, r.Filename)
 		return
 	}
 

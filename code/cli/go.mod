@@ -17,8 +17,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	gocloud.dev v0.23.0
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
-	gorm.io/driver/sqlite v1.2.6
-	gorm.io/gorm v1.22.5
+
 )
 
 require (
@@ -30,11 +29,8 @@ require (
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.4 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
-	github.com/mattn/go-sqlite3 v1.14.9 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect

@@ -5,9 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	describeseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/describe"
 	listseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/list"
-	readseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/read"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/fs"
 	"os"
@@ -21,7 +19,7 @@ const (
 // NewLabradarCmd will create the Cobra command for detailing with files from a Labradar.
 func NewLabradarCmd(cfg *config.Config) *cobra.Command {
 	defaultLbrDir, err := getDefaultLbrDirectory(cfg.Filesystem)
-	var lbrDir string = ""
+	var lbrDir = ""
 	if err != nil {
 		logrus.WithError(err).Warnf("There was a problem trying to guess a default LBR folder; hopefully one is provided.")
 	} else {
@@ -49,9 +47,9 @@ func NewLabradarCmd(cfg *config.Config) *cobra.Command {
 
 func addSubcommands(parentCmd *cobra.Command, cfg *config.Config, lbrDir func() string) {
 
-	parentCmd.AddCommand(readseries.NewCmdRead(cfg, lbrDir))
-	parentCmd.AddCommand(listseries.NewListLbrFilesCmd(cfg, lbrDir))
-	parentCmd.AddCommand(describeseries.NewDescribeSeriesCmd(cfg, lbrDir))
+	//parentCmd.AddCommand(readseries.NewCmdRead(cfg, lbrDir))
+	parentCmd.AddCommand(listseries.NewListLbrFilesCmd(cfg))
+	//parentCmd.AddCommand(describeseries.NewDescribeSeriesCmd(cfg, lbrDir))
 }
 
 func getDefaultLbrDirectory(fs *afero.Afero) (string, error) {

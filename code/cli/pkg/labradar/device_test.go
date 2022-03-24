@@ -12,14 +12,14 @@ func Test_getDeviceId(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want string
+		want DeviceId
 	}{
 		{
 			name: "Parse valid filename.",
 			args: args{
 				filename: "LBR0013797201909141617.LID",
 			},
-			want: "LBR-0013797",
+			want: DeviceId("LBR-0013797"),
 		},
 	}
 	for _, tt := range tests {
@@ -87,7 +87,8 @@ func Test_looksLikeTheLabradarMarkerFile(t *testing.T) {
 
 func Test_UpdateDeviceForSeries(t *testing.T) {
 
-	logrus.Panicf("Not working")
+	logrus.Warnln("This test is intentionally disabled.")
+	t.Fail()
 
 	//d := &Device{
 	//	DeviceId:  "LBR-1234567",

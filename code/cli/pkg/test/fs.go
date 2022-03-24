@@ -10,17 +10,17 @@ import (
 	"strings"
 )
 
-const LBRDirectory = "LBR/"
+const LBRDirectory = "LBR"
 const markerFile = "LBR0013797201909141617.LID"
 const testFileDirectory = "../../data/LBR/"
 
 var testFs = afero.NewMemMapFs()
 var appFs = afero.NewOsFs()
 
-// InitLabradarFilesystemForTest will create some Labradar test data
+// InitLabradarFilesystemForTest will create some Labradar test data.  Returns a reference to the in-memory filesystem.
 func InitLabradarFilesystemForTest() afero.Fs {
 
-	err := testFs.Mkdir(LBRDirectory, 0644)
+	err := testFs.Mkdir("/"+LBRDirectory, 0644)
 	if err != nil {
 		logrus.WithError(err).Error("Could not create the Labradar directory for the tests.")
 		return testFs

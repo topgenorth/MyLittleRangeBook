@@ -45,7 +45,7 @@ func Build() error {
 
 	mg.Deps(InstallDeps)
 	fmt.Printf("Compiling %s...\n", b.CompiledApp)
-	cmd := exec.Command("go", "build", "-o", b.CompiledApp, b.MainGo)
+	cmd := exec.Command("go", "build", "-v", "-x", "-o", b.CompiledApp, b.MainGo)
 	return cmd.Run()
 }
 

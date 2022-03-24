@@ -1,11 +1,10 @@
-// Package series holds all the code for detailing with a Labradar series.
 package labradar
 
 // Series is a structure that holds the data from a Labradar series, and some details of the load
 // and firearm that was used.
 type Series struct {
 	Number         SeriesNumber
-	DeviceId       string
+	deviceId       DeviceId
 	Date           string
 	Time           string
 	Velocities     *VelocityData
@@ -18,9 +17,12 @@ type Series struct {
 func (s Series) String() string {
 	return s.Number.String()
 }
+func (s *Series) DeviceId() DeviceId {
+	return s.deviceId
+}
 
 // TotalNumberOfShots will retrieve the number of shots in the series.
-func (s Series) TotalNumberOfShots() int {
+func (s *Series) TotalNumberOfShots() int {
 	return len(s.Velocities.Values)
 }
 
@@ -52,35 +54,3 @@ func NewSeries(mutators ...SeriesMutatorFn) *Series {
 	s.Update(mutators...)
 	return s
 }
-
-// isSeriesDirectory will return true if the directory name looks like a valid Labradar series directory.
-// This is a case sensitive comparison.
-//func isSeriesDirectory(dirName string) bool {
-//
-//
-//	if len(dirName) != 6 {
-//		return false
-//	}
-//
-//	if dirName[0:2] != "SR" {
-//		return false
-//	}
-//
-//	number := dirName[2:]
-//	if !util.IsNumericOnly(number) {
-//		return false
-//	}
-//
-//	return true
-//}
-
-//// FilenameForSeries Given the number of a series and the root directory of the Labradar files, infer the filename of the Labradar
-//// CSV file that holds the results of the series.
-//func FilenameForSeries(labradarRootDirectory string, seriesNumber int) string {
-//	stub := fmt.Sprintf("%04d", seriesNumber)
-//	//goland:noinspection SpellCheckingInspection
-//	subdir := fmt.Sprintf("SR%s", stub)
-//	filename := fmt.Sprintf("SR%s Report.csv", stub)
-//	p := path.Join(labradarRootDirectory, subdir, filename)
-//	return p
-//}

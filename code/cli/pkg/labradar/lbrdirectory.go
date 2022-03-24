@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 )
 
-// EmptyLabradarDirectory represents an "empty" (null?) directory - one that has not be initialized.
-var EmptyLabradarDirectory Directory = Directory("")
+// EmptyLabradarDirectory represents an "empty" (null?) directory - one that has not been initialized.
+var EmptyLabradarDirectory = Directory("")
 
 // Directory represents a string that is the full path to the LBR directory holding Labradar files.
 type Directory string
@@ -54,13 +54,21 @@ func (d *Directory) SeriesNumbers(afs afero.Fs) []SeriesNumber {
 }
 
 // TryParseDirectory will return a labradar.Directory if the specified Directory e
-func TryParseDirectory(dir string, af *afero.Afero) (Directory, error) {
+func TryParseDirectory(dir string, fs afero.Fs) (Directory, error) {
 
 	if dir == EmptyLabradarDirectory.String() {
 		return EmptyLabradarDirectory, fmt.Errorf("EmptyLabradarDirectory!")
 	}
 
-	isDir, err := af.IsDir(dir)
+	exists, err := afero.DirExists(fs, dir)
+	if err != nil {
+		return EmptyLabradarDirectory, fmt.Errorf("don't know if the directory %s exists", dir)
+	}
+	if !exists {
+		return EmptyLabradarDirectory, fmt.Errorf("`%s` does not exist", dir)
+	}
+
+	isDir, err := afero.IsDir(fs, dir)
 	if err != nil {
 		if isDir {
 			return EmptyLabradarDirectory, fmt.Errorf("could not determine if '%s' is a directory", dir)

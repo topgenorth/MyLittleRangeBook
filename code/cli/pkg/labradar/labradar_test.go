@@ -1,6 +1,11 @@
 package labradar
 
-import "testing"
+import (
+	"github.com/spf13/afero"
+	"opgenorth.net/mylittlerangebook/pkg/test"
+	"os"
+	"testing"
+)
 
 func TestSeriesNumber_String(t *testing.T) {
 	tests := []struct {
@@ -109,6 +114,44 @@ func TestTryParseDeviceId(t *testing.T) {
 			}
 			if got1 != tt.want1 {
 				t.Errorf("TryParseDeviceId() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func TestWithDirectory(t *testing.T) {
+	type args struct {
+		path string
+	}
+
+	testPath := string(os.PathSeparator) + "LBR"
+	testFs := test.InitLabradarFilesystemForTest()
+
+	tests := []struct {
+		name string
+		args args
+		want *Device
+	}{
+		{
+			"Should return a Device for the directory",
+			args{path: testPath},
+			&Device{"LBR-0013797", "America/Edmonton", Directory(testPath), &afero.Afero{Fs: afero.NewOsFs()}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			aferoFs = testFs
+
+			got := WithDirectory(tt.args.path)
+
+			if got.directory != tt.want.directory {
+				t.Errorf("WithDirectory().directory = %v, want %v", got.directory, tt.want.directory)
+			}
+			if got.deviceId != tt.want.deviceId {
+				t.Errorf("WithDirectory().deviceId = %v, want %v", got.deviceId, tt.want.deviceId)
+			}
+			if got.timeZone != tt.want.timeZone {
+				t.Errorf("WithDirectory().timeZone = %v, want %v", got.timeZone, tt.want.timeZone)
 			}
 		})
 	}

@@ -8,7 +8,7 @@ import (
 func UpdateDeviceForSeries(device *Device) SeriesMutatorFn {
 	// TODO [TO20220119] Needs unit tests
 	return func(s *Series) {
-		s.DeviceId = device.deviceId
+		s.deviceId = device.DeviceId()
 	}
 }
 
@@ -136,9 +136,9 @@ func UsingFarenheitForTemperature() SeriesMutatorFn {
 	}
 }
 
-// MergeMutators will combine two separate arrays of SeriesMutatorFn into one.  The items in the first
+// combineMutators will combine two separate arrays of SeriesMutatorFn into one.  The items in the first
 // array will appear first.
-func MergeMutators(first []SeriesMutatorFn, second []SeriesMutatorFn) []SeriesMutatorFn {
+func combineMutators(first []SeriesMutatorFn, second []SeriesMutatorFn) []SeriesMutatorFn {
 	mutators := make([]SeriesMutatorFn, len(first)+len(second))
 	index := 0
 
