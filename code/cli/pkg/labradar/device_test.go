@@ -24,9 +24,11 @@ func Test_getDeviceId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getDeviceId(tt.args.filename); got != tt.want {
-				t.Errorf("getDeviceId() = %v, want %v", got, tt.want)
-			}
+			t.Fail()
+
+			//if got := getDeviceId(tt.args.filename); got != tt.want {
+			//	t.Errorf("getDeviceId() = %v, want %v", got, tt.want)
+			//}
 		})
 	}
 }

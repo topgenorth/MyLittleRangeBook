@@ -16,10 +16,10 @@ func NewListLbrFilesCmd(cfg *config.Config) *cobra.Command {
 
 	c := &cobra.Command{
 		Use:   "list",
-		Short: "Will display a list of all Labaradar series i the Labradar folder..",
+		Short: "Will display a list of all Labaradar series in the Labradar folder.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			var lbrDir = ""
+
 			logrus.Debugf("List the series in %s.", lbrDir)
 			series := labradar.WithDirectory(lbrDir).ListSeries()
 

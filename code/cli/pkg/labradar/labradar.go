@@ -16,8 +16,10 @@ var (
 	aferoFs = afero.NewOsFs()
 )
 
+// WithDirectory is used to identify the directory that holds the LBR folder for a device.  A panic will happen if
+// the specified directory does not seem to be a valid LBR directory.
 func WithDirectory(path string) *Device {
-	dir, err := TryParseDirectory(path, aferoFs)
+	dir, err := tryParseDirectory(path, aferoFs)
 	if err != nil {
 		logrus.WithError(err).Panicf("Not a valid LBR directory `%s`.", path)
 	}
