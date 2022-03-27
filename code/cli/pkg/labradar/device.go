@@ -40,7 +40,7 @@ func (d Device) String() string {
 func (d *Device) LoadSeries(n SeriesNumber) (*Series, error) {
 
 	if n.ExistsOn(d) {
-		return nil, fmt.Errorf("%d does not exist on the device %s", n.Int(), d.DeviceId().String())
+		return nil, fmt.Errorf("%s does not exist on the device %s (%s)", n.String(), d.DeviceId().String(), d.Directory())
 	}
 
 	filename := filepath.Join(d.directory.String(), n.String(), n.LbrName())
