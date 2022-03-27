@@ -39,11 +39,11 @@ func (d Device) String() string {
 // LoadSeries will retrieve the specified series from the Labradar Device.
 func (d *Device) LoadSeries(n SeriesNumber) (*Series, error) {
 
-	if n.ExistsOn(d) {
+	if !n.ExistsOn(d) {
 		return nil, fmt.Errorf("%s does not exist on the device %s (%s)", n.String(), d.DeviceId().String(), d.Directory())
 	}
 
-	filename := filepath.Join(d.directory.String(), n.String(), n.LbrName())
+	filename := n.pathToReportCsvOn(d)
 
 	file := *loadCsv(filename, d.af)
 	csvValues := []SeriesMutatorFn{
