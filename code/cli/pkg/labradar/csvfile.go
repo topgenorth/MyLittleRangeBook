@@ -46,33 +46,8 @@ func loadCsv(filename string, fs *afero.Afero) *CsvFile {
 	return csv
 }
 
-// updateSeriesFromCsvFile will return an array of mutators to update a series.Series with the contents of a
-// CSV file.
-func updateSeriesFromCsvFile(seriesNumber SeriesNumber, directory string, af *afero.Afero) ([]SeriesMutatorFn, error) {
-	filename := filepath.Join(directory, seriesNumber.String())
-	exists, err := af.Exists(filename)
-	if err != nil {
-		return make([]SeriesMutatorFn, 0), fmt.Errorf("could not load the file '%s': %w", filename, err)
-	}
-	if !exists {
-		return make([]SeriesMutatorFn, 0), fmt.Errorf("could not load the file '%s'", filename)
-	}
-
-	// [TO20220118] We dereference file - the thought being that this could allow us to parallelize this? Probably
-	// a case of premature optimization though.
-	file := *loadCsv(filename, af)
-	return []SeriesMutatorFn{
-		withDeviceIdFrom(file),
-		withSeriesNumberFrom(file),
-		withUnitsOfMeasureFrom(file),
-		addMuzzleVelocitiesFrom(file),
-		withSeriesDateFrom(file),
-	}, nil
-
-}
-
-// withSeriesDateFrom will extract the date & time from the CSV.
-func withSeriesDateFrom(file CsvFile) SeriesMutatorFn {
+// withSeriesDateFromCsv will extract the date & time from the CSV.
+func withSeriesDateFromCsv(file CsvFile) SeriesMutatorFn {
 	return func(s *Series) {
 		d, t := getDateAndTimeStrings(file, 18)
 		s.Date = d
@@ -80,23 +55,23 @@ func withSeriesDateFrom(file CsvFile) SeriesMutatorFn {
 	}
 }
 
-// withDeviceIdFrom will extract the device ID from within the CSV file.
-func withDeviceIdFrom(file CsvFile) SeriesMutatorFn {
+// withDeviceIdFromCsv will extract the device ID from within the CSV file.
+func withDeviceIdFromCsv(file CsvFile) SeriesMutatorFn {
 	return func(s *Series) {
 		did := getStringValue(file, 1)
 		s.deviceId = DeviceId(did)
 	}
 }
 
-// withSeriesNumberFrom will extract the device ID from the CSV file.
-func withSeriesNumberFrom(file CsvFile) SeriesMutatorFn {
+// withSeriesNumberFromCsv will extract the device ID from the CSV file.
+func withSeriesNumberFromCsv(file CsvFile) SeriesMutatorFn {
 	return func(s *Series) {
 		s.Number = SeriesNumber(getIntValue(file, 3))
 	}
 }
 
-// withUnitsOfMeasureFrom will extract the units of measure from the CSV file.
-func withUnitsOfMeasureFrom(file CsvFile) SeriesMutatorFn {
+// withUnitsOfMeasureFromCsv will extract the units of measure from the CSV file.
+func withUnitsOfMeasureFromCsv(file CsvFile) SeriesMutatorFn {
 	return func(s *Series) {
 		s.UnitsOfMeasure.Velocity = getStringValue(file, 6)
 		s.UnitsOfMeasure.Distance = getStringValue(file, 7)
@@ -104,8 +79,8 @@ func withUnitsOfMeasureFrom(file CsvFile) SeriesMutatorFn {
 	}
 }
 
-// addMuzzleVelocitiesFrom will read all the muzzle velocities from the CSV file.
-func addMuzzleVelocitiesFrom(file CsvFile) SeriesMutatorFn {
+// addMuzzleVelocitiesFromCsv will read all the muzzle velocities from the CSV file.
+func addMuzzleVelocitiesFromCsv(file CsvFile) SeriesMutatorFn {
 	return func(s *Series) {
 		for i := 18; i < len(file.lines); i++ {
 			velocity := getIntValue(file, i)

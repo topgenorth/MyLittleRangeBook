@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/test"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -152,6 +153,70 @@ func TestWithDirectory(t *testing.T) {
 			}
 			if got.timeZone != tt.want.timeZone {
 				t.Errorf("WithDirectory().timeZone = %v, want %v", got.timeZone, tt.want.timeZone)
+			}
+		})
+	}
+}
+
+func TestSeriesNumber_ExistsOn(t *testing.T) {
+	testFs := test.InitLabradarFilesystemForTest()
+	device := &Device{"LBR-0013797", "America/Edmonton", Directory(test.LBRDirectory), &afero.Afero{Fs: testFs}}
+
+	type args struct {
+		d *Device
+	}
+	tests := []struct {
+		name string
+		t    SeriesNumber
+		args args
+		want bool
+	}{
+		{
+			name: "Should return true because the series exists on the device.",
+			t:    SeriesNumber(1),
+			args: args{device},
+			want: true,
+		},
+		{
+			name: "Should return false because the series does not exist on the device.",
+			t:    SeriesNumber(9999),
+			args: args{device},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.t.ExistsOn(tt.args.d); got != tt.want {
+				t.Errorf("ExistsOn() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSeriesNumber_pathToReportCsvOn(t *testing.T) {
+
+	testFs := test.InitLabradarFilesystemForTest()
+	device := &Device{"LBR-0013797", "America/Edmonton", Directory(test.LBRDirectory), &afero.Afero{Fs: testFs}}
+
+	type args struct {
+		d *Device
+	}
+	tests := []struct {
+		name string
+		t    SeriesNumber
+		args args
+		want string
+	}{
+		{name: "Should return a filename for the device.",
+			t:    SeriesNumber(1),
+			args: args{device},
+			want: filepath.Join(test.LBRDirectory, "SR0001", "SR0001 Report.csv"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.t.pathToReportCsvOn(tt.args.d); got != tt.want {
+				t.Errorf("pathToReportCsvOn() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -35,7 +35,6 @@ func NewRootCmd(cfg *config.Config) *cobra.Command {
 	rootCmd.PersistentFlags().StringVarP(&cfg.Timezone, TimeZoneFlagParam, "", context.InferTimeZone(), "Set the timezone for the Labradar.")
 
 	rootCmd.AddCommand(lbr.NewLabradarCmd(cfg))
-	//rootCmd.AddCommand(cartridge.NewCartridgeCommand(cfg))
 
 	return rootCmd
 }

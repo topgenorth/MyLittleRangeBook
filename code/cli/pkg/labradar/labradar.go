@@ -6,14 +6,21 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/util"
+	"os"
+	"path/filepath"
 	"strconv"
 )
 
-const LBRDirectory = "LBR/"
+type DirectoryProviderFn = func() string // TODO [TO20220122] Duplication with list.NewListLbrFilesCmd
+
+//var LBRDirectory string
 
 var (
-	lbrDir  = EmptyLabradarDirectory
-	aferoFs = afero.NewOsFs()
+	lbrDir                                 = EmptyLabradarDirectory
+	aferoFs                                = afero.NewOsFs()
+	DefaultLabradarDir DirectoryProviderFn = func() string {
+		return "LBR" + string(os.PathSeparator)
+	}
 )
 
 // WithDirectory is used to identify the directory that holds the LBR folder for a device.  A panic will happen if
@@ -48,8 +55,17 @@ func (t *SeriesNumber) LbrName() string {
 	return fmt.Sprintf("%s.lbr", t.String())
 }
 
-func (t *SeriesNumber) ExistsOn(d *Device) (bool, error) {
-	return false, nil
+func (t *SeriesNumber) pathToReportCsvOn(d *Device) string {
+	return filepath.Join(d.directory.String(), t.String(), t.ReportCsv())
+}
+
+func (t *SeriesNumber) ExistsOn(d *Device) bool {
+	exists, err := afero.Exists(d.af, t.pathToReportCsvOn(d))
+	if err != nil {
+		logrus.WithError(err).Warningf("There was a problem trying determine if the series %s is on the device %s.", t.String(), d.String())
+		return false
+	}
+	return exists
 }
 func TryParseSeriesNumber(sr string) (SeriesNumber, bool) {
 	if len(sr) != 6 {
@@ -111,8 +127,7 @@ type Device struct {
 
 func (t *Device) ListSeries() []SeriesNumber {
 
-	logrus.Warnln("ListSeries is not implemented!")
-	return []SeriesNumber{}
+	return t.directory.SeriesNumbers(t.af)
 }
 
 type DeviceId string

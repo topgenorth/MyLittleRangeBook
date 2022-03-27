@@ -36,17 +36,22 @@ func (d Device) String() string {
 	return d.deviceId.String()
 }
 
-// Series will retrieve the specified series from the Labradar Device.
-func (d Device) Series(n SeriesNumber) (*Series, error) {
-	directory := d.Directory()
-	csvValues, err := updateSeriesFromCsvFile(n, directory.String(), d.af)
+// LoadSeries will retrieve the specified series from the Labradar Device.
+func (d *Device) LoadSeries(n SeriesNumber) (*Series, error) {
 
-	if err != nil {
-		e := Error{
-			Msg:    fmt.Sprintf("could not load the series %d from  device %s (%s): %v", n, d.DeviceId(), d.Directory(), err),
-			Number: n.Int(),
-		}
-		return nil, e
+	if n.ExistsOn(d) {
+		return nil, fmt.Errorf("%d does not exist on the device %s", n.Int(), d.DeviceId().String())
+	}
+
+	filename := filepath.Join(d.directory.String(), n.String(), n.LbrName())
+
+	file := *loadCsv(filename, d.af)
+	csvValues := []SeriesMutatorFn{
+		withDeviceIdFromCsv(file),
+		withSeriesNumberFromCsv(file),
+		withUnitsOfMeasureFromCsv(file),
+		addMuzzleVelocitiesFromCsv(file),
+		withSeriesDateFromCsv(file),
 	}
 
 	mutators := combineMutators(LabradarSeriesDefaults(), csvValues)
