@@ -5,11 +5,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	listseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/list"
+	listseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/listseries"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -21,6 +22,7 @@ func NewLabradarCmd(cfg *config.Config) *cobra.Command {
 	defaultLbrDir, err := getDefaultLbrDirectory(cfg.Filesystem)
 	var lbrDir = ""
 	if err != nil {
+		defaultLbrDir = ""
 		logrus.WithError(err).Warnf("There was a problem trying to guess a default LBR folder; hopefully one is provided.")
 	} else {
 		if len(defaultLbrDir) == 0 {
@@ -40,16 +42,23 @@ func NewLabradarCmd(cfg *config.Config) *cobra.Command {
 	usageMsg := "The directory holding the LBR series."
 	lbrCmd.PersistentFlags().StringVarP(&lbrDir, LbrDirectoryFlagParam, "d", defaultLbrDir, usageMsg)
 
-	addSubcommands(lbrCmd, cfg, func() string { return fs.AbsPathify(lbrDir) })
+	lbrDirFn := func() string {
+		fullPath := fs.AbsPathify(lbrDir)
+		if !strings.HasSuffix(fullPath, "LBR") {
+			fullPath = filepath.Join(fullPath, "LBR")
+		}
+		return fs.AbsPathify(fullPath)
+	}
+	addSubcommands(lbrCmd, cfg, lbrDirFn)
 
 	return lbrCmd
 }
 
-func addSubcommands(parentCmd *cobra.Command, cfg *config.Config, lbrDir func() string) {
+func addSubcommands(parentCmd *cobra.Command, cfg *config.Config, defaultLbrDirFn func() string) {
 
-	//parentCmd.AddCommand(readseries.NewCmdRead(cfg, lbrDir))
-	parentCmd.AddCommand(listseries.NewListLbrFilesCmd(cfg))
-	//parentCmd.AddCommand(describeseries.NewDescribeSeriesCmd(cfg, lbrDir))
+	//parentCmd.AddCommand(readseries.NewCmdRead(cfg, defaultLbrDirFn))
+	parentCmd.AddCommand(listseries.NewListLbrFilesCmd(cfg, defaultLbrDirFn))
+	//parentCmd.AddCommand(describeseries.NewDescribeSeriesCmd(cfg, defaultLbrDirFn))
 }
 
 func getDefaultLbrDirectory(fs *afero.Afero) (string, error) {

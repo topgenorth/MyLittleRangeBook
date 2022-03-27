@@ -5,29 +5,36 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/fs"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 )
 
-const LBRDirectory = "LBR"
-const markerFile = "LBR0013797201909141617.LID"
-const testFileDirectory = "../../data/LBR/"
+var LBRDirectory string
+var testFileDirectory string
 
-var testFs = afero.NewMemMapFs()
-var appFs = afero.NewOsFs()
+const LIDFile = "LBR0013797201909141617.LID"
+
+var AferoTestFs = afero.NewMemMapFs()
+var AferoOsFs = afero.NewOsFs()
+
+func init() {
+	LBRDirectory = string(os.PathSeparator) + "LBR"
+	testFileDirectory = filepath.Join("..", "..", "data", "LBR")
+}
 
 // InitLabradarFilesystemForTest will create some Labradar test data.  Returns a reference to the in-memory filesystem.
 func InitLabradarFilesystemForTest() afero.Fs {
 
-	err := testFs.Mkdir("/"+LBRDirectory, 0644)
+	err := AferoTestFs.Mkdir("/"+LBRDirectory, 0644)
 	if err != nil {
 		logrus.WithError(err).Error("Could not create the Labradar directory for the tests.")
-		return testFs
+		return AferoTestFs
 	}
 
 	// [TO20220320] Write a zero byte file for the marker file.
-	err = afero.WriteFile(testFs, markerFile, []byte{}, 0644)
+	err = afero.WriteFile(AferoTestFs, filepath.Join(LBRDirectory, LIDFile), []byte{}, 0644)
 	if err != nil {
 		logrus.WithError(err).Error("Could not create the LID marker file.")
 	}
@@ -35,7 +42,7 @@ func InitLabradarFilesystemForTest() afero.Fs {
 	if err != nil {
 		logrus.WithError(err).Error("There was a problem setting up MemFs like a Labradar.")
 	}
-	return testFs
+	return AferoTestFs
 }
 
 func putLabradarSeriesIntoMemoryForTests() error {
@@ -65,7 +72,7 @@ func putLabradarSeriesIntoMemoryForTests() error {
 
 func copySeriesFilesForTest(name string) error {
 	// [TO20220320] Copy each of the SRxxxx directories from the disk to the in memory filesystem.
-	err := testFs.Mkdir(filepath.Join(LBRDirectory, name), 0644)
+	err := AferoTestFs.Mkdir(filepath.Join(LBRDirectory, name), 0644)
 	if err != nil {
 		return err
 	}
@@ -92,13 +99,13 @@ func copyReportCsvFile(srName string) error {
 
 	csvName := srName + " Report.csv"
 	srcFile := filepath.Join(dataDir, srName, csvName)
-	csvBytes, err := afero.ReadFile(appFs, srcFile)
+	csvBytes, err := afero.ReadFile(AferoOsFs, srcFile)
 
 	if err != nil {
 		return err
 	}
 	dstFile := filepath.Join(LBRDirectory, srName, csvName)
-	err = afero.WriteFile(testFs, dstFile, csvBytes, 0644)
+	err = afero.WriteFile(AferoTestFs, dstFile, csvBytes, 0644)
 	if err != nil {
 		return err
 	}
@@ -139,13 +146,13 @@ func copyLbrFileForSeries(srName string) error {
 	lbrName := srName + ".lbr"
 	srcFile := filepath.Join(dataDir, srName, lbrName)
 
-	inBytes, err := afero.ReadFile(appFs, srcFile)
+	inBytes, err := afero.ReadFile(AferoOsFs, srcFile)
 	if err != nil {
 
 		return err
 	}
 	dstFile := filepath.Join(LBRDirectory, srName, LBRDirectory)
-	err = afero.WriteFile(testFs, dstFile, inBytes, 0644)
+	err = afero.WriteFile(AferoTestFs, dstFile, inBytes, 0644)
 	if err != nil {
 		return err
 	}

@@ -5,34 +5,6 @@ import (
 	"testing"
 )
 
-func Test_getDeviceId(t *testing.T) {
-	type args struct {
-		filename string
-	}
-	tests := []struct {
-		name string
-		args args
-		want DeviceId
-	}{
-		{
-			name: "Parse valid filename.",
-			args: args{
-				filename: "LBR0013797201909141617.LID",
-			},
-			want: DeviceId("LBR-0013797"),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Fail()
-
-			//if got := getDeviceId(tt.args.filename); got != tt.want {
-			//	t.Errorf("getDeviceId() = %v, want %v", got, tt.want)
-			//}
-		})
-	}
-}
-
 func Test_looksLikeTheLabradarMarkerFile(t *testing.T) {
 	type args struct {
 		filename string

@@ -82,8 +82,8 @@ func (d *Directory) DeviceId() DeviceId {
 	return DeviceId(fmt.Sprintf("%s-%s", filename[0:3], serialNumber))
 }
 
-// tryParseDirectory will return a labradar.Directory if the specified Directory e
-func tryParseDirectory(dir string, fs afero.Fs) (Directory, error) {
+// tryParseDirectoryPath will return a labradar.Directory if the specified Directory e
+func tryParseDirectoryPath(dir string, fs afero.Fs) (Directory, error) {
 
 	if dir == EmptyLabradarDirectory.String() {
 		return EmptyLabradarDirectory, fmt.Errorf("EmptyLabradarDirectory!")
@@ -121,7 +121,7 @@ func tryParseDirectory(dir string, fs afero.Fs) (Directory, error) {
 // *.LID file that all LBR data folders seem to have.
 func getLabradarMarkerFile(path string, af afero.Fs) (string, error) {
 
-	pattern := "LBR*.LID"
+	pattern := filepath.Join(path, "LBR*.LID")
 	glob, err := afero.Glob(af, pattern)
 	if err != nil {
 		return "", err

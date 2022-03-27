@@ -19,7 +19,7 @@ var (
 // WithDirectory is used to identify the directory that holds the LBR folder for a device.  A panic will happen if
 // the specified directory does not seem to be a valid LBR directory.
 func WithDirectory(path string) *Device {
-	dir, err := tryParseDirectory(path, aferoFs)
+	dir, err := tryParseDirectoryPath(path, aferoFs)
 	if err != nil {
 		logrus.WithError(err).Panicf("Not a valid LBR directory `%s`.", path)
 	}
@@ -111,6 +111,7 @@ type Device struct {
 
 func (t *Device) ListSeries() []SeriesNumber {
 
+	logrus.Warnln("ListSeries is not implemented!")
 	return []SeriesNumber{}
 }
 

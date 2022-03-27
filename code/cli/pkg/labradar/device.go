@@ -72,25 +72,28 @@ func (d Device) hasReportCsv(n SeriesNumber) (bool, error) {
 // device ID is not a number.
 func parseDeviceIdFromFilename(filename string) (string, error) {
 	// TODO [TO20220119] Needs unit tests
-	serialNumber := filename[3:10]
+	base := filepath.Base(filename)
+	deviceId := base[3:10]
 
-	if !util.IsNumericOnly(serialNumber) {
+	if !util.IsNumericOnly(deviceId) {
 		return "", fmt.Errorf("could not parse a numeric value for the device id from %s", filename)
 	}
 
-	return serialNumber, nil
+	return deviceId, nil
 }
 
 func looksLikeTheLabradarMarkerFile(filename string) bool {
 
-	if !strings.HasPrefix(filename, "LBR") {
+	base := filepath.Base(filename)
+	if !strings.HasPrefix(base, "LBR") {
 		return false
 	}
+
 	if filepath.Ext(filename) != ".LID" {
 		return false
 	}
 
-	if len(filename) != 26 {
+	if len(base) != 26 {
 		return false
 	}
 

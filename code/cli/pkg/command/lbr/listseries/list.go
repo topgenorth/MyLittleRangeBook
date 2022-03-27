@@ -1,4 +1,4 @@
-package list
+package listseries
 
 import (
 	"fmt"
@@ -12,14 +12,13 @@ type LabradarListCommandOptions struct {
 }
 
 // NewListLbrFilesCmd will create the Cobra command to list all the CSV files in an LBR directory.
-func NewListLbrFilesCmd(cfg *config.Config) *cobra.Command {
+func NewListLbrFilesCmd(cfg *config.Config, lbrDirFn func() string) *cobra.Command {
 
 	c := &cobra.Command{
 		Use:   "list",
 		Short: "Will display a list of all Labaradar series in the Labradar folder.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var lbrDir = ""
-
+			lbrDir := lbrDirFn()
 			logrus.Debugf("List the series in %s.", lbrDir)
 			series := labradar.WithDirectory(lbrDir).ListSeries()
 
