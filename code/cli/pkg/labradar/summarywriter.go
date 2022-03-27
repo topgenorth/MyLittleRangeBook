@@ -2,7 +2,6 @@ package labradar
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"io"
 	"text/template"
 )
@@ -21,7 +20,7 @@ type SummaryWriter struct {
 	Template SeriesTemplateType
 }
 
-func New(out io.Writer, template SeriesTemplateType) SummaryWriter {
+func GetSummaryWriter(out io.Writer, template SeriesTemplateType) SummaryWriter {
 	return SummaryWriter{
 		Out:      out,
 		Template: template,
@@ -40,7 +39,6 @@ func parseTemplateType(t SeriesTemplateType) string {
 	return ""
 }
 func (w *SummaryWriter) Write(s Series) error {
-
 	if w.Template == JSON {
 		return fmt.Errorf("cannot write the series; unknown type %s", w.Template)
 	}
@@ -55,22 +53,18 @@ func (w *SummaryWriter) Write(s Series) error {
 
 	err = t.Execute(w.Out, s)
 	if err != nil {
-		m := fmt.Sprintf("could not render the template %s", w.Template)
-		logrus.WithError(err).Errorf(m)
-		return Error{
-			Number: s.Number.Int(),
-			Msg:    m,
-		}
+		return fmt.Errorf("failed to execute the template  %s for %s: %w", w.Template, s.String(), err)
 	}
 	return nil
 }
 
 const tmplSimplePlainText = `
 ----
-Labradar Series : {{.SeriesName}}
+Labradar        : {{.DeviceId}}
+Labradar Series : {{.Number}}
 Date            : {{.Date}} {{.Time}}
 
-Number of Shots : {{.TotalNumberOfShots}}
+Number of Shots : {{.CountOfShots}}
 Avg Velocity    : {{.Velocities.Average}}{{.UnitsOfMeasure.Velocity}}
 Standard Dev    : {{.Velocities.StdDev}}{{.UnitsOfMeasure.Velocity}}
 Extreme Spread  : {{.Velocities.ExtremeSpread}}{{.UnitsOfMeasure.Velocity}}
@@ -80,14 +74,14 @@ Extreme Spread  : {{.Velocities.ExtremeSpread}}{{.UnitsOfMeasure.Velocity}}
 
 const tmplDescriptivePlainText = `
 ---
-Labradar Series : {{.SeriesName}}
+Labradar Series : {{.Number}}
 Firearm         : {{.Firearm}}
 Load            : {{.LoadData.Projectile }}, {{.LoadData.Powder}}
 Notes:          : {{.Notes}}
 
 Device Id       : {{.DeviceId}}
 Date            : {{.Date}} {{.Time}}
-Number of Shots : {{.TotalNumberOfShots}}
+Number of Shots : {{.CountOfShots}}
 
 VelocityData (in {{.UnitsOfMeasure.Velocity}})
 Avg Velocity    : {{.Velocities.Average}}{{.UnitsOfMeasure.Velocity}}

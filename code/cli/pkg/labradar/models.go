@@ -57,7 +57,7 @@ type LoadData struct {
 	Cartridge  string        `json:"cartridge"`
 	Projectile *Projectile   `json:"projectile"`
 	Powder     *PowderCharge `json:"powder"`
-	CBTO       float32       `json:cbto`
+	CBTO       float32       `json:"cbto"`
 }
 
 func (l LoadData) String() string {
@@ -149,6 +149,9 @@ type VelocityData struct {
 	Values []int `json:"values"`
 }
 
+func (vd VelocityData) CountOfShots() int {
+	return len(vd.Values)
+}
 func (vd VelocityData) String() string {
 	return fmt.Sprintf("%d velocities with an average of %d", len(vd.Values), vd.Average())
 }

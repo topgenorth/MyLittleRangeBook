@@ -1,25 +1,12 @@
 package summarizeseries
 
 import (
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
 )
 
-//
-//import (
-//	"fmt"
-//	"github.com/pkg/errors"
-//	"github.com/sirupsen/logrus"
-//	"github.com/spf13/cobra"
-//	"opgenorth.net/mylittlerangebook/pkg/command"
-//	"opgenorth.net/mylittlerangebook/pkg/config"
-//	"opgenorth.net/mylittlerangebook/pkg/labradar"
-//	"opgenorth.net/mylittlerangebook/pkg/mlrb"
-//)
-//
 const (
 	SeriesNumberFlag = "number"
 )
@@ -34,15 +21,10 @@ func (t LabradarReadCommandOptions) SeriesNumber() labradar.SeriesNumber {
 	return labradar.SeriesNumber(t.Number)
 }
 
-//
-//func (t LabradarReadCommandOptions) String() string {
-//	return fmt.Sprintf("series %d in directory '%s'", t.SeriesNumber, t.LabradarDirectory())
-//}
-//
-// NewCmdRead will create the Cobra command to read a Labradar file and display a summary to StdOut.
+// NewSummarizeSeriesCmd will create the Cobra command to read a Labradar file and display a summary to StdOut.
 // lbrDir is my goofy way of trying to read an option that was bound by the parent command.  I can't figure out
 // how to get the value of the lbr.LbrDirectoryFlagParam and bind it
-func NewCmdRead(cfg *config.Config, lbrDirectoryProvider labradar.DirectoryProviderFn) *cobra.Command {
+func NewSummarizeSeriesCmd(cfg *config.Config, lbrDirectoryProvider labradar.DirectoryProviderFn) *cobra.Command {
 
 	opts := &LabradarReadCommandOptions{
 		LabradarDirectory: lbrDirectoryProvider,
@@ -63,24 +45,6 @@ func NewCmdRead(cfg *config.Config, lbrDirectoryProvider labradar.DirectoryProvi
 }
 
 func summarizeLabradarFile(cfg *config.Config, opts *LabradarReadCommandOptions) error {
-	//a := mlrb.New(cfg)
-	//
-	//s, err := a.ReadLabradarSeries(opts.LabradarDirectory(), opts.SeriesNumber)
-	//if err != nil {
-	//	if errors.Is(err, labradar.SeriesNotFoundError{}) {
-	//		logrus.WithError(err).Errorf("Could not find the series.")
-	//	} else {
-	//		logrus.WithError(err).Errorf("Could not read series %d from %s.", opts.SeriesNumber, opts.LabradarDirectory())
-	//	}
-	//	return err
-	//}
-	//
-	//w := labradar.New(cfg.Out, labradar.SimplePlainText)
-	//
-	//if err := w.Write(*s); err != nil {
-	//	logrus.WithError(err).Errorf("Could not summarize the series %s.", s.String())
-	//	return err
-	//}
 
 	series, err := labradar.
 		WithDirectory(opts.LabradarDirectory()).
@@ -89,7 +53,10 @@ func summarizeLabradarFile(cfg *config.Config, opts *LabradarReadCommandOptions)
 		return err
 	}
 
-	logrus.Debugf("Loaded the series %s!", series.String())
+	w := labradar.GetSummaryWriter(cfg.Out, labradar.SimplePlainText)
+	if err := w.Write(*series); err != nil {
+		return err
+	}
 
 	return nil
 }

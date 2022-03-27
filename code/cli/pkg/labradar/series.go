@@ -17,13 +17,13 @@ type Series struct {
 func (s Series) String() string {
 	return s.Number.String()
 }
-func (s *Series) DeviceId() DeviceId {
+func (s Series) DeviceId() DeviceId {
 	return s.deviceId
 }
 
-// TotalNumberOfShots will retrieve the number of shots in the series.
-func (s *Series) TotalNumberOfShots() int {
-	return len(s.Velocities.Values)
+// CountOfShots will retrieve the number of shots in the series.
+func (s Series) CountOfShots() int {
+	return s.Velocities.CountOfShots()
 }
 
 // Update will use the provided mutators to update values in the Series

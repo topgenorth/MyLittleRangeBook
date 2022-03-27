@@ -43,7 +43,7 @@ func NewLabradarCmd(cfg *config.Config) *cobra.Command {
 }
 
 func addSubcommands(parentCmd *cobra.Command, cfg *config.Config, defaultLbrDirFn labradar.DirectoryProviderFn) {
-	parentCmd.AddCommand(summarizeseries.NewCmdRead(cfg, defaultLbrDirFn))
+	parentCmd.AddCommand(summarizeseries.NewSummarizeSeriesCmd(cfg, defaultLbrDirFn))
 	parentCmd.AddCommand(listseries.NewListLbrFilesCmd(cfg, defaultLbrDirFn))
 	//parentCmd.AddCommand(describeseries.NewDescribeSeriesCmd(cfg, defaultLbrDirFn))
 }
