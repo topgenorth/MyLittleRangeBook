@@ -53,7 +53,7 @@ func summarizeLabradarFile(cfg *config.Config, opts *LabradarReadCommandOptions)
 		return err
 	}
 
-	w := labradar.GetSummaryWriter(cfg.Out, labradar.SimplePlainText)
+	w := labradar.GetSummaryWriter(cfg.Out, labradar.DescriptivePlainText)
 	if err := w.Write(*series); err != nil {
 		return err
 	}

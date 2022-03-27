@@ -30,7 +30,11 @@ type Projectile struct {
 }
 
 func (t Projectile) String() string {
-	return fmt.Sprintf("%dgr %s", t.Weight, t.Name)
+	if len(t.Name) > 0 {
+		return fmt.Sprintf("%dgr %s", t.Weight, t.Name)
+	}
+	return fmt.Sprintf("%dgr ?", t.Weight)
+
 }
 
 // emptyProjectile will initialize an empty Projecticle struct.
@@ -64,10 +68,7 @@ func (l LoadData) String() string {
 
 	var bullet string
 	if l.Projectile.Weight > 0 {
-		bullet = fmt.Sprintf("%dgr %s",
-			l.Projectile.Weight,
-			l.Projectile.Name,
-		)
+		bullet = l.Projectile.String()
 	} else {
 		bullet = "Unknown projectile"
 	}

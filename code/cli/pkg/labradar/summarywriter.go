@@ -74,20 +74,20 @@ Extreme Spread  : {{.Velocities.ExtremeSpread}}{{.UnitsOfMeasure.Velocity}}
 
 const tmplDescriptivePlainText = `
 ---
+Device Id       : {{.DeviceId}}
+Date            : {{.Date}} {{.Time}}
+
 Labradar Series : {{.Number}}
+Number of Shots : {{.CountOfShots}}
+
 Firearm         : {{.Firearm}}
 Load            : {{.LoadData.Projectile }}, {{.LoadData.Powder}}
 Notes:          : {{.Notes}}
 
-Device Id       : {{.DeviceId}}
-Date            : {{.Date}} {{.Time}}
-Number of Shots : {{.CountOfShots}}
-
-VelocityData (in {{.UnitsOfMeasure.Velocity}})
 Avg Velocity    : {{.Velocities.Average}}{{.UnitsOfMeasure.Velocity}}
 Standard Dev    : {{.Velocities.StdDev}}{{.UnitsOfMeasure.Velocity}}
 Extreme Spread  : {{.Velocities.ExtremeSpread}}{{.UnitsOfMeasure.Velocity}}
-{{ range $i, $v:= .Velocities.Values}} * Shot {{$i}}: {{$v}}
+{{ range $i, $v:= .Velocities.Values}}    Shot {{$i}}: {{$v}} 
 {{ end }}
 ---
 
