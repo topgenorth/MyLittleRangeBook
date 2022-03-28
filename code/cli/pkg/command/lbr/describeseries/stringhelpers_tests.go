@@ -1,4 +1,4 @@
-package describe
+package describeseries
 
 import (
 	"opgenorth.net/mylittlerangebook/pkg/labradar"

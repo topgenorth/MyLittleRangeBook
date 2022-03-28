@@ -69,21 +69,21 @@ func (a *MyLittleRangeBook) ReadLabradarSeries(lbrDirectory string, seriesNumber
 	//return s, nil
 }
 
-func (a *MyLittleRangeBook) DisplaySeries(series labradar.Series, verbose bool) error {
-
-	var w labradar.SummaryWriter
-	if verbose {
-		w = labradar.New(a.Out, labradar.DescriptivePlainText)
-	} else {
-		w = labradar.New(a.Out, labradar.SimplePlainText)
-	}
-
-	if err := w.Write(series); err != nil {
-		return err
-	}
-
-	return nil
-}
+//func (a *MyLittleRangeBook) DisplaySeries(series labradar.Series, verbose bool) error {
+//
+//	var w labradar.SummaryWriter
+//	if verbose {
+//		w = labradar.New(a.Out, labradar.DescriptivePlainText)
+//	} else {
+//		w = labradar.New(a.Out, labradar.SimplePlainText)
+//	}
+//
+//	if err := w.Write(series); err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
 
 // SaveLabradarSeriesToJson will write the series.Series to a JSON file in the specified directory.
 func (a *MyLittleRangeBook) SaveLabradarSeriesToJson(dir string, series *labradar.Series) error {

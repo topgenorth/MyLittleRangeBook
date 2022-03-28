@@ -3,6 +3,7 @@ package lbr
 
 import (
 	"github.com/spf13/cobra"
+	"opgenorth.net/mylittlerangebook/pkg/command/lbr/describeseries"
 	listseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/listseries"
 	"opgenorth.net/mylittlerangebook/pkg/command/lbr/summarizeseries"
 	"opgenorth.net/mylittlerangebook/pkg/config"
@@ -22,7 +23,7 @@ func NewLabradarCmd(cfg *config.Config) *cobra.Command {
 	var lbrDir = ""
 
 	lbrCmd := &cobra.Command{
-		Use:              "labradar <command>",
+		Use:              "lbr",
 		Short:            "Manage Labradar data files.",
 		Long:             "View, upload, and describe the Labradar series.",
 		TraverseChildren: true,
@@ -45,7 +46,7 @@ func NewLabradarCmd(cfg *config.Config) *cobra.Command {
 func addSubcommands(parentCmd *cobra.Command, cfg *config.Config, defaultLbrDirFn labradar.DirectoryProviderFn) {
 	parentCmd.AddCommand(summarizeseries.NewSummarizeSeriesCmd(cfg, defaultLbrDirFn))
 	parentCmd.AddCommand(listseries.NewListLbrFilesCmd(cfg, defaultLbrDirFn))
-	//parentCmd.AddCommand(describeseries.NewDescribeSeriesCmd(cfg, defaultLbrDirFn))
+	parentCmd.AddCommand(describeseries.NewDescribeSeriesCmd(cfg, defaultLbrDirFn))
 }
 
 func inferDefaultLabradarDirectory() string {
