@@ -1,16 +1,12 @@
 package lbr
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/command"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
-	"opgenorth.net/mylittlerangebook/pkg/mlrb"
-	"opgenorth.net/mylittlerangebook/pkg/readme"
 	"opgenorth.net/mylittlerangebook/pkg/util"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -117,40 +113,43 @@ func describeSeries(cfg *config.Config, opts DescribeSeriesOptions) error {
 	opts.updateSeries(s)
 	logrus.Tracef("Retrieved %s and updated it.", number.String())
 
-	//if err := a.SaveLabradarSeriesToJson(opts.labradarDir(), s); err != nil {
-	//	return err
-	//}
-	//
-	//if err := a.DisplaySeries(*s, true); err != nil {
-	//	return err
-	//}
-	//
-	//if err := updateReadme(a, s, opts); err != nil {
-	//	return err
-	//}
-
-	return fmt.Errorf("Have to finish describeSeries!")
-}
-
-func updateReadme(a *mlrb.MyLittleRangeBook, series *labradar.Series, opts DescribeSeriesOptions) error {
-
-	// TODO [TO20220123] How do we reconcile difference between an existing JSON file and the CSV file?
-
-	file := filepath.Join(opts.labradarDir(), "README.md")
-
-	logrus.Tracef("Updating the README.md (%s).", file)
-
-	r, err := readme.Load(file, a.Filesystem)
-	if err != nil {
+	w := labradar.JsonSeriesWriter{cfg}
+	if err := w.Write(s, opts.labradarDir); err != nil {
 		return err
 	}
-	r.AppendSeries(series, false)
 
-	if err = readme.Save(*r, a.Filesystem); err != nil {
+	if err := summarizeLabradarFile(cfg,
+		&summarizeSeriesOptions{opts.seriesNumber, opts.labradarDir}); err != nil {
+		return err
+	}
+
+	if err := updateReadme(cfg, s, opts); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func updateReadme(cfg *config.Config, series *labradar.Series, opts DescribeSeriesOptions) error {
+
+	logrus.Errorf("Won't update the README file yet.")
+	return nil
+
+	//file := filepath.Join(opts.labradarDir(), "README.md")
+	//
+	//logrus.Tracef("Updating the README.md (%s).", file)
+	//
+	//r, err := readme.Load(file, a.Filesystem)
+	//if err != nil {
+	//	return err
+	//}
+	//r.AppendSeries(series, false)
+	//
+	//if err = readme.Save(*r, a.Filesystem); err != nil {
+	//	return err
+	//}
+	//
+	//return nil
 }
 
 func (opts *DescribeSeriesOptions) updateSeries(s *labradar.Series) {

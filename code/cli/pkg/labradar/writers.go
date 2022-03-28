@@ -2,10 +2,11 @@ package labradar
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/config"
+	"path/filepath"
 	"text/template"
 )
 
@@ -18,30 +19,27 @@ type SeriesWriter interface {
 // JsonSeriesWriter will persist a given Series to a JSON file.
 type JsonSeriesWriter struct {
 	*config.Config
-	FileSystem *afero.Afero
 }
 
-func (w *JsonSeriesWriter) Write(s Series) error {
+// Write will overwrite any existing file.
+func (w *JsonSeriesWriter) Write(s *Series, fn DirectoryProviderFn) error {
 
-	logrus.Warn("Not implemented.")
-	//dir, err := w.GetHomeDir()
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//outputFileName := filepath.Join(dir, s.Labradar.SeriesName+".json")
-	//if !fs.DeleteFile(outputFileName, w.Config) {
-	//	return fmt.Errorf("cannot write to the file %s: %v", outputFileName, err)
-	//}
-	//
-	//err = w.FileSystem.WriteFile(outputFileName, s.ToJsonBytes(), 0644)
-	//if err != nil {
-	//	return series.Error{
-	//		Number: s.Number,
-	//		Msg:    fmt.Sprintf("Could not write to the file %s. %v", outputFileName, err),
-	//	}
-	//}
+	outputFileName := filepath.Join(fn(), s.Number.String()+".json")
 
+	if err := w.Filesystem.Remove(outputFileName); err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(&s)
+	if err != nil {
+		return err
+	}
+
+	if err := w.Filesystem.WriteFile(outputFileName, data, 0644); err != nil {
+		return err
+	}
+
+	logrus.Tracef("Saved %s to the file %s.", s.Number.String(), outputFileName)
 	return nil
 }
 
