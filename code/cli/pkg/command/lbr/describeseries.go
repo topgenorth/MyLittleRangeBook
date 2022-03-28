@@ -25,12 +25,56 @@ const (
 	CbtoParamName         = "cbto"
 )
 
+type DescribeSeriesOptions struct {
+	seriesNumber int
+	labradarDir  labradar.DirectoryProviderFn
+
+	projectile string
+	cartridge  string
+	cbto       float32
+	firearm    string
+	notes      string
+	powder     string
+}
+
+func (opts *DescribeSeriesOptions) SeriesNumber() labradar.SeriesNumber {
+	return labradar.SeriesNumber(opts.seriesNumber)
+}
+
+func (opts *DescribeSeriesOptions) LabradarDir() string {
+	return opts.labradarDir()
+}
+
+func (opts *DescribeSeriesOptions) Projectile() *labradar.Projectile {
+	return parseProjectileString(opts.projectile)
+}
+
+func (opts *DescribeSeriesOptions) Cartridge() string {
+	return opts.cartridge
+}
+
+func (opts *DescribeSeriesOptions) Cbto() float32 {
+	return opts.cbto
+}
+
+func (opts *DescribeSeriesOptions) Firearm() string {
+	return opts.firearm
+}
+
+func (opts *DescribeSeriesOptions) Notes() string {
+	return opts.notes
+}
+
+func (opts *DescribeSeriesOptions) PowderCharge() *labradar.PowderCharge {
+	return parsePowderString(opts.powder)
+}
+
 // NewDescribeSeriesCmd will create the Cobra command to describe what the OldSeries is all about.
 // lbrDirectoryProvider is my goofy way of trying to read an option that was bound by the parent command.  I can't figure out
 // how to get the value of the lbr.LbrDirectoryFlagParam and bind it
 func NewDescribeSeriesCmd(cfg *config.Config, lbrDirectoryProvider labradar.DirectoryProviderFn) *cobra.Command {
 
-	p := describeSeriesOptions{
+	p := DescribeSeriesOptions{
 		seriesNumber: 0,
 		notes:        "",
 		firearm:      "",
@@ -38,7 +82,7 @@ func NewDescribeSeriesCmd(cfg *config.Config, lbrDirectoryProvider labradar.Dire
 		projectile:   "",
 		powder:       "",
 		cbto:         0.0,
-		labradarDir:  lbrDir,
+		labradarDir:  lbrDirectoryProvider,
 	}
 
 	c := &cobra.Command{
@@ -62,19 +106,17 @@ func NewDescribeSeriesCmd(cfg *config.Config, lbrDirectoryProvider labradar.Dire
 	return c
 }
 
-func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
+func describeSeries(cfg *config.Config, opts DescribeSeriesOptions) error {
 
-	return fmt.Errorf("Not implemented.")
-	//a := mlrb.New(cfg)
-	//
-	//// TODO [TO20220123] How do we reconcile difference between an existing JSON file and the CSV file?
-	//
-	//s, err := a.ReadLabradarSeries(opts.labradarDir(), opts.seriesNumber)
-	//if err != nil {
-	//	return err
-	//}
-	//opts.updateSeries(s)
-	//
+	number := opts.SeriesNumber()
+	s, err := labradar.WithDirectory(opts.LabradarDir()).LoadSeries(number)
+	if err != nil {
+		return err
+	}
+
+	opts.updateSeries(s)
+	logrus.Tracef("Retrieved %s and updated it.", number.String())
+
 	//if err := a.SaveLabradarSeriesToJson(opts.labradarDir(), s); err != nil {
 	//	return err
 	//}
@@ -86,11 +128,11 @@ func describeSeries(cfg *config.Config, opts describeSeriesOptions) error {
 	//if err := updateReadme(a, s, opts); err != nil {
 	//	return err
 	//}
-	//
-	//return nil
+
+	return fmt.Errorf("Have to finish describeSeries!")
 }
 
-func updateReadme(a *mlrb.MyLittleRangeBook, series *labradar.Series, opts describeSeriesOptions) error {
+func updateReadme(a *mlrb.MyLittleRangeBook, series *labradar.Series, opts DescribeSeriesOptions) error {
 
 	// TODO [TO20220123] How do we reconcile difference between an existing JSON file and the CSV file?
 
@@ -111,52 +153,33 @@ func updateReadme(a *mlrb.MyLittleRangeBook, series *labradar.Series, opts descr
 	return nil
 }
 
-// describeSeriesOptions holds the values that are necessary to describe a given series.Series.
-type describeSeriesOptions struct {
-	seriesNumber int
-	labradarDir  labradar.DirectoryProviderFn
+func (opts *DescribeSeriesOptions) updateSeries(s *labradar.Series) {
 
-	projectile string
-	cartridge  string
-	cbto       float32
-	firearm    string
-	notes      string
-	powder     string
-}
-
-func (opts *describeSeriesOptions) updateSeries(s *labradar.Series) {
-
+	// TODO [TO20220328] Unit tests
 	mutators := make([]labradar.SeriesMutatorFn, 0)
 
 	if len(opts.cartridge) > 0 {
-		mutators = append(mutators, labradar.WithCartridge(opts.cartridge))
+		mutators = append(mutators, labradar.WithCartridge(opts.Cartridge()))
 	}
 
 	if len(opts.projectile) > 0 {
-		p := parseProjectileString(opts.projectile)
-		mutators = append(mutators, labradar.WithProjecticle(p.Name, p.Weight))
-	}
-
-	if len(opts.cartridge) > 0 {
-		mutators = append(mutators, labradar.WithCartridge(opts.cartridge))
+		mutators = append(mutators, labradar.WithProjecticle(opts.Projectile().Name, opts.Projectile().Weight))
 	}
 
 	if opts.cbto > 0 {
-		f := func(s *labradar.Series) { s.LoadData.CBTO = opts.cbto }
-		mutators = append(mutators, f)
+		mutators = append(mutators, func(s *labradar.Series) { s.LoadData.CBTO = opts.Cbto() })
 	}
 
 	if len(opts.firearm) > 0 {
-		mutators = append(mutators, labradar.WithFirearm(opts.firearm))
+		mutators = append(mutators, labradar.WithFirearm(opts.Firearm()))
 	}
 
 	if len(opts.notes) > 0 {
-		mutators = append(mutators, labradar.WithNotes(opts.notes))
+		mutators = append(mutators, labradar.WithNotes(opts.Notes()))
 	}
 
 	if len(opts.powder) > 0 {
-		pc := parsePowderString(opts.powder)
-		mutators = append(mutators, labradar.WithPowder(pc.Name, pc.Amount))
+		mutators = append(mutators, labradar.WithPowder(opts.PowderCharge().Name, opts.PowderCharge().Amount))
 	}
 
 	s.Update(mutators...)

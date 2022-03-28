@@ -11,13 +11,13 @@ const (
 	SeriesNumberFlag = "number"
 )
 
-// LabradarReadCommandOptions is all the parameters for labradar read.
-type LabradarReadCommandOptions struct {
+// summarizeSeriesOptions is all the parameters for labradar summarize.
+type summarizeSeriesOptions struct {
 	Number            int
 	LabradarDirectory labradar.DirectoryProviderFn
 }
 
-func (t LabradarReadCommandOptions) SeriesNumber() labradar.SeriesNumber {
+func (t summarizeSeriesOptions) SeriesNumber() labradar.SeriesNumber {
 	return labradar.SeriesNumber(t.Number)
 }
 
@@ -26,7 +26,7 @@ func (t LabradarReadCommandOptions) SeriesNumber() labradar.SeriesNumber {
 // how to get the value of the lbr.LbrDirectoryFlagParam and bind it
 func NewSummarizeSeriesCmd(cfg *config.Config, lbrDirectoryProvider labradar.DirectoryProviderFn) *cobra.Command {
 
-	opts := &LabradarReadCommandOptions{
+	opts := &summarizeSeriesOptions{
 		LabradarDirectory: lbrDirectoryProvider,
 	}
 
@@ -44,7 +44,7 @@ func NewSummarizeSeriesCmd(cfg *config.Config, lbrDirectoryProvider labradar.Dir
 	return readCmd
 }
 
-func summarizeLabradarFile(cfg *config.Config, opts *LabradarReadCommandOptions) error {
+func summarizeLabradarFile(cfg *config.Config, opts *summarizeSeriesOptions) error {
 
 	series, err := labradar.
 		WithDirectory(opts.LabradarDirectory()).
