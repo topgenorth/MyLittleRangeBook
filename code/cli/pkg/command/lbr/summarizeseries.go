@@ -1,4 +1,4 @@
-package summarizeseries
+package lbr
 
 import (
 	"github.com/spf13/cobra"
@@ -22,7 +22,7 @@ func (t LabradarReadCommandOptions) SeriesNumber() labradar.SeriesNumber {
 }
 
 // NewSummarizeSeriesCmd will create the Cobra command to read a Labradar file and display a summary to StdOut.
-// lbrDir is my goofy way of trying to read an option that was bound by the parent command.  I can't figure out
+// lbrDirectoryProvider is my goofy way of trying to read an option that was bound by the parent command.  I can't figure out
 // how to get the value of the lbr.LbrDirectoryFlagParam and bind it
 func NewSummarizeSeriesCmd(cfg *config.Config, lbrDirectoryProvider labradar.DirectoryProviderFn) *cobra.Command {
 

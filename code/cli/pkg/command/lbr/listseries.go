@@ -1,4 +1,4 @@
-package listseries
+package lbr
 
 import (
 	"fmt"

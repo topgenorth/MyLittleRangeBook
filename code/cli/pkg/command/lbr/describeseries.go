@@ -1,4 +1,4 @@
-package describeseries
+package lbr
 
 import (
 	"fmt"
@@ -9,7 +9,10 @@ import (
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"opgenorth.net/mylittlerangebook/pkg/mlrb"
 	"opgenorth.net/mylittlerangebook/pkg/readme"
+	"opgenorth.net/mylittlerangebook/pkg/util"
 	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -23,7 +26,9 @@ const (
 )
 
 // NewDescribeSeriesCmd will create the Cobra command to describe what the OldSeries is all about.
-func NewDescribeSeriesCmd(cfg *config.Config, lbrDir func() string) *cobra.Command {
+// lbrDirectoryProvider is my goofy way of trying to read an option that was bound by the parent command.  I can't figure out
+// how to get the value of the lbr.LbrDirectoryFlagParam and bind it
+func NewDescribeSeriesCmd(cfg *config.Config, lbrDirectoryProvider labradar.DirectoryProviderFn) *cobra.Command {
 
 	p := describeSeriesOptions{
 		seriesNumber: 0,
@@ -109,7 +114,7 @@ func updateReadme(a *mlrb.MyLittleRangeBook, series *labradar.Series, opts descr
 // describeSeriesOptions holds the values that are necessary to describe a given series.Series.
 type describeSeriesOptions struct {
 	seriesNumber int
-	labradarDir  func() string
+	labradarDir  labradar.DirectoryProviderFn
 
 	projectile string
 	cartridge  string
@@ -155,4 +160,82 @@ func (opts *describeSeriesOptions) updateSeries(s *labradar.Series) {
 	}
 
 	s.Update(mutators...)
+}
+
+func parsePowderString(powder string) *labradar.PowderCharge {
+	parts := util.RemoveEmptyStrings(strings.Split(powder, " "))
+	if len(parts) < 1 {
+		return &labradar.PowderCharge{Name: "Unknown", Amount: 0.0}
+	}
+
+	p := &labradar.PowderCharge{
+		Name:   parseNameOfProjectileFromString(strings.Join(parts[1:], " ")),
+		Amount: parseAmountFromPowderString(parts[0]),
+	}
+	return p
+}
+
+func parseProjectileString(projectile string) *labradar.Projectile {
+	parts := util.RemoveEmptyStrings(strings.Split(projectile, " "))
+
+	if len(parts) < 1 {
+		return &labradar.Projectile{Name: "Unknown", Weight: 0, BC: nil}
+	}
+
+	p := &labradar.Projectile{
+		Name:   parseNameOfProjectileFromString(strings.Join(parts[1:], " ")),
+		Weight: parseWeightFromProjectileString(parts[0]),
+		BC:     nil, // [TO20220106] We don't worry about BC right now.
+	}
+
+	return p
+}
+
+func parseNameOfProjectileFromString(name string) string {
+
+	replacer := strings.NewReplacer(
+		"grains", "",
+		"grain", "",
+		"gr.", "",
+		"gr", "",
+	)
+	return strings.TrimSpace(replacer.Replace(name))
+}
+
+func parseAmountFromPowderString(amount string) float32 {
+
+	replacer := strings.NewReplacer(
+		"grains", "",
+		"grain", "",
+		"gr.", "",
+		"gr", "",
+	)
+
+	str := strings.TrimSpace(replacer.Replace(amount))
+
+	w, err := strconv.ParseFloat(str, 32)
+	if err != nil {
+		return 0.0
+	}
+
+	return float32(w)
+}
+
+func parseWeightFromProjectileString(weight string) int {
+
+	replacer := strings.NewReplacer(
+		"grains", "",
+		"grain", "",
+		"gr.", "",
+		"gr", "",
+	)
+
+	str := strings.TrimSpace(replacer.Replace(weight))
+
+	w, err := strconv.ParseFloat(str, 32)
+	if err != nil {
+		return 0
+	}
+
+	return int(w)
 }

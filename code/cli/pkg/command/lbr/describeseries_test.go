@@ -1,4 +1,4 @@
-package describeseries
+package lbr
 
 import (
 	"opgenorth.net/mylittlerangebook/pkg/labradar"
