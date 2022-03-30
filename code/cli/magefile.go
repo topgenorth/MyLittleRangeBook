@@ -26,7 +26,10 @@ func init() {
 
 	// We want to use Go 1.11 modules even if the source lives inside GOPATH.
 	// The default is "auto".
-	os.Setenv("GO111MODULE", "on")
+	err := os.Setenv("GO111MODULE", "on")
+	if err != nil {
+		logrus.WithError(err).Warningln("There was a problem trying to set the environment variable GO111MODULE to `on`.")
+	}
 }
 
 // Manage your deps, or running package managers.
@@ -74,8 +77,8 @@ func Install() error {
 
 // Run tests
 func Test() error {
-	env := map[string]string{"GOFLAGS": testGoFlags()}
-	return runCmd(env, goexe, "test", "./...", buildFlags())
+	env := make(map[string]string)
+	return runCmd(env, goexe, "test", "./...")
 }
 
 // Clean up after yourself
@@ -120,14 +123,6 @@ func isCI() bool {
 		os.Getenv("RUN_ID") != "" // TaskCluster, dsari
 }
 
-func testGoFlags() string {
-	if isCI() {
-		return ""
-	}
-
-	return "-test.short"
-}
-
 func buildFlags() []string {
 	if runtime.GOOS == "windows" {
 		return []string{"-buildmode", "exe"}
@@ -141,7 +136,7 @@ func runCmd(env map[string]string, cmd string, args ...interface{}) error {
 	}
 	output, err := sh.OutputWith(env, cmd, argsToStrings(args...)...)
 	if err != nil {
-		fmt.Fprint(os.Stderr, output)
+		_, _ = fmt.Fprint(os.Stderr, output)
 	}
 
 	return err
