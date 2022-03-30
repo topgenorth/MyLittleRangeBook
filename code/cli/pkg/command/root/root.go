@@ -4,7 +4,6 @@ package root
 import (
 	"github.com/spf13/cobra"
 	"opgenorth.net/mylittlerangebook/pkg/command"
-	"opgenorth.net/mylittlerangebook/pkg/command/cartridge"
 	"opgenorth.net/mylittlerangebook/pkg/command/lbr"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"opgenorth.net/mylittlerangebook/pkg/context"
@@ -36,7 +35,6 @@ func NewRootCmd(cfg *config.Config) *cobra.Command {
 	rootCmd.PersistentFlags().StringVarP(&cfg.Timezone, TimeZoneFlagParam, "", context.InferTimeZone(), "Set the timezone for the Labradar.")
 
 	rootCmd.AddCommand(lbr.NewLabradarCmd(cfg))
-	rootCmd.AddCommand(cartridge.NewCartridgeCommand(cfg))
 
 	return rootCmd
 }

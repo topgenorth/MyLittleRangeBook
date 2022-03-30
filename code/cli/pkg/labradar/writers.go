@@ -2,47 +2,44 @@ package labradar
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"opgenorth.net/mylittlerangebook/pkg/config"
-	"opgenorth.net/mylittlerangebook/pkg/labradar/series"
+	"path/filepath"
 	"text/template"
 )
 
 // SeriesWriter is an interface to persisting a OldSeries to something a person might read (HTML, JSON, Markdown, etc).
 type SeriesWriter interface {
-	// Write is used to persist a series.LabradarSeries value to something that a person might read.
-	Write(s series.LabradarSeries) error
+	// Write is used to persist a series.Series value to something that a person might read.
+	Write(s Series) error
 }
 
-// JsonSeriesWriter will persist a given LabradarSeries to a JSON file.
+// JsonSeriesWriter will persist a given Series to a JSON file.
 type JsonSeriesWriter struct {
 	*config.Config
-	FileSystem *afero.Afero
 }
 
-func (w *JsonSeriesWriter) Write(s series.LabradarSeries) error {
+// Write will overwrite any existing file.
+func (w *JsonSeriesWriter) Write(s *Series, fn DirectoryProviderFn) error {
 
-	logrus.Warn("Not implemented.")
-	//dir, err := w.GetHomeDir()
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//outputFileName := filepath.Join(dir, s.Labradar.SeriesName+".json")
-	//if !fs.DeleteFile(outputFileName, w.Config) {
-	//	return fmt.Errorf("cannot write to the file %s: %v", outputFileName, err)
-	//}
-	//
-	//err = w.FileSystem.WriteFile(outputFileName, s.ToJsonBytes(), 0644)
-	//if err != nil {
-	//	return series.Error{
-	//		Number: s.Number,
-	//		Msg:    fmt.Sprintf("Could not write to the file %s. %v", outputFileName, err),
-	//	}
-	//}
+	outputFileName := filepath.Join(fn(), s.Number.String()+".json")
 
+	if err := w.Filesystem.Remove(outputFileName); err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(&s)
+	if err != nil {
+		return err
+	}
+
+	if err := w.Filesystem.WriteFile(outputFileName, data, 0644); err != nil {
+		return err
+	}
+
+	logrus.Tracef("Saved %s to the file %s.", s.Number.String(), outputFileName)
 	return nil
 }
 
@@ -51,7 +48,7 @@ type ReadMeSeriesWriter struct {
 	OldFormat bool
 }
 
-func (w *ReadMeSeriesWriter) Write(s series.LabradarSeries) error {
+func (w *ReadMeSeriesWriter) Write(s Series) error {
 	var tmpl string
 	if w.OldFormat {
 		tmpl = TMPL_README_LINE_OLD_FORMAT
@@ -61,8 +58,8 @@ func (w *ReadMeSeriesWriter) Write(s series.LabradarSeries) error {
 
 	t, err := template.New("ToStringSerialWriter").Parse(tmpl)
 	if err != nil {
-		return series.Error{
-			Number: s.Number,
+		return Error{
+			Number: s.Number.Int(),
 			Msg:    fmt.Sprintf("Error creating text.template: %v", err),
 		}
 	}
@@ -70,8 +67,8 @@ func (w *ReadMeSeriesWriter) Write(s series.LabradarSeries) error {
 	var line bytes.Buffer
 	err = t.Execute(&line, s)
 	if err != nil {
-		return series.Error{
-			Number: s.Number,
+		return Error{
+			Number: s.Number.Int(),
 			Msg:    fmt.Sprintf("Error writing template: %v", err),
 		}
 	}

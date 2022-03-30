@@ -2,16 +2,13 @@
 package lbr
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"opgenorth.net/mylittlerangebook/fs"
-	describeseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/describe"
-	listseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/list"
-	readseries "opgenorth.net/mylittlerangebook/pkg/command/lbr/read"
 	"opgenorth.net/mylittlerangebook/pkg/config"
+	"opgenorth.net/mylittlerangebook/pkg/fs"
+	"opgenorth.net/mylittlerangebook/pkg/labradar"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -20,56 +17,40 @@ const (
 
 // NewLabradarCmd will create the Cobra command for detailing with files from a Labradar.
 func NewLabradarCmd(cfg *config.Config) *cobra.Command {
-	defaultLbrDir, err := getDefaultLbrDirectory(cfg.Filesystem)
-	var lbrDir string = ""
-	if err != nil {
-		logrus.WithError(err).Warnf("There was a problem trying to guess a default LBR folder; hopefully one is provided.")
-	} else {
-		if len(defaultLbrDir) == 0 {
-			logrus.Warn("There is no LBR folder in the directory; hopefully one is provided.")
-		} else {
-			logrus.Tracef("Will use %s as the default directory if one is not provided.", defaultLbrDir)
-		}
-	}
+	var lbrDir = ""
 
 	lbrCmd := &cobra.Command{
-		Use:              "labradar <command>",
+		Use:              "lbr",
 		Short:            "Manage Labradar data files.",
 		Long:             "View, upload, and describe the Labradar series.",
 		TraverseChildren: true,
 	}
-
 	usageMsg := "The directory holding the LBR series."
-	lbrCmd.PersistentFlags().StringVarP(&lbrDir, LbrDirectoryFlagParam, "d", defaultLbrDir, usageMsg)
+	lbrCmd.PersistentFlags().StringVarP(&lbrDir, LbrDirectoryFlagParam, "d", inferDefaultLabradarDirectory(), usageMsg)
 
-	addSubcommands(lbrCmd, cfg, func() string { return fs.AbsPathify(lbrDir) })
+	defaultLbrDirectoryFn := func() string {
+		fullPath := fs.AbsPathify(lbrDir)
+		if !strings.HasSuffix(fullPath, "LBR") {
+			fullPath = filepath.Join(fullPath, "LBR")
+		}
+		return fs.AbsPathify(fullPath)
+	}
+	addSubcommands(lbrCmd, cfg, defaultLbrDirectoryFn)
 
 	return lbrCmd
 }
 
-func addSubcommands(parentCmd *cobra.Command, cfg *config.Config, lbrDir func() string) {
-
-	parentCmd.AddCommand(readseries.NewCmdRead(cfg, lbrDir))
-	parentCmd.AddCommand(listseries.NewListLbrFilesCmd(cfg, lbrDir))
-	parentCmd.AddCommand(describeseries.NewDescribeSeriesCmd(cfg, lbrDir))
+func addSubcommands(parentCmd *cobra.Command, cfg *config.Config, defaultLbrDirFn labradar.DirectoryProviderFn) {
+	parentCmd.AddCommand(NewSummarizeSeriesCmd(cfg, defaultLbrDirFn))
+	parentCmd.AddCommand(NewListLbrFilesCmd(cfg, defaultLbrDirFn))
+	parentCmd.AddCommand(NewDescribeSeriesCmd(cfg, defaultLbrDirFn))
 }
 
-func getDefaultLbrDirectory(fs *afero.Afero) (string, error) {
+func inferDefaultLabradarDirectory() string {
 	path, err := os.Executable()
 	if err != nil {
-		return "", err
+		return labradar.DefaultLabradarDir()
+
 	}
-
-	exePath := filepath.Join(filepath.Dir(path), "LBR")
-
-	exists, err := fs.Exists(exePath)
-	if err != nil {
-		return "", err
-	}
-
-	if exists {
-		return exePath, nil
-	}
-
-	return "", nil
+	return filepath.Join(filepath.Dir(path), labradar.DefaultLabradarDir())
 }
