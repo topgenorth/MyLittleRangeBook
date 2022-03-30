@@ -44,7 +44,7 @@ func Build() error {
 	b := buildArtifacts()
 
 	mg.Deps(InstallDeps)
-	fmt.Printf("Compiling %s...\n", b.CompiledApp)
+	fmt.Printf("Compiling %s to %s...\n", b.MainGo, b.CompiledApp)
 	cmd := exec.Command("go", "build", "-v", "-x", "-o", b.CompiledApp, b.MainGo)
 	return cmd.Run()
 }
@@ -66,7 +66,7 @@ func Install() error {
 		_ = os.Remove(b.InstalledApp)
 	}
 
-	fmt.Printf("Installing to %s\n", b.InstalledApp)
+	fmt.Printf("Installing %s to %s\n", b.CompiledApp, b.InstalledApp)
 	return fs.CopyFile(b.CompiledApp, b.InstalledApp)
 }
 
