@@ -134,3 +134,28 @@ func (t *DeviceDirectory) ListSeries() []SeriesNumber {
 
 	return t.directory.SeriesNumbers(t.af)
 }
+
+type DeviceId string
+
+func TryParseDeviceId(s string) (DeviceId, bool) {
+	const emptyDeviceID = DeviceId("LBR-0000000") // 11 characters
+
+	if len(s) != len(emptyDeviceID) {
+		return emptyDeviceID, false
+	}
+
+	if s[0:4] != "LBR-" {
+		return emptyDeviceID, false
+	}
+
+	return DeviceId(s), true
+
+}
+
+func (t DeviceId) String() string {
+	return string(t)
+}
+
+func (t DeviceId) SerialNumber() string {
+	return t.String()[4:10]
+}
