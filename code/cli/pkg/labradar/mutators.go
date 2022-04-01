@@ -5,7 +5,7 @@ import (
 )
 
 //UpdateDeviceForSeries will update the series.Series with the device id of the specified device.
-func UpdateDeviceForSeries(device *Device) SeriesMutatorFn {
+func UpdateDeviceForSeries(device *DeviceDirectory) SeriesMutatorFn {
 	// TODO [TO20220119] Needs unit tests
 	return func(s *Series) {
 		s.deviceId = device.DeviceId()

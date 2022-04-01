@@ -25,16 +25,16 @@ var (
 
 // WithDirectory is used to identify the directory that holds the LBR folder for a device.  A panic will happen if
 // the specified directory does not seem to be a valid LBR directory.
-func WithDirectory(path string) *Device {
+func WithDirectory(path string) *DeviceDirectory {
 	dir, err := tryParseDirectoryPath(path, aferoFs)
 	if err != nil {
 		logrus.WithError(err).Panicf("Not a valid LBR directory `%s`.", path)
 	}
 	lbrDir = dir
 
-	d, e := NewDevice(lbrDir, aferoFs)
+	d, e := NewDeviceDirectory(lbrDir, aferoFs)
 	if e != nil {
-		logrus.WithError(e).Panicf("Could not get a Device reference for the directory %s.", path)
+		logrus.WithError(e).Panicf("Could not get a DeviceDirectory reference for the directory %s.", path)
 	}
 	return d
 }
@@ -55,11 +55,11 @@ func (t *SeriesNumber) LbrName() string {
 	return fmt.Sprintf("%s.lbr", t.String())
 }
 
-func (t *SeriesNumber) pathToReportCsvOn(d *Device) string {
+func (t *SeriesNumber) pathToReportCsvOn(d *DeviceDirectory) string {
 	return filepath.Join(d.directory.String(), t.String(), t.ReportCsv())
 }
 
-func (t *SeriesNumber) ExistsOn(d *Device) bool {
+func (t *SeriesNumber) ExistsOn(d *DeviceDirectory) bool {
 	exists, err := afero.Exists(d.af, t.pathToReportCsvOn(d))
 	if err != nil {
 		logrus.WithError(err).Warningf("There was a problem trying determine if the series %s is on the device %s.", t.String(), d.String())

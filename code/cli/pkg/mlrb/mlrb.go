@@ -36,8 +36,8 @@ type MyLittleRangeBook struct {
 //	return cartridges, nil
 //}
 
-// Device will return a new device.Device struct using the provided LBR directory.
-func (a *MyLittleRangeBook) Device(lbrDir string) (*labradar.Device, error) {
+// Device will return a new device.DeviceDirectory struct using the provided LBR directory.
+func (a *MyLittleRangeBook) Device(lbrDir string) (*labradar.DeviceDirectory, error) {
 	return labradar.WithDirectory(lbrDir), nil
 }
 
@@ -48,7 +48,7 @@ func (a *MyLittleRangeBook) ReadLabradarSeries(lbrDirectory string, seriesNumber
 	return nil, nil
 
 	//n := labradar.Number(seriesNumber)
-	//d, err := a.Device(lbrDirectory)
+	//d, err := a.DeviceDirectory(lbrDirectory)
 	//if err != nil {
 	//	return nil, err
 	//}

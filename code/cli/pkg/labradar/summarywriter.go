@@ -74,7 +74,7 @@ Extreme Spread  : {{.Velocities.ExtremeSpread}}{{.UnitsOfMeasure.Velocity}}
 
 const tmplDescriptivePlainText = `
 ---
-Device Id       : {{.DeviceId}}
+DeviceDirectory Id       : {{.DeviceId}}
 Date            : {{.Date}} {{.Time}}
 
 Labradar Series : {{.Number}}

@@ -64,7 +64,7 @@ func Test_UpdateDeviceForSeries(t *testing.T) {
 	logrus.Warnln("This test is intentionally disabled.")
 	t.Fail()
 
-	//d := &Device{
+	//d := &DeviceDirectory{
 	//	DeviceId:  "LBR-1234567",
 	//	TimeZone:  pkg.DefaultTimeZone,
 	//	Directory: "",
@@ -72,7 +72,7 @@ func Test_UpdateDeviceForSeries(t *testing.T) {
 	//}
 
 	//type args struct {
-	//	device *Device
+	//	device *DeviceDirectory
 	//}
 	//tests := []struct {
 	//	name string

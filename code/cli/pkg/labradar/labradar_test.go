@@ -131,12 +131,12 @@ func TestWithDirectory(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *Device
+		want *DeviceDirectory
 	}{
 		{
-			"Should return a Device for the directory",
+			"Should return a DeviceDirectory for the directory",
 			args{path: testPath},
-			&Device{"LBR-0013797", "America/Edmonton", Directory(testPath), &afero.Afero{Fs: afero.NewOsFs()}},
+			&DeviceDirectory{"LBR-0013797", "America/Edmonton", Directory(testPath), &afero.Afero{Fs: afero.NewOsFs()}},
 		},
 	}
 	for _, tt := range tests {
@@ -160,10 +160,10 @@ func TestWithDirectory(t *testing.T) {
 
 func TestSeriesNumber_ExistsOn(t *testing.T) {
 	testFs := test.InitLabradarFilesystemForTest()
-	device := &Device{"LBR-0013797", "America/Edmonton", Directory(test.LBRDirectory), &afero.Afero{Fs: testFs}}
+	device := &DeviceDirectory{"LBR-0013797", "America/Edmonton", Directory(test.LBRDirectory), &afero.Afero{Fs: testFs}}
 
 	type args struct {
-		d *Device
+		d *DeviceDirectory
 	}
 	tests := []struct {
 		name string
@@ -196,10 +196,10 @@ func TestSeriesNumber_ExistsOn(t *testing.T) {
 func TestSeriesNumber_pathToReportCsvOn(t *testing.T) {
 
 	testFs := test.InitLabradarFilesystemForTest()
-	device := &Device{"LBR-0013797", "America/Edmonton", Directory(test.LBRDirectory), &afero.Afero{Fs: testFs}}
+	device := &DeviceDirectory{"LBR-0013797", "America/Edmonton", Directory(test.LBRDirectory), &afero.Afero{Fs: testFs}}
 
 	type args struct {
-		d *Device
+		d *DeviceDirectory
 	}
 	tests := []struct {
 		name string
