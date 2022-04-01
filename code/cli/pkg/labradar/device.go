@@ -20,6 +20,17 @@ func NewDevice(dir Directory, fs afero.Fs) (*Device, error) {
 	}, nil
 }
 
+// Device holds the details about a specific Labradar device.
+type Device struct {
+	//DeviceId is a unique ID that is assigned to each Labradar device.
+	deviceId DeviceId
+	// Timezone is the timezone that the clock on the Labradar is set to.
+	timeZone string
+	// Directory is the name of the folder that holds the Labradar files.
+	directory Directory
+	af        *afero.Afero
+}
+
 func (d *Device) DeviceId() DeviceId {
 	return d.deviceId
 }
@@ -107,4 +118,9 @@ func looksLikeTheLabradarMarkerFile(filename string) bool {
 		return false
 	}
 	return true
+}
+
+func (t *Device) ListSeries() []SeriesNumber {
+
+	return t.directory.SeriesNumbers(t.af)
 }

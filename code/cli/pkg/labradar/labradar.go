@@ -114,32 +114,6 @@ func (e SeriesNotFoundError) Error() string {
 	return fmt.Sprintf("%s could not be found.", e.Number.String())
 }
 
-// Device holds the details about a specific Labradar device.
-type Device struct {
-	//DeviceId is a unique ID that is assigned to each Labradar device.
-	deviceId DeviceId
-	// Timezone is the timezone that the clock on the Labradar is set to.
-	timeZone string
-	// Directory is the name of the folder that holds the Labradar files.
-	directory Directory
-	af        *afero.Afero
-}
-
-func (t *Device) ListSeries() []SeriesNumber {
-
-	return t.directory.SeriesNumbers(t.af)
-}
-
-type DeviceId string
-
-func (t DeviceId) String() string {
-	return string(t)
-}
-
-func (t DeviceId) SerialNumber() string {
-	return t.String()[4:10]
-}
-
 func TryParseDeviceId(s string) (DeviceId, bool) {
 	const emptyDeviceID = DeviceId("LBR-0000000") // 11 characters
 
@@ -153,4 +127,14 @@ func TryParseDeviceId(s string) (DeviceId, bool) {
 
 	return DeviceId(s), true
 
+}
+
+type DeviceId string
+
+func (t DeviceId) String() string {
+	return string(t)
+}
+
+func (t DeviceId) SerialNumber() string {
+	return t.String()[4:10]
 }
