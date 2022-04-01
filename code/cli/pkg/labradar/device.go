@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-// NewDevice will initialize a Device structure. The path parameter is the path to the LBR folder
+// NewDeviceDirectory will initialize a DeviceDirectory structure. The path parameter is the path to the LBR folder
 // of the Labradar device.
-func NewDevice(dir Directory, fs afero.Fs) (*Device, error) {
+func NewDeviceDirectory(dir Directory, fs afero.Fs) (*DeviceDirectory, error) {
 
-	return &Device{
+	return &DeviceDirectory{
 		deviceId:  dir.DeviceId(),
 		timeZone:  "America/Edmonton",
 		directory: dir,
@@ -20,24 +20,45 @@ func NewDevice(dir Directory, fs afero.Fs) (*Device, error) {
 	}, nil
 }
 
-func (d *Device) DeviceId() DeviceId {
+// Device represents the characteristics of a Labradar device (either by looking at the SD card or by some kind of Bluetooth).
+type Device interface {
+	DeviceId() DeviceId
+	TimeZone() string
+	Directory() Directory
+	String() string
+	LoadSeries(n SeriesNumber) (*Series, error)
+	ListSeries() []SeriesNumber
+}
+
+// DeviceDirectory holds the details about a specific Labradar device.
+type DeviceDirectory struct {
+	//DeviceId is a unique ID that is assigned to each Labradar device.
+	deviceId DeviceId
+	// Timezone is the timezone that the clock on the Labradar is set to.
+	timeZone string
+	// Directory is the name of the folder that holds the Labradar files.
+	directory Directory
+	af        *afero.Afero
+}
+
+func (d *DeviceDirectory) DeviceId() DeviceId {
 	return d.deviceId
 }
 
-func (d *Device) TimeZone() string {
+func (d *DeviceDirectory) TimeZone() string {
 	return d.timeZone
 }
 
-func (d *Device) Directory() Directory {
+func (d *DeviceDirectory) Directory() Directory {
 	return d.directory
 }
 
-func (d Device) String() string {
+func (d DeviceDirectory) String() string {
 	return d.deviceId.String()
 }
 
-// LoadSeries will retrieve the specified series from the Labradar Device.
-func (d *Device) LoadSeries(n SeriesNumber) (*Series, error) {
+// LoadSeries will retrieve the specified series from the Labradar DeviceDirectory.
+func (d *DeviceDirectory) LoadSeries(n SeriesNumber) (*Series, error) {
 
 	if !n.ExistsOn(d) {
 		return nil, fmt.Errorf("%s does not exist on the device %s (%s)", n.String(), d.DeviceId().String(), d.Directory())
@@ -60,7 +81,7 @@ func (d *Device) LoadSeries(n SeriesNumber) (*Series, error) {
 
 }
 
-func (d Device) hasReportCsv(n SeriesNumber) (bool, error) {
+func (d DeviceDirectory) hasReportCsv(n SeriesNumber) (bool, error) {
 	fn := filepath.Join(d.directory.String(), n.ReportCsv())
 	b, e := d.af.Exists(fn)
 	if e != nil {
@@ -107,4 +128,34 @@ func looksLikeTheLabradarMarkerFile(filename string) bool {
 		return false
 	}
 	return true
+}
+
+func (t *DeviceDirectory) ListSeries() []SeriesNumber {
+
+	return t.directory.SeriesNumbers(t.af)
+}
+
+type DeviceId string
+
+func TryParseDeviceId(s string) (DeviceId, bool) {
+	const emptyDeviceID = DeviceId("LBR-0000000") // 11 characters
+
+	if len(s) != len(emptyDeviceID) {
+		return emptyDeviceID, false
+	}
+
+	if s[0:4] != "LBR-" {
+		return emptyDeviceID, false
+	}
+
+	return DeviceId(s), true
+
+}
+
+func (t DeviceId) String() string {
+	return string(t)
+}
+
+func (t DeviceId) SerialNumber() string {
+	return t.String()[4:10]
 }

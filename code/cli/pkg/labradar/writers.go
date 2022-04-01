@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
+	"io"
 	"opgenorth.net/mylittlerangebook/pkg/config"
 	"path/filepath"
 	"text/template"
@@ -90,4 +92,121 @@ For ammo, stick with the format:
 | OldSeries Number | Ammo | Firearm | Notes | Date |
 | :---:         | :--- | :-----  | :--- | :---:
 | {{.Number}} | {{.LoadData}} | {{.Firearm.Name}} | {{.Notes}} | {{.Labradar.Date}} |
+`
+
+func NewJsonWriter(aferoFs afero.Fs, nameProvider JsonFileNameProvider) JsonWriter {
+	return JsonWriter{
+		afs:      aferoFs,
+		filename: nameProvider,
+	}
+}
+
+func DefaultJsonFileProvider(dir string, seriesNumber int) JsonFileNameProvider {
+	seriesname := fmt.Sprintf("SR%04d", seriesNumber)
+	filename := filepath.Join(dir, seriesname, seriesname+".json")
+
+	return func() string {
+		return filename
+	}
+
+}
+
+func (w *JsonWriter) Write(s Series) error {
+	bytes, err := json.MarshalIndent(s, "", "    ")
+	if err != nil {
+		return err
+	}
+
+	if err = afero.WriteFile(w.afs, w.filename(), bytes, 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type SeriesTemplateType string
+
+const (
+	SimplePlainText      SeriesTemplateType = "SimplePlainText"
+	DescriptivePlainText SeriesTemplateType = "DescriptivePlainText"
+	JSON                 SeriesTemplateType = "Json"
+)
+
+// SummaryWriter is used to display the summary of a given series.
+type SummaryWriter struct {
+	Out      io.Writer
+	Template SeriesTemplateType
+}
+
+func GetSummaryWriter(out io.Writer, template SeriesTemplateType) SummaryWriter {
+	return SummaryWriter{
+		Out:      out,
+		Template: template,
+	}
+}
+
+func parseTemplateType(t SeriesTemplateType) string {
+	if t == SimplePlainText {
+		return tmplSimplePlainText
+	}
+
+	if t == DescriptivePlainText {
+		return tmplDescriptivePlainText
+	}
+
+	return ""
+}
+func (w *SummaryWriter) Write(s Series) error {
+	if w.Template == JSON {
+		return fmt.Errorf("cannot write the series; unknown type %s", w.Template)
+	}
+
+	t, err := template.New("SeriesSummary").Parse(parseTemplateType(w.Template))
+	if err != nil {
+		return Error{
+			Number: s.Number.Int(),
+			Msg:    fmt.Sprintf("could not load the template %s", w.Template),
+		}
+	}
+
+	err = t.Execute(w.Out, s)
+	if err != nil {
+		return fmt.Errorf("failed to execute the template  %s for %s: %w", w.Template, s.String(), err)
+	}
+	return nil
+}
+
+const tmplSimplePlainText = `
+----
+Labradar        : {{.DeviceId}}
+Labradar Series : {{.Number}}
+Date            : {{.Date}} {{.Time}}
+
+Number of Shots : {{.CountOfShots}}
+Avg Velocity    : {{.Velocities.Average}}{{.UnitsOfMeasure.Velocity}}
+Standard Dev    : {{.Velocities.StdDev}}{{.UnitsOfMeasure.Velocity}}
+Extreme Spread  : {{.Velocities.ExtremeSpread}}{{.UnitsOfMeasure.Velocity}}
+----
+
+`
+
+const tmplDescriptivePlainText = `
+---
+DeviceDirectory Id       : {{.DeviceId}}
+Date            : {{.Date}} {{.Time}}
+
+Labradar Series : {{.Number}}
+Number of Shots : {{.CountOfShots}}
+
+Firearm         : {{.Firearm}}
+Load            : {{.LoadData.Projectile }}, {{.LoadData.Powder}}
+Notes:          : {{.Notes}}
+
+Avg Velocity    : {{.Velocities.Average}}{{.UnitsOfMeasure.Velocity}}
+Standard Dev    : {{.Velocities.StdDev}}{{.UnitsOfMeasure.Velocity}}
+Extreme Spread  : {{.Velocities.ExtremeSpread}}{{.UnitsOfMeasure.Velocity}}
+{{ range $i, $v:= .Velocities.Values}}    Shot {{$i}}: {{$v}} 
+{{ end }}
+---
+
 `
