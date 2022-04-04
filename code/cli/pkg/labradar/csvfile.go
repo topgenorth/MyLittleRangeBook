@@ -92,7 +92,7 @@ func addMuzzleVelocitiesFromCsv(file CsvFile) SeriesMutatorFn {
 // getDateAndTimeStrings will attempt to parse the date & time from a line in a CSV file.
 func getDateAndTimeStrings(file CsvFile, lineNumber int) (string, string) {
 
-	line := SanitizeLine(file.lines[lineNumber])
+	line := sanitizeLineFromLabradarCSV(file.lines[lineNumber])
 	parts := strings.Split(line, ";")
 	x := len(parts)
 	if x == 1 {
@@ -110,7 +110,7 @@ func getDateAndTimeStrings(file CsvFile, lineNumber int) (string, string) {
 // getIntValue will attempt to parse an integer value from a line in the CSV file.
 func getIntValue(file CsvFile, lineNumber int) int {
 
-	parts := strings.Split(SanitizeLine(file.lines[lineNumber]), ";")
+	parts := strings.Split(sanitizeLineFromLabradarCSV(file.lines[lineNumber]), ";")
 	i, err := strconv.Atoi(parts[1])
 	if err != nil {
 		return -1
@@ -120,7 +120,7 @@ func getIntValue(file CsvFile, lineNumber int) int {
 
 // getStringValue will attempt to parse a string value from a line in the CSV file.
 func getStringValue(file CsvFile, lineNumber int) string {
-	parts := strings.Split(SanitizeLine(file.lines[lineNumber]), ";")
+	parts := strings.Split(sanitizeLineFromLabradarCSV(file.lines[lineNumber]), ";")
 	return parts[1]
 }
 

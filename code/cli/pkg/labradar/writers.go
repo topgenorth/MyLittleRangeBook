@@ -124,14 +124,6 @@ func (w *JsonWriter) Write(s Series) error {
 	return nil
 }
 
-type SeriesTemplateType string
-
-const (
-	SimplePlainText      SeriesTemplateType = "SimplePlainText"
-	DescriptivePlainText SeriesTemplateType = "DescriptivePlainText"
-	JSON                 SeriesTemplateType = "Json"
-)
-
 // SummaryWriter is used to display the summary of a given series.
 type SummaryWriter struct {
 	Out      io.Writer

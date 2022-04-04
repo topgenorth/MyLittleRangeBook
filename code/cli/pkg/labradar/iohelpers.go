@@ -15,9 +15,9 @@ func CloseFile(f afero.File) {
 	}
 }
 
-// SanitizeLine will take a line of text (from a Labradar CSV file) and try to clean up some of the odd things
+// sanitizeLineFromLabradarCSV will take a line of text (from a Labradar CSV file) and try to clean up some of the odd things
 // that the Labradar writes out.
-func SanitizeLine(line string) string {
+func sanitizeLineFromLabradarCSV(line string) string {
 	parts := strings.Split(strings.TrimSpace(line), pkg.UnicodeNUL)
 
 	switch lengthOfParts := len(parts); lengthOfParts {

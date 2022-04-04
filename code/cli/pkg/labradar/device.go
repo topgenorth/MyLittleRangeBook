@@ -30,6 +30,8 @@ type Device interface {
 	ListSeries() []SeriesNumber
 }
 
+type DeviceId string
+
 // DeviceDirectory holds the details about a specific Labradar device.
 type DeviceDirectory struct {
 	//DeviceId is a unique ID that is assigned to each Labradar device.
@@ -39,6 +41,21 @@ type DeviceDirectory struct {
 	// Directory is the name of the folder that holds the Labradar files.
 	directory Directory
 	af        *afero.Afero
+}
+
+func TryParseDeviceId(s string) (DeviceId, bool) {
+	const emptyDeviceID = DeviceId("LBR-0000000") // 11 characters
+
+	if len(s) != len(emptyDeviceID) {
+		return emptyDeviceID, false
+	}
+
+	if s[0:4] != "LBR-" {
+		return emptyDeviceID, false
+	}
+
+	return DeviceId(s), true
+
 }
 
 func (d *DeviceDirectory) DeviceId() DeviceId {
@@ -133,23 +150,6 @@ func looksLikeTheLabradarMarkerFile(filename string) bool {
 func (t *DeviceDirectory) ListSeries() []SeriesNumber {
 
 	return t.directory.SeriesNumbers(t.af)
-}
-
-type DeviceId string
-
-func TryParseDeviceId(s string) (DeviceId, bool) {
-	const emptyDeviceID = DeviceId("LBR-0000000") // 11 characters
-
-	if len(s) != len(emptyDeviceID) {
-		return emptyDeviceID, false
-	}
-
-	if s[0:4] != "LBR-" {
-		return emptyDeviceID, false
-	}
-
-	return DeviceId(s), true
-
 }
 
 func (t DeviceId) String() string {

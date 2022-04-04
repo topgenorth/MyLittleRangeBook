@@ -7,16 +7,6 @@ import (
 	"os"
 )
 
-type DirectoryProviderFn = func() string // TODO [TO20220122] Duplication with list.NewListLbrFilesCmd
-
-var (
-	lbrDir             = EmptyLabradarDirectory
-	aferoFs            = afero.NewOsFs()
-	DefaultLabradarDir = func() string {
-		return "LBR" + string(os.PathSeparator)
-	}
-)
-
 // WithDirectory is used to identify the directory that holds the LBR folder for a device.  A panic will happen if
 // the specified directory does not seem to be a valid LBR directory.
 func WithDirectory(path string) *DeviceDirectory {
@@ -33,9 +23,27 @@ func WithDirectory(path string) *DeviceDirectory {
 	return d
 }
 
+var (
+	lbrDir             = EmptyLabradarDirectory
+	aferoFs            = afero.NewOsFs()
+	DefaultLabradarDir = func() string {
+		return "LBR" + string(os.PathSeparator)
+	}
+)
+
+type DirectoryProviderFn = func() string // TODO [TO20220122] Duplication with list.NewListLbrFilesCmd
+
 func TryParseSRReportCsv(s string) (SeriesNumber, bool) {
 	return TryParseSeriesNumber(s[0:6])
 }
+
+type SeriesTemplateType string
+
+const (
+	SimplePlainText      SeriesTemplateType = "SimplePlainText"
+	DescriptivePlainText SeriesTemplateType = "DescriptivePlainText"
+	JSON                 SeriesTemplateType = "Json"
+)
 
 // JsonFileNameProvider is a function that will return the name of the JSON file for a series.
 type JsonFileNameProvider = func() string

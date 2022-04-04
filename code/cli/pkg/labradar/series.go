@@ -8,6 +8,7 @@ import (
 // Series is a structure that holds the data from a Labradar series, and some details of the load
 // and firearm that was used.
 type Series struct {
+	// TODO [TO20220404] Maybe this should be an interface?
 	Number         SeriesNumber
 	deviceId       DeviceId
 	Date           string
@@ -19,9 +20,13 @@ type Series struct {
 	UnitsOfMeasure *UnitsOfMeasure
 }
 
+// SeriesMutatorFn describes a function that can be used to manipulate the values of a Series
+type SeriesMutatorFn = func(s *Series)
+
 func (s Series) String() string {
 	return s.Number.String()
 }
+
 func (s Series) DeviceId() DeviceId {
 	return s.deviceId
 }
@@ -59,9 +64,6 @@ func NewSeries(mutators ...SeriesMutatorFn) *Series {
 	s.Update(mutators...)
 	return s
 }
-
-// SeriesMutatorFn describes a function that can be used to manipulate the values of a Series
-type SeriesMutatorFn = func(s *Series)
 
 func TryParseSeriesNumber(sr string) (SeriesNumber, bool) {
 	if len(sr) != 6 {

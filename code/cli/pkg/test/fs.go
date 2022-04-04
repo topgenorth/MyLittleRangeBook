@@ -11,12 +11,19 @@ import (
 	"strings"
 )
 
+// LBRDirectory is a variable that will hold either '\LBR' or '/LBR', depending on the operating system.
 var LBRDirectory string
+
+// testFileDirectory holds the path to the LBR directory that holds the current/existing data files from Labradar.
 var testFileDirectory string
 
+// LIDFile is the filename of a file that the Labradar will create on the SD card.  No idea what it is for.
 const LIDFile = "LBR0013797201909141617.LID"
 
+// AferoTestFs is a reference to the in-memory filesystem used for testing.
 var AferoTestFs = afero.NewMemMapFs()
+
+// AferoOsFs is a reference to the actually disk filesystem.
 var AferoOsFs = afero.NewOsFs()
 
 func init() {
