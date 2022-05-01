@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// getEnviron will populate
+// getEnviron will return a map of all environment variables.
 func getEnviron() map[string]string {
 	environ := map[string]string{}
 	for _, env := range os.Environ() {

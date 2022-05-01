@@ -1,8 +1,8 @@
 package config
 
 import (
-	"opgenorth.net/mylittlerangebook/fs"
 	"opgenorth.net/mylittlerangebook/pkg/context"
+	"opgenorth.net/mylittlerangebook/pkg/fs"
 	"path/filepath"
 )
 
@@ -11,7 +11,6 @@ const (
 	MlrbConfigFileName = "mlrb"
 	// MlrbConfigFileType is the type of config file used, TOML in this case.
 	MlrbConfigFileType = "toml"
-
 	// MlrbEnvironmentVariablePrefix is the prefix for all environment variables.
 	MlrbEnvironmentVariablePrefix = "MLRB"
 )

@@ -8,6 +8,4 @@ const (
 	// DefaultTimeZone is the timezone is the default timezone if we can't infer/determine the timezone of the device.
 	// We use America/Edmonton because I'm in Edmonton, AB.  :)
 	DefaultTimeZone = "America/Edmonton"
-
-	ExecutableName = "mlrb"
 )
