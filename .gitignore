@@ -6,3 +6,5 @@
 /code/cli/mlrb.exe
 /code/cli/bin/mlrb.toml
 /code/cli/bin/mlrb
+/code/cli/output/mlrb.exe
+/data/LBR/.DS_Store
