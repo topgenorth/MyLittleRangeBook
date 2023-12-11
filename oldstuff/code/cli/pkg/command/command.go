@@ -32,9 +32,9 @@ func SetMandatoryFlags(cmd *cobra.Command, flagnames ...string) {
 
 // ConfigureCmd will setup the flags for a given cobra.Command.
 // The priority is:
-//   1. command line
-//   2. environment variables
-//   3. configuration file (mlrb.toml)
+//  1. command line
+//  2. environment variables
+//  3. configuration file (mlrb.toml)
 func ConfigureCmd(cmd *cobra.Command) error {
 
 	v := releaseTheViper()

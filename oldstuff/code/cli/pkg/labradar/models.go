@@ -56,7 +56,7 @@ func (pc PowderCharge) String() string {
 	return fmt.Sprintf("%3.1fgr %s", pc.Amount, pc.Name)
 }
 
-//LoadData holds a reloading recipe
+// LoadData holds a reloading recipe
 type LoadData struct {
 	Cartridge  string        `json:"cartridge"`
 	Projectile *Projectile   `json:"projectile"`

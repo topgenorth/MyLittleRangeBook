@@ -107,7 +107,7 @@ func (c *TestContext) Cleanup() {
 }
 
 // AddTestFile will add a new file to the testing context.
-//mode is optional and only the first one passed is used.
+// mode is optional and only the first one passed is used.
 func (c *TestContext) AddTestFile(src, dest string, mode ...os.FileMode) []byte {
 	data, err := ioutil.ReadFile(src)
 	if err != nil {

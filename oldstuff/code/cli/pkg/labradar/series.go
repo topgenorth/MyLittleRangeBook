@@ -81,7 +81,7 @@ func TryParseSeriesNumber(sr string) (SeriesNumber, bool) {
 	return SeriesNumber(i), true
 }
 
-//UpdateDeviceForSeries will update the series.Series with the device id of the specified device.
+// UpdateDeviceForSeries will update the series.Series with the device id of the specified device.
 func UpdateDeviceForSeries(device *DeviceDirectory) SeriesMutatorFn {
 	// TODO [TO20220119] Needs unit tests
 	return func(s *Series) {
