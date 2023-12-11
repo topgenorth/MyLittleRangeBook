@@ -22,7 +22,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initCobraAndViper)
 
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", configFile, "The configuration file for this application.")
 	_ = viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
@@ -39,7 +39,7 @@ func init() {
 	rootCmd.AddCommand(catalog.NewCatalogCommand())
 }
 
-func initConfig() {
+func initCobraAndViper() {
 	if configFile != "" {
 		viper.SetConfigFile(configFile)
 	} else {
