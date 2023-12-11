@@ -1,6 +1,6 @@
 # Overview
 
-This is the course code for the CLI stuff.
+This is the source code for the CLI stuff.
 
 ## Requirements
 
