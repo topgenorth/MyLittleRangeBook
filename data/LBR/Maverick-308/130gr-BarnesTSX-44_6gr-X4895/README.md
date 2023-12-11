@@ -1,1 +1,0 @@
-Barnes TTSX;44.6gr X-4895;Federal brass
