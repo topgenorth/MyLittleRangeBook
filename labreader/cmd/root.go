@@ -21,13 +21,6 @@ var rootCmd = &cobra.Command{
 	Long:  `My third attempt at this; this is mostly a project for me to learn Go.`,
 }
 
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
 func init() {
 	cobra.OnInitialize(initConfig)
 
@@ -76,4 +69,11 @@ func getDefaultConfigDirectory() string {
 			Send()
 	}
 	return home
+}
+
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
