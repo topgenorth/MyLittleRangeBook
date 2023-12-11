@@ -15,7 +15,7 @@ import (
 )
 
 const defaultMyLogsOnWindows = "C:\\Users\\tom.opgenorth\\Dropbox\\Firearms\\MyLogs"
-const defaultMyLogsOnMacOS = "/home/tom/Dropbox/Firearms/MyLogs"
+const defaultMyLogsOnMacOS = "/Users/tom/Dropbox/Firearms/MyLogs"
 
 func NewCatalogCommand() *cobra.Command {
 	catalogCmd := &cobra.Command{
@@ -149,6 +149,7 @@ func destinationFile(filePath string) string {
 
 func moveFile(source string, destination string) error {
 
+	// TODO [TO20231210] Inject Afero.
 	fs := afero.NewOsFs()
 	afs := &afero.Afero{Fs: fs}
 
