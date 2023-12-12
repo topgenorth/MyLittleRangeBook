@@ -8,14 +8,9 @@ import (
 	"github.com/spf13/viper"
 	"labreader/internal/logger"
 	"labreader/internal/util"
-	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
-
-const defaultMyLogsOnWindows = "C:\\Users\\tom.opgenorth\\Dropbox\\Firearms\\MyLogs"
-const defaultMyLogsOnMacOS = "/Users/tom/Dropbox/Firearms/MyLogs"
 
 func NewCatalogCommand() *cobra.Command {
 	catalogCmd := &cobra.Command{
@@ -25,14 +20,14 @@ func NewCatalogCommand() *cobra.Command {
 		Long: `The file will be copied to the Dropbox directory, in the prescribed directory structure.
 
 All of the meta-data for the file must be specified on
-the command line.  The rifle and cartridge are 
-mandatory.`,
+the command line.  The rifle is mandatory.`,
 		RunE: moveFileToDropbox,
 	}
 
 	return initCommand(catalogCmd)
 }
 
+//goland:noinspection GoUnusedParameter
 func moveFileToDropbox(cmd *cobra.Command, args []string) error {
 	meta := commandLineValues{}
 	err := viper.Unmarshal(&meta)
@@ -41,7 +36,8 @@ func moveFileToDropbox(cmd *cobra.Command, args []string) error {
 	}
 
 	dir := destinationDirectory(meta)
-	destination := filepath.Join(dir, destinationFile(args[0]))
+	// TODO [TO20231212] DI for TimeProvider
+	destination := filepath.Join(dir, timestampDestinationFile(args[0], RealTimeProvider{}))
 
 	if meta.Dryrun {
 		logger.DefaultLogger().
@@ -52,7 +48,10 @@ func moveFileToDropbox(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	err = moveFile(args[0], destination)
+	// TODO [TO20231212] DI for *afero.Afero
+	fs := afero.NewOsFs()
+	afs := &afero.Afero{Fs: fs}
+	err = moveFile(afs, args[0], destination)
 	if err != nil {
 		return errors.Wrap(err, "could not move the file")
 	}
@@ -108,60 +107,28 @@ func initCommand(catalogCmd *cobra.Command) *cobra.Command {
 	return catalogCmd
 }
 
-// destinationDirectory will return a string that is the path to the directory that the file will be moved to.
-func destinationDirectory(clv commandLineValues) string {
-	var part string
-	path := clv.Rifle
+type TimeProvider interface {
+	Now() time.Time
+	String() string
+}
+type RealTimeProvider struct{}
 
-	if util.UnknownStr != clv.Cartridge {
-		part = strings.ReplaceAll(clv.Cartridge, ".", "")
-		path = filepath.Join(path, strings.ToLower(part))
-	}
-
-	b := clv.GetBullet().String()
-	if "" != b {
-		part = strings.ReplaceAll(clv.GetBullet().String(), ".", "")
-		path = filepath.Join(path, part)
-	}
-
-	p := clv.GetPowder().String()
-	if "" != p {
-
-		path = filepath.Join(path, p)
-	}
-
-	if !isValidPath(path) {
-		// TODO [TO20231210] Need a better way to handle this.
-		return ""
-	}
-
-	path = filepath.Join(defaultMyLogsOnWindows, path)
-	return path
+func (r RealTimeProvider) String() string {
+	return r.Now().Format(dateLayout)
 }
 
-func destinationFile(filePath string) string {
-	fn := filepath.Base(filePath)
-	nameParts := []string{time.Now().Format("20060102"), fn}
-	filename := strings.Join(nameParts, "-")
-
-	return filename
+func (r RealTimeProvider) Now() time.Time {
+	return time.Now()
 }
 
-func moveFile(source string, destination string) error {
+type MockTimeProvider struct {
+	FixedTime time.Time
+}
 
-	// TODO [TO20231210] Inject Afero.
-	fs := afero.NewOsFs()
-	afs := &afero.Afero{Fs: fs}
+func (m MockTimeProvider) String() string {
+	return m.FixedTime.Format(dateLayout)
+}
 
-	dir := filepath.Dir(destination)
-	err := afs.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	err = afs.Rename(source, destination)
-	if err != nil {
-		return err
-	}
-	return nil
+func (m MockTimeProvider) Now() time.Time {
+	return m.FixedTime
 }
