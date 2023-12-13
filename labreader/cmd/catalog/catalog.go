@@ -9,8 +9,9 @@ import (
 	"labreader/internal/logger"
 	"labreader/internal/util"
 	"path/filepath"
-	"time"
 )
+
+const dateLayoutForFilePrefix = "20060102"
 
 func NewCatalogCommand() *cobra.Command {
 	catalogCmd := &cobra.Command{
@@ -37,7 +38,7 @@ func moveFileToDropbox(cmd *cobra.Command, args []string) error {
 
 	dir := destinationDirectory(meta)
 	// TODO [TO20231212] DI for TimeProvider
-	destination := filepath.Join(dir, timestampDestinationFile(args[0], RealTimeProvider{}))
+	destination := filepath.Join(dir, timestampDestinationFile(args[0], util.NewTimeProvider(dateLayoutForFilePrefix)))
 
 	if meta.Dryrun {
 		logger.DefaultLogger().
@@ -105,30 +106,4 @@ func initCommand(catalogCmd *cobra.Command) *cobra.Command {
 	viper.SetDefault("rename", false)
 
 	return catalogCmd
-}
-
-type TimeProvider interface {
-	Now() time.Time
-	String() string
-}
-type RealTimeProvider struct{}
-
-func (r RealTimeProvider) String() string {
-	return r.Now().Format(dateLayout)
-}
-
-func (r RealTimeProvider) Now() time.Time {
-	return time.Now()
-}
-
-type MockTimeProvider struct {
-	FixedTime time.Time
-}
-
-func (m MockTimeProvider) String() string {
-	return m.FixedTime.Format(dateLayout)
-}
-
-func (m MockTimeProvider) Now() time.Time {
-	return m.FixedTime
 }

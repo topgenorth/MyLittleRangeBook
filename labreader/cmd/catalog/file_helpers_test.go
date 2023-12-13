@@ -1,13 +1,16 @@
 package catalog
 
 import (
+	"labreader/internal/util"
 	"reflect"
 	"testing"
 	"time"
 )
 
 func Test_timestampDestinationFile(t *testing.T) {
-	timeProvider := MockTimeProvider{FixedTime: time.Date(2023, time.December, 12, 10, 04, 0, 0, time.UTC)}
+	dateForTest := time.Date(2023, time.December, 12, 10, 04, 0, 0, time.UTC)
+	timeProviderForTest := util.NewMockTimeProvider(dateForTest, dateLayoutForFilePrefix)
+
 	type args struct {
 		filePath string
 	}
@@ -24,22 +27,22 @@ func Test_timestampDestinationFile(t *testing.T) {
 		{
 			name: "Has a valid future date so prefix the filename",
 			args: args{filePath: `C:\Users\tom.opgenorth\Dropbox\Firearms\MyLogs\30001029-M305-DataBook.pdf`},
-			want: timeProvider.String() + `-30001029-M305-DataBook.pdf`,
+			want: timeProviderForTest.String() + `-30001029-M305-DataBook.pdf`,
 		},
 		{
 			name: "Has a invalid date so prefix the filename",
 			args: args{filePath: `C:\Users\tom.opgenorth\Dropbox\Firearms\MyLogs\30001345-M305-DataBook.pdf`},
-			want: timeProvider.String() + `-30001345-M305-DataBook.pdf`,
+			want: timeProviderForTest.String() + `-30001345-M305-DataBook.pdf`,
 		},
 		{
 			name: "Doesn't start with what appears to be a date so prefix the filename",
 			args: args{filePath: `C:\Users\tom.opgenorth\Dropbox\Firearms\MyLogs\M305-DataBook.pdf`},
-			want: timeProvider.String() + `-M305-DataBook.pdf`,
+			want: timeProviderForTest.String() + `-M305-DataBook.pdf`,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := timestampDestinationFile(tt.args.filePath, timeProvider); got != tt.want {
+			if got := timestampDestinationFile(tt.args.filePath, timeProviderForTest); got != tt.want {
 				t.Errorf("timestampDestinationFile() = %v, want %v", got, tt.want)
 			}
 		})

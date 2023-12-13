@@ -15,7 +15,6 @@ import (
 const (
 	defaultMyLogsOnWindows = "C:\\Users\\tom.opgenorth\\Dropbox\\Firearms\\MyLogs"
 	defaultMyLogsOnMacOS   = "/Users/tom/Dropbox/Firearms/MyLogs"
-	dateLayout             = "20060102"
 )
 
 // destinationDirectory will return a string that is the path to the directory that the file will be moved to.
@@ -28,13 +27,13 @@ func destinationDirectory(clv commandLineValues) string {
 		path = filepath.Join(path, strings.ToLower(part))
 	}
 
-	b := clv.GetBullet().String()
+	b := clv.getBullet().String()
 	if "" != b {
-		part = strings.ReplaceAll(clv.GetBullet().String(), ".", "")
+		part = strings.ReplaceAll(clv.getBullet().String(), ".", "")
 		path = filepath.Join(path, part)
 	}
 
-	p := clv.GetPowder().String()
+	p := clv.getPowder().String()
 	if "" != p {
 
 		path = filepath.Join(path, p)
@@ -49,7 +48,7 @@ func destinationDirectory(clv commandLineValues) string {
 	return path
 }
 
-func timestampDestinationFile(filePath string, timeProvider TimeProvider) string {
+func timestampDestinationFile(filePath string, timeProvider util.TimeProvider) string {
 	var destinationFilename string
 	prefix := timeProvider.String() + "-"
 	filename := filepath.Base(filePath)
@@ -104,9 +103,9 @@ func parseDateyyyyMMdd(dateString string) (time.Time, error) {
 	if len(dateString) > 8 {
 		dateString = dateString[:8]
 	}
-	parsedDate, err := time.Parse(dateLayout, dateString)
+	parsedDate, err := time.Parse(dateLayoutForFilePrefix, dateString)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "not a date in the format "+dateLayout)
+		return time.Time{}, errors.Wrap(err, "not a date in the format "+dateLayoutForFilePrefix)
 	}
 	return parsedDate, nil
 }

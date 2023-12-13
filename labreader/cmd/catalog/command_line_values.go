@@ -9,7 +9,6 @@ import (
 	"strings"
 )
 
-/*--- */
 // commandLineValues holds the config/command line values for the action.
 type commandLineValues struct {
 	Rifle        string  `mapstructure:"rifle"`
@@ -24,14 +23,14 @@ type commandLineValues struct {
 	Dryrun       bool    `mapstructure:"dryrun"`
 }
 
-func (b commandLineValues) GetBullet() bulletData {
+func (b commandLineValues) getBullet() bulletData {
 	return bulletData{
 		Name:   b.Bullet,
 		Weight: b.BulletWeight,
 	}
 }
 
-func (b commandLineValues) GetPowder() powderData {
+func (b commandLineValues) getPowder() powderData {
 	return powderData{
 		Name:   b.Powder,
 		Weight: b.PowderCharge,
@@ -49,14 +48,14 @@ func (b commandLineValues) String() string {
 	s.WriteString(strings.ReplaceAll(b.Cartridge, ".", ""))
 
 	// TODO [TO20231208] Need to clean the bullet (spaces, illegal characters, etc)
-	formattedBullet := b.GetBullet().String()
+	formattedBullet := b.getBullet().String()
 	if formattedBullet != "" {
 		s.WriteString("-")
 		s.WriteString(strings.ReplaceAll(formattedBullet, ".", ""))
 	}
 
 	// TODO [TO20231208] Need to clean the Powder (spaces, illegal characters, etc).
-	formattedPowder := b.GetPowder().String()
+	formattedPowder := b.getPowder().String()
 	if formattedPowder != "" {
 		s.WriteString("-")
 		s.WriteString(formattedPowder)
@@ -73,7 +72,6 @@ func (b commandLineValues) String() string {
 	return s.String()
 }
 
-/*--- */
 type bulletData struct {
 	Name   string
 	Weight int
@@ -135,6 +133,7 @@ func floatToStr(val float64, precision int) string {
 	return ""
 }
 
+// isValidPath is a wrapper around os.Stat.
 func isValidPath(path string) bool {
 	_, err := os.Stat(filepath.FromSlash(path))
 	return err != nil
