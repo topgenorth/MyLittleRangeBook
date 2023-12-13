@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func Test_destinationFile2(t *testing.T) {
+func Test_timestampDestinationFile(t *testing.T) {
 	timeProvider := MockTimeProvider{FixedTime: time.Date(2023, time.December, 12, 10, 04, 0, 0, time.UTC)}
 	type args struct {
 		filePath string
