@@ -81,7 +81,7 @@ func Test_destinationDirectory(t *testing.T) {
 		want string
 	}{
 		{name: "Correct directory for rifle and cartridge", args: rifleCartridge, want: "C:\\Users\\tom.opgenorth\\Dropbox\\Firearms\\MyLogs\\700SPS\\223"},
-		{name: "Correct directory for rifle, cartridge, and Powder", args: rifleCartridgePowder, want: `C:\Users\tom.opgenorth\Dropbox\Firearms\MyLogs\700SPS\223\BL-C(2)-24_5`},
+		{name: "Correct directory for rifle, cartridge, and powder", args: rifleCartridgePowder, want: `C:\Users\tom.opgenorth\Dropbox\Firearms\MyLogs\700SPS\223\BL-C(2)-24_5`},
 		{name: "Correct directory for rifle, cartridge, and bullet", args: rifleCartridgeBullet, want: `C:\Users\tom.opgenorth\Dropbox\Firearms\MyLogs\700SPS\223\Campro-55`},
 		{name: "Correct directory for rifle, cartridge, powder, and bullet", args: rifleCartridgeBulletPowder, want: `C:\Users\tom.opgenorth\Dropbox\Firearms\MyLogs\700SPS\223\Campro-55\BL-C(2)-24_5`},
 	}
