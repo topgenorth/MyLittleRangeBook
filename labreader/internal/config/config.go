@@ -1,17 +1,20 @@
 package config
 
-type AppConfig struct {
-	Environment string
-	LogLevel    string
-	ConfigFile  string
+type Environment string
+type LogLevel string
+
+type LogConfig struct {
+	Env      Environment
+	LogLevel LogLevel
 }
 
-func InitConfig() (cfg AppConfig, err error) {
-	//if err = dotenv.Load(dotenv.EnvironmentFiles(os.Getenv("ENVIRONMENT"))); err != nil {
-	//	return
-	//}
-
-	//err = envconfig.Process("", &cfg)
-
-	return
-}
+const (
+	DEVELOPMENT Environment = "DEVELOPMENT"
+	PRODUCTION  Environment = "PRODUCTION"
+	LogTrace    LogLevel    = "TRACE"
+	LogDebug    LogLevel    = "DEBUG"
+	LogInfo     LogLevel    = "INFO"
+	LogWarn     LogLevel    = "WARN"
+	LogError    LogLevel    = "ERROR"
+	LogPanic    LogLevel    = "PANIC"
+)

@@ -13,10 +13,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Display the current version.",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("labreader version:", version)
+		fmt.Println("LabReader version:", version)
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(versionCmd)
 }

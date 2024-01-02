@@ -1,7 +1,7 @@
 package catalog
 
 import (
-	"labreader/internal/util"
+	constants "labreader/internal"
 	"testing"
 )
 
@@ -48,7 +48,7 @@ func Test_destinationDirectory(t *testing.T) {
 		vals: commandLineValues{
 			Rifle:        "700SPS",
 			Cartridge:    ".223",
-			Powder:       util.UnknownStr,
+			Powder:       constants.UnknownStr,
 			PowderCharge: 0,
 			Bullet:       "Campro",
 			BulletWeight: 55,

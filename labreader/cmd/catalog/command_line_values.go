@@ -2,7 +2,7 @@ package catalog
 
 import (
 	"fmt"
-	"labreader/internal/util"
+	constants "labreader/internal"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,16 +11,17 @@ import (
 
 // commandLineValues holds the config/command line values for the action.
 type commandLineValues struct {
-	Rifle        string  `mapstructure:"rifle"`
-	Cartridge    string  `mapstructure:"cartridge"`
-	Powder       string  `mapstructure:"powder"`
-	PowderCharge float64 `mapstructure:"powder-charge"`
-	Bullet       string  `mapstructure:"bullet"`
-	BulletWeight int     `mapstructure:"bullet-weight"`
-	COAL         float64 `mapstructure:"coal"`
-	CBTO         float64 `mapstructure:"cbto"`
-	Rename       bool    `mapstructure:"rename"`
-	Dryrun       bool    `mapstructure:"dryrun"`
+	Rifle         string  `mapstructure:"rifle"`
+	Cartridge     string  `mapstructure:"cartridge"`
+	Powder        string  `mapstructure:"powder"`
+	PowderCharge  float64 `mapstructure:"powder-charge"`
+	Bullet        string  `mapstructure:"bullet"`
+	BulletWeight  int     `mapstructure:"bullet-weight"`
+	COAL          float64 `mapstructure:"coal"`
+	CBTO          float64 `mapstructure:"cbto"`
+	Rename        bool    `mapstructure:"rename"`
+	Dryrun        bool    `mapstructure:"dryrun"`
+	CatalogFolder string  `mapstructure:"LBR_CATALOG_FOLDER"`
 }
 
 func (b commandLineValues) getBullet() bulletData {
@@ -78,7 +79,7 @@ type bulletData struct {
 }
 
 func (b bulletData) String() string {
-	if b.Name == util.UnknownStr {
+	if b.Name == constants.UnknownStr {
 		return ""
 	}
 	if strings.TrimSpace(b.Name) == "" {
@@ -104,7 +105,7 @@ type powderData struct {
 }
 
 func (pd powderData) String() string {
-	if pd.Name == util.UnknownStr {
+	if pd.Name == constants.UnknownStr {
 		return ""
 	}
 

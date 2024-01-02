@@ -70,7 +70,7 @@ func Install() error {
 // Run tests
 func Test() error {
 
-	return sh.RunV(goexe, "test", "-v", "./cmd/catalog/")
+	return sh.RunV(goexe, "test", "-v", "./...")
 
 }
 

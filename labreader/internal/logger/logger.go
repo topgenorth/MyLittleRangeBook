@@ -1,34 +1,44 @@
 package logger
 
 import (
+	"labreader/internal/config"
 	"os"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 )
 
-type Level string
+type loggerOption func(*config.LogConfig)
 
-type LogConfig struct {
-	Environment string
-	LogLevel    Level
+// New will create a new zerolog.Logger that is configured for a production environment, logging only INFO or higher.
+func New(options ...loggerOption) zerolog.Logger {
+	cfg := &config.LogConfig{Env: config.PRODUCTION, LogLevel: config.LogInfo}
+	for _, o := range options {
+		o(cfg)
+	}
+
+	l := createLoggerInstance(*cfg)
+	return l
 }
 
-const (
-	TRACE Level = "TRACE"
-	DEBUG Level = "DEBUG"
-	INFO  Level = "INFO"
-	WARN  Level = "WARN"
-	ERROR Level = "ERROR"
-	PANIC Level = "PANIC"
-)
+func DevelopmentEnvironment() func(*config.LogConfig) {
+	return func(logConfig *config.LogConfig) {
+		logConfig.Env = config.DEVELOPMENT
+	}
+}
 
-func New(cfg LogConfig) zerolog.Logger {
+func LogLevelDebug() func(*config.LogConfig) {
+	return func(logConfig *config.LogConfig) {
+		logConfig.LogLevel = config.LogDebug
+	}
+}
+
+func createLoggerInstance(cfg config.LogConfig) zerolog.Logger {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
-	switch cfg.Environment {
-	case "production":
+	switch cfg.Env {
+	case config.PRODUCTION:
 		return zerolog.New(os.Stdout).
 			Level(logLevelToZero(cfg.LogLevel)).
 			With().
@@ -45,28 +55,21 @@ func New(cfg LogConfig) zerolog.Logger {
 	}
 }
 
-func logLevelToZero(level Level) zerolog.Level {
+func logLevelToZero(level config.LogLevel) zerolog.Level {
 	switch level {
-	case PANIC:
+	case config.LogPanic:
 		return zerolog.PanicLevel
-	case ERROR:
+	case config.LogError:
 		return zerolog.ErrorLevel
-	case WARN:
+	case config.LogWarn:
 		return zerolog.WarnLevel
-	case INFO:
+	case config.LogInfo:
 		return zerolog.InfoLevel
-	case DEBUG:
+	case config.LogDebug:
 		return zerolog.DebugLevel
-	case TRACE:
+	case config.LogTrace:
 		return zerolog.TraceLevel
 	default:
 		return zerolog.InfoLevel
 	}
-}
-
-func DefaultLogger() *zerolog.Logger {
-
-	c := LogConfig{Environment: "Development", LogLevel: DEBUG}
-	l := New(c)
-	return &l
 }

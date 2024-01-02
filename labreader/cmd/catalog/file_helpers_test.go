@@ -1,7 +1,7 @@
 package catalog
 
 import (
-	"labreader/internal/util"
+	"labreader/pkg/timeprovider"
 	"reflect"
 	"testing"
 	"time"
@@ -9,7 +9,9 @@ import (
 
 func Test_timestampDestinationFile(t *testing.T) {
 	dateForTest := time.Date(2023, time.December, 12, 10, 04, 0, 0, time.UTC)
-	timeProviderForTest := util.NewMockTimeProvider(dateForTest, dateLayoutForFilePrefix)
+	timeProviderForTest := timeprovider.New(
+		timeprovider.WithDate(dateForTest),
+		timeprovider.WithDateLayout(dateLayoutForFilePrefix))
 
 	type args struct {
 		filePath string

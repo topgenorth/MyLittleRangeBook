@@ -3,7 +3,8 @@ package catalog
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
-	"labreader/internal/util"
+	constants "labreader/internal"
+	"labreader/pkg/timeprovider"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,18 +12,12 @@ import (
 	"time"
 )
 
-//goland:noinspection GoUnusedConst
-const (
-	defaultMyLogsOnWindows = "C:\\Users\\tom.opgenorth\\Dropbox\\Firearms\\MyLogs"
-	defaultMyLogsOnMacOS   = "/Users/tom/Dropbox/Firearms/MyLogs"
-)
-
 // destinationDirectory will return a string that is the path to the directory that the file will be moved to.
 func destinationDirectory(clv commandLineValues) string {
 	var part string
 	path := clv.Rifle
 
-	if util.UnknownStr != clv.Cartridge {
+	if constants.UnknownStr != clv.Cartridge {
 		part = strings.ReplaceAll(clv.Cartridge, ".", "")
 		path = filepath.Join(path, strings.ToLower(part))
 	}
@@ -44,11 +39,11 @@ func destinationDirectory(clv commandLineValues) string {
 		return ""
 	}
 
-	path = filepath.Join(defaultMyLogsOnWindows, path)
+	path = filepath.Join(clv.CatalogFolder, path)
 	return path
 }
 
-func timestampDestinationFile(filePath string, timeProvider util.TimeProvider) string {
+func timestampDestinationFile(filePath string, timeProvider *timeprovider.TimeProvider) string {
 	var destinationFilename string
 	prefix := timeProvider.String() + "-"
 	filename := filepath.Base(filePath)
