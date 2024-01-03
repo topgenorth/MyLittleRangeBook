@@ -1,3 +1,0 @@
-debug = true
-outputDir = "<PATH FOR JSON FILES>"
-lbr_dir = "<PATH FOR LABRADAR CSV FILES>"
