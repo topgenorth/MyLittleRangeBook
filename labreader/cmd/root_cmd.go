@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -8,6 +9,7 @@ import (
 	"labreader/cmd/readstats"
 	"labreader/internal/logger"
 	"os"
+	"path"
 )
 
 var (
@@ -58,15 +60,28 @@ func initCobraAndViper() {
 		viper.AddConfigPath(getDefaultConfigDirectory())
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".labreader")
+		viper.AddConfigPath("$HOME/.labreader")
+		viper.AddConfigPath(".")
 	}
 
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("LBR")
 
-	if err := viper.ReadInConfig(); err == nil {
-		l.Debug().Str("config_file", viper.ConfigFileUsed()).Send()
-	}
+	if err := viper.ReadInConfig(); err != nil {
+		var configFileNotFoundError viper.ConfigFileNotFoundError
+		if errors.As(err, &configFileNotFoundError) {
+			l.Warn().Err(err).Msg("Config file not found")
 
+			newYamlFile := path.Join(getDefaultConfigDirectory(), ".labreader.yml")
+			l.Debug().Str("config-file", newYamlFile).Msg("Created a new config file.")
+			err2 := viper.SafeWriteConfigAs(newYamlFile)
+			if err2 != nil {
+				l.Error().Err(err).Send()
+			}
+		}
+	} else {
+		l.Debug().Str("config-file", viper.ConfigFileUsed()).Send()
+	}
 }
 
 func getDefaultConfigDirectory() string {

@@ -8,6 +8,8 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 )
 
+const defaultTimeFormat = "03:04:05.000PM"
+
 type loggerOption func(*config.LogConfig)
 
 // New will create a new zerolog.Logger that is configured for a production environment, logging only INFO or higher.
@@ -46,7 +48,8 @@ func createLoggerInstance(cfg config.LogConfig) zerolog.Logger {
 			Logger()
 	default:
 		return zerolog.New(zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
-			w.TimeFormat = "03:04:05.000PM"
+
+			w.TimeFormat = defaultTimeFormat
 		})).
 			Level(logLevelToZero(cfg.LogLevel)).
 			With().
@@ -55,6 +58,7 @@ func createLoggerInstance(cfg config.LogConfig) zerolog.Logger {
 	}
 }
 
+// logLevelToZero will take our own log levels and map those to a ZeroLog value.
 func logLevelToZero(level config.LogLevel) zerolog.Level {
 	switch level {
 	case config.LogPanic:
