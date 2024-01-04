@@ -1,4 +1,4 @@
-package exportfile
+package csvfile
 
 import (
 	"github.com/spf13/afero"

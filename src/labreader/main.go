@@ -1,6 +1,6 @@
 package main
 
-import "labreader/cmd"
+import "opgenorth.net/labreader/cmd"
 
 func main() {
 	cmd.Execute()

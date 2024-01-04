@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"opgenorth.net/labradar"
-	"opgenorth.net/labradar/exportfile"
 	"opgenorth.net/tomutil/logger"
 	"os"
 	"path/filepath"

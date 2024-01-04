@@ -1,4 +1,4 @@
-package exportfile
+package csvfile
 
 import (
 	"bytes"
@@ -12,9 +12,11 @@ import (
 
 type csvFileContentsHelper func(t *testing.T) io.Reader
 
-// series14Contents is a copy of a CSV file that was exported using the Labradar app (on Android). It is a text file
+// series14_csv is a copy of a CSV file that was exported using the Labradar app (on Android). It is a text file
 // which appears to have been cleaned up.
-var series14Contents = `sep=;
+//
+//goland:noinspection GoSnakeCaseUsage
+var series14_csv = `sep=;
 Device ID;LBR0013797202206060629;;
 
 Series No;#014;;
@@ -87,5 +89,5 @@ func series11(t *testing.T) io.Reader {
 
 }
 func series14(t *testing.T) io.Reader {
-	return strings.NewReader(series14Contents)
+	return strings.NewReader(series14_csv)
 }
