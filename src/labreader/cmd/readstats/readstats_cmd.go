@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"opgenorth.net/labradar"
+	"opgenorth.net/labradar/csvfile"
 	"opgenorth.net/tomutil/logger"
 	"os"
 	"path/filepath"
@@ -77,7 +78,7 @@ func readStatsFromCsv(cmd *cobra.Command, args []string) error {
 		return errors.Wrapf(err, "could not read the contents of the file %s", cliValues.Filename())
 	}
 
-	csvFile := exportfile.CsvFileContents{
+	csvFile := &csvfile.Contents{
 		Err:   nil,
 		Lines: lines,
 	}
@@ -116,18 +117,18 @@ func readCsv(filename string, afs *afero.Afero) ([]string, error) {
 	return lines, nil
 }
 
-func withVelocities(file exportfile.CsvFileContents) labradar.SeriesMutatorFn {
+func withVelocities(file *csvfile.Contents) labradar.SeriesMutatorFn {
 	return func(s *labradar.Series) {
-		for i := exportfile.LineNumberVelocityStart; i < len(file.Lines); i++ {
+		for i := csvfile.LineNumberVelocityStart; i < len(file.Lines); i++ {
 			v := file.GetIntValue(i)
 			s.Update(labradar.AppendVelocity(v))
 		}
 	}
 }
 
-func withSeriesNumber(file exportfile.CsvFileContents) labradar.SeriesMutatorFn {
+func withSeriesNumber(file *csvfile.Contents) labradar.SeriesMutatorFn {
 	return func(s *labradar.Series) {
-		serialNumber := file.GetIntValue(exportfile.LineNumberSeries)
+		serialNumber := file.GetIntValue(csvfile.LineNumberSeries)
 		s.Update(labradar.WithSeriesNumber(serialNumber))
 	}
 }

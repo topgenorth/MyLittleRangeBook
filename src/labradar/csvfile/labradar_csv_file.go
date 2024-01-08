@@ -31,15 +31,15 @@ func (d *FileDirectory) String() string {
 	return string(*d)
 }
 
-type CsvFileContents struct {
+type Contents struct {
 	inputFilename string
 	Err           error
 	Lines         []string
 }
 
 // LoadCsv will read the lines of the file, one at a time.
-func LoadCsv(filename string, fs *afero.Afero) *CsvFileContents {
-	csv := &CsvFileContents{
+func LoadCsv(filename string, fs *afero.Afero) *Contents {
+	csv := &Contents{
 		inputFilename: filename,
 		Err:           nil,
 		Lines:         nil,
@@ -90,7 +90,7 @@ func sanitizeLineFromLabradarCSV(line string) string {
 }
 
 // GetIntValue will attempt to parse an integer value from a line in the CSV file.
-func (csv *CsvFileContents) GetIntValue(lineNumber int) int {
+func (csv *Contents) GetIntValue(lineNumber int) int {
 	line := sanitizeLineFromLabradarCSV(csv.Lines[lineNumber])
 	parts := strings.Split(line, ";")
 
