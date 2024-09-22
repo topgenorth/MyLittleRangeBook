@@ -8,8 +8,7 @@ public class SimpleFitReader
     public async Task<int> Read(string filename)
     {
         var log = Serilog.Log.Logger.ForContext<SimpleFitReader>(); 
-        // filename = "C:\\Users\\tom.opgenorth\\Dropbox\\Firearms\\Shot_Sessions\\09-08-2024_18-04-40.fit";
-
+    
         log.Information("Processing file {filename}", filename);
 
         var fitListener = new FitListener();
@@ -30,7 +29,7 @@ public class SimpleFitReader
         {
             log.Information(
                 $"File ID Timestamp: {msg?.GetManufacturer()}, Serial #: {msg?.GetGarminProduct()} {msg?.GetSerialNumber()}");
-            ;
+            
         }
 
         foreach (var msg in fitMessages.ChronoShotSessionMesgs)
