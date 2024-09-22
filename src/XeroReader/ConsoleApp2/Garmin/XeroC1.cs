@@ -2,6 +2,16 @@ namespace ConsoleApp2.Garmin;
 
 public class XeroC1
 {
-    public string SerialNumber { get; set; }
-    public string SoftwareVersion { get; set; }
+    List<ShotSession> _shotSessions = new();
+    
+    public uint SerialNumber { get; set; }
+    public float SoftwareVersion { get; set; }
+    public ushort Manufacturer { get; set; }
+
+    public List<ShotSession> Sessions => _shotSessions;
+
+    public override string ToString()
+    {
+        return $"Garmin Xero S/N {SerialNumber}, Software {SoftwareVersion}.";
+    }
 }
