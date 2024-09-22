@@ -5,6 +5,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution Folder", "{A63F589F-252A-4A61-8DC9-7496B5C3A969}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\.github\workflows\codeql-analysis.yml = ..\..\.github\workflows\codeql-analysis.yml
+		..\..\.github\workflows\dotnet.yml = ..\..\.github\workflows\dotnet.yml
 	EndProjectSection
 EndProject
 Global
