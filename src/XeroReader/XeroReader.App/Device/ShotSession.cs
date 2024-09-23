@@ -1,4 +1,4 @@
-namespace net.opgenorth.xero.Garmin
+namespace net.opgenorth.xero.Device
 {
     public class ShotSession
     {

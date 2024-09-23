@@ -1,4 +1,4 @@
-namespace net.opgenorth.xero.Garmin
+namespace net.opgenorth.xero.Device
 {
     /// <summary>
     ///     First attempt at an abstraction around a physical Garmin Xero X1 device.

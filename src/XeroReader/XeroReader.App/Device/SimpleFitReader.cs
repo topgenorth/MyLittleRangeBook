@@ -1,7 +1,7 @@
 using Dynastream.Fit;
-using net.opgenorth.xero.Garmin;
 
-namespace net.opgenorth.xero
+namespace net.opgenorth.xero.Device
+
 {
     public class SimpleFitReader
     {
@@ -37,27 +37,33 @@ namespace net.opgenorth.xero
         {
             _logger.Information("Processing file {filename}", filename);
 
+            var xero = new XeroC1();
+            var shotSession = new ShotSession();
+            xero.Sessions.Add(shotSession);
+            
             var fitListener = new FitListener();
             var decodeDemo = new Decode();
             decodeDemo.MesgEvent += fitListener.OnMesg;
 
             _logger.Information("Decoding...");
+
             await using var fitSource = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
             decodeDemo.Read(fitSource);
-
             var fitMessages = fitListener.FitMessages;
-            var xero = new XeroC1();
-
 
             _logger.Verbose("Reading DeviceInfoMesgs");
-            foreach (var msg in fitMessages.DeviceInfoMesgs) ParseDeviceInfoMesg(xero, msg);
+            foreach (var msg in fitMessages.DeviceInfoMesgs)
+            {
+                ParseDeviceInfoMesg(xero, msg);
+            }
 
-            var shotSession = new ShotSession();
-            foreach (var msg in fitMessages.ChronoShotSessionMesgs) ParseChronoShotSessionMessage(shotSession, msg);
+            foreach (var msg in fitMessages.ChronoShotSessionMesgs)
+            {
+                ParseChronoShotSessionMessage(shotSession, msg);
+            }
 
-            xero.Sessions.Add(shotSession);
             _logger.Information(xero.ToString());
-            
+
             return 0;
         }
     }
