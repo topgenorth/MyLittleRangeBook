@@ -1,4 +1,4 @@
-namespace ConsoleApp2.Garmin;
+namespace net.opgenorth.xero.Garmin;
 
 public class ShotSession
 {

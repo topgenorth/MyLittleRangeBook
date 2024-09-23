@@ -1,8 +1,7 @@
-using ConsoleApp2.Garmin;
 using Dynastream.Fit;
-using DateTime = System.DateTime;
+using net.opgenorth.xero.Garmin;
 
-namespace ConsoleApp2;
+namespace net.opgenorth.xero;
 
 public class SimpleFitReader
 {

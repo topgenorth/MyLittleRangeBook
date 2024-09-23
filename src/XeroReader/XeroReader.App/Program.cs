@@ -1,7 +1,7 @@
-﻿using ConsoleApp2;
-using ConsoleAppFramework;
+﻿using ConsoleAppFramework;
 using Dynastream.Fit;
 using Microsoft.Extensions.DependencyInjection;
+using net.opgenorth.xero;
 
 await using var log = new LoggerConfiguration().WriteTo.Console().WriteTo.Debug().CreateLogger();
 Serilog.Log.Logger = log;
