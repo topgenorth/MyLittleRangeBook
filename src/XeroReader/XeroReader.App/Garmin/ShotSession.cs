@@ -1,17 +1,12 @@
-namespace net.opgenorth.xero.Garmin;
-
-public class ShotSession
+namespace net.opgenorth.xero.Garmin
 {
-    List<Shot> _shots;
-    public DateTime SessionTimestamp { get; set; }
-    public int ShotCount => _shots.Count;
-    public float ProjectileWeight { get; set; }
-    public string ProjectileType { get; set; }
-    public string UnitsOfMeasure { get; set; }
-}
+    public class ShotSession
+    {
+        List<Shot> _shots;
 
-public class Shot
-{
-    public int ShotNumber { get; set; }
-    
+        public DateTime SessionTimestamp { get; set; }
+        public int ShotCount => _shots.Count;
+        public float ProjectileWeight { get; set; }
+        public string ProjectileType { get; set; }
+    }
 }
