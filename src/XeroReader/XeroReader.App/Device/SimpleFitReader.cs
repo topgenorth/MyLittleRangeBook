@@ -22,13 +22,16 @@ namespace net.opgenorth.xero.Device
             xero.Manufacturer = msg?.GetManufacturer() ?? 0;
         }
 
-        void ParseChronoShotSessionMessage(ShotSession shotSession, ChronoShotSessionMesg? msg)
+        void ParseChronoShotSessionMessage(ShotSession shotSession, ChronoShotSessionMesg msg)
         {
-            if (msg is null) return;
             var dt = msg.GetTimestamp().GetDateTime();
+
+            var f = msg.Fields.First(f => f.Name == "MinSpeed");
+            var s= msg.GetMaxSpeed() ?? 0f;
             shotSession.SessionTimestamp = dt;
             shotSession.ProjectileWeight = msg.GetGrainWeight() ?? 0;
             shotSession.ProjectileType = msg.GetProjectileType().ToString() ?? "Unknown";
+            shotSession.Units = f.GetUnits();
 
             // TODO [TO20240922] Get the units of measure. That might belong to the shot?
         }
@@ -45,7 +48,7 @@ namespace net.opgenorth.xero.Device
             var decodeDemo = new Decode();
             decodeDemo.MesgEvent += fitListener.OnMesg;
 
-            _logger.Information("Decoding...");
+            _logger.Information("Decoding...", filename);
 
             await using var fitSource = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
             decodeDemo.Read(fitSource);
@@ -62,9 +65,27 @@ namespace net.opgenorth.xero.Device
                 ParseChronoShotSessionMessage(shotSession, msg);
             }
 
+            foreach (var msg in fitMessages.ChronoShotDataMesgs)
+            {
+                ParseChronoShotDataMesgs(shotSession, msg);
+            }
+
             _logger.Information(xero.ToString());
+            _logger.Information(xero.Sessions[0].ToString());
 
             return 0;
+        }
+
+        void ParseChronoShotDataMesgs(ShotSession shotSession, ChronoShotDataMesg msg)
+        {
+            var shot = new Shot
+            {
+                ShotNumber = (int)msg.GetShotNum(), 
+                Timestamp = msg.GetTimestamp().GetDateTime(),
+                Speed = msg.GetShotSpeed() ?? 0f,
+            };
+
+            shotSession.AddShot(shot);
         }
     }
 }

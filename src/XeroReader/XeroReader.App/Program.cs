@@ -9,7 +9,7 @@ log.Verbose("Boostrapping app.");
 var services = new ServiceCollection();
 services.AddSingleton<ILogger>(log);
 
-using var serviceProvider = services.BuildServiceProvider(); // using for logger flush(important!)
+using var serviceProvider = services.BuildServiceProvider();
 ConsoleApp.ServiceProvider = serviceProvider;
 
 var app = ConsoleApp.Create();
