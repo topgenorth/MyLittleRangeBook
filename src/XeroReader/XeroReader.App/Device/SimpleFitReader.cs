@@ -27,7 +27,7 @@ namespace net.opgenorth.xero.Device
             var dt = msg.GetTimestamp().GetDateTime();
 
             var f = msg.Fields.First(f => f.Name == "MinSpeed");
-            var s= msg.GetMaxSpeed() ?? 0f;
+            var s = msg.GetMaxSpeed() ?? 0f;
             shotSession.SessionTimestamp = dt;
             shotSession.ProjectileWeight = msg.GetGrainWeight() ?? 0;
             shotSession.ProjectileType = msg.GetProjectileType().ToString() ?? "Unknown";
@@ -42,8 +42,9 @@ namespace net.opgenorth.xero.Device
 
             var xero = new XeroC1();
             var shotSession = new ShotSession();
+            shotSession.FileName = Path.GetFileName(filename);
             xero.Sessions.Add(shotSession);
-            
+
             var fitListener = new FitListener();
             var decodeDemo = new Decode();
             decodeDemo.MesgEvent += fitListener.OnMesg;
@@ -55,20 +56,9 @@ namespace net.opgenorth.xero.Device
             var fitMessages = fitListener.FitMessages;
 
             _logger.Verbose("Reading DeviceInfoMesgs");
-            foreach (var msg in fitMessages.DeviceInfoMesgs)
-            {
-                ParseDeviceInfoMesg(xero, msg);
-            }
-
-            foreach (var msg in fitMessages.ChronoShotSessionMesgs)
-            {
-                ParseChronoShotSessionMessage(shotSession, msg);
-            }
-
-            foreach (var msg in fitMessages.ChronoShotDataMesgs)
-            {
-                ParseChronoShotDataMesgs(shotSession, msg);
-            }
+            foreach (var msg in fitMessages.DeviceInfoMesgs) ParseDeviceInfoMesg(xero, msg);
+            foreach (var msg in fitMessages.ChronoShotSessionMesgs) ParseChronoShotSessionMessage(shotSession, msg);
+            foreach (var msg in fitMessages.ChronoShotDataMesgs) ParseChronoShotDataMesgs(shotSession, msg);
 
             _logger.Information(xero.ToString());
             _logger.Information(xero.Sessions[0].ToString());
@@ -80,9 +70,9 @@ namespace net.opgenorth.xero.Device
         {
             var shot = new Shot
             {
-                ShotNumber = (int)msg.GetShotNum(), 
+                ShotNumber = (int)msg.GetShotNum(),
                 Timestamp = msg.GetTimestamp().GetDateTime(),
-                Speed = msg.GetShotSpeed() ?? 0f,
+                Speed = msg.GetShotSpeed() ?? 0f
             };
 
             shotSession.AddShot(shot);

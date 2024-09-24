@@ -1,41 +1,42 @@
+using NanoidDotNet;
+
 namespace net.opgenorth.xero.Device
 {
     public class ShotSession
     {
-        List<Shot> _shots = new();
+        readonly List<Shot> _shots = new();
+
+        public ShotSession()
+        {
+            FileName = string.Empty;
+        }
+
+        public string Id { get; } = Nanoid.Generate();
+
+        public string FileName { get; set; }
 
         public DateTime SessionTimestamp { get; set; }
         public int ShotCount => _shots.Count;
         public float ProjectileWeight { get; set; }
         public string ProjectileType { get; set; }
-        public string Units { get; set;  }
+        public string Units { get; set; }
 
-        public float GetAverage
+        public float GetAverage => _shots.Average(s => s.Speed);
+
+        public float ExtremeSpread => _shots.Max(s => s.Speed) - _shots.Min(s => s.Speed);
+
+        public double StandardDeviation
         {
             get
             {
-                return _shots.Average(s => s.Speed);
+                var enumerable = _shots.ToArray();
+                var mean = enumerable.Average(s => s.Speed);
+                var squaredDistances = enumerable.Select(s => Math.Pow(Math.Abs(s.Speed - mean), 2)).ToList();
+                var shotCount = enumerable.Count();
+                var meanSquaredDistances = squaredDistances.Sum() / shotCount;
+
+                return Math.Sqrt(meanSquaredDistances);
             }
-        }
-
-        public float GetExtremeSpread()
-        {
-            return _shots.Max(s => s.Speed) - _shots.Min(s => s.Speed);
-        }
-
-        public double GetStandardDeviation()
-        {
-            double meanSquaredDistances = 0;
-
-            var enumerable = _shots.ToArray();
-            var datapointCount =  enumerable.Count();
-            var mean = enumerable.Average(s => s.Speed);
-
-            var squaredDistances = enumerable.Select(s => Math.Pow(Math.Abs(s.Speed - mean), 2)).ToList();
-
-            meanSquaredDistances = squaredDistances.Sum() / datapointCount;
-
-            return Math.Sqrt(meanSquaredDistances);
         }
 
         public IEnumerable<Shot> Shots => _shots;
@@ -47,7 +48,7 @@ namespace net.opgenorth.xero.Device
 
         public override string ToString()
         {
-            return $"{_shots.Count} shots, Average {GetAverage} {Units}, SD {GetStandardDeviation()})";
+            return $"{Id} {_shots.Count} shots, Average {GetAverage:F0} {Units}, SD {StandardDeviation:F1} {Units})";
         }
     }
 }

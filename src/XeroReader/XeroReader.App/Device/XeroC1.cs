@@ -1,3 +1,5 @@
+using NanoidDotNet;
+
 namespace net.opgenorth.xero.Device
 {
     /// <summary>
@@ -5,6 +7,8 @@ namespace net.opgenorth.xero.Device
     /// </summary>
     public class XeroC1
     {
+        public string Id { get; private set; } = Nanoid.Generate();
+
         public uint SerialNumber { get; set; }
         public float SoftwareVersion { get; set; }
         public ushort Manufacturer { get; set; }
