@@ -1,7 +1,7 @@
 using Dynastream.Fit;
+using net.opgenorth.xero.device;
 
 namespace net.opgenorth.xero.Device
-
 {
     public class SimpleFitReader
     {
@@ -41,9 +41,8 @@ namespace net.opgenorth.xero.Device
             _logger.Information("Processing file {filename}", filename);
 
             var xero = new XeroC1();
-            var shotSession = new ShotSession();
-            shotSession.FileName = Path.GetFileName(filename);
-            xero.Sessions.Add(shotSession);
+            var shotSession = xero.Sessions;
+            // shotSession.FileName = Path.GetFileName(filename);
 
             var fitListener = new FitListener();
             var decodeDemo = new Decode();
@@ -72,7 +71,7 @@ namespace net.opgenorth.xero.Device
             {
                 ShotNumber = (int)msg.GetShotNum(),
                 Timestamp = msg.GetTimestamp().GetDateTime(),
-                Speed = msg.GetShotSpeed() ?? 0f
+                Speed = new (msg.GetShotSpeed() ?? 0f)
             };
 
             shotSession.AddShot(shot);

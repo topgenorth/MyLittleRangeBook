@@ -1,6 +1,7 @@
+using System.Collections.Generic;
 using NanoidDotNet;
 
-namespace net.opgenorth.xero.Device
+namespace net.opgenorth.xero.device
 {
     /// <summary>
     ///     First attempt at an abstraction around a physical Garmin Xero X1 device.
@@ -13,7 +14,7 @@ namespace net.opgenorth.xero.Device
         public float SoftwareVersion { get; set; }
         public ushort Manufacturer { get; set; }
 
-        public List<ShotSession> Sessions { get; } = new();
+        public ShotCollection Sessions { get; } = new ShotCollection();
 
         public override string ToString()
         {
