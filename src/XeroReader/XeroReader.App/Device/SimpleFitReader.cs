@@ -40,8 +40,8 @@ namespace net.opgenorth.xero.Device
         {
             _logger.Information("Processing file {filename}", filename);
 
-            var xero = new XeroC1();
-            var shotSession = xero.Sessions;
+            // var xero = new XeroC1();XeroC1Ω
+            // var shotSession = xero.Sessions;
             // shotSession.FileName = Path.GetFileName(filename);
 
             var fitListener = new FitListener();
@@ -55,12 +55,12 @@ namespace net.opgenorth.xero.Device
             var fitMessages = fitListener.FitMessages;
 
             _logger.Verbose("Reading DeviceInfoMesgs");
-            foreach (var msg in fitMessages.DeviceInfoMesgs) ParseDeviceInfoMesg(xero, msg);
-            foreach (var msg in fitMessages.ChronoShotSessionMesgs) ParseChronoShotSessionMessage(shotSession, msg);
-            foreach (var msg in fitMessages.ChronoShotDataMesgs) ParseChronoShotDataMesgs(shotSession, msg);
-
-            _logger.Information(xero.ToString());
-            _logger.Information(xero.Sessions[0].ToString());
+            // foreach (var msg in fitMessages.DeviceInfoMesgs) ParseDeviceInfoMesg(xero, msg);
+            // foreach (var msg in fitMessages.ChronoShotSessionMesgs) ParseChronoShotSessionMessage(shotSession, msg);
+            // foreach (var msg in fitMessages.ChronoShotDataMesgs) ParseChronoShotDataMesgs(shotSession, msg);
+            //
+            // _logger.Information(xero.ToString());
+            // _logger.Information(xero.Sessions[0].ToString());
 
             return 0;
         }

@@ -2,7 +2,7 @@ using System;
 
 namespace net.opgenorth.xero.device
 {
-    public struct ShotSpeed
+    public struct ShotSpeed : IEquatable<ShotSpeed>
     {
         public static readonly ShotSpeed Zero = new ShotSpeed(0f);
         public ShotSpeed(float value, string units = "m/s")
@@ -15,9 +15,8 @@ namespace net.opgenorth.xero.device
         public string Units { get; internal set; }
         public override string ToString()
         {
-            return $"{Value} {Units}";
+            return $"{Value}{Units}";
         }
-
         
         public static ShotSpeed operator -(ShotSpeed s)
         {
@@ -44,6 +43,31 @@ namespace net.opgenorth.xero.device
         public static implicit operator float(ShotSpeed s)
         {
             return s.Value;
+        }
+
+        public bool Equals(ShotSpeed other)
+        {
+            return Value.Equals(other.Value) && Units == other.Units;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is ShotSpeed other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Value, Units);
+        }
+
+        public static bool operator ==(ShotSpeed left, ShotSpeed right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(ShotSpeed left, ShotSpeed right)
+        {
+            return !left.Equals(right);
         }
     }
 }

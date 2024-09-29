@@ -12,6 +12,16 @@ namespace net.opgenorth.xero.device
     {
         readonly SortedDictionary<int, Shot> _shots = new SortedDictionary<int, Shot>();
 
+        public uint XeroSerialNumber { get; internal set; }
+
+        public ShotCollection()
+        {
+            XeroSerialNumber = 0;
+        }
+        public ShotCollection(uint xeroSerialNumber)
+        {
+            XeroSerialNumber=xeroSerialNumber;
+        }
         public IEnumerator<Shot> GetEnumerator()
         {
             return _shots.Values.GetEnumerator();
@@ -22,6 +32,8 @@ namespace net.opgenorth.xero.device
             return GetEnumerator();
         }
 
+        public Shot this[int i] => _shots[i];
+     
         public void Add(Shot item)
         {
             _shots[item.ShotNumber] = item;
@@ -41,22 +53,9 @@ namespace net.opgenorth.xero.device
         {
             if (_shots.Count == 0)
             {
-                array = Array.Empty<Shot>();
                 return;
             }
-
-            var maxIndex = _shots.Count - 1;
-            if (arrayIndex >maxIndex)
-            {
-                throw new IndexOutOfRangeException($"There are only {_shots.Count} Shots in the collection.");
-            }
-            
-            array = new Shot[_shots.Count];
-            for (var i = arrayIndex; i < _shots.Count; i++)
-            {
-                var shot = _shots[i];
-                array[i] = shot;
-            }
+            _shots.Values.CopyTo(array, arrayIndex);
         }
 
         public bool Remove(Shot item)
@@ -82,18 +81,12 @@ namespace net.opgenorth.xero.device
             }
         }
 
-        public ShotSpeed ExtremeSpread
+        public ShotSpeed ExtremeSpread => MaxSpeed - MinSpeed;
+
+        public ShotSpeed MinSpeed
         {
             get
             {
-                return MaxSpeed - MinimumSpeed;
-            }
-        }
-        public ShotSpeed MinimumSpeed
-        {
-            get
-            {
-                
                 return _shots.Count == 0 ? ShotSpeed.Zero : _shots.Values.OrderBy(s => s.Speed).Last().Speed;
             }
         }
@@ -103,6 +96,24 @@ namespace net.opgenorth.xero.device
             {
                 return _shots.Count == 0 ? ShotSpeed.Zero : _shots.Values.OrderBy(s => s.Speed).First().Speed;
             }
+        }
+
+        public ShotSpeed AverageSpeed
+        {
+            get
+            {
+                var units = _shots[0].Speed.Units;
+                var avg = _shots.Values.Average(s => s.Speed.Value);
+
+                return new ShotSpeed(avg, units);
+            }
+        }
+
+        public override string ToString()
+        {
+            var units = _shots[0].Speed.Units;
+            return
+                $"{_shots.Count} shots: Avg {AverageSpeed}{units}, SD {StandardDeviation}{units}, ES {ExtremeSpread}{units}";
         }
     }
 }

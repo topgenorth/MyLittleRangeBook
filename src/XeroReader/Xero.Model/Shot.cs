@@ -12,5 +12,9 @@ namespace net.opgenorth.xero.device
         public  DateTime Timestamp { get; set; }
         public  int ShotNumber { get; set; }
         public  ShotSpeed Speed { get; set; }
+        public override string ToString()
+        {
+            return $"#{ShotNumber}: {Speed}";
+        }
     }
 }
