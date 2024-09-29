@@ -17,7 +17,6 @@ namespace net.opgenorth.xero.device
             _xeroSerialNumber = 0;
             FileName = string.Empty;
             ProjectileType = "Rifle";
-            Units = "m/s";
         }
 
         public ShotSession(XeroC1 xeroDevice) : this()
@@ -33,9 +32,9 @@ namespace net.opgenorth.xero.device
         public int ShotCount => _shots.Count;
         public float ProjectileWeight { get; set; }
         public string ProjectileType { get; set; }
-        public string Units { get; set; }
+        public string Units => _shots.MaxSpeed.Units;
 
-        public float GetAverage => _shots.Average(s => s.Speed);
+        public float AverageSpeed => _shots.AverageSpeed;
 
         public float ExtremeSpread => _shots.Max(s => s.Speed) - _shots.Min(s => s.Speed);
 
@@ -55,7 +54,7 @@ namespace net.opgenorth.xero.device
         public override string ToString()
         {
             return
-                $"{Id} {_shots.Count} shots, Average {GetAverage:F0} {Units}, SD {_shots.StandardDeviation:F1} {Units})";
+                $"{Id}: {_shots}";
         }
     }
 }

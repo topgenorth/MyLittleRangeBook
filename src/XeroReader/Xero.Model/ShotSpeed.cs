@@ -2,7 +2,7 @@ using System;
 
 namespace net.opgenorth.xero.device
 {
-    public struct ShotSpeed : IEquatable<ShotSpeed>
+    public struct ShotSpeed : IEquatable<ShotSpeed>, IComparable<ShotSpeed>
     {
         public static readonly ShotSpeed Zero = new ShotSpeed(0f);
         public ShotSpeed(float value, string units = "m/s")
@@ -15,7 +15,7 @@ namespace net.opgenorth.xero.device
         public string Units { get; internal set; }
         public override string ToString()
         {
-            return $"{Value}{Units}";
+            return $"{Value:F1}{Units}";
         }
         
         public static ShotSpeed operator -(ShotSpeed s)
@@ -48,6 +48,16 @@ namespace net.opgenorth.xero.device
         public bool Equals(ShotSpeed other)
         {
             return Value.Equals(other.Value) && Units == other.Units;
+        }
+
+        public int CompareTo(ShotSpeed other)
+        {
+            if (other.Units != Units)
+            {
+                throw new ArgumentException("Cannot compare shots with two different units of measure");
+            }
+
+            return Value.CompareTo(other.Value);
         }
 
         public override bool Equals(object? obj)

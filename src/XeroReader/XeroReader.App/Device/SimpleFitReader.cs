@@ -31,37 +31,27 @@ namespace net.opgenorth.xero.Device
             shotSession.SessionTimestamp = dt;
             shotSession.ProjectileWeight = msg.GetGrainWeight() ?? 0;
             shotSession.ProjectileType = msg.GetProjectileType().ToString() ?? "Unknown";
-            shotSession.Units = f.GetUnits();
-
-            // TODO [TO20240922] Get the units of measure. That might belong to the shot?
         }
 
         public async Task<int> Read(string filename)
         {
-            _logger.Information("Processing file {filename}", filename);
-
-            // var xero = new XeroC1();XeroC1Ω
-            // var shotSession = xero.Sessions;
-            // shotSession.FileName = Path.GetFileName(filename);
-
             var fitListener = new FitListener();
             var decodeDemo = new Decode();
             decodeDemo.MesgEvent += fitListener.OnMesg;
 
-            _logger.Information("Decoding...", filename);
+            _logger.Information("Decoding {FitFile}...", filename);
 
             await using var fitSource = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
             decodeDemo.Read(fitSource);
             var fitMessages = fitListener.FitMessages;
 
-            _logger.Verbose("Reading DeviceInfoMesgs");
+            var shotSession = new ShotSession();            
             // foreach (var msg in fitMessages.DeviceInfoMesgs) ParseDeviceInfoMesg(xero, msg);
-            // foreach (var msg in fitMessages.ChronoShotSessionMesgs) ParseChronoShotSessionMessage(shotSession, msg);
-            // foreach (var msg in fitMessages.ChronoShotDataMesgs) ParseChronoShotDataMesgs(shotSession, msg);
-            //
-            // _logger.Information(xero.ToString());
-            // _logger.Information(xero.Sessions[0].ToString());
+            foreach (var msg in fitMessages.ChronoShotSessionMesgs) ParseChronoShotSessionMessage(shotSession, msg);
+            foreach (var msg in fitMessages.ChronoShotDataMesgs) ParseChronoShotDataMesgs(shotSession, msg);
 
+            _logger.Information(shotSession.ToString());
+            _logger.Information("Finished decoding {FitFile}...", filename);
             return 0;
         }
 

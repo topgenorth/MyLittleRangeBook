@@ -67,17 +67,22 @@ namespace net.opgenorth.xero.device
 
         public bool IsReadOnly => false;
 
-        public double StandardDeviation
+        public string Units => _shots.Any() ? _shots.Values.First().Speed.Units : "m/s";
+
+        public ShotSpeed StandardDeviation
         {
             get
             {
+                if (!_shots.Any()) return ShotSpeed.Zero;
+                
                 var shotValues = _shots.Values.ToArray();
                 var mean = shotValues.Average(s => s.Speed);
                 var squaredDistances = shotValues.Select(s => Math.Pow(Math.Abs(s.Speed - mean), 2)).ToList();
                 var shotCount = shotValues.Count();
                 var meanSquaredDistances = squaredDistances.Sum() / shotCount;
 
-                return Math.Sqrt(meanSquaredDistances);
+                var speed =  Math.Sqrt(meanSquaredDistances);
+                return new ShotSpeed((float) speed , Units);
             }
         }
 
@@ -94,7 +99,7 @@ namespace net.opgenorth.xero.device
         {
             get
             {
-                return _shots.Count == 0 ? ShotSpeed.Zero : _shots.Values.OrderBy(s => s.Speed).First().Speed;
+                return _shots.Count == 0 ? ShotSpeed.Zero : _shots.Values.Max(s => s.Speed);
             }
         }
 
@@ -102,18 +107,19 @@ namespace net.opgenorth.xero.device
         {
             get
             {
-                var units = _shots[0].Speed.Units;
+                if (!_shots.Any()) return ShotSpeed.Zero;
+                var units = _shots[1].Speed.Units;
                 var avg = _shots.Values.Average(s => s.Speed.Value);
-
                 return new ShotSpeed(avg, units);
+
             }
         }
 
         public override string ToString()
         {
-            var units = _shots[0].Speed.Units;
-            return
-                $"{_shots.Count} shots: Avg {AverageSpeed}{units}, SD {StandardDeviation}{units}, ES {ExtremeSpread}{units}";
+            return _shots.Any() ? 
+                $"{_shots.Count} shots, Average {AverageSpeed}, SD {StandardDeviation}, ES {ExtremeSpread}" 
+                : "No shots";
         }
     }
 }
