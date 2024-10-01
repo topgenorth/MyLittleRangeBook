@@ -33,25 +33,26 @@ namespace net.opgenorth.xero.Device
             shotSession.ProjectileType = msg.GetProjectileType().ToString() ?? "Unknown";
         }
 
-        public async Task<int> Read(string filename)
+        public async Task<int> Read(string filename, CancellationToken ct)
         {
+            _logger.Information("Processing {FitFile}...", filename);
+            var fit = await LoadFile(filename, ct); // TODO [TO20241001] Figure out a cancellation token.
+            
             var fitListener = new FitListener();
             var decodeDemo = new Decode();
             decodeDemo.MesgEvent += fitListener.OnMesg;
-
-            _logger.Information("Decoding {FitFile}...", filename);
-
-            await using var fitSource = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+            
+            await using var fitSource = new MemoryStream(fit.ToArray());
             decodeDemo.Read(fitSource);
             var fitMessages = fitListener.FitMessages;
-
+            
             var shotSession = new ShotSession();            
             // foreach (var msg in fitMessages.DeviceInfoMesgs) ParseDeviceInfoMesg(xero, msg);
             foreach (var msg in fitMessages.ChronoShotSessionMesgs) ParseChronoShotSessionMessage(shotSession, msg);
             foreach (var msg in fitMessages.ChronoShotDataMesgs) ParseChronoShotDataMesgs(shotSession, msg);
-
+            
             _logger.Information(shotSession.ToString());
-            _logger.Information("Finished decoding {FitFile}...", filename);
+            _logger.Information("Finished with {FitFile}.", filename);
             return 0;
         }
 
@@ -59,12 +60,22 @@ namespace net.opgenorth.xero.Device
         {
             var shot = new Shot
             {
-                ShotNumber = (int)msg.GetShotNum(),
+                ShotNumber = (int)msg.GetShotNum()!,
                 Timestamp = msg.GetTimestamp().GetDateTime(),
-                Speed = new (msg.GetShotSpeed() ?? 0f)
+                Speed = new ShotSpeed(msg.GetShotSpeed() ?? 0f)
             };
 
             shotSession.AddShot(shot);
+        }
+
+        async Task<ReadOnlyMemory<byte>> LoadFile(string filename, CancellationToken token) {
+             
+            await using var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var result = new byte[fs.Length];
+            var bytesRead = await fs.ReadAsync(result, 0, (int)fs.Length,  token).ConfigureAwait(false);
+            _logger.Verbose("Loaded {BytesRead} bytes from {Filename}", bytesRead, filename);
+            return result;
+
         }
     }
 }

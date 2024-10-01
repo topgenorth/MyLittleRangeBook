@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using net.opgenorth.xero.Device;
 
-await using var log = new LoggerConfiguration().WriteTo.Console().WriteTo.Debug().CreateLogger();
+await using var log = new LoggerConfiguration().MinimumLevel.Verbose().WriteTo.Console().WriteTo.Debug().CreateLogger();
 Log.Logger = log;
 
 log.Verbose("Boostrapping app.");
