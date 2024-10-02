@@ -1,3 +1,4 @@
+/*
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Copyright 2023 Garmin International, Inc.
 // Licensed under the Flexible and Interoperable Data Transfer (FIT) Protocol License; you
@@ -25,7 +26,7 @@ namespace net.opgenorth.xero.File
         public FileIdMesg _firstFileIdMesg => _messages.FileIdMesgs.FirstOrDefault();
         public ActivityMesg _activityMesg => _messages.ActivityMesgs.FirstOrDefault();
 
-        public List< /*SessionMessages*/ object> ParseSessions()
+        public List< /*SessionMessages#1# object> ParseSessions()
         {
             if (!IsActivityFile)
             {
@@ -113,3 +114,4 @@ namespace net.opgenorth.xero.File
         }
     }
 }
+*/
