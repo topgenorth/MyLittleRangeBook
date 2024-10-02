@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>net.opgenorth.xero</RootNamespace>
-        <AssemblyName>xero</AssemblyName>
+        <AssemblyName>xeror</AssemblyName>
         <Version>0.0.0</Version>
     </PropertyGroup>
 

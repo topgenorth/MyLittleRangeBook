@@ -12,14 +12,14 @@ namespace net.opgenorth.xero.Device
             _logger = logger;
         }
 
-        void ParseDeviceInfoMesg(XeroC1 xero, DeviceInfoMesg? msg)
+        void ParseDeviceInfoMesg( DeviceInfoMesg? msg)
         {
             if (msg is null) return;
             if (!msg.Name.Equals("DeviceInfo", StringComparison.OrdinalIgnoreCase)) return;
 
-            xero.SoftwareVersion = msg?.GetSoftwareVersion() ?? 0.0f;
-            xero.SerialNumber = msg?.GetSerialNumber() ?? 0;
-            xero.Manufacturer = msg?.GetManufacturer() ?? 0;
+            var version=  msg?.GetSoftwareVersion() ?? 0.0f;
+            var serialNumber = msg?.GetSerialNumber() ?? 0;
+            var manufactureranufacturer = msg?.GetManufacturer() ?? 0;
         }
 
         void ParseChronoShotSessionMessage(ShotSession shotSession, ChronoShotSessionMesg msg)
@@ -36,7 +36,7 @@ namespace net.opgenorth.xero.Device
         public async Task<int> Read(string filename, CancellationToken ct)
         {
             _logger.Information("Processing {FitFile}...", filename);
-            var fit = await LoadFile(filename, ct); // TODO [TO20241001] Figure out a cancellation token.
+            var fit = await LoadFile(filename, ct);
             
             var fitListener = new FitListener();
             var decodeDemo = new Decode();
@@ -47,13 +47,14 @@ namespace net.opgenorth.xero.Device
             var fitMessages = fitListener.FitMessages;
             
             var shotSession = new ShotSession();            
-            // foreach (var msg in fitMessages.DeviceInfoMesgs) ParseDeviceInfoMesg(xero, msg);
+            foreach (var msg in fitMessages.DeviceInfoMesgs) ParseDeviceInfoMesg(msg);
             foreach (var msg in fitMessages.ChronoShotSessionMesgs) ParseChronoShotSessionMessage(shotSession, msg);
             foreach (var msg in fitMessages.ChronoShotDataMesgs) ParseChronoShotDataMesgs(shotSession, msg);
             
             _logger.Information(shotSession.ToString());
             _logger.Information("Finished with {FitFile}.", filename);
             return 0;
+            
         }
 
         void ParseChronoShotDataMesgs(ShotSession shotSession, ChronoShotDataMesg msg)
