@@ -1,6 +1,6 @@
 ﻿using ConsoleAppFramework;
 using Microsoft.Extensions.DependencyInjection;
-using net.opgenorth.xero.Device;
+using net.opgenorth.xero.File;
 
 await using var log = new LoggerConfiguration().MinimumLevel.Verbose().WriteTo.Console().WriteTo.Debug().CreateLogger();
 Log.Logger = log;

@@ -46,7 +46,9 @@ namespace net.opgenorth.xero.device
         {
             if (_shots.Contains(shot))
                 // TODO [TO20240928] Could check the .Id value, if these are the same, then "add" becomes "replace".
+            {
                 throw new ArgumentException($"The collection already has a shot number {shot.ShotNumber}");
+            }
 
             _shots.Add(shot);
         }

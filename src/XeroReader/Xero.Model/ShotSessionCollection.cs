@@ -12,7 +12,7 @@ namespace net.opgenorth.xero.device
         {
             _sessions = new List<ShotSession>();
         }
-        
+
         public IEnumerator<ShotSession> GetEnumerator()
         {
             return _sessions.GetEnumerator();
@@ -49,12 +49,12 @@ namespace net.opgenorth.xero.device
             return _sessions.Remove(item);
         }
 
+        public int Count => _sessions.Count;
+        public bool IsReadOnly => false;
+
         public void MergeAll()
         {
             throw new NotImplementedException();
         }
-
-        public int Count => _sessions.Count;
-        public bool IsReadOnly => false;
     }
 }
