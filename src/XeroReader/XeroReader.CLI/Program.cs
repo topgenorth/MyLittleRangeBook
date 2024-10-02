@@ -1,6 +1,7 @@
-﻿using ConsoleAppFramework;
+﻿using System.Net.Sockets;
+using ConsoleAppFramework;
 using Microsoft.Extensions.DependencyInjection;
-using net.opgenorth.xero.File;
+using net.opgenorth.xero.FitFile;
 
 await using var log = new LoggerConfiguration().MinimumLevel.Verbose().WriteTo.Console().WriteTo.Debug().CreateLogger();
 Log.Logger = log;
@@ -15,6 +16,7 @@ ConsoleApp.ServiceProvider = serviceProvider;
 var app = ConsoleApp.Create();
 
 app.Add<SimpleFitReader>("");
+
 
 log.Verbose("Start app");
 app.Run(args);

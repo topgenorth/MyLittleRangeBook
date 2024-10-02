@@ -7,7 +7,7 @@
 
 using Dynastream.Fit;
 
-namespace net.opgenorth.xero.File
+namespace net.opgenorth.xero.FitFile
 {
     public class FitDecoder
     {

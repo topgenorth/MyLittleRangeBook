@@ -1,7 +1,7 @@
 using Dynastream.Fit;
 using net.opgenorth.xero.device;
 
-namespace net.opgenorth.xero.File
+namespace net.opgenorth.xero.FitFile
 {
     public class SimpleFitReader
     {
@@ -9,7 +9,7 @@ namespace net.opgenorth.xero.File
 
         public SimpleFitReader(ILogger logger)
         {
-            _logger = logger;
+            _logger = logger.ForContext<SimpleFitReader>();
         }
 
         void ParseDeviceInfoMesg(DeviceInfoMesg? msg)

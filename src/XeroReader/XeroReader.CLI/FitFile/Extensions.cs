@@ -9,7 +9,7 @@ using System.Text;
 using Dynastream.Fit;
 using DateTime = System.DateTime;
 
-namespace net.opgenorth.xero.File
+namespace net.opgenorth.xero.FitFile
 {
     public static class FitExtensions
     {
