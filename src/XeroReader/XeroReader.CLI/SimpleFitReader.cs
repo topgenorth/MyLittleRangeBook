@@ -1,8 +1,7 @@
 using CommunityToolkit.HighPerformance;
-using Dynastream.Fit;
-using net.opgenorth.xero.device;
+using net.opgenorth.xero.FitFile;
 
-namespace net.opgenorth.xero.FitFile
+namespace net.opgenorth.xero
 {
     public class SimpleFitReader
     {

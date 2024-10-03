@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
 using ConsoleAppFramework;
 using Microsoft.Extensions.DependencyInjection;
+using net.opgenorth.xero;
 using net.opgenorth.xero.FitFile;
 
 await using var log = new LoggerConfiguration().MinimumLevel.Verbose().WriteTo.Console().WriteTo.Debug().CreateLogger();
