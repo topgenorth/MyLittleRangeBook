@@ -17,13 +17,14 @@ namespace net.opgenorth.xero.ImportFit
             if (cancellationToken.IsCancellationRequested)
             {
                 _logger.Debug("Cancellation is requested - no work will be done.");
+
                 return 0;
             }
+
             var copiedCount = 0;
-            var skippedCount = 0;           
+            var skippedCount = 0;
             foreach (var filename in Directory.EnumerateFiles(sourceDir))
             {
-  
                 var sourceFile = Path.GetFileName(filename);
                 var destinationFile = Path.Combine(targetDir, sourceFile);
 
@@ -31,6 +32,7 @@ namespace net.opgenorth.xero.ImportFit
                 {
                     skippedCount++;
                     _logger.Verbose("File {Destination} exists, moving on to the next file", destinationFile);
+
                     continue;
                 }
 
@@ -41,8 +43,10 @@ namespace net.opgenorth.xero.ImportFit
                 copiedCount++;
             }
 
-            _logger.Information("Imported {FileCount}from {SourceDir} to {DestinationDir}, skipped {SkippedCount} files.", copiedCount, sourceDir, targetDir, skippedCount);
-            
+            _logger.Information(
+                "Imported {FileCount}from {SourceDir} to {DestinationDir}, skipped {SkippedCount} files.", copiedCount,
+                sourceDir, targetDir, skippedCount);
+
             return 0;
         }
     }

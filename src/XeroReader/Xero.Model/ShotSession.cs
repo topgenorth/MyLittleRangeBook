@@ -49,6 +49,7 @@ namespace net.opgenorth.xero.device
 
             _shots.Add(shot);
         }
+
         public string Notes { get; set; }
 
         public override string ToString()

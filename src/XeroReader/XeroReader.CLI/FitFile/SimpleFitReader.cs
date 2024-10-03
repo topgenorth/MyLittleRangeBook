@@ -7,7 +7,9 @@ namespace net.opgenorth.xero.FitFile
     public class SimpleFitReader
     {
         readonly ILogger _logger;
+
         readonly XeroParser _xeroParser;
+
         public SimpleFitReader(ILogger logger)
         {
             _logger = logger.ForContext<SimpleFitReader>();
@@ -22,12 +24,13 @@ namespace net.opgenorth.xero.FitFile
             await using var stream = fitData.AsStream();
             var shotSession = _xeroParser.Decode(stream);
             shotSession.FileName = filename;
-            
+
             _logger.Information("{ShotSession}", shotSession);
             _logger.Information("Finished with {FitFile}.", filename);
+
             return 0;
         }
-        
+
 
         async Task<ReadOnlyMemory<byte>> LoadFile(string filename, CancellationToken token)
         {

@@ -6,14 +6,19 @@ namespace net.opgenorth.xero.FitFile
     public class XeroParser
     {
         const int ExpectedFileType = 54;
-        readonly ILogger _logger; 
-        readonly FitListener _fitListener = new(); 
+
+        readonly ILogger _logger;
+
+        readonly FitListener _fitListener = new();
+
         FitMessages _fitMessages;
+
         HashSet<string> RecordFieldNames = new();
+
         HashSet<string> RecordDeveloperFieldNames = new();
-        
+
         ShotSession _shotSession;
-        
+
         public XeroParser(ILogger logger)
         {
             _logger = logger.ForContext<XeroParser>();
@@ -21,8 +26,8 @@ namespace net.opgenorth.xero.FitFile
 
         public ShotSession Decode(Stream inputStrea)
         {
-            _shotSession = new();
-            
+            _shotSession = new ShotSession();
+
             var decoder = new Decode();
             // Check that this is a FIT file
             if (!decoder.IsFIT(inputStrea))
@@ -62,7 +67,7 @@ namespace net.opgenorth.xero.FitFile
 
             var f = msg.Fields.First(f => f.Name == "MinSpeed");
             var s = msg.GetMaxSpeed() ?? 0f;
-             _shotSession.SessionTimestamp = dt;
+            _shotSession.SessionTimestamp = dt;
             _shotSession.ProjectileWeight = msg.GetGrainWeight() ?? 0;
             _shotSession.ProjectileType = msg.GetProjectileType().ToString() ?? "Unknown";
         }
@@ -70,7 +75,7 @@ namespace net.opgenorth.xero.FitFile
         void OnChronoShotMsg(object sender, MesgEventArgs e)
         {
             var msg = (ChronoShotDataMesg)e.mesg;
-            
+
             var shot = new Shot
             {
                 ShotNumber = (int)msg.GetShotNum()!,
@@ -98,13 +103,14 @@ namespace net.opgenorth.xero.FitFile
 
         void OnFileIdMsg(object sender, MesgEventArgs e)
         {
-            var f =(FileIdMesg) e.mesg;
+            var f = (FileIdMesg)e.mesg;
             var t = f.GetType();
 
             if (ExpectedFileType != (int)t!)
             {
                 throw new FileTypeException($"Expected FIT File type {ExpectedFileType}, received {t}.");
             }
+
             _logger.Verbose("FileType {FITFileType}", t);
         }
     }
