@@ -17,11 +17,7 @@ namespace net.opgenorth.xero.device
             _xeroSerialNumber = 0;
             FileName = string.Empty;
             ProjectileType = "Rifle";
-        }
-
-        public ShotSession(XeroC1 xeroDevice) : this()
-        {
-            _xeroSerialNumber = xeroDevice.SerialNumber;
+            Notes = string.Empty;
         }
 
         public string Id { get; }
@@ -41,6 +37,7 @@ namespace net.opgenorth.xero.device
         public double StandardDeviation => _shots.StandardDeviation;
 
         public IEnumerable<Shot> Shots => _shots;
+        public uint SerialNumber { get; set; }
 
         public void AddShot(Shot shot)
         {
@@ -52,6 +49,7 @@ namespace net.opgenorth.xero.device
 
             _shots.Add(shot);
         }
+        public string Notes { get; set; }
 
         public override string ToString()
         {

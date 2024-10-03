@@ -53,7 +53,7 @@ namespace net.opgenorth.xero.device
 
         public ShotSpeed MinSpeed
         {
-            get { return _shots.Count == 0 ? ShotSpeed.Zero : _shots.Values.OrderBy(s => s.Speed).Last().Speed; }
+            get { return _shots.Count == 0 ? ShotSpeed.Zero : _shots.Values.Min(s => s.Speed); }
         }
 
         public ShotSpeed MaxSpeed
@@ -124,7 +124,7 @@ namespace net.opgenorth.xero.device
         public override string ToString()
         {
             return _shots.Any()
-                ? $"{_shots.Count} shots, Average {AverageSpeed}, SD {StandardDeviation}, ES {ExtremeSpread}"
+                ? $"{_shots.Count} shots, Average {AverageSpeed}, SD {StandardDeviation}, ES {ExtremeSpread}, Max {MaxSpeed}, Min {MinSpeed}"
                 : "No shots";
         }
     }
