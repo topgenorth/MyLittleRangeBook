@@ -1,22 +1,17 @@
 using Dynastream.Fit;
 using net.opgenorth.xero.device;
 
-namespace net.opgenorth.xero.FitFile
+namespace net.opgenorth.xero.ParseFitFile
 {
     public class XeroParser
     {
         const int ExpectedFileType = 54;
 
         readonly ILogger _logger;
-
         readonly FitListener _fitListener = new();
-
         FitMessages _fitMessages;
-
         HashSet<string> RecordFieldNames = new();
-
         HashSet<string> RecordDeveloperFieldNames = new();
-
         ShotSession _shotSession;
 
         public XeroParser(ILogger logger)
@@ -110,8 +105,6 @@ namespace net.opgenorth.xero.FitFile
             {
                 throw new FileTypeException($"Expected FIT File type {ExpectedFileType}, received {t}.");
             }
-
-            _logger.Verbose("FileType {FITFileType}", t);
         }
     }
 }

@@ -1,5 +1,5 @@
 using CommunityToolkit.HighPerformance;
-using net.opgenorth.xero.FitFile;
+using net.opgenorth.xero.ParseFitFile;
 
 namespace net.opgenorth.xero
 {

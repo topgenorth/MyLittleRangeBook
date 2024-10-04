@@ -17,5 +17,7 @@ namespace net.opgenorth.xero.device
         {
             return $"#{ShotNumber}: {Speed}";
         }
+        
+        public bool IgnoreShot { get; set; }
     }
 }

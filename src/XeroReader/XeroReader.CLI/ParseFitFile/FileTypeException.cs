@@ -1,5 +1,4 @@
-
-namespace net.opgenorth.xero.FitFile
+namespace net.opgenorth.xero.ParseFitFile
 {
     public class FileTypeException : Exception
     {

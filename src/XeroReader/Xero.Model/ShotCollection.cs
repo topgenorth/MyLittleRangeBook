@@ -26,25 +26,25 @@ namespace net.opgenorth.xero.device
 
         public Shot this[int i] => _shots[i];
 
+        public IEnumerable<Shot> ActiveShots => from s in _shots where !s.Value.IgnoreShot select s.Value;
         public string Units => _shots.Any() ? _shots.Values.First().Speed.Units : "m/s";
 
         public ShotSpeed StandardDeviation
         {
             get
             {
-                if (!_shots.Any())
+                var shotValues = ActiveShots.ToArray();
+                if (!shotValues.Any())
                 {
                     return ShotSpeed.Zero;
                 }
-
-                var shotValues = _shots.Values.ToArray();
+        
                 var mean = shotValues.Average(s => s.Speed);
                 var squaredDistances = shotValues.Select(s => Math.Pow(Math.Abs(s.Speed - mean), 2)).ToList();
                 var shotCount = shotValues.Count();
                 var meanSquaredDistances = squaredDistances.Sum() / shotCount;
 
                 var speed = Math.Sqrt(meanSquaredDistances);
-
                 return new ShotSpeed((float)speed, Units);
             }
         }
@@ -53,35 +53,40 @@ namespace net.opgenorth.xero.device
 
         public ShotSpeed MinSpeed
         {
-            get { return _shots.Count == 0 ? ShotSpeed.Zero : _shots.Values.Min(s => s.Speed); }
+            get { return ActiveShots.Any()?  ActiveShots.Min(s => s.Speed) : ShotSpeed.Zero ; }
         }
 
         public ShotSpeed MaxSpeed
         {
-            get { return _shots.Count == 0 ? ShotSpeed.Zero : _shots.Values.Max(s => s.Speed); }
+            get { return ActiveShots.Any() ? ShotSpeed.Zero : ActiveShots.Max(s => s.Speed); }
         }
 
         public ShotSpeed AverageSpeed
         {
             get
             {
-                if (!_shots.Any())
+                if (!ActiveShots.Any())
                 {
                     return ShotSpeed.Zero;
                 }
 
-                var units = _shots[1].Speed.Units;
-                var avg = _shots.Values.Average(s => s.Speed.Value);
+                var units = _shots.First().Value.Speed.Units;
+                var avg = ActiveShots.Select(s=> s).Average(s => s.Speed.Value);
 
                 return new ShotSpeed(avg, units);
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>All of the shots, ignored or not.</returns>
         public IEnumerator<Shot> GetEnumerator()
         {
             return _shots.Values.GetEnumerator();
         }
 
+        
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -117,14 +122,14 @@ namespace net.opgenorth.xero.device
             return _shots.Remove(item.ShotNumber);
         }
 
-        public int Count => _shots.Count;
+        public int Count => ActiveShots.Count();
 
         public bool IsReadOnly => false;
 
         public override string ToString()
         {
             return _shots.Any()
-                ? $"{_shots.Count} shots, Average {AverageSpeed}, SD {StandardDeviation}, ES {ExtremeSpread}, Max {MaxSpeed}, Min {MinSpeed}"
+                ? $"{Count} shots, Average {AverageSpeed}, SD {StandardDeviation}, ES {ExtremeSpread}, Max {MaxSpeed}, Min {MinSpeed}"
                 : "No shots";
         }
     }

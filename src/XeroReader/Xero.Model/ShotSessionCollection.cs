@@ -52,7 +52,12 @@ namespace net.opgenorth.xero.device
         public int Count => _sessions.Count;
         public bool IsReadOnly => false;
 
-        public void MergeAll()
+        /// <summary>
+        /// This will combine all the shot sessions returning a single <c cref="ShotSession" />.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public ShotSession MergeAll()
         {
             throw new NotImplementedException();
         }
