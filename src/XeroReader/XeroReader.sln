@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XeroReader.CLI", "XeroReader.CLI\XeroReader.CLI.csproj", "{C7F1500E-F622-4BA4-844F-951D68CEA7E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub actions", "GitHub actions", "{A63F589F-252A-4A61-8DC9-7496B5C3A969}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\.github\workflows\codeql-analysis.yml = ..\..\.github\workflows\codeql-analysis.yml
+		..\..\.github\workflows\dotnet.yml = ..\..\.github\workflows\dotnet.yml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xero.Model", "Xero.Model\Xero.Model.csproj", "{6D541111-4FAE-42BC-8D6D-A2B0E2C538C2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C7F1500E-F622-4BA4-844F-951D68CEA7E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7F1500E-F622-4BA4-844F-951D68CEA7E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7F1500E-F622-4BA4-844F-951D68CEA7E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7F1500E-F622-4BA4-844F-951D68CEA7E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D541111-4FAE-42BC-8D6D-A2B0E2C538C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D541111-4FAE-42BC-8D6D-A2B0E2C538C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D541111-4FAE-42BC-8D6D-A2B0E2C538C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D541111-4FAE-42BC-8D6D-A2B0E2C538C2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
