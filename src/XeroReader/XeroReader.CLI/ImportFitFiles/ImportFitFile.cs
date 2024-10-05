@@ -12,6 +12,13 @@ namespace net.opgenorth.xero.ImportFitFiles
             _logger = logger.ForContext<ImportFitFile>();
         }
 
+        /// <summary>
+        /// Copies new FIT from the source directory to the target directory.
+        /// </summary>
+        /// <param name="sourceDir"></param>
+        /// <param name="targetDir"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task<int> Import(string sourceDir, string targetDir, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -42,6 +49,14 @@ namespace net.opgenorth.xero.ImportFitFiles
             int skippedCount,
             int copiedCount)
         {
+   
+            if (!"FIT".Equals(Path.GetExtension(filename), StringComparison.OrdinalIgnoreCase))
+            {
+                skippedCount++;
+                _logger.Verbose("Not a FIT file, ignoring {file}", filename);
+                return (skippedCount,copiedCount);
+            }
+            
             var sourceFile = Path.GetFileName(filename);
             var destinationFile = Path.Combine(targetDir, sourceFile);
 
@@ -49,7 +64,6 @@ namespace net.opgenorth.xero.ImportFitFiles
             {
                 skippedCount++;
                 _logger.Verbose("File {Destination} exists, moving on to the next file", destinationFile);
-
                 return (skippedCount, copiedCount);
             }
 

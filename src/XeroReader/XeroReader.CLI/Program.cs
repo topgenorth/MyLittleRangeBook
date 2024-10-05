@@ -2,6 +2,7 @@
 using ConsoleAppFramework;
 using Microsoft.Extensions.DependencyInjection;
 using net.opgenorth.xero;
+using net.opgenorth.xero.ImportFitFiles;
 
 await using var log = new LoggerConfiguration()
     .MinimumLevel.Verbose()
@@ -20,6 +21,7 @@ ConsoleApp.ServiceProvider = serviceProvider;
 var app = ConsoleApp.Create();
 
 app.Add<SimpleFitReader>("");
+app.Add<ImportFitFile>("import");
 
 log.Verbose("Start app");
 app.Run(args);
