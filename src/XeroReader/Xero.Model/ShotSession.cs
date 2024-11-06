@@ -7,9 +7,9 @@ namespace net.opgenorth.xero.device
 {
     public class ShotSession
     {
-        readonly ShotCollection _shots = new ShotCollection();
+        private readonly ShotCollection _shots = new ShotCollection();
 
-        readonly uint _xeroSerialNumber;
+        private readonly uint _xeroSerialNumber;
 
         public ShotSession()
         {
@@ -39,6 +39,8 @@ namespace net.opgenorth.xero.device
         public IEnumerable<Shot> Shots => _shots;
         public uint SerialNumber { get; set; }
 
+        public string Notes { get; set; }
+
         public void AddShot(Shot shot)
         {
             if (_shots.Contains(shot))
@@ -50,12 +52,6 @@ namespace net.opgenorth.xero.device
             _shots.Add(shot);
         }
 
-        public string Notes { get; set; }
-
-        public override string ToString()
-        {
-            return
-                $"{Id}: {_shots}";
-        }
+        public override string ToString() => $"{Id}: {_shots}";
     }
 }

@@ -1,17 +1,16 @@
-namespace net.opgenorth.xero.ParseFitFile
+namespace net.opgenorth.xero.ParseFitFile;
+
+public class FileTypeException : Exception
 {
-    public class FileTypeException : Exception
+    public FileTypeException()
     {
-        public FileTypeException()
-        {
-        }
+    }
 
-        public FileTypeException(string message) : base(message)
-        {
-        }
+    public FileTypeException(string message) : base(message)
+    {
+    }
 
-        public FileTypeException(string message, Exception inner) : base(message, inner)
-        {
-        }
+    public FileTypeException(string message, Exception inner) : base(message, inner)
+    {
     }
 }

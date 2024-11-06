@@ -13,11 +13,8 @@ namespace net.opgenorth.xero.device
         public int ShotNumber { get; set; }
         public ShotSpeed Speed { get; set; }
 
-        public override string ToString()
-        {
-            return $"#{ShotNumber}: {Speed}";
-        }
-        
         public bool IgnoreShot { get; set; }
+
+        public override string ToString() => $"#{ShotNumber}: {Speed}";
     }
 }

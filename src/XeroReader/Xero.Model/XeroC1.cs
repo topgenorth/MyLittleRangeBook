@@ -21,19 +21,10 @@ namespace net.opgenorth.xero.device
 
         public object Sessions { get; private set; }
 
-        public static XeroC1 New(int serialNumber)
-        {
-            return New((uint)serialNumber);
-        }
+        public static XeroC1 New(int serialNumber) => New((uint)serialNumber);
 
-        public static XeroC1 New(uint serialNumber)
-        {
-            return new XeroC1(serialNumber);
-        }
+        public static XeroC1 New(uint serialNumber) => new XeroC1(serialNumber);
 
-        public override string ToString()
-        {
-            return $"Garmin Xero S/N {SerialNumber}, Software {SoftwareVersion}.";
-        }
+        public override string ToString() => $"Garmin Xero S/N {SerialNumber}, Software {SoftwareVersion}.";
     }
 }

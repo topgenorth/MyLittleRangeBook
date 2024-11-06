@@ -10,17 +10,11 @@ namespace net.opgenorth.xero.device
     /// </summary>
     public class ShotCollection : ICollection<Shot>
     {
-        readonly SortedDictionary<int, Shot> _shots = new SortedDictionary<int, Shot>();
+        private readonly SortedDictionary<int, Shot> _shots = new SortedDictionary<int, Shot>();
 
-        public ShotCollection()
-        {
-            XeroSerialNumber = 0;
-        }
+        public ShotCollection() => XeroSerialNumber = 0;
 
-        public ShotCollection(uint xeroSerialNumber)
-        {
-            XeroSerialNumber = xeroSerialNumber;
-        }
+        public ShotCollection(uint xeroSerialNumber) => XeroSerialNumber = xeroSerialNumber;
 
         public uint XeroSerialNumber { get; internal set; }
 
@@ -33,33 +27,28 @@ namespace net.opgenorth.xero.device
         {
             get
             {
-                var shotValues = ActiveShots.ToArray();
+                Shot[] shotValues = ActiveShots.ToArray();
                 if (!shotValues.Any())
                 {
                     return ShotSpeed.Zero;
                 }
-        
-                var mean = shotValues.Average(s => s.Speed);
-                var squaredDistances = shotValues.Select(s => Math.Pow(Math.Abs(s.Speed - mean), 2)).ToList();
-                var shotCount = shotValues.Count();
-                var meanSquaredDistances = squaredDistances.Sum() / shotCount;
 
-                var speed = Math.Sqrt(meanSquaredDistances);
+                float mean = shotValues.Average(s => s.Speed);
+                List<double> squaredDistances = shotValues.Select(s => Math.Pow(Math.Abs(s.Speed - mean), 2)).ToList();
+                int shotCount = shotValues.Count();
+                double meanSquaredDistances = squaredDistances.Sum() / shotCount;
+
+                double speed = Math.Sqrt(meanSquaredDistances);
+
                 return new ShotSpeed((float)speed, Units);
             }
         }
 
         public ShotSpeed ExtremeSpread => MaxSpeed - MinSpeed;
 
-        public ShotSpeed MinSpeed
-        {
-            get { return ActiveShots.Any()?  ActiveShots.Min(s => s.Speed) : ShotSpeed.Zero ; }
-        }
+        public ShotSpeed MinSpeed => ActiveShots.Any() ? ActiveShots.Min(s => s.Speed) : ShotSpeed.Zero;
 
-        public ShotSpeed MaxSpeed
-        {
-            get { return ActiveShots.Any() ? ShotSpeed.Zero : ActiveShots.Max(s => s.Speed); }
-        }
+        public ShotSpeed MaxSpeed => ActiveShots.Any() ? ShotSpeed.Zero : ActiveShots.Max(s => s.Speed);
 
         public ShotSpeed AverageSpeed
         {
@@ -70,42 +59,26 @@ namespace net.opgenorth.xero.device
                     return ShotSpeed.Zero;
                 }
 
-                var units = _shots.First().Value.Speed.Units;
-                var avg = ActiveShots.Select(s=> s).Average(s => s.Speed.Value);
+                string units = _shots.First().Value.Speed.Units;
+                float avg = ActiveShots.Select(s => s).Average(s => s.Speed.Value);
 
                 return new ShotSpeed(avg, units);
             }
         }
 
         /// <summary>
-        /// 
         /// </summary>
         /// <returns>All of the shots, ignored or not.</returns>
-        public IEnumerator<Shot> GetEnumerator()
-        {
-            return _shots.Values.GetEnumerator();
-        }
+        public IEnumerator<Shot> GetEnumerator() => _shots.Values.GetEnumerator();
 
-        
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
 
-        public void Add(Shot item)
-        {
-            _shots[item.ShotNumber] = item;
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public void Clear()
-        {
-            _shots.Clear();
-        }
+        public void Add(Shot item) => _shots[item.ShotNumber] = item;
 
-        public bool Contains(Shot item)
-        {
-            return _shots.ContainsKey(item.ShotNumber);
-        }
+        public void Clear() => _shots.Clear();
+
+        public bool Contains(Shot item) => _shots.ContainsKey(item.ShotNumber);
 
         public void CopyTo(Shot[] array, int arrayIndex)
         {
@@ -117,20 +90,15 @@ namespace net.opgenorth.xero.device
             _shots.Values.CopyTo(array, arrayIndex);
         }
 
-        public bool Remove(Shot item)
-        {
-            return _shots.Remove(item.ShotNumber);
-        }
+        public bool Remove(Shot item) => _shots.Remove(item.ShotNumber);
 
         public int Count => ActiveShots.Count();
 
         public bool IsReadOnly => false;
 
-        public override string ToString()
-        {
-            return _shots.Any()
+        public override string ToString() =>
+            _shots.Any()
                 ? $"{Count} shots, Average {AverageSpeed}, SD {StandardDeviation}, ES {ExtremeSpread}, Max {MaxSpeed}, Min {MinSpeed}"
                 : "No shots";
-        }
     }
 }

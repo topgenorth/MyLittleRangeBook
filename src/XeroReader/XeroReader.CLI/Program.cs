@@ -1,10 +1,10 @@
-﻿
-using ConsoleAppFramework;
+﻿using ConsoleAppFramework;
 using Microsoft.Extensions.DependencyInjection;
 using net.opgenorth.xero;
 using net.opgenorth.xero.ImportFitFiles;
+using Serilog.Core;
 
-await using var log = new LoggerConfiguration()
+await using Logger log = new LoggerConfiguration()
     .MinimumLevel.Verbose()
     .WriteTo.Console()
     .WriteTo.Debug()
@@ -12,13 +12,13 @@ await using var log = new LoggerConfiguration()
 Log.Logger = log;
 
 log.Verbose("Boostrapping app.");
-var services = new ServiceCollection();
+ServiceCollection services = new ServiceCollection();
 services.AddSingleton<ILogger>(log);
 
-using var serviceProvider = services.BuildServiceProvider();
+using ServiceProvider serviceProvider = services.BuildServiceProvider();
 ConsoleApp.ServiceProvider = serviceProvider;
 
-var app = ConsoleApp.Create();
+ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
 app.Add<SimpleFitReader>("");
 app.Add<ImportFitFile>("import");
