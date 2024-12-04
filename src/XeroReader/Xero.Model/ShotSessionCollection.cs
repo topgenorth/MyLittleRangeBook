@@ -6,7 +6,7 @@ namespace net.opgenorth.xero.device
 {
     public class ShotSessionCollection : ICollection<ShotSession>
     {
-        private readonly List<ShotSession> _sessions;
+        readonly List<ShotSession> _sessions;
 
         internal ShotSessionCollection() => _sessions = new List<ShotSession>();
 

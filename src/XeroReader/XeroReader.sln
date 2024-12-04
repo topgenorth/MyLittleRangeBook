@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub actions", "GitHub ac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xero.Model", "Xero.Model\Xero.Model.csproj", "{6D541111-4FAE-42BC-8D6D-A2B0E2C538C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xero.ShotView.Excel", "Xero.ShotView.Excel\Xero.ShotView.Excel.csproj", "{1065BBA7-E69C-4B6F-8B1E-AE23106EB754}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{6D541111-4FAE-42BC-8D6D-A2B0E2C538C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D541111-4FAE-42BC-8D6D-A2B0E2C538C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D541111-4FAE-42BC-8D6D-A2B0E2C538C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1065BBA7-E69C-4B6F-8B1E-AE23106EB754}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1065BBA7-E69C-4B6F-8B1E-AE23106EB754}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1065BBA7-E69C-4B6F-8B1E-AE23106EB754}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1065BBA7-E69C-4B6F-8B1E-AE23106EB754}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

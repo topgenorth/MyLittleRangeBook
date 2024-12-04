@@ -12,7 +12,7 @@ await using Logger log = new LoggerConfiguration()
 Log.Logger = log;
 
 log.Verbose("Boostrapping app.");
-ServiceCollection services = new ServiceCollection();
+ServiceCollection services = new();
 services.AddSingleton<ILogger>(log);
 
 using ServiceProvider serviceProvider = services.BuildServiceProvider();
@@ -20,8 +20,9 @@ ConsoleApp.ServiceProvider = serviceProvider;
 
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
-app.Add<SimpleFitReader>("");
-app.Add<ImportFitFile>("import");
+app.Add<SimpleFitReader>();
+app.Add<ImportFitFile>();
+app.Add<CsvImporter>();
 
 log.Verbose("Start app");
 app.Run(args);

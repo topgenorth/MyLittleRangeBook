@@ -23,7 +23,7 @@ namespace net.opgenorth.xero.device
 
         public static XeroC1 New(int serialNumber) => New((uint)serialNumber);
 
-        public static XeroC1 New(uint serialNumber) => new XeroC1(serialNumber);
+        public static XeroC1 New(uint serialNumber) => new(serialNumber);
 
         public override string ToString() => $"Garmin Xero S/N {SerialNumber}, Software {SoftwareVersion}.";
     }

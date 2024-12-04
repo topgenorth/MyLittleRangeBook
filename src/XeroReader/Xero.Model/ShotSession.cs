@@ -7,9 +7,9 @@ namespace net.opgenorth.xero.device
 {
     public class ShotSession
     {
-        private readonly ShotCollection _shots = new ShotCollection();
+        readonly ShotCollection _shots = new();
 
-        private readonly uint _xeroSerialNumber;
+        readonly uint _xeroSerialNumber;
 
         public ShotSession()
         {

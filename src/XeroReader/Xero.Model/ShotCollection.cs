@@ -10,7 +10,7 @@ namespace net.opgenorth.xero.device
     /// </summary>
     public class ShotCollection : ICollection<Shot>
     {
-        private readonly SortedDictionary<int, Shot> _shots = new SortedDictionary<int, Shot>();
+        readonly SortedDictionary<int, Shot> _shots = new();
 
         public ShotCollection() => XeroSerialNumber = 0;
 
@@ -96,9 +96,8 @@ namespace net.opgenorth.xero.device
 
         public bool IsReadOnly => false;
 
-        public override string ToString() =>
-            _shots.Any()
-                ? $"{Count} shots, Average {AverageSpeed}, SD {StandardDeviation}, ES {ExtremeSpread}, Max {MaxSpeed}, Min {MinSpeed}"
-                : "No shots";
+        public override string ToString() => _shots.Any()
+            ? $"{Count} shots, Average {AverageSpeed}, SD {StandardDeviation}, ES {ExtremeSpread}, Max {MaxSpeed}, Min {MinSpeed}"
+            : "No shots";
     }
 }

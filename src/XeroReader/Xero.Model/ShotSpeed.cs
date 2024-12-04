@@ -4,7 +4,7 @@ namespace net.opgenorth.xero.device
 {
     public struct ShotSpeed : IEquatable<ShotSpeed>, IComparable<ShotSpeed>
     {
-        public static readonly ShotSpeed Zero = new ShotSpeed(0f);
+        public static readonly ShotSpeed Zero = new(0f);
 
         public ShotSpeed(float value, string units = "m/s")
         {
@@ -17,7 +17,7 @@ namespace net.opgenorth.xero.device
 
         public override string ToString() => $"{Value:F1}{Units}";
 
-        public static ShotSpeed operator -(ShotSpeed s) => new ShotSpeed(-1 * s.Value, s.Units);
+        public static ShotSpeed operator -(ShotSpeed s) => new(-1 * s.Value, s.Units);
 
         public static ShotSpeed operator -(ShotSpeed s1, ShotSpeed s2)
         {
