@@ -6,8 +6,13 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>net.opgenorth.xero</RootNamespace>
-        <AssemblyName>xeror</AssemblyName>
+        <AssemblyName>xero</AssemblyName>
         <Version>0.0.0</Version>
+        <IsPackable>false</IsPackable>
+        <PackageId>xero</PackageId>
+        <Authors>Tom Opgeorth</Authors>
+        <Company>Opgenorth Holdings</Company>
+        <Product>xero</Product>
     </PropertyGroup>
 
     <ItemGroup>
