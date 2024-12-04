@@ -8,6 +8,8 @@
     <RootNamespace>net.opgenorth.xero</RootNamespace>
     <AssemblyName>xeror</AssemblyName>
     <Version>0.0.0</Version>
+    <Company>Opgenorth Holdings Ltd.</Company>
+    <Product>XeroReader</Product>
   </PropertyGroup>
 
   <ItemGroup>
