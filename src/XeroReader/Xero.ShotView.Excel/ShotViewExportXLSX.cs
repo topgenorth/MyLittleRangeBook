@@ -8,13 +8,23 @@ using Serilog;
 namespace net.opgenorth.xero.shotview
 {
 
-    class WorksheetTOShotSession
+    internal  static class WorksheetExtensions
+    {
+        public static string GetString(this IXLWorksheet ws, int row, int col)
+        {
+            return ws.Cell(row, col).GetText() ?? string.Empty;
+        }
+    }
+    public class ShotViewExportXLSX
     {
         readonly ILogger _logger;
 
-        public WorksheetTOShotSession(ILogger logger)
+        public ShotViewExportXLSX(ILogger logger) => _logger = logger;
+
+        public void ReadFile(string fileName)
         {
-            _logger = logger;
+            var s = WorkbookToShotSession(new FileInfo(fileName), 1);
+            _logger.Information($"{s}");
         }
 
         internal ShotSession WorkbookToShotSession(FileInfo file, int sheetNumber)
@@ -30,23 +40,6 @@ namespace net.opgenorth.xero.shotview
 
             s.Notes = notes.ToString();
             return s;
-        }
-    }
-    public class ShotViewExportFile
-    {
-        readonly ILogger _logger;
-
-        public ShotViewExportFile(ILogger logger) => _logger = logger;
-
-        public void DoStuff()
-        {
-            const string fileName =
-                "/home/tom/code/MyLittleRangeBook/src/XeroReader/data/Sessions_SEP_2024-SEP_2024.xlsx";
-
-            var x = new WorksheetTOShotSession(_logger);
-            var s = x.WorkbookToShotSession(new FileInfo(fileName), 1);
-
-            _logger.Information($"{s}");
         }
     }
 }
