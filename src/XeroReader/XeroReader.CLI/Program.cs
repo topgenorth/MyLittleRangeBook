@@ -23,8 +23,9 @@ ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
 // app.Add<SimpleFitReader>();
 // app.Add<ImportFitFile>();
-// app.Add<ShotViewExportReader>();
+// app.Add<ReadShotViewXlsx>();
 
-app.Add<ShotViewExportReader>();
+app.Add<ReadShotViewXlsx>();
+app.Add<SqliteMigrationCommmands>();
 log.Verbose("Start app");
 app.Run(args);

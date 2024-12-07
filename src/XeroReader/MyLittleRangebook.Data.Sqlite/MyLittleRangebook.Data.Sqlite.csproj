@@ -8,8 +8,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <EmbeddedResource Include="scripts/**/*.sql" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="Dapper" Version="2.1.35" />
       <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
+      <PackageReference Include="dbup" Version="5.0.41" />
+      <PackageReference Include="dbup-sqlite" Version="5.0.40" />
+      <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+      <PackageReference Include="Serilog" Version="4.2.0" />
     </ItemGroup>
 
 </Project>
