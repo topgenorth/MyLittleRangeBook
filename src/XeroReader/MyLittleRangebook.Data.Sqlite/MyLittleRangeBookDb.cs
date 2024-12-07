@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MyLittleNotebook.Data.Sqlite
+namespace MyLittleRangebook.Data.Sqlite
 {
     public class MyLittleRangeBookDb
     {
