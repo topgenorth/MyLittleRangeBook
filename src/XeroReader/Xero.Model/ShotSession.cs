@@ -5,9 +5,12 @@ using NanoidDotNet;
 
 namespace net.opgenorth.xero.device
 {
+    /// <summary>
+    /// A session holds data about a single Xero shooting session.
+    /// </summary>
     public class ShotSession
     {
-        readonly ShotCollection _shots = new();
+        readonly ShotCollection _shots = [];
 
         readonly uint _xeroSerialNumber;
 
