@@ -27,7 +27,9 @@ namespace net.opgenorth.xero.shotview
             IXLWorksheet ws = wb.Worksheets.ToList()[sheetNumber];
             ShotSession s = new()
             {
-                FileName = _xslxFile.Name, SessionTimestamp = GetSessionDate(ws), Notes = GetNotes(ws).ToString()
+                FileName = _xslxFile.Name,
+                SessionTimestamp = GetSessionDate(ws),
+                Notes = GetNotes(ws).ToString().Trim()
             };
 
 
@@ -36,10 +38,16 @@ namespace net.opgenorth.xero.shotview
 
         static StringBuilder GetNotes(IXLWorksheet ws)
         {
+            const string PERIOD = ". ";
             StringBuilder notes = new();
-            notes.Append("Title: ");
+
+            notes.Append("Sheet title: ");
+            notes.Append(ws.Name);
+            notes.Append(PERIOD);
+
+            notes.Append(" Session title: ");
             notes.Append(ws.Cell(1, 1).GetText());
-            notes.Append('.');
+            notes.Append(PERIOD);
 
             return notes;
         }
@@ -47,34 +55,9 @@ namespace net.opgenorth.xero.shotview
         DateTime GetSessionDate(IXLWorksheet ws)
         {
             const string X = "DATE";
-            foreach (IXLRow row in ws.Rows())
-            {
-                string? colA = row.Cell("A").GetText();
-                if (!X.Equals(colA, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
 
-                string? colB = row.Cell("B").GetText();
-                bool isDate = DateTime.TryParse(colB, out DateTime dt);
-                if (isDate)
-                {
-                    if (dt.Kind == DateTimeKind.Utc)
-                    {
-                        return dt;
-                    }
-
-
-                    return DateTime.SpecifyKind(DateTime.SpecifyKind(dt, DateTimeKind.Local).ToUniversalTime(),
-                        DateTimeKind.Utc);
-                }
-
-                _logger.Verbose("Could not parse '{SessionDate}'", colB);
-
-                break;
-            }
-
-            return DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+            var row = WorksheetExtensions.FindRow(ws, X);
+            return row?.GetDateTimeUTC() ?? DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
         }
     }
 }
