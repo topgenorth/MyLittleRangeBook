@@ -1,45 +1,80 @@
-// Licensed to the.NET Foundation under one or more agreements.
-// The.NET Foundation licenses this file to you under the MIT license.
-
 using System.Text;
 using net.opgenorth.xero.device;
 using Serilog;
 
 namespace net.opgenorth.xero.shotview
 {
-
-    internal  static class WorksheetExtensions
-    {
-        public static string GetString(this IXLWorksheet ws, int row, int col)
-        {
-            return ws.Cell(row, col).GetText() ?? string.Empty;
-        }
-    }
     public class ShotViewExportXLSX
     {
         readonly ILogger _logger;
+        readonly FileInfo _xslxFile;
 
-        public ShotViewExportXLSX(ILogger logger) => _logger = logger;
-
-        public void ReadFile(string fileName)
+        public ShotViewExportXLSX(ILogger logger, string fileName) : this(logger, new FileInfo(fileName))
         {
-            var s = WorkbookToShotSession(new FileInfo(fileName), 1);
-            _logger.Information($"{s}");
         }
 
-        internal ShotSession WorkbookToShotSession(FileInfo file, int sheetNumber)
+        public ShotViewExportXLSX(ILogger logger, FileInfo xslxFile)
         {
-            using var wb = new XLWorkbook(file.FullName);
-            var ws = wb.Worksheets.ToList()[sheetNumber];
-            var s = new ShotSession { FileName = file.Name };
+            _logger = logger;
+            _xslxFile = xslxFile;
+        }
 
-            var notes = new StringBuilder();
+        public override string ToString() => _xslxFile.FullName;
+
+        public ShotSession GetShotSession(int sheetNumber)
+        {
+            using XLWorkbook wb = new(_xslxFile.FullName);
+            IXLWorksheet ws = wb.Worksheets.ToList()[sheetNumber];
+            ShotSession s = new()
+            {
+                FileName = _xslxFile.Name, SessionTimestamp = GetSessionDate(ws), Notes = GetNotes(ws).ToString()
+            };
+
+
+            return s;
+        }
+
+        static StringBuilder GetNotes(IXLWorksheet ws)
+        {
+            StringBuilder notes = new();
+            notes.Append("Title: ");
             notes.Append(ws.Cell(1, 1).GetText());
             notes.Append('.');
-            wb.Dispose();
 
-            s.Notes = notes.ToString();
-            return s;
+            return notes;
+        }
+
+        DateTime GetSessionDate(IXLWorksheet ws)
+        {
+            const string X = "DATE";
+            foreach (IXLRow row in ws.Rows())
+            {
+                string? colA = row.Cell("A").GetText();
+                if (!X.Equals(colA, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                string? colB = row.Cell("B").GetText();
+                bool isDate = DateTime.TryParse(colB, out DateTime dt);
+                if (isDate)
+                {
+                    if (dt.Kind == DateTimeKind.Utc)
+                    {
+                        return dt;
+                    }
+
+
+                    return DateTime.SpecifyKind(DateTime.SpecifyKind(dt, DateTimeKind.Local).ToUniversalTime(),
+                        DateTimeKind.Utc);
+                }
+
+                _logger.Verbose("Could not parse '{SessionDate}'", colB);
+
+                break;
+            }
+
+            return DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
         }
     }
 }

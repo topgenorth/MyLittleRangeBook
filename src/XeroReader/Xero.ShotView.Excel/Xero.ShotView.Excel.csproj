@@ -4,8 +4,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>net.opgenorth.xero.shotview</RootNamespace>
-    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

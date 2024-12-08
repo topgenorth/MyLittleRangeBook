@@ -13,8 +13,9 @@ namespace net.opgenorth.xero
         }
 
         /// <summary>
-        /// Runs the migrations on the <b>.sqlite</b> file.
+        /// Runs the migrations on the sqlite file.
         /// </summary>
+        /// <param name="directory">The directory holding the sqlite file.</param>
         public async Task<int> UpdateDatabase(string directory)
         {
             if (directory == null)
@@ -40,8 +41,9 @@ namespace net.opgenorth.xero
         }
 
         /// <summary>
-        /// Will delete the <b>.sqlite</b> file if it exists, then create a new one.
+        /// Will delete the sqlite file if it exists, then create a new one.
         /// </summary>
+        /// <param name="directory">The directory holding the sqlite file.</param>
         public async Task<int> CreateDatabase(string directory)
         {
             var dbName = string.Empty;
