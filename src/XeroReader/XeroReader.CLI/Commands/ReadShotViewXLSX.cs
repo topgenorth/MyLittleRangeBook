@@ -18,11 +18,15 @@ namespace net.opgenorth.xero
         {
             try
             {
-                var x = new ShotViewExportXLSX(_logger, filename);
+                var x = new ShotViewXlsxParser(_logger, filename);
                 var session = x.GetShotSession(sheetNumber);
 
                 _logger.Information("Read the file {ExcelFile}", filename);
 
+                var page = new ShotSessionTemplate(session);
+                var content = page.TransformText();
+
+                Console.Write(content);
                 return Task.FromResult(0);
             }
             catch (Exception e)

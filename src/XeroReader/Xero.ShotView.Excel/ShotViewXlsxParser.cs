@@ -4,16 +4,16 @@ using Serilog;
 
 namespace net.opgenorth.xero.shotview
 {
-    public class ShotViewExportXLSX
+    public class ShotViewXlsxParser
     {
         readonly ILogger _logger;
         readonly FileInfo _xslxFile;
 
-        public ShotViewExportXLSX(ILogger logger, string fileName) : this(logger, new FileInfo(fileName))
+        public ShotViewXlsxParser(ILogger logger, string fileName) : this(logger, new FileInfo(fileName))
         {
         }
 
-        public ShotViewExportXLSX(ILogger logger, FileInfo xslxFile)
+        public ShotViewXlsxParser(ILogger logger, FileInfo xslxFile)
         {
             _logger = logger;
             _xslxFile = xslxFile;
@@ -29,9 +29,8 @@ namespace net.opgenorth.xero.shotview
             {
                 FileName = _xslxFile.Name,
                 SessionTimestamp = GetSessionDate(ws),
-                Notes = GetNotes(ws).ToString().Trim()
+                Notes = GetNotes(ws).ToString().TrimEnd()
             };
-
 
             return s;
         }
@@ -39,15 +38,17 @@ namespace net.opgenorth.xero.shotview
         static StringBuilder GetNotes(IXLWorksheet ws)
         {
             const string PERIOD = ". ";
-            StringBuilder notes = new();
+            const string BULLET = "    * ";
 
+            StringBuilder notes = new StringBuilder(BULLET);
             notes.Append("Sheet title: ");
             notes.Append(ws.Name);
-            notes.Append(PERIOD);
+            notes.AppendLine(PERIOD);
 
-            notes.Append(" Session title: ");
+            notes.Append(BULLET);
+            notes.Append("Session title: ");
             notes.Append(ws.Cell(1, 1).GetText());
-            notes.Append(PERIOD);
+            notes.AppendLine(PERIOD);
 
             return notes;
         }
@@ -56,8 +57,18 @@ namespace net.opgenorth.xero.shotview
         {
             const string X = "DATE";
 
-            var row = WorksheetExtensions.FindRow(ws, X);
-            return row?.GetDateTimeUTC() ?? DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+            var row = ws.FindRowThatStartsWith(X);
+            var d = row?.GetDateTimeUTC();
+
+            if (d is null)
+            {
+                return DateTime.UtcNow;
+            }
+            else
+            {
+                return d.Value;
+            }
+
         }
     }
 }
