@@ -6,8 +6,8 @@ Session Date: <#= _shotSession.SessionTimestamp.ToString("O")#>
 Notes:
 <#= _shotSession.Notes #>
 
-Number of Shots: XX
-Average Velocity: 9999 fps
-Std Dev: 99 fps
-ES: 99 fps
+Number of Shots: <#= _shotSession.ShotCount #>
+Average Velocity: <#= _shotSession.AverageSpeed  #>
+Std Dev: <#= _shotSession.StandardDeviation #>
+ES: <#= _shotSession.ExtremeSpread #>
 

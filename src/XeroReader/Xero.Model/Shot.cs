@@ -11,9 +11,13 @@ namespace net.opgenorth.xero.device
         public string Id { get; private set; } = Nanoid.Generate();
         public DateTime Timestamp { get; set; }
         public int ShotNumber { get; set; }
-        public ShotSpeed Speed { get; set; }
+        public ShotSpeed Speed { get; set; } = ShotSpeed.Zero;
 
-        public bool IgnoreShot { get; set; }
+        public bool CleanBore { get; set; }  = false;
+        public bool ColdBore { get; set; } = false;
+        public string Notes { get; set; }
+
+        public bool IgnoreShot { get; set; } = false;
 
         public override string ToString() => $"#{ShotNumber}: {Speed}";
     }

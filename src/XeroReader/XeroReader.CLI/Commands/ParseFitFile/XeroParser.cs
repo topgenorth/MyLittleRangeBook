@@ -65,7 +65,9 @@ namespace net.opgenorth.xero.ParseFitFile
             Field? f = msg.Fields.First(f => f.Name == "MinSpeed");
             float s = msg.GetMaxSpeed() ?? 0f;
             _shotSession.SessionTimestamp = dt;
-            _shotSession.ProjectileWeight = msg.GetGrainWeight() ?? 0;
+
+            var w = msg.GetGrainWeight() ?? 0f;
+            _shotSession.ProjectileWeight = Convert.ToInt32(w);
             _shotSession.ProjectileType = msg.GetProjectileType().ToString() ?? "Unknown";
         }
 

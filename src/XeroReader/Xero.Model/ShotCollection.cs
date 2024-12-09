@@ -60,7 +60,7 @@ namespace net.opgenorth.xero.device
                 }
 
                 string units = _shots.First().Value.Speed.Units;
-                float avg = ActiveShots.Select(s => s).Average(s => s.Speed.Value);
+                var avg = ActiveShots.Select(s => s).Average(s => s.Speed.Value);
 
                 return new ShotSpeed(avg, units);
             }

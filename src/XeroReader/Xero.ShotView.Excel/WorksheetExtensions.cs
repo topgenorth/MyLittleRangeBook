@@ -19,32 +19,76 @@ namespace net.opgenorth.xero.shotview
                     break;
                 }
             }
-
             return row;
         }
 
-
-        public static DateTime GetDateTimeUTC(this IXLRow row, string columnLetter = "B")
+        public static int? GetInteger(this IXLRow row, string columnLetter = "B")
         {
-            DateTime result = DateTime.UtcNow.ToUniversalTime();
-            var t = row.GetString(columnLetter);
-            if (DateTime.TryParse(t, out DateTime dt))
+            var c = row.Cell(columnLetter);
+            if (c.TryGetValue<int>(out int ival))
             {
-                if (dt.Kind == DateTimeKind.Unspecified)
-                {
-                    dt = DateTime.SpecifyKind(dt, DateTimeKind.Local);
-                }
-
-                result = dt.ToUniversalTime();
+                return ival;
             }
 
+            if (c.TryGetValue(out float fval))
+            {
+                return Convert.ToInt32(fval);
+            }
+
+            var t = c.GetText();
+            if (string.IsNullOrWhiteSpace(t))
+            {
+                if (float.TryParse(t, out float fval2))
+                {
+                    return Convert.ToInt32(fval2);
+                }
+            }
+
+            return null;
+        }
+        public static DateTime GetDateTimeUTC(this IXLRow row, string columnLetter = "B")
+        {
+
+            DateTime result = DateTime.UtcNow.ToUniversalTime();
+            if (!row.Cell(columnLetter).TryGetValue(out DateTime dt))
+            {
+                return result;
+            }
+
+            if (dt.Kind == DateTimeKind.Unspecified)
+            {
+                dt = DateTime.SpecifyKind(dt, DateTimeKind.Local);
+            }
+
+            result = dt.ToUniversalTime();
             return result;
         }
 
-        internal static string GetString(this IXLRow row, string columnLetter) =>
-            row.Cell(columnLetter).GetText() ?? string.Empty;
+        internal static bool GetBool(this IXLRow row, string columnLetter = "B")
+        {
+            bool val;
+            try
+            {
+                val = row.Cell(columnLetter).GetBoolean();
+            }
+            catch (InvalidCastException)
+            {
+                val = false;
+            }
 
-        internal static string GetString(this IXLWorksheet ws, int row, int col) =>
-            ws.Cell(row, col).GetText() ?? string.Empty;
+            return val;
+        }
+
+        internal static string GetString(this IXLRow row, string columnLetter)
+        {
+            return row.Cell(columnLetter).TryGetValue(out string val) ? val : null;
+        }
+
+
+        internal static string GetString(this IXLWorksheet ws, int row, int col)
+        {
+            return ws.Cell(row, col).TryGetValue(out string val) ? val : null;
+        }
+
     }
 }

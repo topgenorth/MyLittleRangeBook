@@ -48,7 +48,35 @@ namespace net.opgenorth.xero
             
             #line default
             #line hidden
-            this.Write("\n\nNumber of Shots: XX\nAverage Velocity: 9999 fps\nStd Dev: 99 fps\nES: 99 fps\n\n");
+            this.Write("\n\nNumber of Shots: ");
+            
+            #line 9 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.ShotCount));
+            
+            #line default
+            #line hidden
+            this.Write("\nAverage Velocity: ");
+            
+            #line 10 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.AverageSpeed));
+            
+            #line default
+            #line hidden
+            this.Write("\nStd Dev: ");
+            
+            #line 11 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.StandardDeviation));
+            
+            #line default
+            #line hidden
+            this.Write("\nES: ");
+            
+            #line 12 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.ExtremeSpread));
+            
+            #line default
+            #line hidden
+            this.Write("\n\n");
             return this.GenerationEnvironment.ToString();
         }
     }

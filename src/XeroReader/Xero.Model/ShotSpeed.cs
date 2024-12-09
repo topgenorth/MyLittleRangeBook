@@ -4,15 +4,25 @@ namespace net.opgenorth.xero.device
 {
     public struct ShotSpeed : IEquatable<ShotSpeed>, IComparable<ShotSpeed>
     {
-        public static readonly ShotSpeed Zero = new(0f);
+        public static readonly ShotSpeed Zero = new(0, "fps");
 
+        public ShotSpeed(double value, string units = "m/s")
+        {
+            Value = Convert.ToInt32(value);
+            Units = units;
+        }
         public ShotSpeed(float value, string units = "m/s")
+        {
+            Value = Convert.ToInt32(value);
+            Units = units;
+        }
+        public ShotSpeed(int value, string units = "m/s")
         {
             Value = value;
             Units = units;
         }
 
-        public float Value { get; internal set; }
+        public int Value { get; internal set; }
         public string Units { get; internal set; }
 
         public override string ToString() => $"{Value:F1}{Units}";
@@ -26,7 +36,7 @@ namespace net.opgenorth.xero.device
                 throw new ArgumentException("Cannot add two ShotSpeeds of different units");
             }
 
-            float v = s1.Value - s2.Value;
+            int v = s1.Value - s2.Value;
 
             return new ShotSpeed(v, s1.Units);
         }
@@ -38,7 +48,7 @@ namespace net.opgenorth.xero.device
                 throw new ArgumentException("Cannot add two ShotSpeeds of different units");
             }
 
-            float v = s1.Value + s2.Value;
+            int v = s1.Value + s2.Value;
 
             return new ShotSpeed(v, s1.Units);
         }

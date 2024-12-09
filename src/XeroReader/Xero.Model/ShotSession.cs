@@ -10,6 +10,7 @@ namespace net.opgenorth.xero.device
     /// </summary>
     public class ShotSession
     {
+
         readonly ShotCollection _shots = [];
 
         readonly uint _xeroSerialNumber;
@@ -29,7 +30,7 @@ namespace net.opgenorth.xero.device
 
         public DateTime SessionTimestamp { get; set; }
         public int ShotCount => _shots.Count;
-        public float ProjectileWeight { get; set; }
+        public int ProjectileWeight { get; set; }
         public string ProjectileType { get; set; }
         public string Units => _shots.MaxSpeed.Units;
 
@@ -53,6 +54,19 @@ namespace net.opgenorth.xero.device
             }
 
             _shots.Add(shot);
+        }
+
+        public void Mutate(Action<ShotSession> mutator)
+        {
+            mutator(this);
+        }
+
+        public void Mutate(List<Action<ShotSession>> mutators)
+        {
+            foreach (Action<ShotSession> mutator in mutators)
+            {
+                mutator(this);
+            }
         }
 
         public override string ToString() => $"{Id}: {_shots}";
