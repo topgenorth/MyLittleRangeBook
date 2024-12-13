@@ -1,23 +1,29 @@
 ﻿using ConsoleAppFramework;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using net.opgenorth.xero;
-using net.opgenorth.xero.ImportFitFiles;
-using net.opgenorth.xero.shotview;
-using Serilog.Core;
 
-await using Logger log = new LoggerConfiguration()
-    .MinimumLevel.Verbose()
-    .WriteTo.Console()
-    .WriteTo.Debug()
-    .CreateLogger();
-Log.Logger = log;
+// ILogger log = new LoggerConfiguration()
+//     .MinimumLevel.Verbose()
+//     .WriteTo.Console()
+//     .WriteTo.Debug()
+//     .CreateLogger();
+// Log.Logger = log;
 
-log.Verbose("Boostrapping app.");
-ServiceCollection services = new();
-services.AddSingleton<ILogger>(log);
+HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+builder.Services.AddSerilog(lc => lc
+    .ReadFrom.Configuration(builder.Configuration));
+builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", true)
+    .AddJsonFile($"appsettings.{Environments.Development}.json", true);
 
-using ServiceProvider serviceProvider = services.BuildServiceProvider();
-ConsoleApp.ServiceProvider = serviceProvider;
+
+using IHost host = builder.Build();
+using IServiceScope scope = host.Services.CreateScope();
+
+ConsoleApp.ServiceProvider = scope.ServiceProvider;
+var log = scope.ServiceProvider.GetRequiredService<ILogger>();
 
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
