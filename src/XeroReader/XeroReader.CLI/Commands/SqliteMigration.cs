@@ -1,13 +1,13 @@
-using MyLittleRangebook.Data.Sqlite;
+using net.opgenorth.mylittlerangebook.data.sqlite;
 
 namespace net.opgenorth.xero
 {
-    public class SqliteMigrationCommmands
+    public class SqliteMigration
     {
         readonly ILogger _logger;
         readonly SqliteDbZookeeper _sqliteDbKeeper;
 
-        public SqliteMigrationCommmands(ILogger logger, IDbZookeeper dbz)
+        public SqliteMigration(ILogger logger, IDbZookeeper dbz)
         {
             _logger = logger;
             _sqliteDbKeeper = (SqliteDbZookeeper) dbz;
@@ -16,7 +16,6 @@ namespace net.opgenorth.xero
         /// <summary>
         ///     Runs the migrations on the sqlite file.
         /// </summary>
-        /// <param name="directory">The directory holding the sqlite file.</param>
         public async Task<int> UpdateDatabase()
         {
             try
@@ -37,8 +36,7 @@ namespace net.opgenorth.xero
         /// <summary>
         ///     Will delete the sqlite file if it exists, then create a new one.
         /// </summary>
-        /// <param name="directory">The directory holding the sqlite file.</param>
-        public async Task<int> CreateDatabase(string directory)
+        public async Task<int> CreateDatabase()
         {
             try
             {

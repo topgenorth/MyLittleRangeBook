@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>MyLittleNotebook.Data.Sqlite</RootNamespace>
+    <RootNamespace>net.opgenorth.xero.data.sqlite</RootNamespace>
     <LangVersion>12</LangVersion>
     <IsPackable>false</IsPackable>
     <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <AssemblyName>net.opgenorth.xero.data.sqlite</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

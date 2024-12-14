@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangebook.Data.Sqlite
+﻿namespace net.opgenorth.mylittlerangebook.data.sqlite
 {
     public class MyLittleRangeBookDb
     {

@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
-namespace MyLittleRangebook.Data.Sqlite
+namespace net.opgenorth.mylittlerangebook.data.sqlite
 {
     public static class Extensions
     {

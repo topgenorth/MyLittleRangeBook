@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace MyLittleRangebook.Data.Sqlite
+namespace net.opgenorth.mylittlerangebook.data.sqlite
 {
     public class GarminShotViewSqliteOptions
     {

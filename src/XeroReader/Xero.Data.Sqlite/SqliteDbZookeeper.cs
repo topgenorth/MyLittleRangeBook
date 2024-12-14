@@ -5,7 +5,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
 using Serilog;
 
-namespace MyLittleRangebook.Data.Sqlite
+namespace net.opgenorth.mylittlerangebook.data.sqlite
 {
     public class SqliteDbZookeeper : IDbZookeeper
     {

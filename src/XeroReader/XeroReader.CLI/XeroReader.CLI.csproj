@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MyLittleRangebook.Data.Sqlite\MyLittleRangebook.Data.Sqlite.csproj"/>
+    <ProjectReference Include="..\Xero.Data.Sqlite\Xero.Data.Sqlite.csproj" />
     <ProjectReference Include="..\Xero.Model\Xero.Model.csproj"/>
     <ProjectReference Include="..\Xero.ShotView.Excel\Xero.ShotView.Excel.csproj"/>
   </ItemGroup>
