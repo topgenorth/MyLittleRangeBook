@@ -1,15 +1,15 @@
 using ConsoleAppFramework;
-using net.opgenorth.mylittlerangebook.data.sqlite;
+using net.opgenorth.xero.data.sqlite;
 
 namespace net.opgenorth.xero.Commands
 {
 
-    public class SqliteMigratons
+    public class SqliteMigrations
     {
         readonly ILogger _logger;
         readonly IDbZookeeper _sqliteDbKeeper;
 
-        public SqliteMigratons(ILogger logger, IDbZookeeper dbz)
+        public SqliteMigrations(ILogger logger, IDbZookeeper dbz)
         {
             _logger = logger;
             _sqliteDbKeeper = (SqliteDbZookeeper) dbz;

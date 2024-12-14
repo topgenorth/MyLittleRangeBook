@@ -3,13 +3,22 @@ using ConsoleAppFramework;
 using net.opgenorth.xero.device;
 using net.opgenorth.xero.shotview;
 
-namespace net.opgenorth.xero.Commands
+namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
 {
-    public class ShotViewExcelWorkbook
+
+    public partial class ShotViewExcelSpreadsheetTemplate
+    {
+        readonly WorkbookSession _shotSession;
+
+        public ShotViewExcelSpreadsheetTemplate(WorkbookSession shotSession) => _shotSession = shotSession;
+    }
+
+    // ReSharper disable once InconsistentNaming
+    public class WorkbookCLI
     {
         readonly ILogger _logger;
         FileInfo? _file;
-        public ShotViewExcelWorkbook(ILogger logger) => _logger = logger;
+        public WorkbookCLI(ILogger logger) => _logger = logger;
         readonly Task<int> _success = Task.FromResult(0);
         readonly Task<int> _failure = Task.FromResult(1);
 
@@ -25,7 +34,7 @@ namespace net.opgenorth.xero.Commands
             _file = new FileInfo(filename);
             try
             {
-                ShotSession? session = ReadShotSession(sheetNumber);
+                WorkbookSession? session = ReadShotSession(sheetNumber);
                 WriteToConsole(session);
 
                 return _success;
@@ -43,19 +52,19 @@ namespace net.opgenorth.xero.Commands
 
         }
 
-        void WriteToConsole(ShotSession? session)
+        void WriteToConsole(WorkbookSession? session)
         {
             if (session is null)
             {
                 return;
             }
 
-            ShotSessionTemplate? page = new(session);
+            ShotViewExcelSpreadsheetTemplate? page = new(session);
             string? content = page.TransformText();
             Console.Write(content);
         }
 
-        ShotSession? ReadShotSession(int sheetNumber)
+        WorkbookSession? ReadShotSession(int sheetNumber)
         {
             if (_file is null)
             {
@@ -64,10 +73,10 @@ namespace net.opgenorth.xero.Commands
             }
 
             ShotViewXlsxParser? x = new(_logger, _file.FullName);
-            ShotSession? session = x.GetShotSession(sheetNumber);
+            var session = x.GetShotSession(sheetNumber);
+            WorkbookSession ws = new WorkbookSession(session) { SheetNumber = sheetNumber };
             _logger.Information("Read the file {ExcelFile}", _file.FullName);
-
-            return session;
+            return ws;
         }
     }
 }

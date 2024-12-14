@@ -25,19 +25,20 @@ namespace net.opgenorth.xero.shotview
 
         public override string ToString() => _xslxFile.FullName;
 
-        public ShotSession GetShotSession(int sheetNumber)
+        public WorkbookSession GetShotSession(int sheetNumber)
         {
             _workbook = new XLWorkbook(_xslxFile.FullName);
             _worksheet = _workbook.Worksheets.ElementAt(sheetNumber);
 
-            ShotSession s = new() { FileName = _xslxFile.Name };
+            WorkbookSession s = new() { FileName = _xslxFile.Name };
 
-            List<Action<ShotSession>>? mutators = new()
+            List<Action<WorkbookSession>>? mutators = new()
             {
                 GetDateFromWorksheet,
                 CreateNotesFromWorksheet,
                 GetProjectileWeightFromWorksheet,
-                GetShotsFromWorksheet
+                GetShotsFromWorksheet,
+                GetSheetName
             };
 
             s.Mutate(mutators);
@@ -45,20 +46,26 @@ namespace net.opgenorth.xero.shotview
             return s;
         }
 
-        void GetProjectileWeightFromWorksheet(ShotSession s)
+
+        void GetSheetName(WorkbookSession s)
+        {
+            s.SheetName = _worksheet.Name;
+        }
+
+        void GetProjectileWeightFromWorksheet(WorkbookSession s)
         {
             IXLRow? row = _worksheet.FindRowThatStartsWith("Projectile Weight (GRAINS)");
             s.ProjectileWeight = row?.GetInteger() ?? 0;
         }
 
-        void GetDateFromWorksheet(ShotSession s)
+        void GetDateFromWorksheet(WorkbookSession s)
         {
             IXLRow? row = _worksheet.FindRowThatStartsWith("DATE");
             DateTime? d = row?.GetDateTimeUTC();
             s.SessionTimestamp = d ?? DateTime.UtcNow.ToUniversalTime();
         }
 
-        void CreateNotesFromWorksheet(ShotSession s)
+        void CreateNotesFromWorksheet(WorkbookSession s)
         {
             const string period = ". ";
             const string bullet = "    * ";
@@ -76,7 +83,7 @@ namespace net.opgenorth.xero.shotview
             s.Notes = notes.ToString().TrimEnd();
         }
 
-        void GetShotsFromWorksheet(ShotSession s)
+        void GetShotsFromWorksheet(WorkbookSession s)
         {
             IXLRow? shotDelimiter = _worksheet.FindRowThatStartsWith("-");
             int upperLimit = shotDelimiter.RowNumber();
@@ -84,7 +91,7 @@ namespace net.opgenorth.xero.shotview
 
             foreach (IXLRow row in shotRows)
             {
-                Shot? shot = new()
+                Shot? shot = new Shot()
                 {
                     CleanBore = row.GetBool("G"), ColdBore = row.GetBool("H"), Notes = row.GetString("I")
                 };

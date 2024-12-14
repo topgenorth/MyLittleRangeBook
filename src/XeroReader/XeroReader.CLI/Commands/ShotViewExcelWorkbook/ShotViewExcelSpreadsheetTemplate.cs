@@ -7,7 +7,7 @@
 //     the code is regenerated.
 // </auto-generated>
 // ------------------------------------------------------------------------------
-namespace net.opgenorth.xero
+namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
 {
     using System;
     
@@ -15,9 +15,9 @@ namespace net.opgenorth.xero
     /// Class to produce the template output
     /// </summary>
     
-    #line 1 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+    #line 1 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/Commands/ShotViewExcelWorkbook/ShotViewExcelSpreadsheetTemplate.tt"
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
-    public partial class ShotSessionTemplate : ShotSessionTemplateBase
+    public partial class ShotViewExcelSpreadsheetTemplate : ShotViewExcelSpreadsheetTemplateBase
     {
 #line hidden
         /// <summary>
@@ -25,56 +25,64 @@ namespace net.opgenorth.xero
         /// </summary>
         public virtual string TransformText()
         {
-            this.Write("ShotView Export File: ");
+            this.Write("\n--\nShotView Export File: ");
             
-            #line 2 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 4 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/Commands/ShotViewExcelWorkbook/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.FileName));
+            
+            #line default
+            #line hidden
+            this.Write("\nSheet #: ");
+            
+            #line 5 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/Commands/ShotViewExcelWorkbook/ShotViewExcelSpreadsheetTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.SheetNumber));
             
             #line default
             #line hidden
             this.Write("\nSession Date: ");
             
-            #line 3 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.SessionTimestamp.ToString("O")));
+            #line 6 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/Commands/ShotViewExcelWorkbook/ShotViewExcelSpreadsheetTemplate.tt"
+
+    _shotSession.SessionTimestamp.ToString("O"); 
             
             #line default
             #line hidden
             this.Write("\nNotes:\n");
             
-            #line 6 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 10 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/Commands/ShotViewExcelWorkbook/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.Notes));
             
             #line default
             #line hidden
             this.Write("\n\nNumber of Shots: ");
             
-            #line 8 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 12 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/Commands/ShotViewExcelWorkbook/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.ShotCount));
             
             #line default
             #line hidden
             this.Write("\nAverage Velocity: ");
             
-            #line 9 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 13 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/Commands/ShotViewExcelWorkbook/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.AverageSpeed));
             
             #line default
             #line hidden
             this.Write("\nStd Dev: ");
             
-            #line 10 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 14 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/Commands/ShotViewExcelWorkbook/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.StandardDeviation));
             
             #line default
             #line hidden
             this.Write("\nES: ");
             
-            #line 11 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 15 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/Commands/ShotViewExcelWorkbook/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.ExtremeSpread));
             
             #line default
             #line hidden
-            this.Write("\n\n");
+            this.Write("\n--\n");
             return this.GenerationEnvironment.ToString();
         }
     }
@@ -86,7 +94,7 @@ namespace net.opgenorth.xero
     /// Base class for this transformation
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
-    public class ShotSessionTemplateBase
+    public class ShotViewExcelSpreadsheetTemplateBase
     {
         #region Fields
         private global::System.Text.StringBuilder generationEnvironmentField;

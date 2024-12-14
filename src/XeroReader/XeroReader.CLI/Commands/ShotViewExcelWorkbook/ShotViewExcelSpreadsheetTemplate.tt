@@ -1,7 +1,11 @@
 <#@ template language="C#" #>
+
+--
 ShotView Export File: <#= _shotSession.FileName #>
-Session Date: <#=
-                    _shotSession.SessionTimestamp.ToString("O") #>
+Sheet #: <#= _shotSession.SheetNumber #>
+Session Date: <#
+    _shotSession.SessionTimestamp.ToString("O"); #>
+
 Notes:
 <#= _shotSession.Notes #>
 
@@ -9,4 +13,4 @@ Number of Shots: <#= _shotSession.ShotCount #>
 Average Velocity: <#= _shotSession.AverageSpeed #>
 Std Dev: <#= _shotSession.StandardDeviation #>
 ES: <#= _shotSession.ExtremeSpread #>
-
+--

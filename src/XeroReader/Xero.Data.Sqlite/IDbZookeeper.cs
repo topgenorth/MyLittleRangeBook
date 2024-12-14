@@ -1,7 +1,7 @@
 // Licensed to the.NET Foundation under one or more agreements.
 // The.NET Foundation licenses this file to you under the MIT license.
 
-namespace net.opgenorth.mylittlerangebook.data.sqlite
+namespace net.opgenorth.xero.data.sqlite
 {
     public interface IDbZookeeper
     {

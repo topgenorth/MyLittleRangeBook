@@ -48,20 +48,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="ShotSessionTemplate.tt">
-      <Generator>TextTemplatingFilePreprocessor</Generator>
-      <LastGenOutput>ShotSessionTemplate.cs</LastGenOutput>
-    </None>
     <None Update="appsettings.Development.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Commands\ShotViewExcelWorkbook\ShotViewExcelSpreadsheetTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ShotViewExcelSpreadsheetTemplate.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="ShotSessionTemplate.cs">
+    <Compile Update="Commands\ShotViewExcelWorkbook\ShotViewExcelSpreadsheetTemplate.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>ShotSessionTemplate.tt</DependentUpon>
+      <DependentUpon>ShotViewExcelSpreadsheetTemplate.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 

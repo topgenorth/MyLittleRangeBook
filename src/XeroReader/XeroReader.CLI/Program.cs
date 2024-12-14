@@ -3,9 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using net.opgenorth.mylittlerangebook.data.sqlite;
 using net.opgenorth.xero;
 using net.opgenorth.xero.Commands;
+using net.opgenorth.xero.Commands.ShotViewExcelWorkbook;
+using net.opgenorth.xero.data.sqlite;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
@@ -26,7 +27,7 @@ ILogger log = scope.ServiceProvider.GetRequiredService<ILogger>();
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
-app.Add<ShotViewExcelWorkbook>("worksheet");
-app.Add<SqliteMigratons>("database");
+app.Add<WorkbookCLI>("worksheet");
+app.Add<SqliteMigrations>("database");
 log.Verbose("Running app");
 await app.RunAsync(args);
