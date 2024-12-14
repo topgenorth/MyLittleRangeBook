@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using net.opgenorth.mylittlerangebook.data.sqlite;
 using net.opgenorth.xero;
+using net.opgenorth.xero.Commands;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
@@ -26,6 +27,6 @@ ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
 app.Add<ReadShotViewXLSX>();
-app.Add<SqliteMigration>();
+app.Add<SqliteMigratons>();
 log.Verbose("Start app");
 app.Run(args);

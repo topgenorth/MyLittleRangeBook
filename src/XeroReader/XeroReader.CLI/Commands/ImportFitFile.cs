@@ -1,4 +1,4 @@
-namespace net.opgenorth.xero.ImportFitFiles
+namespace net.opgenorth.xero.Commands
 {
     /// <summary>
     ///     This will copy files from the source directory to the destination directory. It will skip any files that already

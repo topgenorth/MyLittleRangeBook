@@ -1,4 +1,4 @@
-namespace net.opgenorth.xero.ParseFitFile
+namespace net.opgenorth.xero.GarminFit
 {
     public class FileTypeException : Exception
     {

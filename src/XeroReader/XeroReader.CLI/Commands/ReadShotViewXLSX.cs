@@ -1,7 +1,7 @@
 ﻿using net.opgenorth.xero.device;
 using net.opgenorth.xero.shotview;
 
-namespace net.opgenorth.xero
+namespace net.opgenorth.xero.Commands
 {
     public class ReadShotViewXLSX
     {

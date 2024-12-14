@@ -1,13 +1,13 @@
 using net.opgenorth.mylittlerangebook.data.sqlite;
 
-namespace net.opgenorth.xero
+namespace net.opgenorth.xero.Commands
 {
-    public class SqliteMigration
+    public class SqliteMigratons
     {
         readonly ILogger _logger;
-        readonly SqliteDbZookeeper _sqliteDbKeeper;
+        readonly IDbZookeeper _sqliteDbKeeper;
 
-        public SqliteMigration(ILogger logger, IDbZookeeper dbz)
+        public SqliteMigratons(ILogger logger, IDbZookeeper dbz)
         {
             _logger = logger;
             _sqliteDbKeeper = (SqliteDbZookeeper) dbz;

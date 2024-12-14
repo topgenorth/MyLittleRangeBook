@@ -1,8 +1,8 @@
 using CommunityToolkit.HighPerformance;
 using net.opgenorth.xero.device;
-using net.opgenorth.xero.ParseFitFile;
+using net.opgenorth.xero.GarminFit;
 
-namespace net.opgenorth.xero
+namespace net.opgenorth.xero.Commands
 {
     public class SimpleFitReader
     {

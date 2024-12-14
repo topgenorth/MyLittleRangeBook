@@ -3,7 +3,7 @@ using net.opgenorth.xero.device;
 using DateTime = System.DateTime;
 using File = Dynastream.Fit.File;
 
-namespace net.opgenorth.xero.ParseFitFile
+namespace net.opgenorth.xero.GarminFit
 {
     /// <summary>
     ///     Xero C1 parser for FIT files.
