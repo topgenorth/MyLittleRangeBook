@@ -26,7 +26,7 @@ ILogger log = scope.ServiceProvider.GetRequiredService<ILogger>();
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
-app.Add<ReadShotViewXLSX>();
-app.Add<SqliteMigratons>();
-log.Verbose("Start app");
-app.Run(args);
+app.Add<ShotViewExcelWorkbook>("worksheet");
+app.Add<SqliteMigratons>("database");
+log.Verbose("Running app");
+await app.RunAsync(args);
