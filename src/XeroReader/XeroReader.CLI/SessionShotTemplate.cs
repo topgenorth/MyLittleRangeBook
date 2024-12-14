@@ -7,11 +7,8 @@ namespace net.opgenorth.xero
 {
     public partial class ShotSessionTemplate
     {
-        ShotSession _shotSession;
+        readonly ShotSession _shotSession;
 
-        public ShotSessionTemplate(ShotSession shotSession)
-        {
-            _shotSession = shotSession;
-        }
+        public ShotSessionTemplate(ShotSession shotSession) => _shotSession = shotSession;
     }
 }

@@ -1,13 +1,12 @@
 <#@ template language="C#" #>
-<#@ import namespace="System.Text" #>
-<#@ import namespace="System.Collections.Generic" #>
-ShotView Export File: <#=_shotSession.FileName #>
-Session Date: <#= _shotSession.SessionTimestamp.ToString("O")#>
+ShotView Export File: <#= _shotSession.FileName #>
+Session Date: <#=
+                    _shotSession.SessionTimestamp.ToString("O") #>
 Notes:
 <#= _shotSession.Notes #>
 
 Number of Shots: <#= _shotSession.ShotCount #>
-Average Velocity: <#= _shotSession.AverageSpeed  #>
+Average Velocity: <#= _shotSession.AverageSpeed #>
 Std Dev: <#= _shotSession.StandardDeviation #>
 ES: <#= _shotSession.ExtremeSpread #>
 

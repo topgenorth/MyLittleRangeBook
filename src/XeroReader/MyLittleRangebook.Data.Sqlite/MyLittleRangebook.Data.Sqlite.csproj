@@ -1,23 +1,38 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <RootNamespace>MyLittleNotebook.Data.Sqlite</RootNamespace>
-        <LangVersion>12</LangVersion>
-        <IsPackable>false</IsPackable>
-        <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
-    </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>MyLittleNotebook.Data.Sqlite</RootNamespace>
+    <LangVersion>12</LangVersion>
+    <IsPackable>false</IsPackable>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <EmbeddedResource Include="scripts/**/*.sql" />
-    </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="scripts/**/*.sql"/>
+  </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Dapper" Version="2.1.35" />
-      <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
-      <PackageReference Include="dbup" Version="5.0.41" />
-      <PackageReference Include="dbup-sqlite" Version="5.0.40" />
-      <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-      <PackageReference Include="Serilog" Version="4.2.0" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.35"/>
+    <PackageReference Include="Dapper.Contrib" Version="2.0.78"/>
+    <PackageReference Include="dbup" Version="5.0.41"/>
+    <PackageReference Include="dbup-sqlite" Version="5.0.40"/>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0"/>
+    <PackageReference Include="Serilog" Version="4.2.0"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.Configuration.Abstractions"/>
+    <Reference Include="Microsoft.Extensions.Hosting.Abstractions">
+      <HintPath>..\..\..\..\..\.nuget\packages\microsoft.extensions.hosting.abstractions\9.0.0\lib\net8.0\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Options">
+      <HintPath>..\..\..\..\..\.nuget\packages\microsoft.extensions.options\9.0.0\lib\net8.0\Microsoft.Extensions.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Options.ConfigurationExtensions">
+      <HintPath>..\..\..\..\..\.nuget\packages\microsoft.extensions.options.configurationextensions\9.0.0\lib\net8.0\Microsoft.Extensions.Options.ConfigurationExtensions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
-﻿using net.opgenorth.xero.shotview;
+﻿using net.opgenorth.xero.device;
+using net.opgenorth.xero.shotview;
 
 namespace net.opgenorth.xero
 {
@@ -9,7 +10,7 @@ namespace net.opgenorth.xero
         public ReadShotViewXLSX(ILogger logger) => _logger = logger;
 
         /// <summary>
-        /// Read the shot data from the specified worksheet within the named Excel spreadsheet.
+        ///     Read the shot data from the specified worksheet within the named Excel spreadsheet.
         /// </summary>
         /// <param name="filename">The name of the Excel workbook.</param>
         /// <param name="sheetNumber">The number of the sheet to read. Zero-indexed.</param>
@@ -18,20 +19,22 @@ namespace net.opgenorth.xero
         {
             try
             {
-                var x = new ShotViewXlsxParser(_logger, filename);
-                var session = x.GetShotSession(sheetNumber);
+                ShotViewXlsxParser? x = new(_logger, filename);
+                ShotSession? session = x.GetShotSession(sheetNumber);
 
                 _logger.Information("Read the file {ExcelFile}", filename);
 
-                var page = new ShotSessionTemplate(session);
-                var content = page.TransformText();
+                ShotSessionTemplate? page = new(session);
+                string? content = page.TransformText();
 
                 Console.Write(content);
+
                 return Task.FromResult(0);
             }
             catch (Exception e)
             {
                 _logger.Error(e, "Could not read the file {ExcelFile}", filename);
+
                 return Task.FromResult(1);
             }
         }

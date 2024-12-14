@@ -1,30 +1,23 @@
-
-
 using System.IO;
 using DbUp;
-using DbUp.Builder;
+using DbUp.Engine;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace MyLittleRangebook.Data.Sqlite
 {
-    public class DbZookeeper
+    public class SqliteDbZookeeper : IDbZookeeper
     {
-        static readonly string DefaultFileName = "garmin-shotview.sqlite";
-
-        readonly FileInfo _sqliteFile;
         readonly ILogger _logger;
+        readonly FileInfo _sqliteFile;
 
-        public DbZookeeper(ILogger logger, string dataDirectory)
+        public SqliteDbZookeeper(ILogger logger, IOptionsSnapshot<GarminShotViewSqliteOptions> options)
         {
             _logger = logger;
-
-            string p = Path.Combine(dataDirectory, DefaultFileName);
-            _sqliteFile = new FileInfo(p);
-
-            SqliteConnectionStringBuilder b = new($"Data Source={_sqliteFile.FullName}");
+            _sqliteFile = new FileInfo(options.Value.SqliteFile);
+            SqliteConnectionStringBuilder b = new($"Data Source={options.Value.SqliteFile}");
             ConnectionString = b.ConnectionString;
-
             _logger.Verbose("Connection string {connectionString}", ConnectionString);
         }
 
@@ -33,11 +26,11 @@ namespace MyLittleRangebook.Data.Sqlite
         public string SqliteFile => _sqliteFile.FullName;
 
         /// <summary>
-        /// Runs the migrations on the <b>.sqlite</b> file.
+        ///     Runs the migrations on the <b>.sqlite</b> file.
         /// </summary>
         public void UpdateDatabase()
         {
-            var deployer = DeployChanges.To
+            UpgradeEngine deployer = DeployChanges.To
                 .SQLiteDatabase(ConnectionString)
                 .LogToConsole()
                 .WithScriptsEmbeddedInAssembly(GetType().Assembly)
@@ -45,8 +38,9 @@ namespace MyLittleRangebook.Data.Sqlite
 
             deployer.PerformUpgrade();
         }
+
         /// <summary>
-        /// Will delete the <b>.sqlite</b> file if it exists, create a new one, and apply migrations.
+        ///     Will delete the <b>.sqlite</b> file if it exists, create a new one, and apply migrations.
         /// </summary>
         public void CreateDatabase()
         {
@@ -59,6 +53,7 @@ namespace MyLittleRangebook.Data.Sqlite
             {
                 _logger.Verbose("No database exists at {FileToDelete}", _sqliteFile.FullName);
             }
+
             UpdateDatabase();
         }
 

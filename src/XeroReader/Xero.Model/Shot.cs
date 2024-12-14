@@ -13,7 +13,7 @@ namespace net.opgenorth.xero.device
         public int ShotNumber { get; set; }
         public ShotSpeed Speed { get; set; } = ShotSpeed.Zero;
 
-        public bool CleanBore { get; set; }  = false;
+        public bool CleanBore { get; set; } = false;
         public bool ColdBore { get; set; } = false;
         public string Notes { get; set; }
 

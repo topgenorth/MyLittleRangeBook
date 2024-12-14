@@ -2,34 +2,28 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using MyLittleRangebook.Data.Sqlite;
 using net.opgenorth.xero;
 
-// ILogger log = new LoggerConfiguration()
-//     .MinimumLevel.Verbose()
-//     .WriteTo.Console()
-//     .WriteTo.Debug()
-//     .CreateLogger();
-// Log.Logger = log;
-
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
-builder.Services.AddSerilog(lc => lc
-    .ReadFrom.Configuration(builder.Configuration));
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", true)
     .AddJsonFile($"appsettings.{Environments.Development}.json", true);
-
+builder.AddGarminShotViewDatabase();
+builder.Services.AddSerilog(lc =>
+    lc .ReadFrom.Configuration(builder.Configuration)
+);
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
 
+var sp = scope.ServiceProvider;
+var o = scope.ServiceProvider.GetRequiredService<IOptionsSnapshot<GarminShotViewSqliteOptions>>();
+
+ILogger log = scope.ServiceProvider.GetRequiredService<ILogger>();
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
-var log = scope.ServiceProvider.GetRequiredService<ILogger>();
-
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
-
-// app.Add<SimpleFitReader>();
-// app.Add<ImportFitFile>();
-// app.Add<ReadShotViewXLSX>();
 
 app.Add<ReadShotViewXLSX>();
 app.Add<SqliteMigrationCommmands>();

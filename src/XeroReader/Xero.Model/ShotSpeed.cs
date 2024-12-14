@@ -11,11 +11,13 @@ namespace net.opgenorth.xero.device
             Value = Convert.ToInt32(value);
             Units = units;
         }
+
         public ShotSpeed(float value, string units = "m/s")
         {
             Value = Convert.ToInt32(value);
             Units = units;
         }
+
         public ShotSpeed(int value, string units = "m/s")
         {
             Value = value;

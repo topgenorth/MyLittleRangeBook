@@ -9,23 +9,25 @@ namespace net.opgenorth.xero.shotview
 
             for (int i = 0; i < rowCount; i++)
             {
-                var r = ws.Rows().ElementAt(i);
-                var c = r.Cell("A");
+                IXLRow? r = ws.Rows().ElementAt(i);
+                IXLCell? c = r.Cell("A");
                 string t = c.GetText() ?? string.Empty;
 
                 if (t.Equals(title, StringComparison.OrdinalIgnoreCase))
                 {
                     row = r;
+
                     break;
                 }
             }
+
             return row;
         }
 
         public static int? GetInteger(this IXLRow row, string columnLetter = "B")
         {
-            var c = row.Cell(columnLetter);
-            if (c.TryGetValue<int>(out int ival))
+            IXLCell? c = row.Cell(columnLetter);
+            if (c.TryGetValue(out int ival))
             {
                 return ival;
             }
@@ -35,7 +37,7 @@ namespace net.opgenorth.xero.shotview
                 return Convert.ToInt32(fval);
             }
 
-            var t = c.GetText();
+            string? t = c.GetText();
             if (string.IsNullOrWhiteSpace(t))
             {
                 if (float.TryParse(t, out float fval2))
@@ -46,9 +48,9 @@ namespace net.opgenorth.xero.shotview
 
             return null;
         }
+
         public static DateTime GetDateTimeUTC(this IXLRow row, string columnLetter = "B")
         {
-
             DateTime result = DateTime.UtcNow.ToUniversalTime();
             if (!row.Cell(columnLetter).TryGetValue(out DateTime dt))
             {
@@ -61,6 +63,7 @@ namespace net.opgenorth.xero.shotview
             }
 
             result = dt.ToUniversalTime();
+
             return result;
         }
 
@@ -79,16 +82,11 @@ namespace net.opgenorth.xero.shotview
             return val;
         }
 
-        internal static string GetString(this IXLRow row, string columnLetter)
-        {
-            return row.Cell(columnLetter).TryGetValue(out string val) ? val : null;
-        }
+        internal static string GetString(this IXLRow row, string columnLetter) =>
+            row.Cell(columnLetter).TryGetValue(out string val) ? val : null;
 
 
-        internal static string GetString(this IXLWorksheet ws, int row, int col)
-        {
-            return ws.Cell(row, col).TryGetValue(out string val) ? val : null;
-        }
-
+        internal static string GetString(this IXLWorksheet ws, int row, int col) =>
+            ws.Cell(row, col).TryGetValue(out string val) ? val : null;
     }
 }

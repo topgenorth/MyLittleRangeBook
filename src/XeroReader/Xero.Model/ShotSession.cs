@@ -6,11 +6,10 @@ using NanoidDotNet;
 namespace net.opgenorth.xero.device
 {
     /// <summary>
-    /// A session holds data about a single Xero shooting session.
+    ///     A session holds data about a single Xero shooting session.
     /// </summary>
     public class ShotSession
     {
-
         readonly ShotCollection _shots = [];
 
         readonly uint _xeroSerialNumber;
@@ -56,10 +55,7 @@ namespace net.opgenorth.xero.device
             _shots.Add(shot);
         }
 
-        public void Mutate(Action<ShotSession> mutator)
-        {
-            mutator(this);
-        }
+        public void Mutate(Action<ShotSession> mutator) => mutator(this);
 
         public void Mutate(List<Action<ShotSession>> mutators)
         {

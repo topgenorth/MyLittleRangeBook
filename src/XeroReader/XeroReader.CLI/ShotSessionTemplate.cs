@@ -9,8 +9,6 @@
 // ------------------------------------------------------------------------------
 namespace net.opgenorth.xero
 {
-    using System.Text;
-    using System.Collections.Generic;
     using System;
     
     /// <summary>
@@ -29,49 +27,49 @@ namespace net.opgenorth.xero
         {
             this.Write("ShotView Export File: ");
             
-            #line 4 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 2 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.FileName));
             
             #line default
             #line hidden
             this.Write("\nSession Date: ");
             
-            #line 5 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 3 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.SessionTimestamp.ToString("O")));
             
             #line default
             #line hidden
             this.Write("\nNotes:\n");
             
-            #line 7 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 6 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.Notes));
             
             #line default
             #line hidden
             this.Write("\n\nNumber of Shots: ");
             
-            #line 9 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 8 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.ShotCount));
             
             #line default
             #line hidden
             this.Write("\nAverage Velocity: ");
             
-            #line 10 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 9 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.AverageSpeed));
             
             #line default
             #line hidden
             this.Write("\nStd Dev: ");
             
-            #line 11 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 10 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.StandardDeviation));
             
             #line default
             #line hidden
             this.Write("\nES: ");
             
-            #line 12 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
+            #line 11 "/home/tom/code/MyLittleRangeBook/src/XeroReader/XeroReader.CLI/ShotSessionTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.ExtremeSpread));
             
             #line default
