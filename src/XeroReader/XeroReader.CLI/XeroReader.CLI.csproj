@@ -51,18 +51,6 @@
     <None Update="appsettings.Development.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Commands\ShotViewExcelWorkbook\ShotViewExcelSpreadsheetTemplate.tt">
-      <Generator>TextTemplatingFilePreprocessor</Generator>
-      <LastGenOutput>ShotViewExcelSpreadsheetTemplate.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Commands\ShotViewExcelWorkbook\ShotViewExcelSpreadsheetTemplate.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ShotViewExcelSpreadsheetTemplate.tt</DependentUpon>
-    </Compile>
   </ItemGroup>
 
 </Project>

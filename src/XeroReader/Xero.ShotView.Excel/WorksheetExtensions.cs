@@ -1,5 +1,12 @@
 namespace net.opgenorth.xero.shotview
 {
+    public partial class ShotViewExcelSpreadsheetTemplate
+    {
+        readonly WorkbookSession _shotSession;
+
+        public ShotViewExcelSpreadsheetTemplate(WorkbookSession shotSession) => _shotSession = shotSession;
+    }
+
     public static class WorksheetExtensions
     {
         public static IXLRow? FindRowThatStartsWith(this IXLWorksheet ws, string title)

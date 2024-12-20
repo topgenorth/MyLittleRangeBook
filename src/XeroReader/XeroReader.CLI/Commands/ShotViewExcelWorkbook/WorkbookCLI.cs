@@ -5,14 +5,6 @@ using net.opgenorth.xero.shotview;
 
 namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
 {
-
-    public partial class ShotViewExcelSpreadsheetTemplate
-    {
-        readonly WorkbookSession _shotSession;
-
-        public ShotViewExcelSpreadsheetTemplate(WorkbookSession shotSession) => _shotSession = shotSession;
-    }
-
     // ReSharper disable once InconsistentNaming
     public class WorkbookCLI
     {
