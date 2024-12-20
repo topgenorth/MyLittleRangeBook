@@ -2,7 +2,8 @@
 
 --
 ShotView Export File: <#= _shotSession.FileName #>, Sheet #: <#= _shotSession.SheetNumber #>
-Session Date: <#= _shotSession.SessionTimestamp.ToString("O") #>
+Session Date: <#=
+                    _shotSession.SessionTimestamp.ToString("O") #>
 
 Notes:
 <#= _shotSession.Notes #>
@@ -17,10 +18,10 @@ Session:
 Shot #  Velocity   Notes
 ------  --------   --------------------
 <#
-    foreach(var shot in _shotSession.Shots)
+    foreach (var shot in _shotSession.Shots)
     {
 #>
-<#= shot.ShotNumber.ToString().CenterString(6)#>  <#= shot.Speed.ToString()#>   <#= shot.Notes.CenterString(50)#>
+<#= shot.ShotNumber.ToString().CenterString(6) #>  <#= shot.Speed.ToString() #>   <#= shot.Notes.CenterString(50) #>
 <#
     }
 #>

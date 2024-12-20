@@ -9,12 +9,10 @@ namespace net.opgenorth.xero.shotview
 
     public static class WorksheetExtensions
     {
-        public static string CenterString(this string stringToCenter, int totalLength)
-        {
-            return stringToCenter.PadLeft(((totalLength - stringToCenter.Length) / 2)
-                                          + stringToCenter.Length)
-                .PadRight(totalLength);
-        }
+        public static string CenterString(this string stringToCenter, int totalLength) => stringToCenter.PadLeft(
+                (totalLength - stringToCenter.Length) / 2
+                + stringToCenter.Length)
+            .PadRight(totalLength);
 
         public static IXLRow? FindRowThatStartsWith(this IXLWorksheet ws, string title)
         {

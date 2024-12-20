@@ -10,9 +10,9 @@ namespace net.opgenorth.xero.device
     {
         public Shot()
         {
-
         }
-        public Shot(Shot otherShot): this()
+
+        public Shot(Shot otherShot) : this()
         {
             Timestamp = otherShot.Timestamp;
             ShotNumber = otherShot.ShotNumber;

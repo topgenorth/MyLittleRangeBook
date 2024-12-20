@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using net.opgenorth.xero;
 using net.opgenorth.xero.Commands;
 using net.opgenorth.xero.Commands.ShotViewExcelWorkbook;
 using net.opgenorth.xero.data.sqlite;
@@ -14,14 +13,15 @@ builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile($"appsettings.{Environments.Development}.json", true);
 builder.AddGarminShotViewDatabase();
 builder.Services.AddSerilog(lc =>
-    lc .ReadFrom.Configuration(builder.Configuration)
+    lc.ReadFrom.Configuration(builder.Configuration)
 );
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
 
-var sp = scope.ServiceProvider;
-var o = scope.ServiceProvider.GetRequiredService<IOptionsSnapshot<GarminShotViewSqliteOptions>>();
+IServiceProvider? sp = scope.ServiceProvider;
+IOptionsSnapshot<GarminShotViewSqliteOptions>? o = scope.ServiceProvider
+    .GetRequiredService<IOptionsSnapshot<GarminShotViewSqliteOptions>>();
 
 ILogger log = scope.ServiceProvider.GetRequiredService<ILogger>();
 ConsoleApp.ServiceProvider = scope.ServiceProvider;

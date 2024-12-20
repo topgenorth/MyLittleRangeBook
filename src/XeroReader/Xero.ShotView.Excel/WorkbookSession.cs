@@ -1,43 +1,39 @@
-
 using net.opgenorth.xero.device;
 
 namespace net.opgenorth.xero.shotview
 {
-    public class WorkbookSession: ShotSession
+    public class WorkbookSession : ShotSession
     {
-        public WorkbookSession() : base()
+        public WorkbookSession()
         {
-
         }
 
-        public WorkbookSession(ShotSession session) : base()
+        public WorkbookSession(ShotSession session)
         {
-            this.Notes = session.Notes;
-            this.FileName = session.FileName;
-            this.ProjectileType = session.ProjectileType;
-            this.ProjectileWeight = session.ProjectileWeight;
-            this.SessionTimestamp = session.SessionTimestamp;
+            Notes = session.Notes;
+            FileName = session.FileName;
+            ProjectileType = session.ProjectileType;
+            ProjectileWeight = session.ProjectileWeight;
+            SessionTimestamp = session.SessionTimestamp;
 
-            foreach (var shot in session.Shots)
+            foreach (Shot shot in session.Shots)
             {
-                var newShot = new Shot(shot);
-                this.AddShot(newShot);
+                Shot newShot = new(shot);
+                AddShot(newShot);
             }
         }
+
         public int SheetNumber { get; set; } = 0;
         public string SheetName { get; set; }
 
-        public void Mutate(Action<WorkbookSession> mutator)
-        {
-            mutator(this);
-        }
+        public void Mutate(Action<WorkbookSession> mutator) => mutator(this);
+
         public void Mutate(List<Action<WorkbookSession>> mutators)
         {
-            foreach (var mutator in mutators)
+            foreach (Action<WorkbookSession> mutator in mutators)
             {
                 mutator(this);
             }
         }
     }
-
 }

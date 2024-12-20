@@ -47,10 +47,7 @@ namespace net.opgenorth.xero.shotview
         }
 
 
-        void GetSheetName(WorkbookSession s)
-        {
-            s.SheetName = _worksheet.Name;
-        }
+        void GetSheetName(WorkbookSession s) => s.SheetName = _worksheet.Name;
 
         void GetProjectileWeightFromWorksheet(WorkbookSession s)
         {
@@ -91,7 +88,7 @@ namespace net.opgenorth.xero.shotview
 
             foreach (IXLRow row in shotRows)
             {
-                Shot? shot = new Shot()
+                Shot? shot = new()
                 {
                     CleanBore = row.GetBool("G"), ColdBore = row.GetBool("H"), Notes = row.GetString("I")
                 };

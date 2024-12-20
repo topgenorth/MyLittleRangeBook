@@ -3,7 +3,6 @@ using net.opgenorth.xero.data.sqlite;
 
 namespace net.opgenorth.xero.Commands
 {
-
     public class SqliteMigrations
     {
         readonly ILogger _logger;
@@ -12,7 +11,7 @@ namespace net.opgenorth.xero.Commands
         public SqliteMigrations(ILogger logger, IDbZookeeper dbz)
         {
             _logger = logger;
-            _sqliteDbKeeper = (SqliteDbZookeeper) dbz;
+            _sqliteDbKeeper = (SqliteDbZookeeper)dbz;
         }
 
 

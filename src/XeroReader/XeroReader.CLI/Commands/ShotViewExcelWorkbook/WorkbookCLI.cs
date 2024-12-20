@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using ConsoleAppFramework;
-using net.opgenorth.xero.device;
 using net.opgenorth.xero.shotview;
 
 namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
@@ -8,11 +7,11 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
     // ReSharper disable once InconsistentNaming
     public class WorkbookCLI
     {
+        readonly Task<int> _failure = Task.FromResult(1);
         readonly ILogger _logger;
+        readonly Task<int> _success = Task.FromResult(0);
         FileInfo? _file;
         public WorkbookCLI(ILogger logger) => _logger = logger;
-        readonly Task<int> _success = Task.FromResult(0);
-        readonly Task<int> _failure = Task.FromResult(1);
 
         /// <summary>
         ///     Import a session from the numbered worksheet contained in the ShotView export workbook.
@@ -41,7 +40,6 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
             {
                 _file = null;
             }
-
         }
 
         void WriteToConsole(WorkbookSession? session)
@@ -61,13 +59,15 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
             if (_file is null)
             {
                 _logger.Verbose("No file specified.");
+
                 return null;
             }
 
             ShotViewXlsxParser? x = new(_logger, _file.FullName);
-            var session = x.GetShotSession(sheetNumber);
-            WorkbookSession ws = new WorkbookSession(session) { SheetNumber = sheetNumber };
+            WorkbookSession session = x.GetShotSession(sheetNumber);
+            WorkbookSession ws = new(session) { SheetNumber = sheetNumber };
             _logger.Information("Read the file {ExcelFile}", _file.FullName);
+
             return ws;
         }
     }

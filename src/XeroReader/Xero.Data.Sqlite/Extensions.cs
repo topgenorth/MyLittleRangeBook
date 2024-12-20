@@ -1,3 +1,5 @@
+using System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -13,17 +15,15 @@ namespace net.opgenorth.xero.data.sqlite
         /// <returns></returns>
         public static IHostApplicationBuilder AddGarminShotViewDatabase(this IHostApplicationBuilder builder)
         {
-            var c = builder.Configuration;
-            var x = c.GetSection(GarminShotViewSqliteOptions.ConfigSection);
+            IConfigurationManager c = builder.Configuration;
+            IConfigurationSection x = c.GetSection(GarminShotViewSqliteOptions.ConfigSection);
 
             builder.Services.Configure<GarminShotViewSqliteOptions>(x);
             builder.Services.TryAddScoped<IDbZookeeper, SqliteDbZookeeper>();
+
             return builder;
         }
 
-        static void ConfigureOptions(GarminShotViewSqliteOptions obj)
-        {
-            throw new System.NotImplementedException();
-        }
+        static void ConfigureOptions(GarminShotViewSqliteOptions obj) => throw new NotImplementedException();
     }
 }
