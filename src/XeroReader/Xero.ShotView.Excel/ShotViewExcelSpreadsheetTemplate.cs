@@ -32,57 +32,95 @@ namespace net.opgenorth.xero.shotview
             
             #line default
             #line hidden
-            this.Write("\nSheet #: ");
+            this.Write(", Sheet #: ");
             
-            #line 5 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            #line 4 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.SheetNumber));
             
             #line default
             #line hidden
             this.Write("\nSession Date: ");
             
-            #line 6 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
-
-    _shotSession.SessionTimestamp.ToString("O"); 
+            #line 5 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.SessionTimestamp.ToString("O")));
             
             #line default
             #line hidden
-            this.Write("\nNotes:\n");
+            this.Write("\n\nNotes:\n");
             
-            #line 10 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            #line 8 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.Notes));
             
             #line default
             #line hidden
             this.Write("\n\nNumber of Shots: ");
             
-            #line 12 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            #line 10 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.ShotCount));
             
             #line default
             #line hidden
             this.Write("\nAverage Velocity: ");
             
-            #line 13 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            #line 11 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.AverageSpeed));
             
             #line default
             #line hidden
             this.Write("\nStd Dev: ");
             
-            #line 14 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            #line 12 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.StandardDeviation));
             
             #line default
             #line hidden
             this.Write("\nES: ");
             
-            #line 15 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            #line 13 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.ExtremeSpread));
             
             #line default
             #line hidden
-            this.Write("\n--\n");
+            this.Write("\n\nSession:\n\nShot #  Velocity   Notes\n------  --------   --------------------\n");
+            
+            #line 19 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+
+    foreach(var shot in _shotSession.Shots)
+    {
+
+            
+            #line default
+            #line hidden
+            
+            #line 23 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(shot.ShotNumber.ToString().CenterString(6)));
+            
+            #line default
+            #line hidden
+            this.Write("  ");
+            
+            #line 23 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(shot.Speed.ToString()));
+            
+            #line default
+            #line hidden
+            this.Write("   ");
+            
+            #line 23 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(shot.Notes.CenterString(50)));
+            
+            #line default
+            #line hidden
+            this.Write("\n");
+            
+            #line 24 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+
+    }
+
+            
+            #line default
+            #line hidden
+            this.Write("--\n");
             return this.GenerationEnvironment.ToString();
         }
     }
