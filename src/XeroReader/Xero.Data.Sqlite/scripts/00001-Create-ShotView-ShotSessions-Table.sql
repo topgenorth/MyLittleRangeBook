@@ -1,7 +1,6 @@
 CREATE TABLE shotview_sessions
 (
-    id                TEXT    NOT NULL
-        CONSTRAINT shotview_sessions_pk PRIMARY KEY,
+    id TEXT NOT NULL CONSTRAINT shotview_sessions_pk PRIMARY KEY,
     session_date      TEXT    NOT NULL,
     name              integer NOT NULL,
     projectile_weight integer          DEFAULT 0 NOT NULL,

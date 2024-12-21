@@ -16,8 +16,7 @@ namespace net.opgenorth.xero.data.sqlite
         {
             _logger = logger;
             _sqliteFile = new FileInfo(options.Value.SqliteFile);
-            SqliteConnectionStringBuilder b = new($"Data Source={options.Value.SqliteFile}");
-            ConnectionString = b.ConnectionString;
+            ConnectionString = options.Value.MakeConnectionString();
             _logger.Verbose("Connection string {connectionString}", ConnectionString);
         }
 

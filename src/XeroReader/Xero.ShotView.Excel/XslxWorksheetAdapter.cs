@@ -4,18 +4,18 @@ using Serilog;
 
 namespace net.opgenorth.xero.shotview
 {
-    public class ShotViewXlsxParser : IDisposable
+    public class XslxWorksheetAdapter : IDisposable
     {
         readonly ILogger _logger;
         readonly FileInfo _xslxFile;
         IXLWorkbook _workbook;
         IXLWorksheet _worksheet;
 
-        public ShotViewXlsxParser(ILogger logger, string fileName) : this(logger, new FileInfo(fileName))
+        public XslxWorksheetAdapter(ILogger logger, string fileName) : this(logger, new FileInfo(fileName))
         {
         }
 
-        public ShotViewXlsxParser(ILogger logger, FileInfo xslxFile)
+        public XslxWorksheetAdapter(ILogger logger, FileInfo xslxFile)
         {
             _logger = logger;
             _xslxFile = xslxFile;
@@ -30,7 +30,7 @@ namespace net.opgenorth.xero.shotview
             _workbook = new XLWorkbook(_xslxFile.FullName);
             _worksheet = _workbook.Worksheets.ElementAt(sheetNumber);
 
-            WorkbookSession s = new() { FileName = _xslxFile.Name };
+            WorkbookSession s = new() { FileName = _xslxFile.Name, SheetNumber = sheetNumber};
 
             List<Action<WorkbookSession>>? mutators = new()
             {
@@ -47,7 +47,11 @@ namespace net.opgenorth.xero.shotview
         }
 
 
-        void GetSheetName(WorkbookSession s) => s.SheetName = _worksheet.Name;
+        void GetSheetName(WorkbookSession s)
+        {
+            string sheetName = $"{_xslxFile.Name}[{s.SheetNumber}]-{_worksheet.Name}";
+            s.SheetName = sheetName;
+        }
 
         void GetProjectileWeightFromWorksheet(WorkbookSession s)
         {

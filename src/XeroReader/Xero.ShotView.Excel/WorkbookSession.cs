@@ -16,6 +16,7 @@ namespace net.opgenorth.xero.shotview
             ProjectileWeight = session.ProjectileWeight;
             SessionTimestamp = session.SessionTimestamp;
 
+
             foreach (Shot shot in session.Shots)
             {
                 Shot newShot = new(shot);
@@ -23,7 +24,7 @@ namespace net.opgenorth.xero.shotview
             }
         }
 
-        public int SheetNumber { get; set; } = 0;
+        public int SheetNumber { get; init; } = 0;
         public string SheetName { get; set; }
 
         public void Mutate(Action<WorkbookSession> mutator) => mutator(this);

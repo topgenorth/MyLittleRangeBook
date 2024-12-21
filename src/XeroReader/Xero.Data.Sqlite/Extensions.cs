@@ -1,4 +1,4 @@
-using System;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -24,6 +24,11 @@ namespace net.opgenorth.xero.data.sqlite
             return builder;
         }
 
-        static void ConfigureOptions(GarminShotViewSqliteOptions obj) => throw new NotImplementedException();
+        public  static string MakeConnectionString(this GarminShotViewSqliteOptions opt)
+        {
+            SqliteConnectionStringBuilder b = new($"Data Source={opt.SqliteFile}");
+
+            return b.ConnectionString;
+        }
     }
 }
