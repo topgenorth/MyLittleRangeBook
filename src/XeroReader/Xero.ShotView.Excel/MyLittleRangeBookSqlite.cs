@@ -72,7 +72,7 @@ namespace net.opgenorth.xero.data.sqlite
             var update = new
             {
                 session.Id,
-                SessionTimestamp = session.SessionTimestamp.ToString("O"),
+                SessionTimestamp = session.SessionTimestamp.ToUniversalTime().ToString("O"),
                 Name = session.SheetName,
                 session.ProjectileWeight,
                 session.Notes,

@@ -65,7 +65,7 @@ namespace net.opgenorth.xero.shotview
 
         void GetSessionIdFromWorksheet(WorkbookSession s)
         {
-            var id = _worksheet.Cell(1, "G").Value.GetText();
+            string? id = _worksheet.Cell(1, "G").Value.GetText();
             if (string.IsNullOrEmpty(id))
             {
                 return;
@@ -121,7 +121,9 @@ namespace net.opgenorth.xero.shotview
             {
                 Shot? shot = new()
                 {
-                    CleanBore = row.GetBool("G"), ColdBore = row.GetBool("H"), Notes = row.GetString("I")
+                    CleanBore = row.GetBool("G"),
+                    ColdBore = row.GetBool("H"),
+                    Notes = row.GetString("I")
                 };
 
                 int? shotNumber = row.GetInteger("A");
@@ -129,7 +131,6 @@ namespace net.opgenorth.xero.shotview
                 {
                     continue;
                 }
-
                 shot.ShotNumber = shotNumber.Value;
 
                 int? speed = row.GetInteger();
@@ -138,10 +139,21 @@ namespace net.opgenorth.xero.shotview
                     continue;
                 }
 
+                // TODO [TO20241222] Assumption is that we're FPS.
                 shot.Speed = new ShotSpeed(speed.Value, "fps");
+
+                string timeText = row.GetString("F");
+                if (TimeOnly.TryParse(timeText, out TimeOnly only))
+                {
+                    var x = s.SessionTimestamp;
+                    var d = new DateTime(x.Year, x.Month, x.Day,
+                        only.Hour, only.Minute, only.Second);
+                    shot.Timestamp = d;
+                }
 
                 s.AddShot(shot);
             }
         }
     }
 }
+
