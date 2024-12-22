@@ -23,7 +23,7 @@ namespace net.opgenorth.xero.device
             Notes = string.Empty;
         }
 
-        public string Id { get; }
+        public string Id { get; set; }
 
         public string FileName { get; set; }
 

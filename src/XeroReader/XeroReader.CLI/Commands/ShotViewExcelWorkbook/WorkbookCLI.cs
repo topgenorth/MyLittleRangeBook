@@ -35,7 +35,8 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
 
             try
             {
-                WorkbookSession? session = ReadShotSession(sheetNumber);
+                using XslxWorksheetAdapter? xlsx = new(_logger, _file.FullName);
+                WorkbookSession? session = xlsx.GetShotSession(sheetNumber);
                 if (session == null)
                 {
                     _logger.Warning($"Could not read from the sheet #{sheetNumber} from {filename}.");
@@ -46,6 +47,8 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
                     _logger.Verbose("Database at {0}", db.Filename);
                     db.UpsertSession(session);
                     _logger.Information($"Imported sheet #{sheetNumber} from {filename}.");
+
+                    xlsx.WriteMetadataToWorksheet(session);
                 }
 
                 return s_success;
@@ -75,7 +78,8 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
             _file = new FileInfo(filename);
             try
             {
-                WorkbookSession? session = ReadShotSession(sheetNumber);
+                using XslxWorksheetAdapter? xlsx = new(_logger, _file.FullName);
+                WorkbookSession? session = xlsx.GetShotSession(sheetNumber);
                 WriteToConsole(session);
 
                 return s_success;
@@ -104,20 +108,5 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
             Console.Write(content);
         }
 
-        WorkbookSession? ReadShotSession(int sheetNumber)
-        {
-            if (_file is null)
-            {
-                _logger.Verbose("No file specified.");
-
-                return null;
-            }
-
-            XslxWorksheetAdapter? x = new(_logger, _file.FullName);
-            WorkbookSession session = x.GetShotSession(sheetNumber);
-            _logger.Information("Read the file {ExcelFile}", _file.FullName);
-
-            return session;
-        }
     }
 }

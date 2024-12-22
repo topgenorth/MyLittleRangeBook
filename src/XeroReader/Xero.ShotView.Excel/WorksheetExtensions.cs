@@ -25,12 +25,13 @@ namespace net.opgenorth.xero.shotview
                 IXLCell? c = r.Cell("A");
                 string t = c.GetText() ?? string.Empty;
 
-                if (t.Equals(title, StringComparison.OrdinalIgnoreCase))
+                if (!t.Equals(title, StringComparison.OrdinalIgnoreCase))
                 {
-                    row = r;
-
-                    break;
+                    continue;
                 }
+
+                row = r;
+                break;
             }
 
             return row;
@@ -50,12 +51,14 @@ namespace net.opgenorth.xero.shotview
             }
 
             string? t = c.GetText();
-            if (string.IsNullOrWhiteSpace(t))
+            if (!string.IsNullOrWhiteSpace(t))
             {
-                if (float.TryParse(t, out float fval2))
-                {
-                    return Convert.ToInt32(fval2);
-                }
+                return null;
+            }
+
+            if (float.TryParse(t, out float fval2))
+            {
+                return Convert.ToInt32(fval2);
             }
 
             return null;

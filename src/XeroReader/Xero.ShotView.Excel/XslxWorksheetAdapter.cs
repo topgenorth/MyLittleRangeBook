@@ -25,6 +25,22 @@ namespace net.opgenorth.xero.shotview
 
         public override string ToString() => _xslxFile.FullName;
 
+        public void WriteMetadataToWorksheet(WorkbookSession session)
+        {
+            // const string x = "All shots included in the calculations";
+            // var lastRow = _worksheet.FindRowThatStartsWith(x);
+            // if (lastRow is null)
+            // {
+            //     _logger.Warning("Could not find the last row in {sheetName}", _worksheet.Name);
+            //     return;
+            // }
+            //
+            // var i = lastRow.RowNumber() + 1;
+            // [TO20241222] Just write to G1.
+            _worksheet.Cell(1, "G").Value = session.Id;
+            _workbook.Save();
+        }
+
         public WorkbookSession GetShotSession(int sheetNumber)
         {
             _workbook = new XLWorkbook(_xslxFile.FullName);
@@ -32,20 +48,31 @@ namespace net.opgenorth.xero.shotview
 
             WorkbookSession s = new() { FileName = _xslxFile.Name, SheetNumber = sheetNumber};
 
-            List<Action<WorkbookSession>>? mutators = new()
-            {
+            List<Action<WorkbookSession>>? mutators =
+            [
+                GetSessionIdFromWorksheet,
                 GetDateFromWorksheet,
                 CreateNotesFromWorksheet,
                 GetProjectileWeightFromWorksheet,
                 GetShotsFromWorksheet,
                 GetSheetName
-            };
+            ];
 
             s.Mutate(mutators);
 
             return s;
         }
 
+        void GetSessionIdFromWorksheet(WorkbookSession s)
+        {
+            var id = _worksheet.Cell(1, "G").Value.GetText();
+            if (string.IsNullOrEmpty(id))
+            {
+                return;
+            }
+
+            s.Id = id;
+        }
 
         void GetSheetName(WorkbookSession s)
         {

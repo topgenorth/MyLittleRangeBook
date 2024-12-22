@@ -63,7 +63,7 @@ namespace net.opgenorth.xero.data.sqlite
                                          name=@SheetName,
                                          projectile_weight=@ProjectileWeight,
                                          notes=@Notes,
-                                         modification_time=@ModificationTime,
+                                         modification_date=@ModificationTime,
                                          projectile_units=@ProjectileUnits,
                                          velocity_units=@VelocityUnits
                                      WHERE id=@Id
