@@ -4,6 +4,9 @@ CREATE TABLE shotview_sessions
     session_date      TEXT    NOT NULL,
     name              integer NOT NULL,
     projectile_weight integer          DEFAULT 0 NOT NULL,
+    projectile_type   TEXT    NOT NULL,
+    projectile_units  TEXT    NOT NULL DEFAULT 'grains',
+    velocity_units    TEXT    NOT NULL DEFAULT 'fps',
     notes             TExT             DEFAULT NULL,
     modification_date TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     creation_date     TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP

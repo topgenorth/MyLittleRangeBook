@@ -1,20 +1,23 @@
-﻿using System.Diagnostics;
+﻿using System.Data;
+using System.Diagnostics;
+using System.Transactions;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
 using net.opgenorth.xero.device;
 using net.opgenorth.xero.shotview;
 using Serilog;
+using IsolationLevel = System.Data.IsolationLevel;
 
 namespace net.opgenorth.xero.data.sqlite
 {
-    public class MyLittleRangeBookDb
+    public class MyLittleRangeBookRepository
     {
         readonly string _connectionString;
         readonly ILogger _logger;
         readonly FileInfo _sqliteFile;
 
-        public MyLittleRangeBookDb(ILogger logger, IOptionsSnapshot<GarminShotViewSqliteOptions> options)
+        public MyLittleRangeBookRepository(ILogger logger, IOptionsSnapshot<GarminShotViewSqliteOptions> options)
         {
             _logger = logger;
             _sqliteFile = new FileInfo(options.Value.SqliteFile);
@@ -23,13 +26,74 @@ namespace net.opgenorth.xero.data.sqlite
 
         public string Filename => _sqliteFile.FullName;
 
+
+        void LoadSessionFromSqlite(WorkbookSession s)
+        {
+            var id = new { Id = s.Id };
+            const string sessionSql = "SELECT id, session_date, name, projectile_type, projectile_weight, notes FROM shotview_sessions WHERE id=@Id";
+            const string shotsSql = "SELECT id, shot_number, velocity, notes, cold_bore, clean_bore, ignore_shot, shot_time FROM shotview_shots WHERE id=@Id ORDER BY shot_number";
+
+            using SqliteConnection conn = new(_connectionString);
+            using var trans =  conn.BeginTransaction(IsolationLevel.Snapshot);
+            var sessionRdr =  conn.ExecuteReader(sessionSql, id, trans, 1, CommandType.TableDirect);
+
+            sessionRdr.Read();
+            s.SessionTimestamp = sessionRdr.GetDateTime(1);
+            s.ProjectileWeight = sessionRdr.GetInt32(4);
+            s.ProjectileType = sessionRdr.GetString(3);
+            s.Notes = sessionRdr.GetString(5);
+            sessionRdr.Dispose();
+
+            using var shotsRdr = conn.ExecuteReader(shotsSql, id, trans, 1, CommandType.TableDirect);
+            LoadShotsFromSqlite(shotsRdr, s);
+            shotsRdr.Dispose();
+            trans.Rollback();
+            conn.Close();
+        }
+
+        void LoadShotsFromSqlite(IDataReader rdr, WorkbookSession s)
+        {
+            while (rdr.Read())
+            {
+                var shot = new Shot(rdr.GetString(0))
+                {
+                    ShotNumber = rdr.GetInt32(1),
+                    Speed = new ShotSpeed(rdr.GetInt32(2), "fps"),
+                    Notes = rdr.GetString(3),
+                    ColdBore = rdr.GetBoolean(4),
+                    CleanBore = rdr.GetBoolean(5),
+                    IgnoreShot = rdr.GetBoolean(6),
+                    Timestamp = rdr.GetDateTime(7)
+                };
+                s.AddShot(shot);
+            }
+        }
+        public async Task<WorkbookSession> GetSession(string sessionId)
+        {
+            var session = new WorkbookSession(sessionId);
+
+            List<Action<WorkbookSession>> mutators = [LoadSessionFromSqlite];
+            session.Mutate(mutators);
+            return session;
+        }
+
         public async Task<int> DeleteSession(WorkbookSession session)
         {
-            await using SqliteConnection conn = new(_connectionString);
-            int rowDeleted =
-                await conn.ExecuteAsync("DELETE FROM shotview_session WHERE Id=@Id", new { session.Id });
+            const string deleteShotsSql = "DELETE FROM shotview_shots WHERE shotview_session_id = @Id";
+            const string deleteSessionSql = "DELETE FROM shotview_session WHERE Id=@Id";
+            int rowDeleted = 0;
+            int shotsDeleted = 0;
+            var id = new { Id = session.Id };
 
-            return rowDeleted;
+            await using SqliteConnection conn = new(_connectionString);
+            using (TransactionScope scope = new())
+            {
+                shotsDeleted = await conn.ExecuteAsync(deleteShotsSql, id);
+                rowDeleted = await conn.ExecuteAsync( deleteSessionSql, id);
+                scope.Complete();
+            }
+
+            return rowDeleted + shotsDeleted;
         }
 
         public async Task UpsertSession(WorkbookSession session)

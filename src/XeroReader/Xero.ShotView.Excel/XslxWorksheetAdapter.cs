@@ -45,12 +45,17 @@ namespace net.opgenorth.xero.shotview
         {
             _workbook = new XLWorkbook(_xslxFile.FullName);
             _worksheet = _workbook.Worksheets.ElementAt(sheetNumber);
+            string? id = _worksheet.Cell(1, "G").Value.GetText();
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return null;
+            }
 
-            WorkbookSession s = new() { FileName = _xslxFile.Name, SheetNumber = sheetNumber};
+            WorkbookSession s = new(id) { FileName = _xslxFile.Name, SheetNumber = sheetNumber};
 
-            List<Action<WorkbookSession>>? mutators =
+            List<Action<WorkbookSession>> mutators =
             [
-                GetSessionIdFromWorksheet,
+
                 GetDateFromWorksheet,
                 CreateNotesFromWorksheet,
                 GetProjectileWeightFromWorksheet,
@@ -63,16 +68,6 @@ namespace net.opgenorth.xero.shotview
             return s;
         }
 
-        void GetSessionIdFromWorksheet(WorkbookSession s)
-        {
-            string? id = _worksheet.Cell(1, "G").Value.GetText();
-            if (string.IsNullOrEmpty(id))
-            {
-                return;
-            }
-
-            s.Id = id;
-        }
 
         void GetSheetName(WorkbookSession s)
         {

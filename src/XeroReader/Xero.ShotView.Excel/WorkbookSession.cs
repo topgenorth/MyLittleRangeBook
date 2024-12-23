@@ -1,15 +1,21 @@
+
 using net.opgenorth.xero.device;
 
 namespace net.opgenorth.xero.shotview
 {
+
+
     public class WorkbookSession : ShotSession
     {
-        public WorkbookSession()
+
+        public WorkbookSession(string sessionId)
         {
+            Id = sessionId;
         }
 
         public WorkbookSession(ShotSession session)
         {
+            Id = session.Id;
             Notes = session.Notes;
             FileName = session.FileName;
             ProjectileType = session.ProjectileType;

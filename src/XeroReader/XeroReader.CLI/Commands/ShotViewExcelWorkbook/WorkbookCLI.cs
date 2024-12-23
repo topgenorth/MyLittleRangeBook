@@ -43,9 +43,9 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
                 }
                 else
                 {
-                    MyLittleRangeBookDb db = new(_logger, _options);
-                    _logger.Verbose("Database at {0}", db.Filename);
-                    db.UpsertSession(session);
+                    MyLittleRangeBookRepository repository = new(_logger, _options);
+                    _logger.Verbose("Database at {0}", repository.Filename);
+                    repository.UpsertSession(session);
                     _logger.Information($"Imported sheet #{sheetNumber} from {filename}.");
 
                     xlsx.WriteMetadataToWorksheet(session);
