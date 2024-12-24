@@ -31,6 +31,7 @@ namespace net.opgenorth.xero.shotview
                 }
 
                 row = r;
+
                 break;
             }
 
@@ -69,7 +70,7 @@ namespace net.opgenorth.xero.shotview
             DateTime result;
             if (!row.Cell(columnLetter).TryGetValue(out DateTime dt))
             {
-                var dateText = row.Cell(columnLetter).GetString();
+                string? dateText = row.Cell(columnLetter).GetString();
                 if (!DateTime.TryParse(dateText, out dt))
                 {
                     return null;
@@ -82,6 +83,7 @@ namespace net.opgenorth.xero.shotview
             }
 
             result = dt.ToUniversalTime();
+
             return result;
         }
 

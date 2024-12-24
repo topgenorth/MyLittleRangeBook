@@ -4,12 +4,12 @@ using System.Transactions;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
+using net.opgenorth.xero.data.sqlite;
 using net.opgenorth.xero.device;
-using net.opgenorth.xero.shotview;
 using Serilog;
 using IsolationLevel = System.Data.IsolationLevel;
 
-namespace net.opgenorth.xero.data.sqlite
+namespace net.opgenorth.xero.shotview
 {
     public class MyLittleRangeBookRepository : IGetShotSession, IPersistShotSession
     {
@@ -26,53 +26,13 @@ namespace net.opgenorth.xero.data.sqlite
 
         public string Filename => _sqliteFile.FullName;
 
-
-        void LoadSessionFromSqlite(WorkbookSession s)
-        {
-            var id = new { Id = s.Id };
-            const string sessionSql = "SELECT id, session_date, name, projectile_type, projectile_weight, notes FROM shotview_sessions WHERE id=@Id";
-            const string shotsSql = "SELECT id, shot_number, velocity, notes, cold_bore, clean_bore, ignore_shot, shot_time FROM shotview_shots WHERE id=@Id ORDER BY shot_number";
-
-            using SqliteConnection conn = new(_connectionString);
-            using var trans =  conn.BeginTransaction(IsolationLevel.Snapshot);
-            var sessionRdr =  conn.ExecuteReader(sessionSql, id, trans, 1, CommandType.TableDirect);
-
-            sessionRdr.Read();
-            s.DateTimeUtc = sessionRdr.GetDateTime(1);
-            s.ProjectileWeight = sessionRdr.GetInt32(4);
-            s.ProjectileType = sessionRdr.GetString(3);
-            s.Notes = sessionRdr.GetString(5);
-            sessionRdr.Dispose();
-
-            using var shotsRdr = conn.ExecuteReader(shotsSql, id, trans, 1, CommandType.TableDirect);
-            LoadShotsFromSqlite(shotsRdr, s);
-            trans.Rollback();
-            conn.Close();
-        }
-
-        void LoadShotsFromSqlite(IDataReader rdr, WorkbookSession s)
-        {
-            while (rdr.Read())
-            {
-                var shot = new Shot(rdr.GetString(0))
-                {
-                    ShotNumber = rdr.GetInt32(1),
-                    Speed = new ShotSpeed(rdr.GetInt32(2), "fps"),
-                    Notes = rdr.GetString(3),
-                    ColdBore = rdr.GetBoolean(4),
-                    CleanBore = rdr.GetBoolean(5),
-                    IgnoreShot = rdr.GetBoolean(6),
-                    DateTimeUtc = rdr.GetDateTime(7)
-                };
-                s.AddShot(shot);
-            }
-        }
         public async Task<WorkbookSession> GetSession(string sessionId)
         {
-            var session = new WorkbookSession(sessionId);
+            WorkbookSession session = new(sessionId);
 
             List<Action<WorkbookSession>> mutators = [LoadSessionFromSqlite];
             session.Mutate(mutators);
+
             return session;
         }
 
@@ -82,13 +42,13 @@ namespace net.opgenorth.xero.data.sqlite
             const string deleteSessionSql = "DELETE FROM shotview_session WHERE Id=@Id";
             int rowDeleted = 0;
             int shotsDeleted = 0;
-            var id = new { Id = session.Id };
+            var id = new { session.Id };
 
             await using SqliteConnection conn = new(_connectionString);
             using (TransactionScope scope = new())
             {
                 shotsDeleted = await conn.ExecuteAsync(deleteShotsSql, id);
-                rowDeleted = await conn.ExecuteAsync( deleteSessionSql, id);
+                rowDeleted = await conn.ExecuteAsync(deleteSessionSql, id);
                 scope.Complete();
             }
 
@@ -116,6 +76,50 @@ namespace net.opgenorth.xero.data.sqlite
             }
 
             Debug.Assert(rowsAffected > 0, "No rows were affected.");
+        }
+
+
+        void LoadSessionFromSqlite(WorkbookSession s)
+        {
+            var id = new { s.Id };
+            const string sessionSql =
+                "SELECT id, session_date, name, projectile_type, projectile_weight, notes FROM shotview_sessions WHERE id=@Id";
+            const string shotsSql =
+                "SELECT id, shot_number, velocity, notes, cold_bore, clean_bore, ignore_shot, shot_time FROM shotview_shots WHERE id=@Id ORDER BY shot_number";
+
+            using SqliteConnection conn = new(_connectionString);
+            using SqliteTransaction? trans = conn.BeginTransaction(IsolationLevel.Snapshot);
+            IDataReader sessionRdr = conn.ExecuteReader(sessionSql, id, trans, 1, CommandType.TableDirect);
+
+            sessionRdr.Read();
+            s.DateTimeUtc = sessionRdr.GetDateTime(1);
+            s.ProjectileWeight = sessionRdr.GetInt32(4);
+            s.ProjectileType = sessionRdr.GetString(3);
+            s.Notes = sessionRdr.GetString(5);
+            sessionRdr.Dispose();
+
+            using IDataReader shotsRdr = conn.ExecuteReader(shotsSql, id, trans, 1, CommandType.TableDirect);
+            LoadShotsFromSqlite(shotsRdr, s);
+            trans.Rollback();
+            conn.Close();
+        }
+
+        void LoadShotsFromSqlite(IDataReader rdr, WorkbookSession s)
+        {
+            while (rdr.Read())
+            {
+                Shot shot = new(rdr.GetString(0))
+                {
+                    ShotNumber = rdr.GetInt32(1),
+                    Speed = new ShotSpeed(rdr.GetInt32(2), "fps"),
+                    Notes = rdr.GetString(3),
+                    ColdBore = rdr.GetBoolean(4),
+                    CleanBore = rdr.GetBoolean(5),
+                    IgnoreShot = rdr.GetBoolean(6),
+                    DateTimeUtc = rdr.GetDateTime(7)
+                };
+                s.AddShot(shot);
+            }
         }
 
         async Task<int> UpdateSession(SqliteConnection conn, WorkbookSession session)
@@ -158,14 +162,14 @@ namespace net.opgenorth.xero.data.sqlite
                                """;
             var values = new
             {
-                Id = session.Id,
+                session.Id,
                 SessionDateTimeUtc = session.DateTimeUtc.ToString("O"),
-                SheetName = session.SheetName,
-                ProjectileWeight = session.ProjectileWeight,
-                ProjectileType=session.ProjectileType,
+                session.SheetName,
+                session.ProjectileWeight,
+                session.ProjectileType,
                 ProjectileUnits = "grains", // TODO [TO20241224] Hardcoded for now.
                 VelocityUnits = "fps", // TODO [TO20241224] Hardcoded for now.
-                Notes = session.Notes
+                session.Notes
             };
 
 

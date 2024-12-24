@@ -51,7 +51,7 @@ namespace net.opgenorth.xero.shotview
                 return null;
             }
 
-            WorkbookSession s = new(id) { FileName = _xslxFile.Name, SheetNumber = sheetNumber};
+            WorkbookSession s = new(id) { FileName = _xslxFile.Name, SheetNumber = sheetNumber };
 
             List<Action<WorkbookSession>> mutators =
             [
@@ -65,6 +65,7 @@ namespace net.opgenorth.xero.shotview
             s.Mutate(mutators);
 
             _logger.Verbose("Loaded session from {sheetName}", s.SheetName);
+
             return s;
         }
 
@@ -116,9 +117,7 @@ namespace net.opgenorth.xero.shotview
             {
                 Shot? shot = new()
                 {
-                    CleanBore = row.GetBool("G"),
-                    ColdBore = row.GetBool("H"),
-                    Notes = row.GetString("I")
+                    CleanBore = row.GetBool("G"), ColdBore = row.GetBool("H"), Notes = row.GetString("I")
                 };
 
                 int? shotNumber = row.GetInteger("A");
@@ -126,6 +125,7 @@ namespace net.opgenorth.xero.shotview
                 {
                     continue;
                 }
+
                 shot.ShotNumber = shotNumber.Value;
 
                 int? speed = row.GetInteger();
@@ -150,19 +150,17 @@ namespace net.opgenorth.xero.shotview
                 return sessionDateUtc;
             }
 
-            if (!TimeOnly.TryParse(timeText, out var shotTime))
+            if (!TimeOnly.TryParse(timeText, out TimeOnly shotTime))
             {
                 return sessionDateUtc;
             }
 
-            var localDt = sessionDateUtc.ToLocalTime();
-            var shotDate = new DateTime(localDt.Year, localDt.Month, localDt.Day,
+            DateTime localDt = sessionDateUtc.ToLocalTime();
+            DateTime shotDate = new(localDt.Year, localDt.Month, localDt.Day,
                 shotTime.Hour, shotTime.Minute, shotTime.Second);
             shotDate = DateTime.SpecifyKind(shotDate, DateTimeKind.Local);
 
             return shotDate.ToUniversalTime();
-
         }
     }
 }
-

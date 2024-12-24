@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Xero.Data.Sqlite\Xero.Data.Sqlite.csproj" />
+    <ProjectReference Include="..\Xero.Data.Sqlite\Xero.Data.Sqlite.csproj"/>
     <ProjectReference Include="..\Xero.Model\Xero.Model.csproj"/>
   </ItemGroup>
 

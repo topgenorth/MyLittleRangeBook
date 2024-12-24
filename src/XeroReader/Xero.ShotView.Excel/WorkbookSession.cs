@@ -1,17 +1,10 @@
-
 using net.opgenorth.xero.device;
 
 namespace net.opgenorth.xero.shotview
 {
-
-
     public class WorkbookSession : ShotSession
     {
-
-        public WorkbookSession(string sessionId)
-        {
-            Id = sessionId;
-        }
+        public WorkbookSession(string sessionId) => Id = sessionId;
 
         public WorkbookSession(ShotSession session)
         {
