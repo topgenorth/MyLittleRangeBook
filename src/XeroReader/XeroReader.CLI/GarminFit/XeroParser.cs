@@ -64,7 +64,7 @@ namespace net.opgenorth.xero.GarminFit
 
             Field? f = msg.Fields.First(f => f.Name == "MinSpeed");
             float s = msg.GetMaxSpeed() ?? 0f;
-            _shotSession.SessionTimestamp = dt;
+            _shotSession.DateTimeUtc = dt;
 
             float w = msg.GetGrainWeight() ?? 0f;
             _shotSession.ProjectileWeight = Convert.ToInt32(w);
@@ -78,7 +78,7 @@ namespace net.opgenorth.xero.GarminFit
             Shot shot = new()
             {
                 ShotNumber = (int)msg.GetShotNum()!,
-                Timestamp = msg.GetTimestamp().GetDateTime(),
+                DateTimeUtc = msg.GetTimestamp().GetDateTime(),
                 Speed = new ShotSpeed(msg.GetShotSpeed() ?? 0f)
             };
             _shotSession.AddShot(shot);

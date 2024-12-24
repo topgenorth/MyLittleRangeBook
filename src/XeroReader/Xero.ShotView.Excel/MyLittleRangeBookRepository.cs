@@ -11,7 +11,7 @@ using IsolationLevel = System.Data.IsolationLevel;
 
 namespace net.opgenorth.xero.data.sqlite
 {
-    public class MyLittleRangeBookRepository
+    public class MyLittleRangeBookRepository : IGetShotSession, IPersistShotSession
     {
         readonly string _connectionString;
         readonly ILogger _logger;
@@ -38,7 +38,7 @@ namespace net.opgenorth.xero.data.sqlite
             var sessionRdr =  conn.ExecuteReader(sessionSql, id, trans, 1, CommandType.TableDirect);
 
             sessionRdr.Read();
-            s.SessionTimestamp = sessionRdr.GetDateTime(1);
+            s.DateTimeUtc = sessionRdr.GetDateTime(1);
             s.ProjectileWeight = sessionRdr.GetInt32(4);
             s.ProjectileType = sessionRdr.GetString(3);
             s.Notes = sessionRdr.GetString(5);
@@ -46,7 +46,6 @@ namespace net.opgenorth.xero.data.sqlite
 
             using var shotsRdr = conn.ExecuteReader(shotsSql, id, trans, 1, CommandType.TableDirect);
             LoadShotsFromSqlite(shotsRdr, s);
-            shotsRdr.Dispose();
             trans.Rollback();
             conn.Close();
         }
@@ -63,7 +62,7 @@ namespace net.opgenorth.xero.data.sqlite
                     ColdBore = rdr.GetBoolean(4),
                     CleanBore = rdr.GetBoolean(5),
                     IgnoreShot = rdr.GetBoolean(6),
-                    Timestamp = rdr.GetDateTime(7)
+                    DateTimeUtc = rdr.GetDateTime(7)
                 };
                 s.AddShot(shot);
             }
@@ -123,7 +122,7 @@ namespace net.opgenorth.xero.data.sqlite
         {
             const string updateSql = """
                                      UPDATE shotview_sessions
-                                     SET session_date=@SessionTimestamp,
+                                     SET session_date=@DateTimeUtc,
                                          name=@SheetName,
                                          projectile_weight=@ProjectileWeight,
                                          notes=@Notes,
@@ -136,7 +135,7 @@ namespace net.opgenorth.xero.data.sqlite
             var update = new
             {
                 session.Id,
-                SessionTimestamp = session.SessionTimestamp.ToUniversalTime().ToString("O"),
+                SessionTimestamp = session.DateTimeUtc.ToUniversalTime().ToString("O"),
                 Name = session.SheetName,
                 session.ProjectileWeight,
                 session.Notes,
@@ -152,10 +151,25 @@ namespace net.opgenorth.xero.data.sqlite
         async Task<int> InsertSession(SqliteConnection connection, WorkbookSession session)
         {
             const string sql = """
-                               INSERT INTO shotview_sessions (id, session_date, name, projectile_weight, notes)
-                               VALUES(@Id, @SessionTimestamp, @SheetName , @ProjectileWeight, @Notes)
+                               INSERT INTO shotview_sessions (id, session_date, name,
+                                                              projectile_weight, projectile_type, projectile_units,
+                                                              velocity_units, notes)
+                               VALUES(@Id, @SessionDateTimeUtc, @SheetName , @ProjectileWeight, @ProjectileType, @ProjectileUnits, @VelocityUnits, @Notes)
                                """;
-            int r = await connection.ExecuteAsync(sql, session);
+            var values = new
+            {
+                Id = session.Id,
+                SessionDateTimeUtc = session.DateTimeUtc.ToString("O"),
+                SheetName = session.SheetName,
+                ProjectileWeight = session.ProjectileWeight,
+                ProjectileType=session.ProjectileType,
+                ProjectileUnits = "grains", // TODO [TO20241224] Hardcoded for now.
+                VelocityUnits = "fps", // TODO [TO20241224] Hardcoded for now.
+                Notes = session.Notes
+            };
+
+
+            int r = await connection.ExecuteAsync(sql, values);
             _logger.Verbose("Added session {session.id} to database.", session.Id);
 
             return r;
@@ -223,7 +237,7 @@ namespace net.opgenorth.xero.data.sqlite
                 s.CleanBore,
                 s.ColdBore,
                 s.IgnoreShot,
-                ShotTime = s.Timestamp.ToUniversalTime().ToString("O")
+                ShotTime = s.DateTimeUtc.ToUniversalTime().ToString("O")
             });
 
             if (!inserts.Any())
@@ -255,7 +269,7 @@ namespace net.opgenorth.xero.data.sqlite
                 s.ColdBore,
                 s.CleanBore,
                 s.IgnoreShot,
-                ShotTime = s.Timestamp.ToUniversalTime().ToString("O"),
+                ShotTime = s.DateTimeUtc.ToString("O"),
                 ModificationTime = DateTime.UtcNow.ToString("O")
             });
             if (!updates.Any())

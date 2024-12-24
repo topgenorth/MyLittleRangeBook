@@ -42,7 +42,7 @@ namespace net.opgenorth.xero.shotview
             this.Write("\nSession Date: ");
             
             #line 5 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.SessionTimestamp.ToString("O")));
+            this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.DateTimeUtc.ToString("O")));
             
             #line default
             #line hidden

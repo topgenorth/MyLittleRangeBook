@@ -20,7 +20,7 @@ namespace net.opgenorth.xero.shotview
             FileName = session.FileName;
             ProjectileType = session.ProjectileType;
             ProjectileWeight = session.ProjectileWeight;
-            SessionTimestamp = session.SessionTimestamp;
+            DateTimeUtc = session.DateTimeUtc;
 
 
             foreach (Shot shot in session.Shots)

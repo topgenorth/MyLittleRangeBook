@@ -55,8 +55,7 @@ namespace net.opgenorth.xero.shotview
 
             List<Action<WorkbookSession>> mutators =
             [
-
-                GetDateFromWorksheet,
+                GetSessionDateFromWorksheet,
                 CreateNotesFromWorksheet,
                 GetProjectileWeightFromWorksheet,
                 GetShotsFromWorksheet,
@@ -65,6 +64,7 @@ namespace net.opgenorth.xero.shotview
 
             s.Mutate(mutators);
 
+            _logger.Verbose("Loaded session from {sheetName}", s.SheetName);
             return s;
         }
 
@@ -81,11 +81,11 @@ namespace net.opgenorth.xero.shotview
             s.ProjectileWeight = row?.GetInteger() ?? 0;
         }
 
-        void GetDateFromWorksheet(WorkbookSession s)
+        void GetSessionDateFromWorksheet(WorkbookSession s)
         {
             IXLRow? row = _worksheet.FindRowThatStartsWith("DATE");
             DateTime? d = row?.GetDateTimeUTC();
-            s.SessionTimestamp = d ?? DateTime.UtcNow.ToUniversalTime();
+            s.DateTimeUtc = d ?? DateTime.UtcNow;
         }
 
         void CreateNotesFromWorksheet(WorkbookSession s)
@@ -137,17 +137,31 @@ namespace net.opgenorth.xero.shotview
                 // TODO [TO20241222] Assumption is that we're FPS.
                 shot.Speed = new ShotSpeed(speed.Value, "fps");
 
-                string timeText = row.GetString("F");
-                if (TimeOnly.TryParse(timeText, out TimeOnly only))
-                {
-                    var x = s.SessionTimestamp;
-                    var d = new DateTime(x.Year, x.Month, x.Day,
-                        only.Hour, only.Minute, only.Second);
-                    shot.Timestamp = d;
-                }
+                shot.DateTimeUtc = ConvertShotTimeToShotDateTimeUtc(s.DateTimeUtc, row.GetString("F"));
 
                 s.AddShot(shot);
             }
+        }
+
+        DateTime ConvertShotTimeToShotDateTimeUtc(DateTime sessionDateUtc, string timeText)
+        {
+            if (string.IsNullOrWhiteSpace(timeText))
+            {
+                return sessionDateUtc;
+            }
+
+            if (!TimeOnly.TryParse(timeText, out var shotTime))
+            {
+                return sessionDateUtc;
+            }
+
+            var localDt = sessionDateUtc.ToLocalTime();
+            var shotDate = new DateTime(localDt.Year, localDt.Month, localDt.Day,
+                shotTime.Hour, shotTime.Minute, shotTime.Second);
+            shotDate = DateTime.SpecifyKind(shotDate, DateTimeKind.Local);
+
+            return shotDate.ToUniversalTime();
+
         }
     }
 }

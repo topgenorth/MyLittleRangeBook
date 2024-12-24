@@ -64,12 +64,16 @@ namespace net.opgenorth.xero.shotview
             return null;
         }
 
-        public static DateTime GetDateTimeUTC(this IXLRow row, string columnLetter = "B")
+        public static DateTime? GetDateTimeUTC(this IXLRow row, string columnLetter = "B")
         {
-            DateTime result = DateTime.UtcNow.ToUniversalTime();
+            DateTime result;
             if (!row.Cell(columnLetter).TryGetValue(out DateTime dt))
             {
-                return result;
+                var dateText = row.Cell(columnLetter).GetString();
+                if (!DateTime.TryParse(dateText, out dt))
+                {
+                    return null;
+                }
             }
 
             if (dt.Kind == DateTimeKind.Unspecified)
@@ -78,7 +82,6 @@ namespace net.opgenorth.xero.shotview
             }
 
             result = dt.ToUniversalTime();
-
             return result;
         }
 

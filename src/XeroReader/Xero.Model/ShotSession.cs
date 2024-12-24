@@ -27,7 +27,7 @@ namespace net.opgenorth.xero.device
 
         public string FileName { get; set; }
 
-        public DateTime SessionTimestamp { get; set; }
+        public DateTime DateTimeUtc { get; set; }
         public int ShotCount => _shots.Count;
         public int ProjectileWeight { get; set; }
         public string ProjectileType { get; set; }

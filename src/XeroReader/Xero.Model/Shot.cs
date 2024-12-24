@@ -8,13 +8,13 @@ namespace net.opgenorth.xero.device
     /// </summary>
     public class Shot
     {
-        public Shot()
+        public Shot(): this(Nanoid.Generate())
         {
-            Id = Nanoid.Generate();
         }
 
         public Shot(string shotId)
         {
+            DateTimeUtc = DateTime.UtcNow;
             Id = shotId;
         }
 
@@ -22,7 +22,7 @@ namespace net.opgenorth.xero.device
         public Shot(Shot otherShot) : this()
         {
             Id = otherShot.Id;
-            Timestamp = otherShot.Timestamp;
+            DateTimeUtc = otherShot.DateTimeUtc;
             ShotNumber = otherShot.ShotNumber;
             Speed = otherShot.Speed;
             CleanBore = otherShot.CleanBore;
@@ -31,8 +31,8 @@ namespace net.opgenorth.xero.device
             Notes = otherShot.Notes;
         }
 
-        public string Id { get; private set; }
-        public DateTime Timestamp { get; set; }
+        public string Id { get; }
+        public DateTime DateTimeUtc { get; set; }
         public int ShotNumber { get; set; }
         public ShotSpeed Speed { get; set; } = ShotSpeed.Zero;
 
