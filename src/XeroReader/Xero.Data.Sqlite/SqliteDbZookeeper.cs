@@ -12,11 +12,11 @@ namespace net.opgenorth.xero.data.sqlite
         readonly ILogger _logger;
         readonly FileInfo _sqliteFile;
 
-        public SqliteDbZookeeper(ILogger logger, IOptionsSnapshot<GarminShotViewSqliteOptions> options)
+        public SqliteDbZookeeper(ILogger logger, IOptionsSnapshot<SqliteOptions> options)
         {
             _logger = logger;
             _sqliteFile = new FileInfo(options.Value.SqliteFile);
-            ConnectionString = options.Value.MakeConnectionString();
+            ConnectionString = options.Value.MakeSqliteConnectionString();
             _logger.Verbose("Connection string {connectionString}", ConnectionString);
         }
 

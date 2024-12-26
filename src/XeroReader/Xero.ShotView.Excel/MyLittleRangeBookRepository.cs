@@ -17,11 +17,11 @@ namespace net.opgenorth.xero.shotview
         readonly ILogger _logger;
         readonly FileInfo _sqliteFile;
 
-        public MyLittleRangeBookRepository(ILogger logger, IOptionsSnapshot<GarminShotViewSqliteOptions> options)
+        public MyLittleRangeBookRepository(ILogger logger, IOptionsSnapshot<SqliteOptions> options)
         {
             _logger = logger;
             _sqliteFile = new FileInfo(options.Value.SqliteFile);
-            _connectionString = options.Value.MakeConnectionString();
+            _connectionString = options.Value.MakeSqliteConnectionString();
         }
 
         public string Filename => _sqliteFile.FullName;

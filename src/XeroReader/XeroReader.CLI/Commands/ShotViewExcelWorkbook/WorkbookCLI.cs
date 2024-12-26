@@ -12,14 +12,57 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
         static readonly Task<int> s_failure = Task.FromResult(1);
         static readonly Task<int> s_success = Task.FromResult(0);
         readonly ILogger _logger;
-        readonly IOptionsSnapshot<GarminShotViewSqliteOptions> _options;
+        readonly IOptionsSnapshot<SqliteOptions> _options;
+        readonly MyLittleRangeBookRepository _repo;
 
         FileInfo? _file;
 
-        public WorkbookCLI(ILogger logger, IOptionsSnapshot<GarminShotViewSqliteOptions> options)
+        public WorkbookCLI(ILogger logger, IOptionsSnapshot<SqliteOptions> options, MyLittleRangeBookRepository repo)
         {
             _logger = logger;
             _options = options;
+            _repo = repo;
+        }
+
+        /// <summary>
+        ///     Import all of the worksheets in the workbook.
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        [Command("import all")]
+        public  Task<int> ImportWorkbook(string filename, CancellationToken ct)
+        {
+            _file = new FileInfo(filename);
+            try
+            {
+                using XslxWorksheetAdapter? xlsx = new(_logger, _file.FullName);
+                IEnumerable<WorkbookSession> sessions = xlsx.GetAllSessions(ct);
+
+                var sheets = sessions.Select(session => _repo.UpsertSession(session)).ToArray();
+
+                try
+                {
+                    Task.WaitAll(sheets, ct);
+                    _logger.Verbose("Imported {sessionCount} sessions from {workbook}.",
+                        sessions.Count(), _file.FullName);
+                    return s_success;
+                }
+                catch (AggregateException ae)
+                {
+                    foreach (var e in ae.InnerExceptions)
+                    {
+                        _logger.Error(e, "There was a problem reading a sheet in file {filename}", _file.FullName);
+                    }
+                    return s_failure;
+                }
+
+            }
+            catch (Exception e)
+            {
+                _logger.Fatal("Could not import the XSLX {filename}", filename);
+
+                return s_failure;
+            }
         }
 
         /// <summary>
@@ -43,9 +86,8 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
                 }
                 else
                 {
-                    MyLittleRangeBookRepository repository = new(_logger, _options);
-                    _logger.Verbose("Database at {0}", repository.Filename);
-                    repository.UpsertSession(session);
+                    _logger.Verbose("Database at {0}", _repo.Filename);
+                    _repo.UpsertSession(session);
                     _logger.Information($"Imported sheet #{sheetNumber} from {filename}.");
 
                     xlsx.WriteMetadataToWorksheet(session);
@@ -107,6 +149,5 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
             string? content = page.TransformText();
             Console.Write(content);
         }
-
     }
 }

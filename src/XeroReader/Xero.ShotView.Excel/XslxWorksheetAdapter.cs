@@ -7,7 +7,7 @@ namespace net.opgenorth.xero.shotview
     public class XslxWorksheetAdapter : IDisposable
     {
         readonly ILogger _logger;
-        readonly FileInfo _xslxFile;
+        readonly FileInfo _file;
         IXLWorkbook _workbook;
         IXLWorksheet _worksheet;
 
@@ -15,15 +15,15 @@ namespace net.opgenorth.xero.shotview
         {
         }
 
-        public XslxWorksheetAdapter(ILogger logger, FileInfo xslxFile)
+        public XslxWorksheetAdapter(ILogger logger, FileInfo file)
         {
             _logger = logger;
-            _xslxFile = xslxFile;
+            _file = file;
         }
 
         public void Dispose() => _workbook?.Dispose();
 
-        public override string ToString() => _xslxFile.FullName;
+        public override string ToString() => _file.FullName;
 
         public void WriteMetadataToWorksheet(WorkbookSession session)
         {
@@ -43,7 +43,7 @@ namespace net.opgenorth.xero.shotview
 
         public WorkbookSession GetShotSession(int sheetNumber)
         {
-            _workbook = new XLWorkbook(_xslxFile.FullName);
+            _workbook = new XLWorkbook(_file.FullName);
             _worksheet = _workbook.Worksheets.ElementAt(sheetNumber);
             string? id = _worksheet.Cell(1, "G").Value.GetText();
             if (string.IsNullOrWhiteSpace(id))
@@ -51,7 +51,7 @@ namespace net.opgenorth.xero.shotview
                 return null;
             }
 
-            WorkbookSession s = new(id) { FileName = _xslxFile.Name, SheetNumber = sheetNumber };
+            WorkbookSession s = new(id) { FileName = _file.Name, SheetNumber = sheetNumber };
 
             List<Action<WorkbookSession>> mutators =
             [
@@ -72,7 +72,7 @@ namespace net.opgenorth.xero.shotview
 
         void GetSheetName(WorkbookSession s)
         {
-            string sheetName = $"{_xslxFile.Name}[{s.SheetNumber}]-{_worksheet.Name}";
+            string sheetName = $"{_file.Name}[{s.SheetNumber}]-{_worksheet.Name}";
             s.SheetName = sheetName;
         }
 
@@ -161,6 +161,15 @@ namespace net.opgenorth.xero.shotview
             shotDate = DateTime.SpecifyKind(shotDate, DateTimeKind.Local);
 
             return shotDate.ToUniversalTime();
+        }
+
+        public IEnumerable<WorkbookSession> GetAllSessions(CancellationToken ct)
+        {
+            if (ct.IsCancellationRequested)
+            {
+                return [];
+            }
+            throw new NotImplementedException();
         }
     }
 }

@@ -13,18 +13,19 @@ namespace net.opgenorth.xero.data.sqlite
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
-        public static IHostApplicationBuilder AddGarminShotViewDatabase(this IHostApplicationBuilder builder)
+        public static IHostApplicationBuilder AddSqliteDatabase(this IHostApplicationBuilder builder)
         {
             IConfigurationManager c = builder.Configuration;
-            IConfigurationSection x = c.GetSection(GarminShotViewSqliteOptions.ConfigSection);
+            IConfigurationSection x = c.GetSection(SqliteOptions.ConfigSection);
 
-            builder.Services.Configure<GarminShotViewSqliteOptions>(x);
+            builder.Services.Configure<SqliteOptions>(x);
             builder.Services.TryAddScoped<IDbZookeeper, SqliteDbZookeeper>();
+
 
             return builder;
         }
 
-        public  static string MakeConnectionString(this GarminShotViewSqliteOptions opt)
+        public  static string MakeSqliteConnectionString(this SqliteOptions opt)
         {
             SqliteConnectionStringBuilder b = new($"Data Source={opt.SqliteFile}");
 

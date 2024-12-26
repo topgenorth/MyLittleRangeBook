@@ -2,7 +2,7 @@ using System.IO;
 
 namespace net.opgenorth.xero.data.sqlite
 {
-    public class GarminShotViewSqliteOptions
+    public class SqliteOptions
     {
         /// <summary>
         ///     The name of the .sqlite database file (excluding the directory).

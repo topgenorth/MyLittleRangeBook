@@ -11,22 +11,27 @@ HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", true)
     .AddJsonFile($"appsettings.{Environments.Development}.json", true);
-builder.AddGarminShotViewDatabase();
+
+
 builder.Services.AddSerilog(lc =>
     lc.ReadFrom.Configuration(builder.Configuration)
 );
+
+builder.AddSqliteDatabase();
+builder.Services.AddWorksheetSqlite();
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
 
 IServiceProvider? sp = scope.ServiceProvider;
-IOptionsSnapshot<GarminShotViewSqliteOptions>? o = scope.ServiceProvider
-    .GetRequiredService<IOptionsSnapshot<GarminShotViewSqliteOptions>>();
+IOptionsSnapshot<SqliteOptions>? o = scope.ServiceProvider
+    .GetRequiredService<IOptionsSnapshot<SqliteOptions>>();
 
 ILogger log = scope.ServiceProvider.GetRequiredService<ILogger>();
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
+// [TO20241226] Add the CLI.
 app.Add<WorkbookCLI>("worksheet");
 app.Add<SqliteMigrations>("database");
 log.Verbose("Running app");
