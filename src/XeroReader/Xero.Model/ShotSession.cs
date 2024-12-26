@@ -43,6 +43,8 @@ namespace net.opgenorth.xero.device
         public uint SerialNumber { get; set; }
 
         public string Notes { get; set; }
+        public string ProjectileUnits { get; set; }
+        public string VelocityUnits { get; set; }
 
         public void AddShot(Shot shot)
         {

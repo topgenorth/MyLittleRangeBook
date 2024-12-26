@@ -83,20 +83,33 @@ namespace net.opgenorth.xero.shotview
         {
             var id = new { s.Id };
             const string sessionSql =
-                "SELECT id, session_date, name, projectile_type, projectile_weight, notes FROM shotview_sessions WHERE id=@Id";
+                """
+                SELECT id, session_date, name,
+                       projectile_type, projectile_weight, projectile_units,
+                       velocity_units,
+                       notes
+                FROM shotview_sessions
+                WHERE id=@Id
+                """;
             const string shotsSql =
-                "SELECT id, shot_number, velocity, notes, cold_bore, clean_bore, ignore_shot, shot_time FROM shotview_shots WHERE id=@Id ORDER BY shot_number";
+                """
+                SELECT id, shot_number, velocity, notes, cold_bore, clean_bore, ignore_shot, shot_time
+                FROM shotview_shots WHERE id=@Id ORDER BY shot_number"
+                """;
 
             using SqliteConnection conn = new(_connectionString);
             using SqliteTransaction? trans = conn.BeginTransaction(IsolationLevel.Snapshot);
-            IDataReader sessionRdr = conn.ExecuteReader(sessionSql, id, trans, 1, CommandType.TableDirect);
+            IDataReader rdr = conn.ExecuteReader(sessionSql, id, trans, 1, CommandType.TableDirect);
 
-            sessionRdr.Read();
-            s.DateTimeUtc = sessionRdr.GetDateTime(1);
-            s.ProjectileWeight = sessionRdr.GetInt32(4);
-            s.ProjectileType = sessionRdr.GetString(3);
-            s.Notes = sessionRdr.GetString(5);
-            sessionRdr.Dispose();
+            rdr.Read();
+            s.DateTimeUtc = rdr.GetDateTime(1);
+            s.SheetName = rdr.GetString(2);
+            s.ProjectileType = rdr.GetString(3);
+            s.ProjectileWeight = rdr.GetInt32(4);
+            s.ProjectileUnits = rdr.GetString(5);
+            s.VelocityUnits = rdr.GetString(6);
+            s.Notes = rdr.GetString(7);
+            rdr.Dispose();
 
             using IDataReader shotsRdr = conn.ExecuteReader(shotsSql, id, trans, 1, CommandType.TableDirect);
             LoadShotsFromSqlite(shotsRdr, s);
@@ -129,23 +142,26 @@ namespace net.opgenorth.xero.shotview
                                      SET session_date=@DateTimeUtc,
                                          name=@SheetName,
                                          projectile_weight=@ProjectileWeight,
-                                         notes=@Notes,
-                                         modification_date=@ModificationTime,
+                                         projectile_type=@ProjectileType,
                                          projectile_units=@ProjectileUnits,
-                                         velocity_units=@VelocityUnits
+                                         velocity_units=@velocity_units,
+                                         notes=@Notes,
+                                         modification_date=@ModificationTime
                                      WHERE id=@Id
                                      """;
 
             var update = new
             {
-                session.Id,
-                SessionTimestamp = session.DateTimeUtc.ToUniversalTime().ToString("O"),
-                Name = session.SheetName,
-                session.ProjectileWeight,
-                session.Notes,
+                Id=session.Id,
+                DateTimeUtc = session.DateTimeUtc.ToString("O"),
+                SheetName = session.SheetName,
+                ProjectileWeight=session.ProjectileWeight,
+                ProjectileType=session.ProjectileType,
+                ProjectileUnits=session.ProjectileUnits,
+                VelocityUnits=session.VelocityUnits,
+                Notes=session.Notes,
                 ModificationTime = DateTime.UtcNow.ToString("O"),
-                ProjectileUnits = "grains",
-                VelocityUnits = "grains"
+
             };
             int r = await conn.ExecuteAsync(updateSql, update);
 
@@ -233,15 +249,15 @@ namespace net.opgenorth.xero.shotview
 
             var inserts = shotsToInsert.Select(s => new
             {
-                s.Id,
+                Id=s.Id,
                 SessionId = sessionId,
-                s.ShotNumber,
+                ShotNumber=s.ShotNumber,
                 Velocity = s.Speed.Value,
-                s.Notes,
-                s.CleanBore,
-                s.ColdBore,
-                s.IgnoreShot,
-                ShotTime = s.DateTimeUtc.ToUniversalTime().ToString("O")
+                Notes=string.IsNullOrWhiteSpace(s.Notes) ? null: s.Notes,
+                CleanBore=s.CleanBore,
+                ColdBore=s.ColdBore,
+                IgnoreShot=s.IgnoreShot,
+                ShotTime = s.DateTimeUtc.ToString("O")
             });
 
             if (!inserts.Any())
@@ -266,13 +282,13 @@ namespace net.opgenorth.xero.shotview
                                       """;
             var updates = shotsToUpdate.Select(s => new
             {
-                s.Id,
-                s.ShotNumber,
+                Id=s.Id,
+                ShotNumber=s.ShotNumber,
                 Velocity = s.Speed.Value,
-                s.Notes,
-                s.ColdBore,
-                s.CleanBore,
-                s.IgnoreShot,
+                Notes=string.IsNullOrWhiteSpace(s.Notes) ? null : s.Notes,
+                ColdBore=s.ColdBore,
+                CleanBore=s.CleanBore,
+                IgnoreShot=s.IgnoreShot,
                 ShotTime = s.DateTimeUtc.ToString("O"),
                 ModificationTime = DateTime.UtcNow.ToString("O")
             });
