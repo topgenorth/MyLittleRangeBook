@@ -4,6 +4,10 @@ namespace net.opgenorth.xero.shotview
 {
     public class WorkbookSession : ShotSession
     {
+        public WorkbookSession() : base()
+        {
+
+        }
         public WorkbookSession(string sessionId) => Id = sessionId;
 
         public WorkbookSession(ShotSession session)
@@ -23,7 +27,7 @@ namespace net.opgenorth.xero.shotview
             }
         }
 
-        public int SheetNumber { get; init; } = 0;
+        public int SheetNumber { get; set; } = 0;
         public string SheetName { get; set; }
 
         public void Mutate(Action<WorkbookSession> mutator) => mutator(this);

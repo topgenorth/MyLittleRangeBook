@@ -105,6 +105,8 @@ namespace net.opgenorth.xero.shotview
         internal static string GetString(this IXLRow row, string columnLetter) =>
             row.Cell(columnLetter).TryGetValue(out string val) ? val : null;
 
+        internal static string GetString(this IXLWorksheet ws, int row, string col) =>
+            ws.Cell(row, col).TryGetValue(out string val) ? val : null;
 
         internal static string GetString(this IXLWorksheet ws, int row, int col) =>
             ws.Cell(row, col).TryGetValue(out string val) ? val : null;

@@ -4,24 +4,28 @@ using Serilog;
 
 namespace net.opgenorth.xero.shotview
 {
-    public class XslxWorksheetAdapter : IDisposable
+    public class XlsxAdapter : IDisposable, IShotViewWorksheetAdapter
     {
+        public const int MaxiumumNumberOfSheets = 100;
         readonly ILogger _logger;
         readonly FileInfo _file;
         IXLWorkbook _workbook;
         IXLWorksheet _worksheet;
 
-        public XslxWorksheetAdapter(ILogger logger, string fileName) : this(logger, new FileInfo(fileName))
+        public XlsxAdapter(ILogger logger, string fileName) : this(logger, new FileInfo(fileName))
         {
         }
 
-        public XslxWorksheetAdapter(ILogger logger, FileInfo file)
+        public XlsxAdapter(ILogger logger, FileInfo file)
         {
             _logger = logger;
             _file = file;
         }
 
-        public void Dispose() => _workbook?.Dispose();
+        public void Dispose()
+        {
+            _workbook?.Dispose();
+        }
 
         public override string ToString() => _file.FullName;
 
@@ -41,17 +45,27 @@ namespace net.opgenorth.xero.shotview
             _workbook.Save();
         }
 
-        public WorkbookSession GetShotSession(int sheetNumber)
+        public WorkbookSession? GetShotSession(int sheetNumber)
         {
             _workbook = new XLWorkbook(_file.FullName);
-            _worksheet = _workbook.Worksheets.ElementAt(sheetNumber);
-            string? id = _worksheet.Cell(1, "G").Value.GetText();
-            if (string.IsNullOrWhiteSpace(id))
+
+            // [TO20241227] If this sheet has been imported, then we will have the session Id
+            // stored in G7. Use that value as the session id.
+            try
             {
+                _worksheet = _workbook.Worksheets.ElementAt(sheetNumber);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // [TO20241227] No sheet - no session.
                 return null;
             }
 
-            WorkbookSession s = new(id) { FileName = _file.Name, SheetNumber = sheetNumber };
+            string? id = _worksheet.GetString(1, "G");
+
+            WorkbookSession s = !string.IsNullOrWhiteSpace(id) ? new WorkbookSession(id) : new WorkbookSession();
+            s.FileName = _file.Name;
+            s.SheetNumber = sheetNumber;
 
             List<Action<WorkbookSession>> mutators =
             [
@@ -169,7 +183,20 @@ namespace net.opgenorth.xero.shotview
             {
                 return [];
             }
-            throw new NotImplementedException();
+
+            var list = new List<WorkbookSession>();
+            for (int i = 0; i < MaxiumumNumberOfSheets; i++)
+            {
+                var session = GetShotSession(i);
+                if (session is null)
+                {
+                    break;
+                }
+
+                list.Add(session);
+            }
+
+            return list.ToArray();
         }
     }
 }

@@ -144,7 +144,7 @@ namespace net.opgenorth.xero.shotview
                                          projectile_weight=@ProjectileWeight,
                                          projectile_type=@ProjectileType,
                                          projectile_units=@ProjectileUnits,
-                                         velocity_units=@velocity_units,
+                                         velocity_units=@VelocityUnits,
                                          notes=@Notes,
                                          modification_date=@ModificationTime
                                      WHERE id=@Id
@@ -152,16 +152,15 @@ namespace net.opgenorth.xero.shotview
 
             var update = new
             {
-                Id=session.Id,
                 DateTimeUtc = session.DateTimeUtc.ToString("O"),
                 SheetName = session.SheetName,
                 ProjectileWeight=session.ProjectileWeight,
                 ProjectileType=session.ProjectileType,
-                ProjectileUnits=session.ProjectileUnits,
-                VelocityUnits=session.VelocityUnits,
+                ProjectileUnits=string.IsNullOrWhiteSpace(session.ProjectileUnits) ? "grains" : session.ProjectileUnits,
+                VelocityUnits=string.IsNullOrWhiteSpace(session.VelocityUnits) ? "fps" : session.VelocityUnits,
                 Notes=session.Notes,
                 ModificationTime = DateTime.UtcNow.ToString("O"),
-
+                Id = session.Id
             };
             int r = await conn.ExecuteAsync(updateSql, update);
 

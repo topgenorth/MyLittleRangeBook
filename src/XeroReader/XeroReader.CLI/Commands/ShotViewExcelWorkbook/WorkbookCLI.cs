@@ -29,37 +29,36 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        [Command("import all")]
-        public  Task<int> ImportWorkbook(string filename, CancellationToken ct)
+        [Command("import workbook")]
+        public Task<int> ImportWorkbook(string filename, CancellationToken ct)
         {
             _file = new FileInfo(filename);
             try
             {
-                using XslxWorksheetAdapter? xlsx = new(_logger, _file.FullName);
+                using XlsxAdapter? xlsx = new(_logger, _file.FullName);
                 IEnumerable<WorkbookSession> sessions = xlsx.GetAllSessions(ct);
 
-                var sheets = sessions.Select(session => _repo.UpsertSession(session)).ToArray();
+                Task[] sheets = sessions.Select(session => _repo.UpsertSession(session)).ToArray();
 
-                try
+
+                Task.WaitAll(sheets, ct);
+                _logger.Verbose("Imported {sessionCount} sessions from {workbook}.",
+                    sessions.Count(), _file.FullName);
+
+                return s_success;
+            }
+            catch (AggregateException ae)
+            {
+                foreach (Exception e in ae.InnerExceptions)
                 {
-                    Task.WaitAll(sheets, ct);
-                    _logger.Verbose("Imported {sessionCount} sessions from {workbook}.",
-                        sessions.Count(), _file.FullName);
-                    return s_success;
-                }
-                catch (AggregateException ae)
-                {
-                    foreach (var e in ae.InnerExceptions)
-                    {
-                        _logger.Error(e, "There was a problem reading a sheet in file {filename}", _file.FullName);
-                    }
-                    return s_failure;
+                    _logger.Error(e, "There was a problem reading a sheet in file {filename}", _file.FullName);
                 }
 
+                return s_failure;
             }
             catch (Exception e)
             {
-                _logger.Fatal("Could not import the XSLX {filename}", filename);
+                _logger.Fatal(e, "Could not import the XSLX {filename}", filename);
 
                 return s_failure;
             }
@@ -72,13 +71,13 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
         /// <param name="sheetNumber">The number of the sheet to read. Zero-indexed.</param>
         /// <returns></returns>
         [Command("import")]
-        public Task<int> ImportSheet(string filename, [Range(0, 100)] int sheetNumber = 0)
+        public async Task<int> ImportSheet(string filename, [Range(0, 100)] int sheetNumber = 0)
         {
             _file = new FileInfo(filename);
 
             try
             {
-                using XslxWorksheetAdapter? xlsx = new(_logger, _file.FullName);
+                using XlsxAdapter? xlsx = new(_logger, _file.FullName);
                 WorkbookSession? session = xlsx.GetShotSession(sheetNumber);
                 if (session == null)
                 {
@@ -87,19 +86,19 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
                 else
                 {
                     _logger.Verbose("Database at {0}", _repo.Filename);
-                    _repo.UpsertSession(session);
+                    await _repo.UpsertSession(session);
                     _logger.Information($"Imported sheet #{sheetNumber} from {filename}.");
 
                     xlsx.WriteMetadataToWorksheet(session);
                 }
 
-                return s_success;
+                return 1;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error importing the worksheet");
 
-                return s_failure;
+                return 0;
             }
             finally
             {
@@ -120,7 +119,7 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
             _file = new FileInfo(filename);
             try
             {
-                using XslxWorksheetAdapter? xlsx = new(_logger, _file.FullName);
+                using XlsxAdapter? xlsx = new(_logger, _file.FullName);
                 WorkbookSession? session = xlsx.GetShotSession(sheetNumber);
                 WriteToConsole(session);
 
