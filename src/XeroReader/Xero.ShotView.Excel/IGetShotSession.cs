@@ -6,6 +6,7 @@ namespace net.opgenorth.xero.shotview
     public interface IGetShotSession
     {
         string Filename { get; }
-        Task<WorkbookSession> GetSession(string sessionId);
+
+        Task<WorkbookSession> GetSessionByName(string sheetName);
     }
 }

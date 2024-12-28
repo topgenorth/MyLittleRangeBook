@@ -4,13 +4,17 @@ using Serilog;
 
 namespace net.opgenorth.xero.shotview
 {
-    public class XlsxAdapter : IDisposable, IShotViewWorksheetAdapter
+    public class XlsxAdapter : IShotViewXslxAdapter
     {
+        /// <summary>
+        ///     Arbitrary value.
+        /// </summary>
         public const int MaxiumumNumberOfSheets = 100;
-        readonly ILogger _logger;
+
         readonly FileInfo _file;
-        IXLWorkbook _workbook;
-        IXLWorksheet _worksheet;
+        readonly ILogger _logger;
+        IXLWorkbook? _workbook;
+        IXLWorksheet? _worksheet;
 
         public XlsxAdapter(ILogger logger, string fileName) : this(logger, new FileInfo(fileName))
         {
@@ -22,35 +26,16 @@ namespace net.opgenorth.xero.shotview
             _file = file;
         }
 
-        public void Dispose()
-        {
-            _workbook?.Dispose();
-        }
+        public void Dispose() => _workbook?.Dispose();
 
+        public string Filename => _file.FullName;
         public override string ToString() => _file.FullName;
 
-        public void WriteMetadataToWorksheet(WorkbookSession session)
-        {
-            // const string x = "All shots included in the calculations";
-            // var lastRow = _worksheet.FindRowThatStartsWith(x);
-            // if (lastRow is null)
-            // {
-            //     _logger.Warning("Could not find the last row in {sheetName}", _worksheet.Name);
-            //     return;
-            // }
-            //
-            // var i = lastRow.RowNumber() + 1;
-            // [TO20241222] Just write to G1.
-            _worksheet.Cell(1, "G").Value = session.Id;
-            _workbook.Save();
-        }
 
         public WorkbookSession? GetShotSession(int sheetNumber)
         {
             _workbook = new XLWorkbook(_file.FullName);
 
-            // [TO20241227] If this sheet has been imported, then we will have the session Id
-            // stored in G7. Use that value as the session id.
             try
             {
                 _worksheet = _workbook.Worksheets.ElementAt(sheetNumber);
@@ -61,19 +46,19 @@ namespace net.opgenorth.xero.shotview
                 return null;
             }
 
-            string? id = _worksheet.GetString(1, "G");
-
-            WorkbookSession s = !string.IsNullOrWhiteSpace(id) ? new WorkbookSession(id) : new WorkbookSession();
-            s.FileName = _file.Name;
-            s.SheetNumber = sheetNumber;
+            WorkbookSession s = new()
+            {
+                FileName = _file.Name,
+                SheetNumber = sheetNumber,
+                SheetName = $"{_file.Name}[{sheetNumber}]"
+            };
 
             List<Action<WorkbookSession>> mutators =
             [
                 GetSessionDateFromWorksheet,
                 CreateNotesFromWorksheet,
                 GetProjectileWeightFromWorksheet,
-                GetShotsFromWorksheet,
-                GetSheetName
+                GetShotsFromWorksheet
             ];
 
             s.Mutate(mutators);
@@ -83,22 +68,32 @@ namespace net.opgenorth.xero.shotview
             return s;
         }
 
-
-        void GetSheetName(WorkbookSession s)
+        public IEnumerable<WorkbookSession> GetAllSessions()
         {
-            string sheetName = $"{_file.Name}[{s.SheetNumber}]-{_worksheet.Name}";
-            s.SheetName = sheetName;
+
+            for (int i = 0; i < MaxiumumNumberOfSheets; i++)
+            {
+                WorkbookSession? session = GetShotSession(i);
+                if (session is null)
+                {
+                    break;
+                }
+
+                yield return session;
+            }
+
         }
 
         void GetProjectileWeightFromWorksheet(WorkbookSession s)
         {
-            IXLRow? row = _worksheet.FindRowThatStartsWith("Projectile Weight (GRAINS)");
+            // TODO [TO20241228] We can get the weight units from this cell too.
+            IXLRow? row = _worksheet!.FindRowThatStartsWith("Projectile Weight");
             s.ProjectileWeight = row?.GetInteger() ?? 0;
         }
 
         void GetSessionDateFromWorksheet(WorkbookSession s)
         {
-            IXLRow? row = _worksheet.FindRowThatStartsWith("DATE");
+            IXLRow? row = _worksheet!.FindRowThatStartsWith("DATE");
             DateTime? d = row?.GetDateTimeUTC();
             s.DateTimeUtc = d ?? DateTime.UtcNow;
         }
@@ -110,12 +105,12 @@ namespace net.opgenorth.xero.shotview
 
             StringBuilder notes = new(bullet);
             notes.Append("Sheet title: ");
-            notes.Append(_worksheet.Name);
+            notes.Append(_worksheet!.Name);
             notes.AppendLine(period);
 
             notes.Append(bullet);
             notes.Append("Session title: ");
-            notes.Append(_worksheet.Cell(1, 1).GetText());
+            notes.Append(_worksheet!.Cell(1, 1).GetText());
             notes.AppendLine(period);
 
             s.Notes = notes.ToString().TrimEnd();
@@ -123,9 +118,9 @@ namespace net.opgenorth.xero.shotview
 
         void GetShotsFromWorksheet(WorkbookSession s)
         {
-            IXLRow? shotDelimiter = _worksheet.FindRowThatStartsWith("-");
+            IXLRow? shotDelimiter = _worksheet!.FindRowThatStartsWith("-");
             int upperLimit = shotDelimiter.RowNumber();
-            IXLRows? shotRows = _worksheet.Rows(3, upperLimit);
+            IXLRows? shotRows = _worksheet!.Rows(3, upperLimit);
 
             foreach (IXLRow row in shotRows)
             {
@@ -150,9 +145,7 @@ namespace net.opgenorth.xero.shotview
 
                 // TODO [TO20241222] Assumption is that we're FPS.
                 shot.Speed = new ShotSpeed(speed.Value, "fps");
-
                 shot.DateTimeUtc = ConvertShotTimeToShotDateTimeUtc(s.DateTimeUtc, row.GetString("F"));
-
                 s.AddShot(shot);
             }
         }
@@ -175,28 +168,6 @@ namespace net.opgenorth.xero.shotview
             shotDate = DateTime.SpecifyKind(shotDate, DateTimeKind.Local);
 
             return shotDate.ToUniversalTime();
-        }
-
-        public IEnumerable<WorkbookSession> GetAllSessions(CancellationToken ct)
-        {
-            if (ct.IsCancellationRequested)
-            {
-                return [];
-            }
-
-            var list = new List<WorkbookSession>();
-            for (int i = 0; i < MaxiumumNumberOfSheets; i++)
-            {
-                var session = GetShotSession(i);
-                if (session is null)
-                {
-                    break;
-                }
-
-                list.Add(session);
-            }
-
-            return list.ToArray();
         }
     }
 }

@@ -30,37 +30,26 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
         /// <param name="filename"></param>
         /// <returns></returns>
         [Command("import workbook")]
-        public Task<int> ImportWorkbook(string filename, CancellationToken ct)
+        public async Task<int> ImportWorkbook(string filename, CancellationToken ct)
         {
             _file = new FileInfo(filename);
             try
             {
                 using XlsxAdapter? xlsx = new(_logger, _file.FullName);
-                IEnumerable<WorkbookSession> sessions = xlsx.GetAllSessions(ct);
-
-                Task[] sheets = sessions.Select(session => _repo.UpsertSession(session)).ToArray();
-
-
-                Task.WaitAll(sheets, ct);
-                _logger.Verbose("Imported {sessionCount} sessions from {workbook}.",
-                    sessions.Count(), _file.FullName);
-
-                return s_success;
-            }
-            catch (AggregateException ae)
-            {
-                foreach (Exception e in ae.InnerExceptions)
+                foreach (var s in xlsx.GetAllSessions())
                 {
-                    _logger.Error(e, "There was a problem reading a sheet in file {filename}", _file.FullName);
+                    await _repo.UpsertSession(s);
+                    _logger.Verbose("Imported {name}", s.SheetName);
                 }
 
-                return s_failure;
+                return 1;
             }
+
             catch (Exception e)
             {
                 _logger.Fatal(e, "Could not import the XSLX {filename}", filename);
 
-                return s_failure;
+                return 0;
             }
         }
 
@@ -76,8 +65,8 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
             _file = new FileInfo(filename);
 
             try
-            {
-                using XlsxAdapter? xlsx = new(_logger, _file.FullName);
+            {   using IShotViewXslxAdapter  xlsx = new XlsxAdapter(_logger, _file.FullName);
+
                 WorkbookSession? session = xlsx.GetShotSession(sheetNumber);
                 if (session == null)
                 {
@@ -89,7 +78,6 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
                     await _repo.UpsertSession(session);
                     _logger.Information($"Imported sheet #{sheetNumber} from {filename}.");
 
-                    xlsx.WriteMetadataToWorksheet(session);
                 }
 
                 return 1;
