@@ -39,5 +39,7 @@ namespace net.opgenorth.xero.shotview
                 mutator(this);
             }
         }
+
+
     }
 }

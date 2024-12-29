@@ -67,12 +67,28 @@ namespace net.opgenorth.xero.shotview
             }
             else
             {
+                session.Id = await GetSessionIdForName(conn, session.SheetName);
                 rowsAffected = await UpdateSession(conn, session);
             }
 
             if (rowsAffected > 0)
             {
                 await UpsertShots(conn, session);
+            }
+        }
+
+        async Task<string> GetSessionIdForName(SqliteConnection conn, string sheetName)
+        {
+            const string sql = "SELECT id FROM shotview_sessions WHERE name=@SheetName";
+
+            var rdr =  await conn.ExecuteReaderAsync(sql, new {SheetName = sheetName});
+            if (await rdr.ReadAsync())
+            {
+                return rdr.GetString(0);
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -142,14 +158,13 @@ namespace net.opgenorth.xero.shotview
             const string updateSql = """
                                      UPDATE shotview_sessions
                                      SET session_date=@DateTimeUtc,
-                                         name=@SheetName,
                                          projectile_weight=@ProjectileWeight,
                                          projectile_type=@ProjectileType,
                                          projectile_units=@ProjectileUnits,
                                          velocity_units=@VelocityUnits,
                                          notes=@Notes,
                                          modification_date=@ModificationTime
-                                     WHERE id=@Id
+                                     WHERE name=@SheetName
                                      """;
 
 
@@ -188,24 +203,8 @@ namespace net.opgenorth.xero.shotview
         }
 
 
-        static object ShotToDynamicType(Shot s, string sessionId=null)
+        static object ShotToDynamicType(Shot s, string sessionId)
         {
-            if (string.IsNullOrWhiteSpace(sessionId))
-            {
-                return new
-                {
-                    Id = s.Id,
-                    ShotNumber = s.ShotNumber,
-                    Velocity = s.Speed.Value,
-                    Notes = string.IsNullOrWhiteSpace(s.Notes) ? null : s.Notes,
-                    CleanBore = s.CleanBore,
-                    ColdBore = s.ColdBore,
-                    IgnoreShot = s.IgnoreShot,
-                    ShotTime = s.DateTimeUtc.ToString("O"),
-                    ModificationTime = DateTime.UtcNow.ToString("O")
-                };
-            }
-
             return new
             {
                 Id = s.Id,
@@ -252,14 +251,22 @@ namespace net.opgenorth.xero.shotview
                 await PutShotNumbersForSessionIntoBuckets(conn, session);
 
             int shotsInserted = await InsertShots(conn, session.Id, shotsToInsert);
-            int shotsUpdated = await UpdateShots(conn, shotsToUpdate);
-            int shotsDeleted = await DeleteShots(conn, shotsToDelete);
-
-            _logger.Verbose(
-                "Inserted {shots.inserted}, updated {shots.updated}, and deleted {shots.deleted} shots for session {session.id}",
-                shotsInserted, shotsUpdated, shotsDeleted, session.Id);
+            int shotsUpdated = await UpdateShots(conn, session.Id, shotsToUpdate);
+            int shotsDeleted = await DeleteShots(conn, session.Id, shotsToDelete);
 
             int rowsAffected = shotsInserted + shotsDeleted + shotsUpdated;
+            if (rowsAffected != session.Shots.Count())
+            {
+                _logger.Warning(
+                    "Inserted {shots.inserted}, updated {shots.updated}, and deleted {shots.deleted} shots for session {session.id}",
+                    shotsInserted, shotsUpdated, shotsDeleted, session.Id);
+            }
+            else
+            {
+                _logger.Verbose(
+                    "Inserted {shots.inserted}, updated {shots.updated}, and deleted {shots.deleted} shots for session {session.id}",
+                    shotsInserted, shotsUpdated, shotsDeleted, session.Id);
+            }
 
             return rowsAffected;
         }
@@ -268,12 +275,14 @@ namespace net.opgenorth.xero.shotview
         {
             const string shotsSql = """
                                     SELECT shot_number
-                                    FROM shotview_shots
-                                    WHERE shotview_session_id=@Id
-                                    ORDER BY shot_number
+                                    FROM shotview_shots sh
+                                    LEFT JOIN shotview_sessions s
+                                        ON sh.shotview_session_id=s.id
+                                    WHERE s.name=@SessionName
+                                    ORDER BY shot_number;
                                     """;
 
-            int[] existingShotNumbers = (await conn.QueryAsync<shotNumber_>(shotsSql, new { session.Id }))
+            int[] existingShotNumbers = (await conn.QueryAsync<shotNumber_>(shotsSql, new { SessionName=session.SheetName }))
                 .Select(si => si.shot_number)
                 .ToArray<int>();
 
@@ -282,8 +291,8 @@ namespace net.opgenorth.xero.shotview
                 return new Tuple<Shot[], Shot[], Shot[]>(session.Shots.ToArray(), [], []);
             }
 
-            Shot[]? allShots = session.Shots.ToArray();
 
+            Shot[]? allShots = session.Shots.ToArray();
             Shot[]? shotsToInsert = allShots.Where(s => existingShotNumbers.All(esi => esi != s.ShotNumber)).ToArray();
             Shot[]? shotsToUpdate = allShots.Where(s => existingShotNumbers.Any(esi => esi == s.ShotNumber)).ToArray();
             Shot[]? shotsToDelete = allShots.Where(s => shotsToInsert.Union(shotsToUpdate).All(stk => stk.Id != s.Id))
@@ -316,25 +325,16 @@ namespace net.opgenorth.xero.shotview
                                       """;
 
             var inserts = shotsToInsert.Select(s => ShotToDynamicType(s, sessionId));
-
             if (!inserts.Any())
             {
                 return 0;
             }
-
-
-            // int rowsInserted = 0;
-            // foreach (object insert in inserts)
-            // {
-            //     rowsInserted += await conn.ExecuteAsync(insertShot, insert);
-            // }
-
             int rowsInserted = await conn.ExecuteAsync(insertShot, inserts);
 
             return rowsInserted;
         }
 
-        async Task<int> UpdateShots(SqliteConnection conn, Shot[] shotsToUpdate)
+        async Task<int> UpdateShots(SqliteConnection conn, string sessionId, Shot[] shotsToUpdate)
         {
             const string updateShot = """
                                       UPDATE shotview_shots SET velocity=@Velocity,
@@ -344,22 +344,28 @@ namespace net.opgenorth.xero.shotview
                                                                 ignore_shot=@IgnoreShot,
                                                                 shot_time=@ShotTime,
                                                                 modification_date=@ModificationTime
-                                      WHERE (id=@Id);
+                                      WHERE shot_number=@ShotNumber AND shotview_session_id=@SessionId;
                                       """;
-            var updates = shotsToUpdate.Select(s => ShotToDynamicType(s));
-            if (!updates.Any())
+            var shotUpdates = shotsToUpdate.Select(s => ShotToDynamicType(s, sessionId));
+            if (!shotUpdates.Any())
             {
                 return 0;
             }
 
-            int rowsUpdated = await conn.ExecuteAsync(updateShot, updates);
+            int rowsUpdated = 0;
+            foreach (var update in shotUpdates)
+            {
+                rowsUpdated += await conn.ExecuteAsync(updateShot, update);
+            }
+
+            // int rowsUpdated = await conn.ExecuteAsync(updateShot, updates);
 
             return rowsUpdated;
         }
 
-        async Task<int> DeleteShots(SqliteConnection conn, Shot[] shotsToDelete)
+        async Task<int> DeleteShots(SqliteConnection conn,string sessionId,  Shot[] shotsToDelete)
         {
-            const string deleteShot = "DELETE FROM shotview_shots WHERE id=@Id";
+            const string deleteShot = "DELETE FROM shotview_shots WHERE shotview_session_id=@SessionId";
 
             IEnumerable<string> deletes = shotsToDelete.Select(s => s.Id);
             if (!deletes.Any())
@@ -367,7 +373,7 @@ namespace net.opgenorth.xero.shotview
                 return 0;
             }
 
-            int rowsDeleted = await conn.ExecuteAsync(deleteShot, shotsToDelete);
+            int rowsDeleted = await conn.ExecuteAsync(deleteShot, new {SessionId=sessionId});
 
             return rowsDeleted;
         }
