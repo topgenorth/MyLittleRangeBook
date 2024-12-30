@@ -119,7 +119,7 @@ namespace net.opgenorth.xero.shotview
         void GetShotsFromWorksheet(WorkbookSession s)
         {
             IXLRow? shotDelimiter = _worksheet!.FindRowThatStartsWith("-");
-            int upperLimit = shotDelimiter.RowNumber();
+            int upperLimit = shotDelimiter!.RowNumber();
             IXLRows? shotRows = _worksheet!.Rows(3, upperLimit);
 
             foreach (IXLRow row in shotRows)

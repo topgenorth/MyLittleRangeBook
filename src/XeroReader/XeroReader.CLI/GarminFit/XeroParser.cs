@@ -16,8 +16,8 @@ namespace net.opgenorth.xero.GarminFit
         readonly ILogger _logger;
         readonly HashSet<string> RecordDeveloperFieldNames = new();
         readonly HashSet<string> RecordFieldNames = new();
-        FitMessages _fitMessages;
-        ShotSession _shotSession;
+        FitMessages? _fitMessages = null;
+        ShotSession? _shotSession = null;
 
         public XeroParser(ILogger logger) => _logger = logger.ForContext<XeroParser>();
 

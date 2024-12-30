@@ -29,7 +29,6 @@ namespace net.opgenorth.xero.shotview
 
         public async Task<WorkbookSession> GetSessionByName(string name)
         {
-            const string sql = "SELECT * FROM shotview_session WHERE name=@Name";
             await using SqliteConnection conn = new(_connectionString);
             var s = await LoadSessionFromSqlite(conn, name);
 

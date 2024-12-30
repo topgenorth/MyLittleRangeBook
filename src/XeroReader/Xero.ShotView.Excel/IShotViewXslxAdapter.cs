@@ -3,7 +3,7 @@ namespace net.opgenorth.xero.shotview
 {
     public interface IShotViewXslxAdapter: IDisposable
     {
-        void Dispose();
+
         string ToString();
         string Filename { get;  }
 

@@ -1,3 +1,4 @@
+using NanoidDotNet;
 using net.opgenorth.xero.device;
 
 namespace net.opgenorth.xero.shotview
@@ -6,11 +7,11 @@ namespace net.opgenorth.xero.shotview
     {
         public WorkbookSession() : base()
         {
-
+            SheetName = Nanoid.Generate();
         }
-        public WorkbookSession(string sessionId) => Id = sessionId;
+        public WorkbookSession(string sessionId): this() => Id = sessionId;
 
-        public WorkbookSession(ShotSession session)
+        public WorkbookSession(ShotSession session): this()
         {
             Id = session.Id;
             Notes = session.Notes;
@@ -18,7 +19,6 @@ namespace net.opgenorth.xero.shotview
             ProjectileType = session.ProjectileType;
             ProjectileWeight = session.ProjectileWeight;
             DateTimeUtc = session.DateTimeUtc;
-
 
             foreach (Shot shot in session.Shots)
             {

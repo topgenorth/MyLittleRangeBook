@@ -10,6 +10,7 @@ namespace net.opgenorth.xero.device
     {
         public Shot(): this(Nanoid.Generate())
         {
+            Notes = string.Empty;
         }
 
         public Shot(string shotId)
