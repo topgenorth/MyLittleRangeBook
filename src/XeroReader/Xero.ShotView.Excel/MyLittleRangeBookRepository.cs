@@ -67,10 +67,12 @@ public class MyLittleRangeBookRepository : IGetShotSession, IPersistShotSession
         }
         else
         {
-            Option<string> idO = await GetSessionIdForName(conn, session.SheetName);
+            Option<string> o_id = await GetSessionIdForName(conn, session.SheetName);
 
-            idO.Match(id => session.Id = id,
-                () => session.Id = string.Empty);
+            o_id.Match(
+                id => session.Id = id,
+                () => session.Id = string.Empty
+            );
 
             rowsAffected = await UpdateSession(conn, session);
         }
