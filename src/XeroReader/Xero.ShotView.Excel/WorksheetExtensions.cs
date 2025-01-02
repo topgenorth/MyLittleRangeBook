@@ -1,114 +1,113 @@
-namespace net.opgenorth.xero.shotview
+namespace net.opgenorth.xero.shotview;
+
+public partial class ShotViewExcelSpreadsheetTemplate
 {
-    public partial class ShotViewExcelSpreadsheetTemplate
+    private readonly WorkbookSession _shotSession;
+
+    public ShotViewExcelSpreadsheetTemplate(WorkbookSession shotSession) => _shotSession = shotSession;
+}
+
+public static class WorksheetExtensions
+{
+    public static string CenterString(this string stringToCenter, int totalLength) => stringToCenter.PadLeft(
+            (totalLength - stringToCenter.Length) / 2
+            + stringToCenter.Length)
+        .PadRight(totalLength);
+
+    public static IXLRow? FindRowThatStartsWith(this IXLWorksheet ws, string title)
     {
-        readonly WorkbookSession _shotSession;
+        IXLRow? row = null;
+        int rowCount = ws.Rows().Count();
 
-        public ShotViewExcelSpreadsheetTemplate(WorkbookSession shotSession) => _shotSession = shotSession;
-    }
-
-    public static class WorksheetExtensions
-    {
-        public static string CenterString(this string stringToCenter, int totalLength) => stringToCenter.PadLeft(
-                (totalLength - stringToCenter.Length) / 2
-                + stringToCenter.Length)
-            .PadRight(totalLength);
-
-        public static IXLRow? FindRowThatStartsWith(this IXLWorksheet ws, string title)
+        for (int i = 0; i < rowCount; i++)
         {
-            IXLRow? row = null;
-            int rowCount = ws.Rows().Count();
+            IXLRow? r = ws.Rows().ElementAt(i);
+            IXLCell? c = r.Cell("A");
+            string t = c.GetText() ?? string.Empty;
 
-            for (int i = 0; i < rowCount; i++)
+            if (!t.Equals(title, StringComparison.OrdinalIgnoreCase))
             {
-                IXLRow? r = ws.Rows().ElementAt(i);
-                IXLCell? c = r.Cell("A");
-                string t = c.GetText() ?? string.Empty;
-
-                if (!t.Equals(title, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                row = r;
-
-                break;
+                continue;
             }
 
-            return row;
+            row = r;
+
+            break;
         }
 
-        public static int? GetInteger(this IXLRow row, string columnLetter = "B")
+        return row;
+    }
+
+    public static int? GetInteger(this IXLRow row, string columnLetter = "B")
+    {
+        IXLCell? c = row.Cell(columnLetter);
+        if (c.TryGetValue(out int ival))
         {
-            IXLCell? c = row.Cell(columnLetter);
-            if (c.TryGetValue(out int ival))
-            {
-                return ival;
-            }
+            return ival;
+        }
 
-            if (c.TryGetValue(out float fval))
-            {
-                return Convert.ToInt32(fval);
-            }
+        if (c.TryGetValue(out float fval))
+        {
+            return Convert.ToInt32(fval);
+        }
 
-            string? t = c.GetText();
-            if (!string.IsNullOrWhiteSpace(t))
-            {
-                return null;
-            }
-
-            if (float.TryParse(t, out float fval2))
-            {
-                return Convert.ToInt32(fval2);
-            }
-
+        string? t = c.GetText();
+        if (!string.IsNullOrWhiteSpace(t))
+        {
             return null;
         }
 
-        public static DateTime? GetDateTimeUTC(this IXLRow row, string columnLetter = "B")
+        if (float.TryParse(t, out float fval2))
         {
-            DateTime result;
-            if (!row.Cell(columnLetter).TryGetValue(out DateTime dt))
-            {
-                string? dateText = row.Cell(columnLetter).GetString();
-                if (!DateTime.TryParse(dateText, out dt))
-                {
-                    return null;
-                }
-            }
-
-            if (dt.Kind == DateTimeKind.Unspecified)
-            {
-                dt = DateTime.SpecifyKind(dt, DateTimeKind.Local);
-            }
-
-            result = dt.ToUniversalTime();
-
-            return result;
+            return Convert.ToInt32(fval2);
         }
 
-        internal static bool GetBool(this IXLRow row, string columnLetter = "B")
-        {
-            bool val;
-            try
-            {
-                val = row.Cell(columnLetter).GetBoolean();
-            }
-            catch (InvalidCastException)
-            {
-                val = false;
-            }
-
-            return val;
-        }
-
-        internal static string GetString(this IXLRow row, string columnLetter) =>
-            row.Cell(columnLetter).TryGetValue(out string val) ? val : null;
-
-        internal static string GetString(this IXLWorksheet ws, int row, string col) =>
-            ws.Cell(row, col).TryGetValue(out string val) ? val : null;
-
-        internal static string GetString(this IXLWorksheet ws, int row, int col) =>
-            ws.Cell(row, col).TryGetValue(out string val) ? val : null;
+        return null;
     }
+
+    public static DateTime? GetDateTimeUTC(this IXLRow row, string columnLetter = "B")
+    {
+        DateTime result;
+        if (!row.Cell(columnLetter).TryGetValue(out DateTime dt))
+        {
+            string? dateText = row.Cell(columnLetter).GetString();
+            if (!DateTime.TryParse(dateText, out dt))
+            {
+                return null;
+            }
+        }
+
+        if (dt.Kind == DateTimeKind.Unspecified)
+        {
+            dt = DateTime.SpecifyKind(dt, DateTimeKind.Local);
+        }
+
+        result = dt.ToUniversalTime();
+
+        return result;
+    }
+
+    internal static bool GetBool(this IXLRow row, string columnLetter = "B")
+    {
+        bool val;
+        try
+        {
+            val = row.Cell(columnLetter).GetBoolean();
+        }
+        catch (InvalidCastException)
+        {
+            val = false;
+        }
+
+        return val;
+    }
+
+    internal static string? GetString(this IXLRow row, string columnLetter) =>
+        row.Cell(columnLetter).TryGetValue(out string val) ? val : null;
+
+    internal static string? GetString(this IXLWorksheet ws, int row, string col) =>
+        ws.Cell(row, col).TryGetValue(out string val) ? val : null;
+
+    internal static string? GetString(this IXLWorksheet ws, int row, int col) =>
+        ws.Cell(row, col).TryGetValue(out string val) ? val : null;
 }

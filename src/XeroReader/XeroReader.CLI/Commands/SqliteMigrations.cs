@@ -1,61 +1,60 @@
 using ConsoleAppFramework;
 using net.opgenorth.xero.data.sqlite;
 
-namespace net.opgenorth.xero.Commands
+namespace net.opgenorth.xero.Commands;
+
+public class SqliteMigrations
 {
-    public class SqliteMigrations
+    private readonly ILogger _logger;
+    private readonly IDbZookeeper _sqliteDbKeeper;
+
+    public SqliteMigrations(ILogger logger, IDbZookeeper dbz)
     {
-        readonly ILogger _logger;
-        readonly IDbZookeeper _sqliteDbKeeper;
+        _logger = logger;
+        _sqliteDbKeeper = (SqliteDbZookeeper)dbz;
+    }
 
-        public SqliteMigrations(ILogger logger, IDbZookeeper dbz)
+
+    /// <summary>
+    ///     Runs the migrations on the sqlite file.
+    /// </summary>
+    [Command("upgrade")]
+    public Task<int> UpdateDatabase()
+    {
+        try
         {
-            _logger = logger;
-            _sqliteDbKeeper = (SqliteDbZookeeper)dbz;
+            _sqliteDbKeeper.UpdateDatabase();
+            _logger.Verbose("Updated the database {dbName}", _sqliteDbKeeper.ToString());
+
+            return Task.FromResult(0);
         }
-
-
-        /// <summary>
-        ///     Runs the migrations on the sqlite file.
-        /// </summary>
-        [Command("upgrade")]
-        public Task<int> UpdateDatabase()
+        catch (Exception e)
         {
-            try
-            {
-                _sqliteDbKeeper.UpdateDatabase();
-                _logger.Verbose("Updated the database {dbName}", _sqliteDbKeeper.ToString());
+            _logger.Fatal(e, "Could not update the database {dbName}.", _sqliteDbKeeper.ToString());
 
-                return Task.FromResult(0);
-            }
-            catch (Exception e)
-            {
-                _logger.Fatal(e, "Could not update the database {dbName}.", _sqliteDbKeeper.ToString());
-
-                return Task.FromResult(1);
-            }
+            return Task.FromResult(1);
         }
+    }
 
-        /// <summary>
-        ///     Will delete the sqlite file if it exists, then create a new one.
-        /// </summary>
-        [Command("init")]
-        public async Task<int> CreateDatabase()
+    /// <summary>
+    ///     Will delete the sqlite file if it exists, then create a new one.
+    /// </summary>
+    [Command("init")]
+    public async Task<int> CreateDatabase()
+    {
+        try
         {
-            try
-            {
-                _logger.Verbose("Create the database {dbName}", _sqliteDbKeeper.ToString());
-                _sqliteDbKeeper.CreateDatabase();
-                _logger.Verbose("Created database {dbName}", _sqliteDbKeeper.ToString());
+            _logger.Verbose("Create the database {dbName}", _sqliteDbKeeper.ToString());
+            _sqliteDbKeeper.CreateDatabase();
+            _logger.Verbose("Created database {dbName}", _sqliteDbKeeper.ToString());
 
-                return 0;
-            }
-            catch (Exception e)
-            {
-                _logger.Fatal(e, "Could not create the database {dbName}.", _sqliteDbKeeper.ToString());
+            return 0;
+        }
+        catch (Exception e)
+        {
+            _logger.Fatal(e, "Could not create the database {dbName}.", _sqliteDbKeeper.ToString());
 
-                return 1;
-            }
+            return 1;
         }
     }
 }

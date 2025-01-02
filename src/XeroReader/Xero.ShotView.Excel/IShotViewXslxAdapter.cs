@@ -1,13 +1,10 @@
+namespace net.opgenorth.xero.shotview;
 
-namespace net.opgenorth.xero.shotview
+public interface IShotViewXslxAdapter : IDisposable
 {
-    public interface IShotViewXslxAdapter: IDisposable
-    {
-        void Dispose();
-        string ToString();
-        string Filename { get;  }
+    string Filename { get; }
+    string ToString();
 
-        WorkbookSession? GetShotSession(int sheetNumber);
-        IEnumerable<WorkbookSession> GetAllSessions();
-    }
+    WorkbookSession? GetShotSession(int sheetNumber);
+    IEnumerable<WorkbookSession> GetAllSessions();
 }
