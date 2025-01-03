@@ -7,9 +7,6 @@
     <TargetFrameworks>net8.0</TargetFrameworks>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugSymbols>false</DebugSymbols>
-  </PropertyGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="scripts/**/*.sql"/>
