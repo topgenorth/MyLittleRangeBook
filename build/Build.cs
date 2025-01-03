@@ -60,7 +60,6 @@ partial class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            
             Log.Information("Branch = {Branch}", GitHubActions.Ref);
             Log.Information("Commit = {Commit}", GitHubActions.Sha);
             
@@ -73,22 +72,13 @@ partial class Build : NukeBuild
                     .SetFileVersion(GitVer.AssemblySemFileVer)
                     .SetInformationalVersion(GitVer.InformationalVersion)
                     .SetVerbosity(DotNetVerbosity.minimal)
-                    .SetNoLogo(true)
-                    .EnableNoRestore();
+                    .SetNoLogo(true);
             });
 
             Log.Information("Compiled version {version}, {infoversion}", GitVer.AssemblySemVer, GitVer.InformationalVersion);
         });
 
-    Target UnitTests => _ => _
-        .Executes(() =>
-        {
-            Log.Verbose("Running all unit tests");
-        });
-
-
     Target Publish => _ => _
-        .DependsOn(UnitTests)
         .Executes(() =>
         {
             // [TO20250103] .NET RID Catalog - https://learn.microsoft.com/en-us/dotnet/core/rid-catalog
