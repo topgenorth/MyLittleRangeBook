@@ -5,10 +5,12 @@ name: .NET
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
-
+    branches:
+      - main
+      - develop
+      - release/*
+      - feature/*
+  
 jobs:
   build:
 
@@ -20,9 +22,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Restore dependencies
-        run: dotnet restore
+          cache: false 
+      - name: Install NUKE build tool
+        run: dotnet tool install Nuke.GlobalTool --global        
       - name: Build
-        run: dotnet build --no-restore
-      - name: Test
-        run: dotnet test --no-build --verbosity normal
+        run: ./build.sh compile
+
