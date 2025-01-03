@@ -18,9 +18,13 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;                              
 using static Nuke.Common.Tools.MSBuild.MSBuildTasks;                                            // MSBUILD
 using static Nuke.Common.Tools.NuGet.NuGetTasks; 
 
+[GitHubActions(
+    "continuous",
+    GitHubActionsImage.UbuntuLatest,
+    On = new[] { GitHubActionsTrigger.Push },
+    InvokedTargets = new[] { nameof(Compile) })]
 partial class Build : NukeBuild
 {
-    
     public static int Main() => Execute<Build>(x => x.Compile);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
