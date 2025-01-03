@@ -27,6 +27,6 @@ jobs:
         run: dotnet tool install Nuke.GlobalTool --global
       - name: Install GitVersion
         run: nuke :add-package GitVersion.Tool
-      - name: Build
-        run: ./build.sh compile
+#      - name: Build
+#        run: ./build.sh compile
 

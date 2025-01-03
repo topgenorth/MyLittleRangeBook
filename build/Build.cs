@@ -1,4 +1,4 @@
-using System;
+
 using System.IO;
 using Nuke.Common;
 using Nuke.Common.CI;
@@ -9,52 +9,39 @@ using Nuke.Common.ProjectModel;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitVersion;
 using Serilog;
-
-using static Nuke.Common.ChangeLog.ChangelogTasks;                                              // CHANGELOG
-using static Nuke.Common.EnvironmentInfo;
-using static Nuke.Common.IO.FileSystemTasks;
-using static Nuke.Common.IO.PathConstruction;
-using static Nuke.Common.Tools.DotNet.DotNetTasks;                                              // DOTNET
-using static Nuke.Common.Tools.MSBuild.MSBuildTasks;                                            // MSBUILD
-using static Nuke.Common.Tools.NuGet.NuGetTasks; 
-
-[GitHubActions(
-    "continuous",
-    GitHubActionsImage.UbuntuLatest,
-    FetchDepth = 0,
-    On = new[] { GitHubActionsTrigger.Push },
-    InvokedTargets = new[] { nameof(Compile) })]
+using static Nuke.Common.Tools.DotNet.DotNetTasks; 
 partial class Build : NukeBuild
 {
-    public static int Main() => Execute<Build>(x => x.Compile);
+    const string MasterBranch = "master";
+    const string DevelopBranch = "develop";
+    readonly AbsolutePath ArtifactsDirectory = RootDirectory / "artifacts";
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
-    
-    [Parameter("Installation directory for the 'install' target.")]
-    AbsolutePath InstallDir =  Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile).ToString(), "MyLittleRangeBook");
+
+    [CI] readonly GitHubActions GitHubActions;
+    [GitVersion] readonly GitVersion GitVer;
 
     /// Support plugins are available for:
     /// - JetBrains ReSharper        https://nuke.build/resharper
     /// - JetBrains Rider            https://nuke.build/rider
     /// - Microsoft VisualStudio     https://nuke.build/visualstudio
     /// - Microsoft VSCode           https://nuke.build/vscode
+    [GitRepository]
+    readonly GitRepository Repository;
 
-    [GitRepository] readonly GitRepository Repository;
-    [CI] readonly GitHubActions GitHubActions;
-    [Solution] readonly Solution Solution;     
-    [GitVersion()] readonly GitVersion GitVer;
-    
-    const string MasterBranch = "master";
-    const string DevelopBranch = "develop";
-    
+    [Solution] readonly Solution Solution;
+
+    [Parameter("Installation directory for the 'install' target.")]
+    AbsolutePath InstallDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "MyLittleRangeBook");
+
     AbsolutePath OutputDirectory => RootDirectory / "output";
     AbsolutePath SolutionDirectory => RootDirectory / "src/XeroReader";
-    readonly AbsolutePath ArtifactsDirectory = RootDirectory / "artifacts";
     AbsolutePath PublishDirectory => OutputDirectory / "publish";
-    AbsolutePath CliProject => SolutionDirectory  / "XeroReader.CLI" / "XeroReader.CLI.csproj";
-    
-    string ChangelogFile => RootDirectory / "CHANGELOG.md";   
+    AbsolutePath CliProject => SolutionDirectory / "XeroReader.CLI" / "XeroReader.CLI.csproj";
+
+    string ChangelogFile => RootDirectory / "CHANGELOG.md";
+
     Target Clean => _ => _
         .Before(Restore)
         .Executes(() =>
@@ -89,7 +76,7 @@ partial class Build : NukeBuild
                     .SetNoLogo(true)
                     .EnableNoRestore();
             });
-            
+
             Log.Information("Compiled version {version}, {infoversion}", GitVer.AssemblySemVer, GitVer.InformationalVersion);
         });
 
@@ -99,13 +86,13 @@ partial class Build : NukeBuild
             Log.Verbose("Running all unit tests");
         });
 
-    
+
     Target Publish => _ => _
         .DependsOn(UnitTests)
         .Executes(() =>
         {
             // [TO20250103] .NET RID Catalog - https://learn.microsoft.com/en-us/dotnet/core/rid-catalog
-            string runtime = IsLinux() ? "linux-x64" : "win-x64";
+            var runtime = IsLinux() ? "linux-x64" : "win-x64";
             DotNetPublish(s => s
                 .SetProject(CliProject)
                 .SetPublishSingleFile(true)
@@ -123,13 +110,13 @@ partial class Build : NukeBuild
                 .SetNoLogo(true)
             );
         });
-    
+
     Target Install => _ => _
         .DependsOn(Publish)
         .Executes(() =>
         {
-            AbsolutePath app = IsLinux() ? ArtifactsDirectory / "xeror" : ArtifactsDirectory / "xeror.exe";
-            app.CopyToDirectory(InstallDir, ExistsPolicy.FileOverwrite, createDirectories:true);
+            var app = IsLinux() ? ArtifactsDirectory / "xeror" : ArtifactsDirectory / "xeror.exe";
+            app.CopyToDirectory(InstallDir, ExistsPolicy.FileOverwrite, createDirectories: true);
             Log.Information("Installed the application to {installDir} ", InstallDir);
         });
 
@@ -149,4 +136,5 @@ partial class Build : NukeBuild
             Log.Information("SSH URL = {Value}", Repository.SshUrl);
         });
 
+    public static int Main() => Execute<Build>(x => x.Compile);
 }
