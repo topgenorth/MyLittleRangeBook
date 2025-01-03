@@ -7,7 +7,7 @@ on:
         description: 'The .NET version to setup'
         type: string
         required: true
-        default: '8.0.x'
+        default: '8.0.11'
       nuke-target:
         type: string
         description: 'The NUKE target to run'
@@ -38,4 +38,4 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj', '**/Directory.Packages.props') }}
 
       - name: 'Run: NUKE Build'
-        run: ./build.cmd ${{ inputs.nuke-target }}
+        run: ./build.sh ${{ inputs.nuke-target }}

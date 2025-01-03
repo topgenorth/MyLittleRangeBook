@@ -63,16 +63,19 @@ partial class Build : NukeBuild
             Log.Information("Branch = {Branch}", GitHubActions.Ref);
             Log.Information("Commit = {Commit}", GitHubActions.Sha);
             
+            var runtime = IsLinux() ? "linux-x64" : "win-x64";
+
             DotNetBuild(s =>
             {
                 return s.SetProjectFile(Solution)
                     .SetConfiguration(Configuration)
                     .SetFramework("net8.0")
+                    .SetRuntime(runtime)
                     .SetAssemblyVersion(GitVer.AssemblySemVer)
                     .SetFileVersion(GitVer.AssemblySemFileVer)
                     .SetInformationalVersion(GitVer.InformationalVersion)
                     .SetVerbosity(DotNetVerbosity.minimal)
-                    .SetNoLogo(true);
+                    ;
             });
 
             Log.Information("Compiled version {version}, {infoversion}", GitVer.AssemblySemVer, GitVer.InformationalVersion);
@@ -85,20 +88,28 @@ partial class Build : NukeBuild
             var runtime = IsLinux() ? "linux-x64" : "win-x64";
             DotNetPublish(s => s
                 .SetProject(XeroReaderCliProject)
-                .SetPublishSingleFile(true)
-                .SetProperty("DebugType", "embedded")
-                .SetProperty("IncludeNativeLibrariesForSelfExtract", "true")
-                .SetOutput(ArtifactsDirectory)
-                .SetSelfContained(true)
+                .SetConfiguration(Configuration)
+                .SetNoRestore(false)
+                .SetOutput(OutputDirectory)
                 .SetFramework("net8.0")
                 .SetRuntime(runtime)
-                .SetConfiguration(Configuration)
                 .SetAssemblyVersion(GitVer.AssemblySemVer)
                 .SetFileVersion(GitVer.AssemblySemFileVer)
                 .SetInformationalVersion(GitVer.InformationalVersion)
                 .SetVerbosity(DotNetVerbosity.minimal)
                 .SetNoLogo(true)
+                .SetPublishSingleFile(true)
+                .SetPublishTrimmed(false)
+                .SetSelfContained(true)
+                .SetProperty("DebugType", "embedded")
+                .SetProperty("IncludeNativeLibrariesForSelfExtract", "true")
             );
+            
+            Log.Information("Published version {version}, {infoversion} to {outputdirectory}", 
+                GitVer.AssemblySemVer, 
+                GitVer.InformationalVersion,
+                OutputDirectory);
+
         });
 
     Target Install => _ => _
