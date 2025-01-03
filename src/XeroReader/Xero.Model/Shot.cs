@@ -10,7 +10,6 @@ namespace net.opgenorth.xero.device
     {
         public Shot(): this(Nanoid.Generate())
         {
-            Notes = string.Empty;
         }
 
         public Shot(string shotId)
@@ -39,7 +38,7 @@ namespace net.opgenorth.xero.device
 
         public bool CleanBore { get; set; }
         public bool ColdBore { get; set; }
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
 
         public bool IgnoreShot { get; set; }
 

@@ -150,7 +150,7 @@ namespace net.opgenorth.xero.shotview
             }
         }
 
-        DateTime ConvertShotTimeToShotDateTimeUtc(DateTime sessionDateUtc, string timeText)
+        DateTime ConvertShotTimeToShotDateTimeUtc(DateTime sessionDateUtc, string? timeText)
         {
             if (string.IsNullOrWhiteSpace(timeText))
             {

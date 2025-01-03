@@ -12,7 +12,9 @@ public class ShotSession
 {
     private readonly ShotCollection _shots = [];
 
+#pragma warning disable CS0414 // Field is assigned but its value is never used
     private readonly uint _xeroSerialNumber;
+#pragma warning restore CS0414 // Field is assigned but its value is never used
 
     public ShotSession()
     {

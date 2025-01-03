@@ -34,7 +34,7 @@ partial class Build : NukeBuild
     [GitRepository] readonly GitRepository Repository;
     [CI] readonly GitHubActions GitHubActions;
     [Solution] readonly Solution Solution;     
-    [GitVersion] readonly GitVersion GitVersion;
+    [GitVersion(NoFetch = true,UpdateBuildNumber = true)] readonly GitVersion GitVer;
     
     const string MasterBranch = "master";
     const string DevelopBranch = "develop";
@@ -69,13 +69,15 @@ partial class Build : NukeBuild
             {
                 return s.SetProjectFile(Solution)
                     .SetConfiguration(Configuration)
-                    .SetAssemblyVersion(GitVersion.AssemblySemVer)
-                    .SetFileVersion(GitVersion.AssemblySemFileVer)
-                    .SetInformationalVersion(GitVersion.InformationalVersion)
-                    .SetVerbosity(DotNetVerbosity.quiet)
+                    .SetAssemblyVersion(GitVer.AssemblySemVer)
+                    .SetFileVersion(GitVer.AssemblySemFileVer)
+                    .SetInformationalVersion(GitVer.InformationalVersion)
+                    .SetVerbosity(DotNetVerbosity.minimal)
                     .SetNoLogo(true)
                     .EnableNoRestore();
             });
+            
+            Log.Information("Compile version {version}, {infoversion}", GitVer.AssemblySemVer, GitVer.InformationalVersion);
         });
 
     Target UnitTests => _ => _
@@ -89,7 +91,7 @@ partial class Build : NukeBuild
         .DependsOn(UnitTests)
         .Executes(() =>
         {
-            var  installDir = IsLinux() ?  "~/.local/bin/" :  Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var installDir = IsLinux() ?  "~/.local/bin/" :  Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             Log.Information("Installing the application to {installDir} ", installDir);
         });
 

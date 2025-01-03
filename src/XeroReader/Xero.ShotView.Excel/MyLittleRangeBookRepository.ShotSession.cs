@@ -48,7 +48,7 @@ namespace net.opgenorth.xero.shotview
             }
             else
             {
-                session.Id = await GetSessionIdForName(conn, session.SheetName);
+                session.Id = await GetSessionIdForName(conn, session.SheetName) ?? throw new InvalidOperationException("Could not find a session named " + session.SheetName);
                 rowsAffected = await UpdateSession(conn, session);
             }
 
@@ -58,7 +58,7 @@ namespace net.opgenorth.xero.shotview
             }
         }
 
-        async Task<string> GetSessionIdForName(SqliteConnection conn, string sheetName)
+        async Task<string?> GetSessionIdForName(SqliteConnection conn, string sheetName)
         {
             const string sql = "SELECT id FROM shotview_sessions WHERE name=@SheetName";
 

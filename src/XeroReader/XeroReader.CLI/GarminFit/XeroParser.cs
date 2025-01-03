@@ -16,7 +16,9 @@ namespace net.opgenorth.xero.GarminFit
         readonly ILogger _logger;
         readonly HashSet<string> RecordDeveloperFieldNames = new();
         readonly HashSet<string> RecordFieldNames = new();
+#pragma warning disable CS0414 // Field is assigned but its value is never used
         FitMessages? _fitMessages = null;
+#pragma warning restore CS0414 // Field is assigned but its value is never used
         ShotSession? _shotSession = null;
 
         public XeroParser(ILogger logger) => _logger = logger.ForContext<XeroParser>();
@@ -54,7 +56,7 @@ namespace net.opgenorth.xero.GarminFit
             DeviceInfoMesg? msg = (DeviceInfoMesg)e.mesg;
             uint serialNumber = msg?.GetSerialNumber() ?? 0;
 
-            _shotSession.SerialNumber = serialNumber;
+            _shotSession!.SerialNumber = serialNumber;
         }
 
         void OnChronoShotSessionMsg(object sender, MesgEventArgs e)
@@ -64,11 +66,11 @@ namespace net.opgenorth.xero.GarminFit
 
             Field? f = msg.Fields.First(f => f.Name == "MinSpeed");
             float s = msg.GetMaxSpeed() ?? 0f;
-            _shotSession.DateTimeUtc = dt;
+            _shotSession!.DateTimeUtc = dt;
 
             float w = msg.GetGrainWeight() ?? 0f;
-            _shotSession.ProjectileWeight = Convert.ToInt32(w);
-            _shotSession.ProjectileType = msg.GetProjectileType().ToString() ?? "Unknown";
+            _shotSession!.ProjectileWeight = Convert.ToInt32(w);
+            _shotSession!.ProjectileType = msg.GetProjectileType().ToString() ?? "Unknown";
         }
 
         void OnChronoShotMsg(object sender, MesgEventArgs e)
@@ -81,7 +83,7 @@ namespace net.opgenorth.xero.GarminFit
                 DateTimeUtc = msg.GetTimestamp().GetDateTime(),
                 Speed = new ShotSpeed(msg.GetShotSpeed() ?? 0f)
             };
-            _shotSession.AddShot(shot);
+            _shotSession!.AddShot(shot);
         }
 
         void OnRecordMsg(object sender, MesgEventArgs e)

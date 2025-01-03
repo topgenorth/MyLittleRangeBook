@@ -1,6 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Publish XeroReader.CLI to artifacts" type="DotNetFolderPublish" factoryName="Publish to folder">
-    <riderPublish configuration="Release" delete_existing_files="true" platform="Any CPU" produce_single_file="true" ready_to_run="true" runtime="linux-x64" self_contained="true" target_folder="$PROJECT_DIR$/../../artifacts" target_framework="net8.0" uuid_high="-4039359365585417308" uuid_low="-8912741183997958168" />
-    <method v="2" />
-  </configuration>
-</component>
