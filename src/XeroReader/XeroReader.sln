@@ -17,6 +17,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{60BD84D8-88C3-49B6-B4A1-CB6685BD12C2}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\README.md = ..\..\README.md
+		..\..\GitVersion.yml = ..\..\GitVersion.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\..\build\_build.csproj", "{B775D77D-B4BA-40BB-AEDC-06C43E709D38}"

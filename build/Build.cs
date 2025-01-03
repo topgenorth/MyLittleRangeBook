@@ -34,7 +34,7 @@ partial class Build : NukeBuild
     [GitRepository] readonly GitRepository Repository;
     [CI] readonly GitHubActions GitHubActions;
     [Solution] readonly Solution Solution;     
-    [GitVersion(NoFetch = true,UpdateBuildNumber = true)] readonly GitVersion GitVer;
+    [GitVersion(NoFetch = true)] readonly GitVersion GitVer;
     
     const string MasterBranch = "master";
     const string DevelopBranch = "develop";
