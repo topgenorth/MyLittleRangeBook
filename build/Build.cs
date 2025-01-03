@@ -21,6 +21,7 @@ using static Nuke.Common.Tools.NuGet.NuGetTasks;
 [GitHubActions(
     "continuous",
     GitHubActionsImage.UbuntuLatest,
+    FetchDepth = 0,
     On = new[] { GitHubActionsTrigger.Push },
     InvokedTargets = new[] { nameof(Compile) })]
 partial class Build : NukeBuild
@@ -42,7 +43,7 @@ partial class Build : NukeBuild
     [GitRepository] readonly GitRepository Repository;
     [CI] readonly GitHubActions GitHubActions;
     [Solution] readonly Solution Solution;     
-    [GitVersion(NoFetch = true)] readonly GitVersion GitVer;
+    [GitVersion()] readonly GitVersion GitVer;
     
     const string MasterBranch = "master";
     const string DevelopBranch = "develop";
