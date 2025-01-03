@@ -77,7 +77,7 @@ partial class Build : NukeBuild
                     .EnableNoRestore();
             });
             
-            Log.Information("Compile version {version}, {infoversion}", GitVer.AssemblySemVer, GitVer.InformationalVersion);
+            Log.Information("Compiled version {version}, {infoversion}", GitVer.AssemblySemVer, GitVer.InformationalVersion);
         });
 
     Target UnitTests => _ => _

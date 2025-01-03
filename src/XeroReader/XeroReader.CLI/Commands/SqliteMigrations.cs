@@ -40,6 +40,7 @@ public class SqliteMigrations
     ///     Will delete the sqlite file if it exists, then create a new one.
     /// </summary>
     [Command("init")]
+    // ReSharper disable once UnusedMember.Global
     public async Task<int> CreateDatabase()
     {
         try
