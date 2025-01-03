@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>net.opgenorth.xero</RootNamespace>
@@ -10,6 +10,7 @@
     <Version>0.0.0</Version>
     <Company>Opgenorth Holdings Ltd.</Company>
     <Product>XeroReader</Product>
+    <LangVersion>13</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

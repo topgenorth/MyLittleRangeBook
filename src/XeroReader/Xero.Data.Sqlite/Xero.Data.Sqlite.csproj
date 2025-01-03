@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <RootNamespace>net.opgenorth.xero.data.sqlite</RootNamespace>
-    <LangVersion>12</LangVersion>
+    <LangVersion>13</LangVersion>
     <IsPackable>false</IsPackable>
     <AssemblyName>net.opgenorth.xero.data.sqlite</AssemblyName>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>

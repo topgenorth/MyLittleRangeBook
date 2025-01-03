@@ -28,6 +28,7 @@
         "Compile",
         "Install",
         "Print",
+        "Publish",
         "Restore",
         "UnitTests"
       ]

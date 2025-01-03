@@ -40,22 +40,25 @@ partial class Build : NukeBuild
     const string DevelopBranch = "develop";
     
     AbsolutePath OutputDirectory => RootDirectory / "output";
-    AbsolutePath SourceDirectory => RootDirectory / "src/XeroReader";
+    AbsolutePath SolutionDirectory => RootDirectory / "src/XeroReader";
     readonly AbsolutePath ArtifactsDirectory = RootDirectory / "artifacts";
+    AbsolutePath PublishDirectory => OutputDirectory / "publish";
+    AbsolutePath CliProject => SolutionDirectory  / "XeroReader.CLI" / "XeroReader.CLI.csproj";
     
     string ChangelogFile => RootDirectory / "CHANGELOG.md";   
     Target Clean => _ => _
         .Before(Restore)
         .Executes(() =>
         {
-            Log.Debug("Cleaning the solution: {source}", SourceDirectory);
-            SourceDirectory.GlobDirectories("*/bin", "*/obj").DeleteDirectories();
+            Log.Debug("Cleaning the solution: {source}", SolutionDirectory);
+            SolutionDirectory.GlobDirectories("*/bin", "*/obj").DeleteDirectories();
             OutputDirectory.CreateOrCleanDirectory();
             ArtifactsDirectory.CreateOrCleanDirectory();
         });
 
     Target Restore => _ => _
-        .DependsOn(Clean)
+        .Before(Publish)
+        .Before(Compile)
         .Executes(() =>
         {
             DotNetRestore(s => s.SetProjectFile(Solution));
@@ -69,6 +72,7 @@ partial class Build : NukeBuild
             {
                 return s.SetProjectFile(Solution)
                     .SetConfiguration(Configuration)
+                    .SetFramework("net8.0")
                     .SetAssemblyVersion(GitVer.AssemblySemVer)
                     .SetFileVersion(GitVer.AssemblySemFileVer)
                     .SetInformationalVersion(GitVer.InformationalVersion)
@@ -81,14 +85,38 @@ partial class Build : NukeBuild
         });
 
     Target UnitTests => _ => _
-        .DependsOn(Compile)
         .Executes(() =>
         {
             Log.Verbose("Running all unit tests");
         });
 
-    Target Install => _ => _
+    
+    Target Publish => _ => _
         .DependsOn(UnitTests)
+        .Executes(() =>
+        {
+            // [TO20250103] .NET RID Catalog - https://learn.microsoft.com/en-us/dotnet/core/rid-catalog
+            string runtime = IsLinux() ? "linux-x64" : "win-x64";
+            DotNetPublish(s => s
+                .SetProject(CliProject)
+                .SetPublishSingleFile(true)
+                .SetProperty("DebugType", "embedded")
+                .SetProperty("IncludeNativeLibrariesForSelfExtract", "true")
+                .SetOutput(ArtifactsDirectory)
+                .SetSelfContained(true)
+                .SetFramework("net8.0")
+                .SetRuntime(runtime)
+                .SetConfiguration(Configuration)
+                .SetAssemblyVersion(GitVer.AssemblySemVer)
+                .SetFileVersion(GitVer.AssemblySemFileVer)
+                .SetInformationalVersion(GitVer.InformationalVersion)
+                .SetVerbosity(DotNetVerbosity.minimal)
+                .SetNoLogo(true)
+            );
+        });
+    
+    Target Install => _ => _
+        .DependsOn(Publish)
         .Executes(() =>
         {
             var installDir = IsLinux() ?  "~/.local/bin/" :  Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
