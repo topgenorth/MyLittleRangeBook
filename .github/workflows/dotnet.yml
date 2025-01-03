@@ -24,7 +24,9 @@ jobs:
           dotnet-version: 8.0.x
           cache: false 
       - name: Install NUKE build tool
-        run: dotnet tool install Nuke.GlobalTool --global        
+        run: dotnet tool install Nuke.GlobalTool --global
+      - name: Install GitVersion
+        run: nuke :add-package GitVersion.Tool
       - name: Build
         run: ./build.sh compile
 
