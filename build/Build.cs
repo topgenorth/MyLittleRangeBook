@@ -67,7 +67,7 @@ partial class Build : NukeBuild
 
             DotNetBuild(s =>
             {
-                return s.SetProjectFile(Solution)
+                return s.SetProjectFile(XeroReaderCliProject)
                     .SetConfiguration(Configuration)
                     .SetFramework("net8.0")
                     .SetRuntime(runtime)
