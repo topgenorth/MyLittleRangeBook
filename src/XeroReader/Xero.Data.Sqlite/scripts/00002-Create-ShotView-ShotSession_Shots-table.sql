@@ -17,4 +17,4 @@ CREATE TABLE shotview_shots
 
 CREATE UNIQUE INDEX shotview_shots_shotview_session_id_shot_number_uindex
     ON shotview_shots (shotview_session_id, shot_number);
-CREATE INDEX shotview_shots_modification_date_id on shotview_shots(modification_date);
+CREATE INDEX shotview_shots_modification_date_id on shotview_shots (modification_date);

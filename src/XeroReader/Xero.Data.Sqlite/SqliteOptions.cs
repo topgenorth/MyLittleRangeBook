@@ -1,29 +1,28 @@
 using System.IO;
 
-namespace net.opgenorth.xero.data.sqlite
+namespace net.opgenorth.xero.data.sqlite;
+
+public class SqliteOptions
 {
-    public class SqliteOptions
-    {
-        /// <summary>
-        ///     The name of the .sqlite database file (excluding the directory).
-        /// </summary>
-        public const string DefaultFileName = "garmin-shotview.sqlite";
+    /// <summary>
+    ///     The name of the .sqlite database file (excluding the directory).
+    /// </summary>
+    public const string DefaultFileName = "garmin-shotview.sqlite";
 
-        /// <summary>
-        ///     The configuration key to get the directory for the Sqlite database.
-        /// </summary>
-        // Sqlite:DataDirectory
-        public const string ConfigSection = "Sqlite";
+    /// <summary>
+    ///     The configuration key to get the directory for the Sqlite database.
+    /// </summary>
+    // Sqlite:DataDirectory
+    public const string ConfigSection = "Sqlite";
 
-        /// <summary>
-        ///     The directory holding the .sqlite file.
-        /// </summary>
-        public string DataDirectory { get; set; }
+    /// <summary>
+    ///     The directory holding the .sqlite file.
+    /// </summary>
+    public string DataDirectory { get; set; }
 
-        public string SqliteFile => Path.Combine(string.IsNullOrEmpty(DataDirectory) ? string.Empty : DataDirectory,
-            DefaultFileName);
+    public string SqliteFile => Path.Combine(string.IsNullOrEmpty(DataDirectory) ? string.Empty : DataDirectory,
+        DefaultFileName);
 
-        public override string ToString() => SqliteFile;
-        public override int GetHashCode() => SqliteFile.GetHashCode();
-    }
+    public override string ToString() => SqliteFile;
+    public override int GetHashCode() => SqliteFile.GetHashCode();
 }
