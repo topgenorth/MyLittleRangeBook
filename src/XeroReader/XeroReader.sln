@@ -6,6 +6,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub actions", "GitHub ac
 	ProjectSection(SolutionItems) = preProject
 		..\..\.github\workflows\codeql-analysis.yml = ..\..\.github\workflows\codeql-analysis.yml
 		..\..\.github\workflows\ci.yml = ..\..\.github\workflows\ci.yml
+		..\..\.github\workflows\dotnet-nuke-setup.yml = ..\..\.github\workflows\dotnet-nuke-setup.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xero.Model", "Xero.Model\Xero.Model.csproj", "{6D541111-4FAE-42BC-8D6D-A2B0E2C538C2}"

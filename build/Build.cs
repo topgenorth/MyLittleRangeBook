@@ -12,12 +12,12 @@ using Nuke.Common.Tools.GitVersion;
 using Serilog;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
-[GitHubActions(
-    "ci",
-    GitHubActionsImage.UbuntuLatest,
-    FetchDepth = 0,
-    On = new[] { GitHubActionsTrigger.Push },
-    InvokedTargets = new[] { nameof(Compile) })]
+// [GitHubActions(
+//     "ci",
+//     GitHubActionsImage.UbuntuLatest,
+//     FetchDepth = 0,
+//     On = new[] { GitHubActionsTrigger.Push },
+//     InvokedTargets = new[] { nameof(Compile) })]
 partial class Build : NukeBuild
 {
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
