@@ -10,13 +10,16 @@ using Nuke.Common.ProjectModel;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitVersion;
 using Serilog;
-using static Nuke.Common.Tools.DotNet.DotNetTasks; 
+using static Nuke.Common.Tools.DotNet.DotNetTasks;
+
+[GitHubActions(
+    "ci",
+    GitHubActionsImage.UbuntuLatest,
+    FetchDepth = 0,
+    On = new[] { GitHubActionsTrigger.Push },
+    InvokedTargets = new[] { nameof(Compile) })]
 partial class Build : NukeBuild
 {
-    const string MasterBranch = "master";
-    const string DevelopBranch = "develop";
-    readonly AbsolutePath ArtifactsDirectory = RootDirectory / "artifacts";
-
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
@@ -27,6 +30,7 @@ partial class Build : NukeBuild
     
     [Parameter("Installation directory for the 'install' target.")]
     AbsolutePath InstallDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "MyLittleRangeBook");
+    readonly AbsolutePath ArtifactsDirectory = RootDirectory / "artifacts";
     AbsolutePath OutputDirectory => RootDirectory / "output";
     AbsolutePath XeroReaderSolutionDirectory => RootDirectory / "src/XeroReader";
     AbsolutePath PublishDirectory => OutputDirectory / "publish";
