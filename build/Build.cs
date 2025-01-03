@@ -65,18 +65,15 @@ partial class Build : NukeBuild
             
             var runtime = IsLinux() ? "linux-x64" : "win-x64";
 
-            DotNetBuild(s =>
-            {
-                return s.SetProjectFile(XeroReaderCliProject)
-                    .SetConfiguration(Configuration)
-                    .SetFramework("net8.0")
-                    .SetRuntime(runtime)
-                    .SetAssemblyVersion(GitVer.AssemblySemVer)
-                    .SetFileVersion(GitVer.AssemblySemFileVer)
-                    .SetInformationalVersion(GitVer.InformationalVersion)
-                    .SetVerbosity(DotNetVerbosity.minimal)
-                    ;
-            });
+            DotNetBuild(s => s.SetProjectFile(XeroReaderCliProject)
+                .SetNoRestore(false)
+                .SetConfiguration(Configuration)
+                .SetFramework("net8.0")
+                .SetRuntime(runtime)
+                .SetAssemblyVersion(GitVer.AssemblySemVer)
+                .SetFileVersion(GitVer.AssemblySemFileVer)
+                .SetInformationalVersion(GitVer.InformationalVersion)
+                .SetVerbosity(DotNetVerbosity.minimal));
 
             Log.Information("Compiled version {version}, {infoversion}", GitVer.AssemblySemVer, GitVer.InformationalVersion);
         });
