@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.CI.GitHubActions;
@@ -24,6 +25,9 @@ partial class Build : NukeBuild
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+    
+    [Parameter("Installation directory for the 'install' target.")]
+    AbsolutePath InstallDir =  Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile).ToString(), "MyLittleRangeBook");
 
     /// Support plugins are available for:
     /// - JetBrains ReSharper        https://nuke.build/resharper
@@ -119,8 +123,9 @@ partial class Build : NukeBuild
         .DependsOn(Publish)
         .Executes(() =>
         {
-            var installDir = IsLinux() ?  "~/.local/bin/" :  Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            Log.Information("Installing the application to {installDir} ", installDir);
+            AbsolutePath app = IsLinux() ? ArtifactsDirectory / "xeror" : ArtifactsDirectory / "xeror.exe";
+            app.CopyToDirectory(InstallDir, ExistsPolicy.FileOverwrite, createDirectories:true);
+            Log.Information("Installed the application to {installDir} ", InstallDir);
         });
 
     Target Print => _ => _

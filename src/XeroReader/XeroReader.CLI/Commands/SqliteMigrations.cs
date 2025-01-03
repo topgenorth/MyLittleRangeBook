@@ -24,7 +24,7 @@ public class SqliteMigrations
         try
         {
             _sqliteDbKeeper.UpdateDatabase();
-            _logger.Verbose("Updated the database {dbName}", _sqliteDbKeeper.ToString());
+            _logger.Information("Updated the database {dbName}", _sqliteDbKeeper.ToString());
 
             return Task.FromResult(0);
         }
@@ -45,9 +45,8 @@ public class SqliteMigrations
     {
         try
         {
-            _logger.Verbose("Create the database {dbName}", _sqliteDbKeeper.ToString());
             _sqliteDbKeeper.CreateDatabase();
-            _logger.Verbose("Created database {dbName}", _sqliteDbKeeper.ToString());
+            _logger.Information("Created database {dbName}", _sqliteDbKeeper.ToString());
 
             return 0;
         }

@@ -112,6 +112,10 @@
             "Release"
           ]
         },
+        "InstallDir": {
+          "type": "string",
+          "description": "Installation directory for the 'install' target"
+        },
         "Solution": {
           "type": "string",
           "description": "Path to a solution file that is automatically loaded"
