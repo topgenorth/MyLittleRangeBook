@@ -1,4 +1,5 @@
 
+using System;
 using System.IO;
 using Nuke.Common;
 using Nuke.Common.CI;
@@ -64,6 +65,10 @@ partial class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
+            
+            Log.Information("Branch = {Branch}", GitHubActions.Ref);
+            Log.Information("Commit = {Commit}", GitHubActions.Sha);
+            
             DotNetBuild(s =>
             {
                 return s.SetProjectFile(Solution)
