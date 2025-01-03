@@ -4,8 +4,11 @@
     <RootNamespace>net.opgenorth.xero.data.sqlite</RootNamespace>
     <LangVersion>12</LangVersion>
     <IsPackable>false</IsPackable>
-    <AssemblyName>net.opgenorth.xero.data.sqlite</AssemblyName>
     <TargetFrameworks>net8.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
