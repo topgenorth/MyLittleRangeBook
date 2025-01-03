@@ -1,15 +1,29 @@
+using System;
 using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.CI.GitHubActions;
 using Nuke.Common.Git;
 using Nuke.Common.IO;
+using Nuke.Common.ProjectModel;
+using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Tools.GitVersion;
 using Serilog;
 
-class Build : NukeBuild
+using static Nuke.Common.ChangeLog.ChangelogTasks;                                              // CHANGELOG
+using static Nuke.Common.EnvironmentInfo;
+using static Nuke.Common.IO.FileSystemTasks;
+using static Nuke.Common.IO.PathConstruction;
+using static Nuke.Common.Tools.DotNet.DotNetTasks;                                              // DOTNET
+using static Nuke.Common.Tools.MSBuild.MSBuildTasks;                                            // MSBUILD
+using static Nuke.Common.Tools.NuGet.NuGetTasks; 
+
+partial class Build : NukeBuild
 {
+    
+    public static int Main() => Execute<Build>(x => x.Compile);
+
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
-
 
     /// Support plugins are available for:
     /// - JetBrains ReSharper        https://nuke.build/resharper
@@ -19,11 +33,17 @@ class Build : NukeBuild
 
     [GitRepository] readonly GitRepository Repository;
     [CI] readonly GitHubActions GitHubActions;
+    [Solution] readonly Solution Solution;     
+    [GitVersion] readonly GitVersion GitVersion;
+    
     const string MasterBranch = "master";
     const string DevelopBranch = "develop";
+    
     AbsolutePath OutputDirectory => RootDirectory / "output";
     AbsolutePath SourceDirectory => RootDirectory / "src/XeroReader";
-
+    readonly AbsolutePath ArtifactsDirectory = RootDirectory / "artifacts";
+    
+    string ChangelogFile => RootDirectory / "CHANGELOG.md";   
     Target Clean => _ => _
         .Before(Restore)
         .Executes(() =>
@@ -31,19 +51,31 @@ class Build : NukeBuild
             Log.Debug("Cleaning the solution: {source}", SourceDirectory);
             SourceDirectory.GlobDirectories("*/bin", "*/obj").DeleteDirectories();
             OutputDirectory.CreateOrCleanDirectory();
+            ArtifactsDirectory.CreateOrCleanDirectory();
         });
 
     Target Restore => _ => _
+        .DependsOn(Clean)
         .Executes(() =>
         {
-            Log.Verbose("Restoring dependencies.");
+            DotNetRestore(s => s.SetProjectFile(Solution));
         });
 
     Target Compile => _ => _
         .DependsOn(Restore)
         .Executes(() =>
         {
-            Log.Verbose("Compile the solution.");
+            DotNetBuild(s =>
+            {
+                return s.SetProjectFile(Solution)
+                    .SetConfiguration(Configuration)
+                    .SetAssemblyVersion(GitVersion.AssemblySemVer)
+                    .SetFileVersion(GitVersion.AssemblySemFileVer)
+                    .SetInformationalVersion(GitVersion.InformationalVersion)
+                    .SetVerbosity(DotNetVerbosity.quiet)
+                    .SetNoLogo(true)
+                    .EnableNoRestore();
+            });
         });
 
     Target UnitTests => _ => _
@@ -55,10 +87,9 @@ class Build : NukeBuild
 
     Target Install => _ => _
         .DependsOn(UnitTests)
-        .Requires(() => Repository.IsOnMainOrMasterBranch())
         .Executes(() =>
         {
-            var installDir = "~/.local/bin/";
+            var  installDir = IsLinux() ?  "~/.local/bin/" :  Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             Log.Information("Installing the application to {installDir} ", installDir);
         });
 
@@ -78,5 +109,4 @@ class Build : NukeBuild
             Log.Information("SSH URL = {Value}", Repository.SshUrl);
         });
 
-    public static int Main() => Execute<Build>(x => x.Compile);
 }
