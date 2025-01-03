@@ -21,25 +21,16 @@ partial class Build : NukeBuild
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
     [CI] readonly GitHubActions GitHubActions;
-    [GitVersion] readonly GitVersion GitVer;
-
-    /// Support plugins are available for:
-    /// - JetBrains ReSharper        https://nuke.build/resharper
-    /// - JetBrains Rider            https://nuke.build/rider
-    /// - Microsoft VisualStudio     https://nuke.build/visualstudio
-    /// - Microsoft VSCode           https://nuke.build/vscode
-    [GitRepository]
-    readonly GitRepository Repository;
-
+    [GitVersion(NoFetch = true)] readonly GitVersion GitVer;
+    [GitRepository] readonly GitRepository Repository;
     [Solution] readonly Solution Solution;
-
+    
     [Parameter("Installation directory for the 'install' target.")]
     AbsolutePath InstallDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "MyLittleRangeBook");
-
     AbsolutePath OutputDirectory => RootDirectory / "output";
-    AbsolutePath SolutionDirectory => RootDirectory / "src/XeroReader";
+    AbsolutePath XeroReaderSolutionDirectory => RootDirectory / "src/XeroReader";
     AbsolutePath PublishDirectory => OutputDirectory / "publish";
-    AbsolutePath CliProject => SolutionDirectory / "XeroReader.CLI" / "XeroReader.CLI.csproj";
+    AbsolutePath XeroReaderCliProject => XeroReaderSolutionDirectory / "XeroReader.CLI" / "XeroReader.CLI.csproj";
 
     string ChangelogFile => RootDirectory / "CHANGELOG.md";
 
@@ -47,8 +38,8 @@ partial class Build : NukeBuild
         .Before(Restore)
         .Executes(() =>
         {
-            Log.Debug("Cleaning the solution: {source}", SolutionDirectory);
-            SolutionDirectory.GlobDirectories("*/bin", "*/obj").DeleteDirectories();
+            Log.Debug("Cleaning the solution: {source}", XeroReaderSolutionDirectory);
+            XeroReaderSolutionDirectory.GlobDirectories("*/bin", "*/obj").DeleteDirectories();
             OutputDirectory.CreateOrCleanDirectory();
             ArtifactsDirectory.CreateOrCleanDirectory();
         });
@@ -99,7 +90,7 @@ partial class Build : NukeBuild
             // [TO20250103] .NET RID Catalog - https://learn.microsoft.com/en-us/dotnet/core/rid-catalog
             var runtime = IsLinux() ? "linux-x64" : "win-x64";
             DotNetPublish(s => s
-                .SetProject(CliProject)
+                .SetProject(XeroReaderCliProject)
                 .SetPublishSingleFile(true)
                 .SetProperty("DebugType", "embedded")
                 .SetProperty("IncludeNativeLibrariesForSelfExtract", "true")
