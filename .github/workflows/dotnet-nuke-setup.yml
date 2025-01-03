@@ -5,9 +5,11 @@ on:
     inputs:
       dotnet-version:
         description: 'The .NET version to setup'
+        type: string
         required: true
         default: '8.0.x'
       nuke-target:
+        type: string
         description: 'The NUKE target to run'
         required: true
         default: 'Compile'
