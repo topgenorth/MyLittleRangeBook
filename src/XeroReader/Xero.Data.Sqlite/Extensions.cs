@@ -15,6 +15,7 @@ public static class Extensions
     /// <returns></returns>
     public static IHostApplicationBuilder AddSqliteDatabase(this IHostApplicationBuilder builder)
     {
+        SQLitePCL.Batteries.Init();
         IConfigurationManager c = builder.Configuration;
         IConfigurationSection x = c.GetSection(SqliteOptions.ConfigSection);
 

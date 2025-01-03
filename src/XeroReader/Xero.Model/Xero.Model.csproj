@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <RootNamespace>net.opgenorth.xero.device</RootNamespace>
-    <LangVersion>13</LangVersion>
+    <LangVersion>12</LangVersion>
     <IsPackable>false</IsPackable>
     <TargetFrameworks>net8.0</TargetFrameworks>
   </PropertyGroup>

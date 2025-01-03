@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <RootNamespace>net.opgenorth.xero.data.sqlite</RootNamespace>
-    <LangVersion>13</LangVersion>
+    <LangVersion>12</LangVersion>
     <IsPackable>false</IsPackable>
     <AssemblyName>net.opgenorth.xero.data.sqlite</AssemblyName>
     <TargetFrameworks>net8.0</TargetFrameworks>
@@ -18,10 +18,12 @@
     <PackageReference Include="dbup" Version="5.0.41"/>
     <PackageReference Include="dbup-sqlite" Version="6.0.1"/>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2"/>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0"/>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0"/>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
     <PackageReference Include="Serilog" Version="4.2.0"/>
+    <PackageReference Include="SQLitePCLRaw.bundle_winsqlite3" Version="2.1.10" />
   </ItemGroup>
 
   <ItemGroup>

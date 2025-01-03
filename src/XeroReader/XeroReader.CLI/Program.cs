@@ -8,9 +8,14 @@ using net.opgenorth.xero.Commands.ShotViewExcelWorkbook;
 using net.opgenorth.xero.data.sqlite;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+#if DEBUG
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", true)
     .AddJsonFile($"appsettings.{Environments.Development}.json", true);
+#else
+builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", true)
+#endif
 
 
 builder.Services.AddSerilog(lc =>

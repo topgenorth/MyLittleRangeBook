@@ -10,7 +10,7 @@
     <Version>0.0.0</Version>
     <Company>Opgenorth Holdings Ltd.</Company>
     <Product>XeroReader</Product>
-    <LangVersion>13</LangVersion>
+    <LangVersion>12</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
