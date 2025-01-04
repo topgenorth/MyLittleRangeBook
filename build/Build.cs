@@ -110,9 +110,9 @@ partial class Build : NukeBuild
         .DependsOn(Publish)
         .Executes(() =>
         {
-            var app = IsLinux() ? ArtifactsDirectory / "xeror" : ArtifactsDirectory / "xeror.exe";
+            var app = IsLinux() ? OutputDirectory / "xeror" : ArtifactsDirectory / "xeror.exe";
+            InstallDir.CreateDirectory();
             app.CopyToDirectory(InstallDir, ExistsPolicy.FileOverwrite, createDirectories: true);
-            Log.Information("Installed the application to {installDir} ", InstallDir);
         });
 
     Target Print => _ => _
