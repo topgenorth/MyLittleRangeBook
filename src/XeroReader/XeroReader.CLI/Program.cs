@@ -14,7 +14,7 @@ builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile($"appsettings.{Environments.Development}.json", true);
 #else
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", true)
+    .AddJsonFile("appsettings.json", true);
 #endif
 
 
