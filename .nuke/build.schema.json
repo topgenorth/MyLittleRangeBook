@@ -29,8 +29,7 @@
         "Install",
         "Print",
         "Publish",
-        "Restore",
-        "UnitTests"
+        "Restore"
       ]
     },
     "Verbosity": {

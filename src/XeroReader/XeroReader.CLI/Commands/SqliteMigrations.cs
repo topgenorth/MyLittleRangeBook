@@ -47,7 +47,6 @@ public class SqliteMigrations
         {
             _sqliteDbKeeper.CreateDatabase();
             _logger.Information("Created database {dbName}", _sqliteDbKeeper.ToString());
-
             return 0;
         }
         catch (Exception e)

@@ -60,9 +60,6 @@ partial class Build : NukeBuild
         .DependsOn(Restore)
         .Executes(() =>
         {
-            Log.Information("Branch = {Branch}", GitHubActions.Ref);
-            Log.Information("Commit = {Commit}", GitHubActions.Sha);
-            
             var runtime = IsLinux() ? "linux-x64" : "win-x64";
 
             DotNetBuild(s => s.SetProjectFile(XeroReaderCliProject)

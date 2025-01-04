@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,7 +16,6 @@ public static class Extensions
     /// <returns></returns>
     public static IHostApplicationBuilder AddSqliteDatabase(this IHostApplicationBuilder builder)
     {
-        SQLitePCL.Batteries.Init();
         IConfigurationManager c = builder.Configuration;
         IConfigurationSection x = c.GetSection(SqliteOptions.ConfigSection);
 
