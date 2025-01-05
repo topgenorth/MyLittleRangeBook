@@ -28,8 +28,6 @@ partial class Build : NukeBuild
     [GitRepository] readonly GitRepository Repository;
     [Solution] readonly Solution Solution;
     
-    [Parameter("Installation directory for the 'install' target.")]
-    AbsolutePath InstallDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "MyLittleRangeBook");
     readonly AbsolutePath ArtifactsDirectory = RootDirectory / "artifacts";
     AbsolutePath OutputDirectory => RootDirectory / "output";
     AbsolutePath XeroReaderSolutionDirectory => RootDirectory / "src/XeroReader";
@@ -46,6 +44,7 @@ partial class Build : NukeBuild
             XeroReaderSolutionDirectory.GlobDirectories("*/bin", "*/obj").DeleteDirectories();
             OutputDirectory.CreateOrCleanDirectory();
             ArtifactsDirectory.CreateOrCleanDirectory();
+            PublishDirectory.CreateOrCleanDirectory();
         });
 
     Target Restore => _ => _
@@ -84,7 +83,7 @@ partial class Build : NukeBuild
                 .SetProject(XeroReaderCliProject)
                 .SetConfiguration(Configuration)
                 .SetNoRestore(false)
-                .SetOutput(OutputDirectory)
+                .SetOutput(PublishDirectory)
                 .SetFramework("net8.0")
                 .SetRuntime(runtime)
                 .SetAssemblyVersion(GitVer.AssemblySemVer)
@@ -105,16 +104,7 @@ partial class Build : NukeBuild
                 OutputDirectory);
 
         });
-
-    Target Install => _ => _
-        .DependsOn(Publish)
-        .Executes(() =>
-        {
-            var app = IsLinux() ? OutputDirectory / "xeror" : ArtifactsDirectory / "xeror.exe";
-            InstallDir.CreateDirectory();
-            app.CopyToDirectory(InstallDir, ExistsPolicy.FileOverwrite, createDirectories: true);
-        });
-
+    
     Target Print => _ => _
         .Executes(() =>
         {
