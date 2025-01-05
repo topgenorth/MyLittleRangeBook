@@ -20,10 +20,9 @@ namespace net.opgenorth.xero.shotview
         public static string GetAppNameAndVersion()
         {
             string[] args = Environment.GetCommandLineArgs();
-            string location = Environment.GetCommandLineArgs()[0];
+            string location = Environment.ProcessPath;
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(location);
-
-            return fvi is null ? location : $"{fvi.ProductName} {fvi.ProductVersion}";
+            return $"{fvi.ProductName} {fvi.ProductVersion}";
         }
 
         public static string CenterString(this string stringToCenter, int totalLength) => stringToCenter.PadLeft(
