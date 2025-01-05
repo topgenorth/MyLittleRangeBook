@@ -1,6 +1,3 @@
-
-using System;
-using System.IO;
 using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.CI.GitHubActions;
@@ -15,11 +12,10 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 // [GitHubActions(
 //     "ci",
 //     GitHubActionsImage.UbuntuLatest,
-//     FetchDepth = 0,
-//     On = new[] { GitHubActionsTrigger.Push },
-//     InvokedTargets = new[] { nameof(Compile) })]
 partial class Build : NukeBuild
 {
+    readonly AbsolutePath ArtifactsDirectory = RootDirectory / "artifacts";
+
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
@@ -27,17 +23,15 @@ partial class Build : NukeBuild
     [GitVersion(NoFetch = true)] readonly GitVersion GitVer;
     [GitRepository] readonly GitRepository Repository;
     [Solution] readonly Solution Solution;
-    
-    readonly AbsolutePath ArtifactsDirectory = RootDirectory / "artifacts";
-    AbsolutePath OutputDirectory => RootDirectory / "output";
     AbsolutePath XeroReaderSolutionDirectory => RootDirectory / "src/XeroReader";
-    AbsolutePath PublishDirectory => OutputDirectory / "publish";
     AbsolutePath XeroReaderCliProject => XeroReaderSolutionDirectory / "XeroReader.CLI" / "XeroReader.CLI.csproj";
-
-    string ChangelogFile => RootDirectory / "CHANGELOG.md";
+    AbsolutePath OutputDirectory => RootDirectory / "output";
+    AbsolutePath PublishDirectory => RootDirectory / "publish";
+    AbsolutePath ChangelogFile => RootDirectory / "CHANGELOG.md";
 
     Target Clean => _ => _
         .Before(Restore)
+        .Before(Publish)
         .Executes(() =>
         {
             Log.Debug("Cleaning the solution: {source}", XeroReaderSolutionDirectory);
@@ -63,6 +57,7 @@ partial class Build : NukeBuild
 
             DotNetBuild(s => s.SetProjectFile(XeroReaderCliProject)
                 .SetNoRestore(false)
+                .SetOutputDirectory(OutputDirectory)
                 .SetConfiguration(Configuration)
                 .SetFramework("net8.0")
                 .SetRuntime(runtime)
@@ -71,7 +66,9 @@ partial class Build : NukeBuild
                 .SetInformationalVersion(GitVer.InformationalVersion)
                 .SetVerbosity(DotNetVerbosity.minimal));
 
-            Log.Information("Compiled version {version}, {infoversion}", GitVer.AssemblySemVer, GitVer.InformationalVersion);
+            Log.Information("Compiled version {version}, {infoversion}",
+                GitVer.AssemblySemVer,
+                GitVer.InformationalVersion);
         });
 
     Target Publish => _ => _
@@ -79,32 +76,29 @@ partial class Build : NukeBuild
         {
             // [TO20250103] .NET RID Catalog - https://learn.microsoft.com/en-us/dotnet/core/rid-catalog
             var runtime = IsLinux() ? "linux-x64" : "win-x64";
-            DotNetPublish(s => s
-                .SetProject(XeroReaderCliProject)
-                .SetConfiguration(Configuration)
+            DotNetPublish(s => s.SetProject(XeroReaderCliProject)
                 .SetNoRestore(false)
                 .SetOutput(PublishDirectory)
+                .SetConfiguration(Configuration)
                 .SetFramework("net8.0")
                 .SetRuntime(runtime)
                 .SetAssemblyVersion(GitVer.AssemblySemVer)
                 .SetFileVersion(GitVer.AssemblySemFileVer)
                 .SetInformationalVersion(GitVer.InformationalVersion)
                 .SetVerbosity(DotNetVerbosity.minimal)
-                .SetNoLogo(true)
                 .SetPublishSingleFile(true)
                 .SetPublishTrimmed(false)
                 .SetSelfContained(true)
                 .SetProperty("DebugType", "embedded")
                 .SetProperty("IncludeNativeLibrariesForSelfExtract", "true")
             );
-            
-            Log.Information("Published version {version}, {infoversion} to {outputdirectory}", 
-                GitVer.AssemblySemVer, 
-                GitVer.InformationalVersion,
-                OutputDirectory);
 
+            Log.Information("Published version {version}, {infoversion} to {publishDirectory}",
+                GitVer.AssemblySemVer,
+                GitVer.InformationalVersion,
+                PublishDirectory);
         });
-    
+
     Target Print => _ => _
         .Executes(() =>
         {
@@ -123,3 +117,9 @@ partial class Build : NukeBuild
 
     public static int Main() => Execute<Build>(x => x.Compile);
 }
+
+//     FetchDepth = 0,
+
+//     On = new[] { GitHubActionsTrigger.Push },
+
+//     InvokedTargets = new[] { nameof(Compile) })]

@@ -18,9 +18,22 @@ builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
 #endif
 
 
-builder.Services.AddSerilog(lc =>
-    lc.ReadFrom.Configuration(builder.Configuration)
-);
+string appSettingsJson = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+if (!File.Exists(appSettingsJson))
+{
+    builder.Services.AddSerilog(lc =>
+    {
+        lc.WriteTo.Console()
+            .Enrich.WithProperty("ApplicationName", "xeror")
+            .MinimumLevel.Verbose();
+    });
+}
+else
+{
+    builder.Services.AddSerilog(lc =>
+        lc.ReadFrom.Configuration(builder.Configuration)
+    );
+}
 
 builder.AddSqliteDatabase();
 builder.Services.AddWorksheetSqlite();

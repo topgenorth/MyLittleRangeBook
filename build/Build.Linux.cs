@@ -25,15 +25,20 @@ public partial class Build
             var publishedApp = PublishDirectory / LINUX_APP_NAME;
             var installDir = UsersHomeDir / INSTALL_SUBDIRECTORY;
             var installedApp = installDir / LINUX_APP_NAME;
-            AbsolutePath localBinDir = Path.Combine( UsersHomeDir, ".local", "bin" );
+            AbsolutePath localBinDir = Path.Combine(UsersHomeDir, ".local", "bin");
             var symLink = Path.Combine(localBinDir, LINUX_APP_NAME);
-            
+
+            if (File.Exists(symLink))
+            {
+                File.Delete(symLink);
+                Log.Information("Deleting symlink {symLink}", symLink);
+            }
+
             #region Copy the app to ~/.mlrb
             installDir.CreateDirectory();
             publishedApp.CopyToDirectory(installDir, ExistsPolicy.FileOverwrite, createDirectories: true);
             Log.Debug("Copied the app from {publishedApp} to {installDir}.", publishedApp, installDir);
             #endregion
-
 
             #region Create ~/.local/bin if necessary
             if (!Directory.Exists(localBinDir))

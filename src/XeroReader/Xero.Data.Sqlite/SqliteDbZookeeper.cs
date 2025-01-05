@@ -4,58 +4,59 @@ using DbUp.Engine;
 using Microsoft.Extensions.Options;
 using Serilog;
 
-namespace net.opgenorth.xero.data.sqlite;
-
-public class SqliteDbZookeeper : IDbZookeeper
+namespace net.opgenorth.xero.data.sqlite
 {
-    private readonly ILogger _logger;
-    private readonly FileInfo _sqliteFile;
-
-    public SqliteDbZookeeper(ILogger logger, IOptionsSnapshot<SqliteOptions> options)
+    public class SqliteDbZookeeper : IDbZookeeper
     {
-        _logger = logger;
-        _sqliteFile = new FileInfo(options.Value.SqliteFile);
-        ConnectionString = options.Value.MakeSqliteConnectionString();
-        _logger.Verbose("Connection string {connectionString}", ConnectionString);
-    }
+        readonly ILogger _logger;
+        readonly FileInfo _sqliteFile;
 
-    public string ConnectionString { get; }
-
-    public string SqliteFile => _sqliteFile.FullName;
-
-    /// <summary>
-    ///     Runs the migrations on the <b>.sqlite</b> file.
-    /// </summary>
-    public void UpdateDatabase()
-    {
-        UpgradeEngine deployer = DeployChanges.To
-            .SqliteDatabase(ConnectionString)
-            .LogToConsole()
-            .WithScriptsEmbeddedInAssembly(GetType().Assembly)
-            .Build();
-
-        deployer.PerformUpgrade();
-    }
-
-    /// <summary>
-    ///     Will delete the <b>.sqlite</b> file if it exists, create a new one, and apply migrations.
-    /// </summary>
-    public void CreateDatabase()
-    {
-        if (_sqliteFile.Exists)
+        public SqliteDbZookeeper(ILogger logger, IOptionsSnapshot<SqliteOptions> options)
         {
-            _logger.Verbose("Deleting file at {FileToDelete}", _sqliteFile.FullName);
-            _sqliteFile.Delete();
-        }
-        else
-        {
-            _logger.Verbose("No database exists at {FileToDelete}", _sqliteFile.FullName);
+            _logger = logger;
+            _sqliteFile = new FileInfo(options.Value.SqliteFile);
+            ConnectionString = options.Value.MakeSqliteConnectionString();
+            _logger.Verbose("Connection string {connectionString}", ConnectionString);
         }
 
-        UpdateDatabase();
+        public string ConnectionString { get; }
+
+        public string SqliteFile => _sqliteFile.FullName;
+
+        /// <summary>
+        ///     Runs the migrations on the <b>.sqlite</b> file.
+        /// </summary>
+        public void UpdateDatabase()
+        {
+            UpgradeEngine deployer = DeployChanges.To
+                .SqliteDatabase(ConnectionString)
+                .LogToConsole()
+                .WithScriptsEmbeddedInAssembly(GetType().Assembly)
+                .Build();
+
+            deployer.PerformUpgrade();
+        }
+
+        /// <summary>
+        ///     Will delete the <b>.sqlite</b> file if it exists, create a new one, and apply migrations.
+        /// </summary>
+        public void CreateDatabase()
+        {
+            if (_sqliteFile.Exists)
+            {
+                _logger.Verbose("Deleting file at {FileToDelete}", _sqliteFile.FullName);
+                _sqliteFile.Delete();
+            }
+            else
+            {
+                _logger.Verbose("No database exists at {FileToDelete}", _sqliteFile.FullName);
+            }
+
+            UpdateDatabase();
+        }
+
+        public override int GetHashCode() => _sqliteFile.GetHashCode();
+
+        public override string ToString() => _sqliteFile.FullName;
     }
-
-    public override int GetHashCode() => _sqliteFile.GetHashCode();
-
-    public override string ToString() => _sqliteFile.FullName;
 }
