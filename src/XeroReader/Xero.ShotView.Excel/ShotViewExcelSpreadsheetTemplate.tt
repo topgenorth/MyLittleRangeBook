@@ -1,0 +1,28 @@
+<#@ template language="C#" #>
+
+--
+<#= AppVersion #>
+ShotView Export File: <#= _shotSession.FileName #>, Sheet #: <#= _shotSession.SheetNumber #>
+Session Date: <#= _shotSession.DateTimeUtc.ToString("O") #>
+
+Notes:
+<#= _shotSession.Notes #>
+
+Number of Shots: <#= _shotSession.ShotCount #>
+Average Velocity: <#= _shotSession.AverageSpeed #>
+Std Dev: <#= _shotSession.StandardDeviation #>
+ES: <#= _shotSession.ExtremeSpread #>
+
+Session:
+
+Shot #  Velocity   Notes
+------  --------   --------------------
+<#
+    foreach (var shot in _shotSession.Shots)
+    {
+#>
+<#= shot.ShotNumber.ToString().CenterString(6) #>  <#= shot.Speed.ToString() #>   <#= shot.Notes.CenterString(50) #>
+<#
+    }
+#>
+--

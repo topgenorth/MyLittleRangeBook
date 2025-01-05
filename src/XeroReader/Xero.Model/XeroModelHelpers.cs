@@ -1,6 +1,5 @@
-namespace net.opgenorth.xero.device
+namespace net.opgenorth.xero.device;
+
+public static class XeroModelHelpers
 {
-    public static class XeroModelHelpers
-    {
-    }
 }

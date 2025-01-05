@@ -3,59 +3,73 @@ using System.Collections.Generic;
 using System.Linq;
 using NanoidDotNet;
 
-namespace net.opgenorth.xero.device
+namespace net.opgenorth.xero.device;
+
+/// <summary>
+///     A session holds data about a single Xero shooting session.
+/// </summary>
+public class ShotSession
 {
-    public class ShotSession
+    private readonly ShotCollection _shots = [];
+
+#pragma warning disable CS0414 // Field is assigned but its value is never used
+    private readonly uint _xeroSerialNumber;
+#pragma warning restore CS0414 // Field is assigned but its value is never used
+
+    public ShotSession()
     {
-        readonly ShotCollection _shots = new ShotCollection();
+        Id = Nanoid.Generate();
+        _xeroSerialNumber = 0;
+        FileName = string.Empty;
+        ProjectileType = "Rifle";
+        Notes = string.Empty;
+        ProjectileUnits = "grains";
+        VelocityUnits = "fps";
+    }
 
-        readonly uint _xeroSerialNumber;
+    public string Id { get; set; }
 
-        public ShotSession()
+    public string FileName { get; set; }
+
+    public DateTime DateTimeUtc { get; set; }
+    public int ShotCount => _shots.Count;
+    public int ProjectileWeight { get; set; }
+    public string ProjectileType { get; set; }
+    public string Units => _shots.MaxSpeed.Units;
+
+    public float AverageSpeed => _shots.AverageSpeed;
+
+    public float ExtremeSpread => _shots.Max(s => s.Speed) - _shots.Min(s => s.Speed);
+
+    public double StandardDeviation => _shots.StandardDeviation;
+
+    public IEnumerable<Shot> Shots => _shots;
+    public uint SerialNumber { get; set; }
+
+    public string Notes { get; set; }
+    public string ProjectileUnits { get; set; }
+    public string VelocityUnits { get; set; }
+
+    public void AddShot(Shot shot)
+    {
+        if (_shots.Contains(shot))
+            // TODO [TO20240928] Could check the .Id value, if these are the same, then "add" becomes "replace".
         {
-            Id = Nanoid.Generate();
-            _xeroSerialNumber = 0;
-            FileName = string.Empty;
-            ProjectileType = "Rifle";
-            Notes = string.Empty;
+            throw new ArgumentException($"The collection already has a shot number {shot.ShotNumber}");
         }
 
-        public string Id { get; }
+        _shots.Add(shot);
+    }
 
-        public string FileName { get; set; }
+    public void Mutate(Action<ShotSession> mutator) => mutator(this);
 
-        public DateTime SessionTimestamp { get; set; }
-        public int ShotCount => _shots.Count;
-        public float ProjectileWeight { get; set; }
-        public string ProjectileType { get; set; }
-        public string Units => _shots.MaxSpeed.Units;
-
-        public float AverageSpeed => _shots.AverageSpeed;
-
-        public float ExtremeSpread => _shots.Max(s => s.Speed) - _shots.Min(s => s.Speed);
-
-        public double StandardDeviation => _shots.StandardDeviation;
-
-        public IEnumerable<Shot> Shots => _shots;
-        public uint SerialNumber { get; set; }
-
-        public void AddShot(Shot shot)
+    public void Mutate(List<Action<ShotSession>> mutators)
+    {
+        foreach (Action<ShotSession> mutator in mutators)
         {
-            if (_shots.Contains(shot))
-                // TODO [TO20240928] Could check the .Id value, if these are the same, then "add" becomes "replace".
-            {
-                throw new ArgumentException($"The collection already has a shot number {shot.ShotNumber}");
-            }
-
-            _shots.Add(shot);
-        }
-
-        public string Notes { get; set; }
-
-        public override string ToString()
-        {
-            return
-                $"{Id}: {_shots}";
+            mutator(this);
         }
     }
+
+    public override string ToString() => $"{Id}: {_shots}";
 }

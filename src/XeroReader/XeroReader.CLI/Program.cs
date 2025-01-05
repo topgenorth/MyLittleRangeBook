@@ -1,27 +1,56 @@
-﻿
-using ConsoleAppFramework;
+﻿using ConsoleAppFramework;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using net.opgenorth.xero;
-using net.opgenorth.xero.ImportFitFiles;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using net.opgenorth.xero.Commands;
+using net.opgenorth.xero.Commands.ShotViewExcelWorkbook;
+using net.opgenorth.xero.data.sqlite;
 
-await using var log = new LoggerConfiguration()
-    .MinimumLevel.Verbose()
-    .WriteTo.Console()
-    .WriteTo.Debug()
-    .CreateLogger();
-Log.Logger = log;
+HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+#if DEBUG
+builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", true)
+    .AddJsonFile($"appsettings.{Environments.Development}.json", true);
+#else
+builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", true);
+#endif
 
-log.Verbose("Boostrapping app.");
-var services = new ServiceCollection();
-services.AddSingleton<ILogger>(log);
 
-using var serviceProvider = services.BuildServiceProvider();
-ConsoleApp.ServiceProvider = serviceProvider;
+string appSettingsJson = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+if (!File.Exists(appSettingsJson))
+{
+    builder.Services.AddSerilog(lc =>
+    {
+        lc.WriteTo.Console()
+            .Enrich.WithProperty("ApplicationName", "xeror")
+            .MinimumLevel.Verbose();
+    });
+}
+else
+{
+    builder.Services.AddSerilog(lc =>
+        lc.ReadFrom.Configuration(builder.Configuration)
+    );
+}
 
-var app = ConsoleApp.Create();
+builder.AddSqliteDatabase();
+builder.Services.AddWorksheetSqlite();
 
-app.Add<SimpleFitReader>("");
-app.Add<ImportFitFile>("import");
+using IHost host = builder.Build();
+using IServiceScope scope = host.Services.CreateScope();
 
-log.Verbose("Start app");
-app.Run(args);
+IServiceProvider? sp = scope.ServiceProvider;
+IOptionsSnapshot<SqliteOptions>? o = scope.ServiceProvider
+    .GetRequiredService<IOptionsSnapshot<SqliteOptions>>();
+
+ILogger log = scope.ServiceProvider.GetRequiredService<ILogger>();
+ConsoleApp.ServiceProvider = scope.ServiceProvider;
+ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
+
+// [TO20241226] Add the CLI.
+app.Add<WorkbookCLI>("worksheet");
+app.Add<SqliteMigrations>("database");
+log.Verbose("Running app");
+await app.RunAsync(args);

@@ -43,3 +43,8 @@ _UpgradeReport_Files/
 Thumbs.db
 Desktop.ini
 .DS_Store
+**/.~lock.*
+/XeroReader.CLI/garmin-shotview.sqlite
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/appsettings.Staging.json

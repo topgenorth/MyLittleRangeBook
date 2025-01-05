@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>net.opgenorth.xero.shotview</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <LangVersion>12</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.104.2"/>
+    <PackageReference Include="LanguageExt.Core" Version="4.4.9"/>
+    <PackageReference Include="Serilog" Version="4.2.0"/>
+    <PackageReference Include="System.CodeDom" Version="9.0.0"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Xero.Data.Sqlite\Xero.Data.Sqlite.csproj"/>
+    <ProjectReference Include="..\Xero.Model\Xero.Model.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="ShotViewExcelSpreadsheetTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ShotViewExcelSpreadsheetTemplate.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="ShotViewExcelSpreadsheetTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ShotViewExcelSpreadsheetTemplate.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.Options">
+      <HintPath>..\..\..\..\..\.nuget\packages\microsoft.extensions.options\9.0.0\lib\net8.0\Microsoft.Extensions.Options.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

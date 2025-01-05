@@ -1,46 +1,57 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <RootNamespace>net.opgenorth.xero</RootNamespace>
-        <AssemblyName>xero</AssemblyName>
-        <Version>0.0.0</Version>
-        <IsPackable>false</IsPackable>
-        <PackageId>xero</PackageId>
-        <Authors>Tom Opgeorth</Authors>
-        <Company>Opgenorth Holdings</Company>
-        <Product>xero</Product>
-    </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>net.opgenorth.xero</RootNamespace>
+    <AssemblyName>xeror</AssemblyName>
+    <Version>0.0.0</Version>
+    <Company>Opgenorth Holdings Ltd.</Company>
+    <Product>XeroReader</Product>
+    <LangVersion>12</LangVersion>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Collector.Serilog.Enrichers.Assembly" Version="1.0.1"/>
-        <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.3.2"/>
-        <PackageReference Include="ConsoleAppFramework" Version="5.2.4">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Garmin.FIT.Sdk" Version="21.141.0"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0"/>
-        <PackageReference Include="Serilog" Version="4.0.1"/>
-        <PackageReference Include="Serilog.Exceptions" Version="8.4.0"/>
-        <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0"/>
-        <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.2"/>
-        <PackageReference Include="Serilog.Sinks.ColoredConsole" Version="3.0.1"/>
-        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0"/>
-        <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0"/>
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Collector.Serilog.Enrichers.Assembly" Version="1.0.1"/>
+    <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.0"/>
+    <PackageReference Include="ConsoleAppFramework" Version="5.3.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Garmin.FIT.Sdk" Version="21.158.0"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0"/>
+    <PackageReference Include="Serilog" Version="4.2.0"/>
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0"/>
+    <PackageReference Include="Serilog.Exceptions" Version="8.4.0"/>
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0"/>
+    <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0"/>
+    <PackageReference Include="Serilog.Sinks.ColoredConsole" Version="3.0.1"/>
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0"/>
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0"/>
+    <PackageReference Include="System.CodeDom" Version="9.0.0"/>
+  </ItemGroup>
 
-    <ItemGroup>
-        <Content Include="..\.gitignore">
-            <Link>.gitignore</Link>
-        </Content>
-    </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\.gitignore">
+      <Link>.gitignore</Link>
+    </Content>
+  </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\Xero.Model\Xero.Model.csproj"/>
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Xero.Data.Sqlite\Xero.Data.Sqlite.csproj"/>
+    <ProjectReference Include="..\Xero.Model\Xero.Model.csproj"/>
+    <ProjectReference Include="..\Xero.ShotView.Excel\Xero.ShotView.Excel.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
 </Project>

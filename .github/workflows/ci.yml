@@ -1,0 +1,10 @@
+name: ci
+
+on: [push]
+
+jobs:
+  build:
+    uses: ./.github/workflows/dotnet-nuke-setup.yml
+    with:
+      dotnet-version: '8.0.x'
+      nuke-target: 'Compile'
