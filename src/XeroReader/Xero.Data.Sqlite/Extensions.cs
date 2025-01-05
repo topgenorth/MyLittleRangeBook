@@ -1,5 +1,5 @@
 using System;
-using System.IO;
+using System.Diagnostics;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,7 +31,17 @@ namespace net.opgenorth.xero.data.sqlite
         {
             string sqliteFile = opt.SqliteFile;
             SqliteConnectionStringBuilder b = new($"Data Source={sqliteFile}");
+
             return b.ConnectionString;
+        }
+
+        public static string GetAppNameAndVersion()
+        {
+            string location = Environment.GetCommandLineArgs()[0];
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(location);
+            string version = fvi.ProductVersion;
+
+            return $"{fvi.ProductName} {version}";
         }
     }
 }

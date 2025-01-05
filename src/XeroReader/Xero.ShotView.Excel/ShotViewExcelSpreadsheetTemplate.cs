@@ -25,23 +25,30 @@ namespace net.opgenorth.xero.shotview
         /// </summary>
         public virtual string TransformText()
         {
-            this.Write("\n--\nShotView Export File: ");
+            this.Write("\n--\n");
             
             #line 4 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(AppVersion));
+            
+            #line default
+            #line hidden
+            this.Write("\nShotView Export File: ");
+            
+            #line 5 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.FileName));
             
             #line default
             #line hidden
             this.Write(", Sheet #: ");
             
-            #line 4 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            #line 5 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.SheetNumber));
             
             #line default
             #line hidden
             this.Write("\nSession Date: ");
             
-            #line 5 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
+            #line 6 "/home/tom/code/MyLittleRangeBook/src/XeroReader/Xero.ShotView.Excel/ShotViewExcelSpreadsheetTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(_shotSession.DateTimeUtc.ToString("O")));
             
             #line default

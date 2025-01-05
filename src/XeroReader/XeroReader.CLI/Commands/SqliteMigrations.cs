@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ConsoleAppFramework;
 using net.opgenorth.xero.data.sqlite;
 
@@ -14,6 +15,14 @@ namespace net.opgenorth.xero.Commands
             _sqliteDbKeeper = (SqliteDbZookeeper)dbz;
         }
 
+        public static string GetAppNameAndVersion()
+        {
+            string[] args = Environment.GetCommandLineArgs();
+            string location = Environment.GetCommandLineArgs()[0];
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(location);
+
+            return fvi is null ? location : $"{fvi.ProductName} {fvi.ProductVersion}";
+        }
 
         /// <summary>
         ///     Runs the migrations on the sqlite file.
@@ -21,6 +30,8 @@ namespace net.opgenorth.xero.Commands
         [Command("upgrade")]
         public Task<int> UpdateDatabase()
         {
+            _logger.Information("{appName}", GetAppNameAndVersion());
+
             try
             {
                 _sqliteDbKeeper.UpdateDatabase();
@@ -43,6 +54,8 @@ namespace net.opgenorth.xero.Commands
         // ReSharper disable once UnusedMember.Global
         public Task<int> CreateDatabase()
         {
+            _logger.Information("{appName}", GetAppNameAndVersion());
+
             try
             {
                 _sqliteDbKeeper.CreateDatabase();

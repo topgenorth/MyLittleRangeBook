@@ -1,9 +1,9 @@
 <#@ template language="C#" #>
 
 --
+<#= AppVersion #>
 ShotView Export File: <#= _shotSession.FileName #>, Sheet #: <#= _shotSession.SheetNumber #>
-Session Date: <#=
-                _shotSession.DateTimeUtc.ToString("O") #>
+Session Date: <#= _shotSession.DateTimeUtc.ToString("O") #>
 
 Notes:
 <#= _shotSession.Notes #>
