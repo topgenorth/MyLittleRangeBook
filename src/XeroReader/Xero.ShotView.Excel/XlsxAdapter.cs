@@ -34,15 +34,23 @@ namespace net.opgenorth.xero.shotview
 
         public WorkbookSession? GetShotSession(int sheetNumber)
         {
-            _workbook = new XLWorkbook(_file.FullName);
+            try
+            {
+                _workbook = new XLWorkbook(_file.FullName);
+            }
+            catch (FileFormatException fex)
+            {
+                _logger.Debug(fex, $"Failed to load sheet {_file.FullName}#{sheetNumber}.");
+                return null;
+            }
 
             try
             {
                 _worksheet = _workbook.Worksheets.ElementAt(sheetNumber);
             }
-            catch (ArgumentOutOfRangeException)
+            catch (ArgumentOutOfRangeException aoorex)
             {
-                // [TO20241227] No sheet - no session.
+                _logger.Debug(aoorex, $"Failed to load sheet {_file.FullName}#{sheetNumber}.");
                 return null;
             }
 
