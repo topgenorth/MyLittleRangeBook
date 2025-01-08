@@ -37,12 +37,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\.gitignore">
-      <Link>.gitignore</Link>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Xero.Data.Sqlite\Xero.Data.Sqlite.csproj"/>
     <ProjectReference Include="..\Xero.Model\Xero.Model.csproj"/>
     <ProjectReference Include="..\Xero.ShotView.Excel\Xero.ShotView.Excel.csproj"/>

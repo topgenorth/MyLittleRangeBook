@@ -50,7 +50,7 @@ ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
 // [TO20241226] Add the CLI.
-app.Add<WorkbookCLI>("worksheet");
+app.Add<WorkbookCLI>("workbook");
 app.Add<SqliteMigrations>("database");
 log.Verbose("Running app");
 await app.RunAsync(args);
