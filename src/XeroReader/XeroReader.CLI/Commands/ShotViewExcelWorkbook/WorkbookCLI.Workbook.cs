@@ -24,13 +24,19 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
                     _logger.Verbose("Imported {name}", s.SheetName);
                 }
 
+                return 0;
+            }
+            catch (ArgumentException aex)
+            {
+                _logger.Information(aex, "Is this a 2007  Excel file?");
+
                 return 1;
             }
             catch (Exception e)
             {
                 _logger.Fatal(e, "Could not import the XSLX {filename}", filename);
 
-                return 0;
+                return 1;
             }
         }
     }
