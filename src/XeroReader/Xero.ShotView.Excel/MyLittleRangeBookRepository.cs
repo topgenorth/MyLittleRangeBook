@@ -1,13 +1,6 @@
-﻿using System.Data;
-using System.Diagnostics;
-using System.Transactions;
-using Dapper;
-using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using net.opgenorth.xero.data.sqlite;
-using net.opgenorth.xero.device;
 using Serilog;
-using IsolationLevel = System.Data.IsolationLevel;
 
 namespace net.opgenorth.xero.shotview
 {
@@ -20,11 +13,11 @@ namespace net.opgenorth.xero.shotview
         public MyLittleRangeBookRepository(ILogger logger, IOptionsSnapshot<SqliteOptions> options)
         {
             _logger = logger;
-            _sqliteFile = new FileInfo(options.Value.SqliteFile);
-            _connectionString = options.Value.MakeSqliteConnectionString();
+            SqliteOptions? o = options.Value.InferDataDirectory();
+            _sqliteFile = new FileInfo(o.SqliteFile);
+            _connectionString = o.MakeSqliteConnectionString();
         }
 
         public string Filename => _sqliteFile.FullName;
-
     }
 }
