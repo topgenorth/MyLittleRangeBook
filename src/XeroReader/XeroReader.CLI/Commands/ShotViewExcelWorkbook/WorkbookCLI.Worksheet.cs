@@ -17,9 +17,8 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
         [Command("import sheet")]
         public async Task<int> ImportSheet(string filename, [Range(0, 100)] int sheetNumber, CancellationToken ct)
         {
-            _logger.Information("{appName}", WorksheetExtensions.GetAppNameAndVersion());
-
             _file = new FileInfo(filename);
+            _logger.Verbose("Database at {0}", _repo.Filename);
 
             try
             {
@@ -32,7 +31,6 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
                 }
                 else
                 {
-                    _logger.Verbose("Database at {0}", _repo.Filename);
                     await _repo.UpsertSession(session, ct);
                     _logger.Information($"Imported sheet #{sheetNumber} from {filename}.");
                 }

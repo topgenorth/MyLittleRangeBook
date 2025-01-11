@@ -25,7 +25,8 @@ optionsBuilder.BindConfiguration(SqliteOptions.ConfigSection);
 
 builder.Services.AddSerilog(lc =>
 {
-    lc.ReadFrom.Configuration(builder.Configuration);
+    // lc.ReadFrom.Configuration(builder.Configuration);
+    lc.WriteTo.Console();
     lc.MinimumLevel.Verbose();
 });
 
