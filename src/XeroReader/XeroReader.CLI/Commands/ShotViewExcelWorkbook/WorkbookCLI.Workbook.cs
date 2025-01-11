@@ -9,11 +9,17 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
         ///     Import all of the worksheets in the workbook.
         /// </summary>
         /// <param name="filename"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
         [Command("import")]
         public async Task<int> ImportWorkbook(string filename, CancellationToken ct)
         {
             _file = new FileInfo(filename);
+            if (ct.IsCancellationRequested)
+            {
+                return 0;
+            }
+
             try
             {
                 _logger.Information("{appName}", WorksheetExtensions.GetAppNameAndVersion());
@@ -28,7 +34,7 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
             }
             catch (ArgumentException aex)
             {
-                _logger.Information(aex, "Is this a 2007  Excel file?");
+                _logger.Information("Please make sure that this is an Excel 2007 file with an XLSX extension.?");
 
                 return 1;
             }
