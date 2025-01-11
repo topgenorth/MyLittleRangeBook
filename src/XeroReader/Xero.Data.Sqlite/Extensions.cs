@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,49 @@ namespace net.opgenorth.xero.data.sqlite
 {
     public static class Extensions
     {
+        public const string DEFAULT_DATA_DIRECTORY = ".mlrb";
+
+
+        public static SqliteOptions InferDataDirectory(this SqliteOptions options)
+        {
+            options.DataDirectory = InferDataDirectory(options.SqliteFile);
+
+            return options;
+        }
+
+        /// <summary>
+        ///     If the file does not have a directory, then make a guess.  For DEVELOPMENT, it's same directory
+        ///     as the assembly.  For PRODUCTION, it's the user's home directory/.mlrb.
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static string InferDataDirectory(string filename)
+        {
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                return string.Empty;
+            }
+
+            string dir = Path.GetDirectoryName(filename);
+            if (!string.IsNullOrWhiteSpace(dir))
+            {
+                return dir;
+            }
+
+            if (Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") == "Development")
+            {
+                dir = AppContext.BaseDirectory;
+            }
+            else
+            {
+                dir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            }
+
+            dir = Path.Combine(dir, DEFAULT_DATA_DIRECTORY);
+
+            return dir;
+        }
+
         /// <summary>
         ///     Add the options to DI for the Sqlite database.
         /// </summary>
