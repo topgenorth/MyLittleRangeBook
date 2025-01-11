@@ -53,7 +53,7 @@ namespace net.opgenorth.xero.data.sqlite
                 _logger.Information("Creating database {FileToDelete}.", _sqliteFile.FullName);
             }
 
-            if (!_sqliteFile.Directory.Exists)
+            if (!_sqliteFile.Directory!.Exists)
             {
                 _sqliteFile.Directory.Create();
             }
