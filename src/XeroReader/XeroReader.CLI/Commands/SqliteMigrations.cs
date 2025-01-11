@@ -20,6 +20,7 @@ namespace net.opgenorth.xero.Commands
             string[] args = Environment.GetCommandLineArgs();
             string? location = Environment.ProcessPath;
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(location);
+
             return $"{fvi.ProductName} {fvi.ProductVersion}";
         }
 
@@ -29,8 +30,6 @@ namespace net.opgenorth.xero.Commands
         [Command("upgrade")]
         public Task<int> UpdateDatabase()
         {
-            _logger.Information("{appName}", GetAppNameAndVersion());
-
             try
             {
                 _sqliteDbKeeper.UpdateDatabase();
@@ -53,8 +52,6 @@ namespace net.opgenorth.xero.Commands
         // ReSharper disable once UnusedMember.Global
         public Task<int> CreateDatabase()
         {
-            _logger.Information("{appName}", GetAppNameAndVersion());
-
             try
             {
                 _sqliteDbKeeper.CreateDatabase();
