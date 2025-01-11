@@ -17,7 +17,7 @@ namespace net.opgenorth.xero.data.sqlite
             SqliteOptions o = options.Value.InferDataDirectory();
             _sqliteFile = new FileInfo(o.SqliteFile);
             ConnectionString = o.MakeSqliteConnectionString();
-            _logger.Information("Connection string {connectionString}", ConnectionString);
+            _logger.Verbose("Connection string '{connectionString}'", ConnectionString);
         }
 
         public string ConnectionString { get; }
@@ -45,12 +45,17 @@ namespace net.opgenorth.xero.data.sqlite
         {
             if (_sqliteFile.Exists)
             {
-                _logger.Warning("Deleting file at {FileToDelete} and recreating", _sqliteFile.FullName);
+                _logger.Warning("Deleting file at {FileToDelete}.", _sqliteFile.FullName);
                 _sqliteFile.Delete();
             }
             else
             {
-                _logger.Information("Creating database {FileToDelete}", _sqliteFile.FullName);
+                _logger.Information("Creating database {FileToDelete}.", _sqliteFile.FullName);
+            }
+
+            if (!_sqliteFile.Directory.Exists)
+            {
+                _sqliteFile.Directory.Create();
             }
 
             UpdateDatabase();
