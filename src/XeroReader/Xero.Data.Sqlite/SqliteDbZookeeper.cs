@@ -14,9 +14,10 @@ namespace net.opgenorth.xero.data.sqlite
         public SqliteDbZookeeper(ILogger logger, IOptionsSnapshot<SqliteOptions> options)
         {
             _logger = logger;
-            _sqliteFile = new FileInfo(options.Value.SqliteFile);
-            ConnectionString = options.Value.MakeSqliteConnectionString();
-            _logger.Verbose("Connection string {connectionString}", ConnectionString);
+            SqliteOptions o = options.Value.InferDataDirectory();
+            _sqliteFile = new FileInfo(o.SqliteFile);
+            ConnectionString = o.MakeSqliteConnectionString();
+            _logger.Verbose("Connection string '{connectionString}'", ConnectionString);
         }
 
         public string ConnectionString { get; }
@@ -44,12 +45,17 @@ namespace net.opgenorth.xero.data.sqlite
         {
             if (_sqliteFile.Exists)
             {
-                _logger.Verbose("Deleting file at {FileToDelete}", _sqliteFile.FullName);
+                _logger.Warning("Deleting file at {FileToDelete}.", _sqliteFile.FullName);
                 _sqliteFile.Delete();
             }
             else
             {
-                _logger.Verbose("No database exists at {FileToDelete}", _sqliteFile.FullName);
+                _logger.Information("Creating database {FileToDelete}.", _sqliteFile.FullName);
+            }
+
+            if (!_sqliteFile.Directory!.Exists)
+            {
+                _sqliteFile.Directory.Create();
             }
 
             UpdateDatabase();

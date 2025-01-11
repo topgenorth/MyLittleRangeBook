@@ -28,7 +28,7 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
                 {
                     try
                     {
-                        await _repo.UpsertSession(s);
+                        await _repo.UpsertSession(s, ct);
                         _logger.Verbose("Imported {name}", s.SheetName);
                     }
                     catch (Exception ex)

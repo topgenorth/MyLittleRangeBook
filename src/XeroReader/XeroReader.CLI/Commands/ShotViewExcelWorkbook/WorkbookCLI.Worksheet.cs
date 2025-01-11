@@ -15,7 +15,7 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
         /// <param name="sheetNumber">The number of the sheet to read. Zero-indexed.</param>
         /// <returns></returns>
         [Command("import sheet")]
-        public async Task<int> ImportSheet(string filename, [Range(0, 100)] int sheetNumber = 0)
+        public async Task<int> ImportSheet(string filename, [Range(0, 100)] int sheetNumber, CancellationToken ct)
         {
             _logger.Information("{appName}", WorksheetExtensions.GetAppNameAndVersion());
 
@@ -33,7 +33,7 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
                 else
                 {
                     _logger.Verbose("Database at {0}", _repo.Filename);
-                    await _repo.UpsertSession(session);
+                    await _repo.UpsertSession(session, ct);
                     _logger.Information($"Imported sheet #{sheetNumber} from {filename}.");
                 }
 
