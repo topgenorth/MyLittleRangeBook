@@ -8,15 +8,6 @@ using net.opgenorth.xero.Commands.ShotViewExcelWorkbook;
 using net.opgenorth.xero.data.sqlite;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
-#if DEBUG
-builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", true)
-    .AddJsonFile($"appsettings.{Environments.Development}.json", true);
-#else
-builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", true);
-#endif
-
 
 string appSettingsJson = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
 if (!File.Exists(appSettingsJson))
@@ -41,13 +32,13 @@ builder.Services.AddWorksheetSqlite();
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
 
-IServiceProvider? sp = scope.ServiceProvider;
-IOptionsSnapshot<SqliteOptions>? o = scope.ServiceProvider
-    .GetRequiredService<IOptionsSnapshot<SqliteOptions>>();
-
 ILogger log = scope.ServiceProvider.GetRequiredService<ILogger>();
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
+
+IOptionsSnapshot<SqliteOptions>? o = scope.ServiceProvider
+    .GetRequiredService<IOptionsSnapshot<SqliteOptions>>();
+log.Debug("Database location {sqliteDatabase}.", o.Value.SqliteFile);
 
 // [TO20241226] Add the CLI.
 app.Add<WorkbookCLI>("workbook");

@@ -26,8 +26,15 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
                 using XlsxAdapter? xlsx = new(_logger, _file.FullName);
                 foreach (WorkbookSession? s in xlsx.GetAllSessions())
                 {
-                    await _repo.UpsertSession(s);
-                    _logger.Verbose("Imported {name}", s.SheetName);
+                    try
+                    {
+                        await _repo.UpsertSession(s);
+                        _logger.Verbose("Imported {name}", s.SheetName);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, "Whoops");
+                    }
                 }
 
                 return 0;

@@ -58,8 +58,8 @@ namespace net.opgenorth.xero.shotview
             if (rowsAffected != session.Shots.Count())
             {
                 _logger.Warning(
-                    "Inserted {shots.inserted}, updated {shots.updated}, and deleted {shots.deleted} shots for session {session.id}",
-                    shotsInserted, shotsUpdated, shotsDeleted, session.Id);
+                    "Inserted {shots.inserted}, updated {shots.updated}, and deleted {shots.deleted} shots for session {session.id} {session.sheetName}",
+                    shotsInserted, shotsUpdated, shotsDeleted, session.Id, session.SheetName);
             }
             else
             {
