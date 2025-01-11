@@ -1,13 +1,12 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="database init" type="DotNetProject" factoryName=".NET Project">
+  <configuration default="false" name="workbook import" type="DotNetProject" factoryName=".NET Project">
     <option name="EXE_PATH" value="$PROJECT_DIR$/XeroReader.CLI/bin/Debug/net8.0/xeror" />
-    <option name="PROGRAM_PARAMETERS" value="database init" />
+    <option name="PROGRAM_PARAMETERS" value="workbook import --filename $USER_HOME$/Dropbox/Firearms/MyLittleRangeBook/ShotView/Sessions_DEC_2024-DEC_2024.xlsx" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/XeroReader.CLI/bin/Debug/net8.0" />
     <option name="PASS_PARENT_ENVS" value="1" />
     <option name="USE_EXTERNAL_CONSOLE" value="0" />
     <option name="USE_MONO" value="0" />
     <option name="RUNTIME_ARGUMENTS" value="" />
-    <option name="RUNTIME_TYPE" value="coreclr" />
     <option name="PROJECT_PATH" value="$PROJECT_DIR$/XeroReader.CLI/XeroReader.CLI.csproj" />
     <option name="PROJECT_EXE_PATH_TRACKING" value="1" />
     <option name="PROJECT_ARGUMENTS_TRACKING" value="1" />
