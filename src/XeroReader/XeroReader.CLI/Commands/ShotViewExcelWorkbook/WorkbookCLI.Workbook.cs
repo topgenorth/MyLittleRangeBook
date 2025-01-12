@@ -15,6 +15,8 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
         public async Task<int> ImportWorkbook(string filename, CancellationToken ct)
         {
             _file = new FileInfo(filename);
+            _logger.Verbose("Database at {0}", _repo.Filename);
+
             if (ct.IsCancellationRequested)
             {
                 return 0;
@@ -22,7 +24,6 @@ namespace net.opgenorth.xero.Commands.ShotViewExcelWorkbook
 
             try
             {
-                _logger.Information("{appName}", WorksheetExtensions.GetAppNameAndVersion());
                 using XlsxAdapter? xlsx = new(_logger, _file.FullName);
                 foreach (WorkbookSession? s in xlsx.GetAllSessions())
                 {

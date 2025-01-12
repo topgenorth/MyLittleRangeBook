@@ -10,9 +10,7 @@ using net.opgenorth.xero.data.sqlite;
 using net.opgenorth.xero.shotview;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
-builder.Configuration
-    .AddEnvironmentVariables("MLRB_")
-    .AddJsonFile("appsettings.json", true, true);
+builder.Configuration.AddJsonFile("appsettings.json", true, true);
 
 #if DEBUG
 builder.Configuration.AddJsonFile("appsettings.Development.json", false, true);
@@ -25,10 +23,12 @@ optionsBuilder.ValidateDataAnnotations();
 optionsBuilder.ValidateOnStart();
 optionsBuilder.BindConfiguration(SqliteOptions.ConfigSection);
 
-
 builder.Services.AddSerilog(lc =>
-    lc.ReadFrom.Configuration(builder.Configuration)
-);
+{
+    // lc.ReadFrom.Configuration(builder.Configuration);
+    lc.WriteTo.Console();
+    lc.MinimumLevel.Verbose();
+});
 
 
 builder.Services.TryAddScoped<IDbZookeeper, SqliteDbZookeeper>();
@@ -43,9 +43,15 @@ using IServiceScope scope = host.Services.CreateScope();
 ILogger log = scope.ServiceProvider.GetRequiredService<ILogger>();
 SqliteOptions? options = builder.Configuration.GetSection(SqliteOptions.ConfigSection).Get<SqliteOptions>();
 
-// var options = scope.ServiceProvider.GetRequiredService<SqliteOptions>();
-// var options = host.Services.GetRequiredService<SqliteOptions>();
-log.Verbose("Options data directory: '{optionsDataDirectory}'", options.DataDirectory);
+if (options is null)
+{
+    log.Warning("Missing SQLite settings");
+}
+else
+{
+    log.Information("Database {db}.", options.SqliteFile);
+}
+
 
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
