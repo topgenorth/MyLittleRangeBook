@@ -9,7 +9,7 @@ using System.Text;
 using Dynastream.Fit;
 using DateTime = Dynastream.Fit.DateTime;
 
-namespace Extensions;
+namespace net.opgenorth.xero.GarminFit;
 
 public static class FitExtensions
 {
@@ -34,7 +34,8 @@ public static class FitExtensions
     public static System.DateTime LocalTimestampAsSystemDateTime(this ActivityMesg activity) =>
         new((activity.GetLocalTimestamp() ?? 0) * 10000000L + FitEpoch.Ticks, DateTimeKind.Local);
 
-    public static DateTime LocalTimestampAsFitDateTime(this ActivityMesg activity) => new(activity.GetLocalTimestamp() ?? 0);
+    public static DateTime LocalTimestampAsFitDateTime(this ActivityMesg activity) =>
+        new(activity.GetLocalTimestamp() ?? 0);
 
     public static DateTime? GetTimestamp(this Mesg mesg)
     {
@@ -91,7 +92,8 @@ public static class FitExtensions
 
     public static bool Overlaps(this Mesg mesg, SessionMesg session)
     {
-        if (mesg.GetStartTime() == null || mesg.GetEndTime() == null || session.GetStartTime() == null || session.GetEndTime() == null)
+        if (mesg.GetStartTime() == null || mesg.GetEndTime() == null || session.GetStartTime() == null ||
+            session.GetEndTime() == null)
         {
             return false;
         }

@@ -2,7 +2,7 @@ using CommunityToolkit.HighPerformance;
 using net.opgenorth.xero.device;
 using net.opgenorth.xero.GarminFit;
 
-namespace net.opgenorth.xero.Commands.FitFiles;
+namespace net.opgenorth.xero.FitFiles;
 
 public class SimpleFitReader
 {
