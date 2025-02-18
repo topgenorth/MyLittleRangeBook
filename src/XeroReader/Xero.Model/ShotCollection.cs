@@ -12,12 +12,6 @@ public class ShotCollection : ICollection<Shot>
 {
     private readonly SortedDictionary<int, Shot> _shots = new();
 
-    public ShotCollection() => XeroSerialNumber = 0;
-
-    public ShotCollection(uint xeroSerialNumber) => XeroSerialNumber = xeroSerialNumber;
-
-    public uint XeroSerialNumber { get; internal set; }
-
     public Shot this[int i] => _shots[i];
 
     public IEnumerable<Shot> ActiveShots => from s in _shots where !s.Value.IgnoreShot select s.Value;

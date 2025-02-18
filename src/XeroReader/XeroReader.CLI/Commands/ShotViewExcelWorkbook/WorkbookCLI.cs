@@ -6,6 +6,9 @@ using net.opgenorth.xero.shotview;
 
 namespace net.opgenorth.xero.ShotViewExcelWorkbook;
 
+/// <summary>
+///     Entrypoint for all the commands.
+/// </summary>
 // ReSharper disable once InconsistentNaming
 public class WorkbookCLI
 {
@@ -14,9 +17,7 @@ public class WorkbookCLI
     private readonly ILogger _logger;
     private readonly IOptionsSnapshot<SqliteOptions> _options;
     private readonly MyLittleRangeBookRepository _repo;
-
     private FileInfo? _file;
-
 
     public WorkbookCLI(ILogger logger, IOptionsSnapshot<SqliteOptions> options, MyLittleRangeBookRepository repo)
     {
@@ -187,6 +188,7 @@ public class WorkbookCLI
         {
             return;
         }
+
 
         ShotViewExcelSpreadsheetTemplate? page = new(session, WorksheetExtensions.GetAppNameAndVersion());
         string? content = page.TransformText();
