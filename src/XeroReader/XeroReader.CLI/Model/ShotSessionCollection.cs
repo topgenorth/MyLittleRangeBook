@@ -1,8 +1,6 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 
-namespace net.opgenorth.xero.device;
+namespace net.opgenorth.xero.Model;
 
 public class ShotSessionCollection : ICollection<ShotSession>
 {

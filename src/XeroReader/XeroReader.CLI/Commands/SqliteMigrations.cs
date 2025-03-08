@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using ConsoleAppFramework;
-using net.opgenorth.xero.data.sqlite;
+using net.opgenorth.xero.Data.Sqlite;
 
 namespace net.opgenorth.xero;
 

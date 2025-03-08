@@ -1,6 +1,6 @@
 using CommunityToolkit.HighPerformance;
-using net.opgenorth.xero.device;
 using net.opgenorth.xero.GarminFit;
+using net.opgenorth.xero.Model;
 
 namespace net.opgenorth.xero.FitFiles;
 

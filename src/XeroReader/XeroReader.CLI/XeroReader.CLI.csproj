@@ -10,21 +10,29 @@
     <Version>0.0.0</Version>
     <Company>Opgenorth Holdings Ltd.</Company>
     <Product>XeroReader</Product>
-    <LangVersion>12</LangVersion>
+    <LangVersion>latestmajor</LangVersion>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.104.2"/>
     <PackageReference Include="Collector.Serilog.Enrichers.Assembly" Version="1.0.1"/>
     <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.0"/>
     <PackageReference Include="ConsoleAppFramework" Version="5.3.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Dapper" Version="2.1.66"/>
+    <PackageReference Include="dbup" Version="5.0.41"/>
+    <PackageReference Include="dbup-sqlite" Version="6.0.1"/>
     <PackageReference Include="Garmin.FIT.Sdk" Version="21.158.0"/>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.2"/>
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0"/>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0"/>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0"/>
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0"/>
+    <PackageReference Include="Nanoid" Version="3.1.0"/>
+    <PackageReference Include="NewId" Version="4.0.1"/>
     <PackageReference Include="Serilog" Version="4.2.0"/>
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0"/>
     <PackageReference Include="Serilog.Exceptions" Version="8.4.0"/>
@@ -43,15 +51,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Xero.Data.Sqlite\Xero.Data.Sqlite.csproj"/>
-    <ProjectReference Include="..\Xero.Model\Xero.Model.csproj"/>
-    <ProjectReference Include="..\Xero.ShotView.Excel\Xero.ShotView.Excel.csproj"/>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="appsettings.Development.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="ShotView\Excel\ShotViewExcelSpreadsheetTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ShotViewExcelSpreadsheetTemplate.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Data\Sqlite\scripts\00001-Create-ShotView-ShotSessions-Table.sql"/>
+    <EmbeddedResource Include="Data\Sqlite\scripts\00002-Create-ShotView-ShotSession_Shots-table.sql"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="ShotView\Excel\ShotViewExcelSpreadsheetTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ShotViewExcelSpreadsheetTemplate.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

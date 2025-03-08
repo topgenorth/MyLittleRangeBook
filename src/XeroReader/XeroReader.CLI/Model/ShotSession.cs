@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NanoidDotNet;
 
-namespace net.opgenorth.xero.device;
+namespace net.opgenorth.xero.Model;
 
 /// <summary>
 ///     A session holds data about a single Xero shooting session.

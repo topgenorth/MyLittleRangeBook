@@ -1,7 +1,7 @@
 // Licensed to the.NET Foundation under one or more agreements.
 // The.NET Foundation licenses this file to you under the MIT license.
 
-namespace net.opgenorth.xero.shotview;
+namespace net.opgenorth.xero.ShotView.Excel;
 
 public interface IPersistShotSession
 {

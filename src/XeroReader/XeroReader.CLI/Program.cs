@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using net.opgenorth.xero;
-using net.opgenorth.xero.data.sqlite;
+using net.opgenorth.xero.Data.Sqlite;
 using net.opgenorth.xero.ShotViewExcelWorkbook;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();

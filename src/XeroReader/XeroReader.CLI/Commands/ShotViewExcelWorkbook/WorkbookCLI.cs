@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using ConsoleAppFramework;
 using Microsoft.Extensions.Options;
-using net.opgenorth.xero.data.sqlite;
-using net.opgenorth.xero.shotview;
+using net.opgenorth.xero.Data.Sqlite;
+using net.opgenorth.xero.ShotView.Excel;
 
 namespace net.opgenorth.xero.ShotViewExcelWorkbook;
 

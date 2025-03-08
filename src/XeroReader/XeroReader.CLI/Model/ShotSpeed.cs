@@ -1,6 +1,4 @@
-using System;
-
-namespace net.opgenorth.xero.device;
+namespace net.opgenorth.xero.Model;
 
 public struct ShotSpeed : IEquatable<ShotSpeed>, IComparable<ShotSpeed>
 {
