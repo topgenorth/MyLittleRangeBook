@@ -58,6 +58,14 @@
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>ShotViewExcelSpreadsheetTemplate.cs</LastGenOutput>
     </None>
+    <None Update="Excel\ShotViewExcelSpreadsheetTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ShotViewExcelSpreadsheetTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="Excel\SessionToMarkdownTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>SessionToMarkdownTemplate.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -70,6 +78,14 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ShotViewExcelSpreadsheetTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Excel\ShotViewExcelSpreadsheetTemplate.cs">
+      <DependentUpon>ShotViewExcelSpreadsheetTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Excel\SessionToMarkdownTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SessionToMarkdownTemplate.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 
