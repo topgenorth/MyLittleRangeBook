@@ -12,8 +12,9 @@ namespace net.opgenorth.xero.Excel
         public MyLittleRangeBookRepository(ILogger logger, IOptionsSnapshot<SqliteOptions> options)
         {
             _logger = logger;
-            _sqliteFile = new FileInfo(options.Value.SqliteFile);
-            _connectionString = options.Value.MakeSqliteConnectionString();
+            SqliteOptions? o = options.Value.InferDataDirectory();
+            _sqliteFile = new FileInfo(o.SqliteFile);
+            _connectionString = o.MakeSqliteConnectionString();
         }
 
         public string Filename => _sqliteFile.FullName;

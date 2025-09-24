@@ -7,7 +7,7 @@ riderModule.iml
 *.pdb
 *.DotSettings.user
 /FitSDK/cs/Examples/.idea/.idea.Examples/.idea/git_toolbox_blame.xml
-
+**/execution-plan.html
 
 # Common IntelliJ Platform excludes
 
@@ -48,3 +48,4 @@ Desktop.ini
 **/appsettings.Development.json
 **/appsettings.Production.json
 **/appsettings.Staging.json
+/garmin-shotview.sqlite

@@ -146,7 +146,7 @@ namespace net.opgenorth.xero.ShotViewExcelWorkbook
         /// <param name="filename">The name of the Excel workbook.</param>
         /// <param name="sheetNumber">The number of the sheet to read. Zero-indexed.</param>
         /// <returns></returns>
-        [Command("view")]
+        [Command("view sheet")]
         public Task<int> DisplayWorksheetInConsole(string filename, [Range(0, 100)] int sheetNumber = 0)
         {
             _file = new FileInfo(filename);

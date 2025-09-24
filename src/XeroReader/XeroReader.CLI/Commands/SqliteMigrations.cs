@@ -30,8 +30,6 @@ namespace net.opgenorth.xero
         [Command("upgrade")]
         public Task<int> UpdateDatabase()
         {
-            _logger.Information("{appName}", GetAppNameAndVersion());
-
             try
             {
                 _sqliteDbKeeper.UpdateDatabase();
@@ -54,8 +52,6 @@ namespace net.opgenorth.xero
         // ReSharper disable once UnusedMember.Global
         public Task<int> CreateDatabase()
         {
-            _logger.Information("{appName}", GetAppNameAndVersion());
-
             try
             {
                 _sqliteDbKeeper.CreateDatabase();

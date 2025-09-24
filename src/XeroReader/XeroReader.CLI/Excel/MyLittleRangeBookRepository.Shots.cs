@@ -39,7 +39,7 @@ namespace net.opgenorth.xero.Excel
             ModificationTime = DateTime.UtcNow.ToString("O")
         };
 
-        async Task<int> UpsertShots(SqliteConnection conn, WorkbookSession session)
+        async Task<int> UpsertShots(SqliteConnection conn, SqliteTransaction trans, WorkbookSession session)
         {
             if (!session.Shots.Any())
             {
@@ -49,23 +49,11 @@ namespace net.opgenorth.xero.Excel
             (Shot[] shotsToInsert, Shot[] shotsToUpdate, Shot[] shotsToDelete) =
                 await PutShotNumbersForSessionIntoBuckets(conn, session);
 
-            int shotsInserted = await InsertShots(conn, session.Id, shotsToInsert);
-            int shotsUpdated = await UpdateShots(conn, session.Id, shotsToUpdate);
-            int shotsDeleted = await DeleteShots(conn, session.Id, shotsToDelete);
+            int shotsInserted = await InsertShots(conn, trans, session.Id, shotsToInsert).ConfigureAwait(false);
+            int shotsUpdated = await UpdateShots(conn, trans, session.Id, shotsToUpdate).ConfigureAwait(false);
+            int shotsDeleted = await DeleteShots(conn, trans, session.Id, shotsToDelete).ConfigureAwait(false);
 
             int rowsAffected = shotsInserted + shotsDeleted + shotsUpdated;
-            if (rowsAffected != session.Shots.Count())
-            {
-                _logger.Warning(
-                    "Inserted {shots.inserted}, updated {shots.updated}, and deleted {shots.deleted} shots for session {session.id}",
-                    shotsInserted, shotsUpdated, shotsDeleted, session.Id);
-            }
-            else
-            {
-                _logger.Verbose(
-                    "Inserted {shots.inserted}, updated {shots.updated}, and deleted {shots.deleted} shots for session {session.id}",
-                    shotsInserted, shotsUpdated, shotsDeleted, session.Id);
-            }
 
             return rowsAffected;
         }
@@ -73,17 +61,17 @@ namespace net.opgenorth.xero.Excel
         async Task<Tuple<Shot[], Shot[], Shot[]>> PutShotNumbersForSessionIntoBuckets(SqliteConnection conn,
             WorkbookSession session)
         {
-            const string shotsSql = """
-                                    SELECT shot_number
-                                    FROM shotview_shots sh
-                                    LEFT JOIN shotview_sessions s
-                                        ON sh.shotview_session_id=s.id
-                                    WHERE s.name=@SessionName
-                                    ORDER BY shot_number;
-                                    """;
+            const string SHOTS_SQL = """
+                                     SELECT shot_number
+                                     FROM shotview_shots sh
+                                     LEFT JOIN shotview_sessions s
+                                         ON sh.shotview_session_id=s.id
+                                     WHERE s.name=@SessionName
+                                     ORDER BY shot_number;
+                                     """;
 
             int[] existingShotNumbers =
-                (await conn.QueryAsync<shotNumber_>(shotsSql, new { SessionName = session.SheetName }))
+                (await conn.QueryAsync<shotNumber_>(SHOTS_SQL, new { SessionName = session.SheetName }))
                 .Select(si => si.shot_number)
                 .ToArray();
 
@@ -102,54 +90,61 @@ namespace net.opgenorth.xero.Excel
             return new Tuple<Shot[], Shot[], Shot[]>(shotsToInsert, shotsToUpdate, shotsToDelete);
         }
 
-        async Task<int> InsertShots(SqliteConnection conn, string sessionId, Shot[] shotsToInsert)
+        async Task<int> InsertShots(SqliteConnection conn,
+            SqliteTransaction trans,
+            string sessionId,
+            Shot[] shotsToInsert)
         {
-            const string insertShot = """
-                                      INSERT INTO shotview_shots (id,
-                                                                  shotview_session_id,
-                                                                  shot_number,
-                                                                  velocity,
-                                                                  notes,
-                                                                  cold_bore,
-                                                                  clean_bore,
-                                                                  ignore_shot,
-                                                                  shot_time)
-                                      VALUES (@Id,
-                                              @SessionId,
-                                              @ShotNumber,
-                                              @Velocity,
-                                              @Notes,
-                                              @ColdBore,
-                                              @CleanBore,
-                                              @IgnoreShot,
-                                              @ShotTime);
-                                      """;
+            const string INSERT_SHOT = """
+                                       INSERT INTO shotview_shots (id,
+                                                                   shotview_session_id,
+                                                                   shot_number,
+                                                                   velocity,
+                                                                   notes,
+                                                                   cold_bore,
+                                                                   clean_bore,
+                                                                   ignore_shot,
+                                                                   shot_time)
+                                       VALUES (@Id,
+                                               @SessionId,
+                                               @ShotNumber,
+                                               @Velocity,
+                                               @Notes,
+                                               @ColdBore,
+                                               @CleanBore,
+                                               @IgnoreShot,
+                                               @ShotTime);
+                                       """;
 
-            IEnumerable<object> inserts = shotsToInsert.Select(s => ShotToDynamicType(s, sessionId));
-            if (!inserts.Any())
+            object[] inserts = shotsToInsert.Select(s => ShotToDynamicType(s, sessionId)).ToArray();
+            if (inserts.Length == 0)
             {
                 return 0;
             }
 
-            int rowsInserted = await conn.ExecuteAsync(insertShot, inserts);
+
+            int rowsInserted = await conn.ExecuteAsync(INSERT_SHOT, inserts, trans).ConfigureAwait(false);
 
             return rowsInserted;
         }
 
-        async Task<int> UpdateShots(SqliteConnection conn, string sessionId, Shot[] shotsToUpdate)
+        async Task<int> UpdateShots(SqliteConnection conn,
+            SqliteTransaction trans,
+            string sessionId,
+            Shot[] shotsToUpdate)
         {
-            const string updateShot = """
-                                      UPDATE shotview_shots SET velocity=@Velocity,
-                                                                notes=@Notes,
-                                                                cold_bore=@ColdBore,
-                                                                clean_bore=@CleanBore,
-                                                                ignore_shot=@IgnoreShot,
-                                                                shot_time=@ShotTime,
-                                                                modification_date=@ModificationTime
-                                      WHERE shot_number=@ShotNumber AND shotview_session_id=@SessionId;
-                                      """;
-            IEnumerable<object> shotUpdates = shotsToUpdate.Select(s => ShotToDynamicType(s, sessionId));
-            if (!shotUpdates.Any())
+            const string UPDATE_SHOT = """
+                                       UPDATE shotview_shots SET velocity=@Velocity,
+                                                                 notes=@Notes,
+                                                                 cold_bore=@ColdBore,
+                                                                 clean_bore=@CleanBore,
+                                                                 ignore_shot=@IgnoreShot,
+                                                                 shot_time=@ShotTime,
+                                                                 modification_date=@ModificationTime
+                                       WHERE shot_number=@ShotNumber AND shotview_session_id=@SessionId;
+                                       """;
+            object[] shotUpdates = shotsToUpdate.Select(s => ShotToDynamicType(s, sessionId)).ToArray();
+            if (shotUpdates.Length == 0)
             {
                 return 0;
             }
@@ -157,17 +152,26 @@ namespace net.opgenorth.xero.Excel
             int rowsUpdated = 0;
             foreach (object update in shotUpdates)
             {
-                rowsUpdated += await conn.ExecuteAsync(updateShot, update);
+                try
+                {
+                    rowsUpdated += await conn.ExecuteAsync(UPDATE_SHOT, update, trans).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Could not update shot");
+                }
             }
 
-            // int rowsUpdated = await conn.ExecuteAsync(updateShot, updates);
 
             return rowsUpdated;
         }
 
-        async Task<int> DeleteShots(SqliteConnection conn, string sessionId, Shot[] shotsToDelete)
+        async Task<int> DeleteShots(SqliteConnection conn,
+            SqliteTransaction trans,
+            string sessionId,
+            Shot[] shotsToDelete)
         {
-            const string deleteShot = "DELETE FROM shotview_shots WHERE shotview_session_id=@SessionId";
+            const string DELETE_SHOT = "DELETE FROM shotview_shots WHERE shotview_session_id=@SessionId";
 
             IEnumerable<string> deletes = shotsToDelete.Select(s => s.Id);
             if (!deletes.Any())
@@ -175,7 +179,8 @@ namespace net.opgenorth.xero.Excel
                 return 0;
             }
 
-            int rowsDeleted = await conn.ExecuteAsync(deleteShot, new { SessionId = sessionId });
+            int rowsDeleted = await conn.ExecuteAsync(DELETE_SHOT, new { SessionId = sessionId }, trans)
+                .ConfigureAwait(false);
 
             return rowsDeleted;
         }
