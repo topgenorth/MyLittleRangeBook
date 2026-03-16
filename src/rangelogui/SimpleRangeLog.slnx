@@ -1,0 +1,13 @@
+<Solution>
+    <Folder Name="/SharedControls/">
+        <Project Path="SharedControls/SharedControls.csproj" />
+        <Project Path="SharedControlsTests/SharedControlsTests.csproj" />
+    </Folder>
+    <Folder Name="/SolutionItems/">
+        <File Path=".editorconfig" />
+        <File Path=".gitignore" />
+        <File Path="README.md" />
+    </Folder>
+    <Project Path="MySimpleRangeLog.App/MySimpleRangeLog.App.csproj" />
+    <Project Path="MySimpleRangeLog.Tests/MySimpleRangeLog.Tests.csproj" />
+</Solution>

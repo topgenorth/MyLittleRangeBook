@@ -1,0 +1,38 @@
+name: Build .NET Framework Application
+
+on:
+  push:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [ windows, linux ]
+    runs-on: ${{ matrix.platform == 'windows' && 'windows-latest' || 'ubuntu-latest' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish single-file EXE
+        run: |
+          dotnet publish src/rangelogui/MySimpleRangeLog.App/MySimpleRangeLog.App.csproj -c Release \
+            -r ${{ matrix.platform == 'windows' && 'win-x64' || 'linux-x64' }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            -o ./out/SimpleRangeLog
+        shell: bash
+
+      - name: Upload ${{ matrix.platform }} artifact
+        if: success()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.platform }}-SimpleRangeLog-exe
+          path: |
+            out/SimpleRangeLog/
