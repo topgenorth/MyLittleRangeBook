@@ -24,7 +24,9 @@ namespace MySimpleRangeLog.Helper
         {
             DATABASE_SCRIPTS = [
                 "MySimpleRangeLog.Database.scripts.001-SimpleRangeEvents-schema.sql",
-                "MySimpleRangeLog.Database.scripts.002-SimpleRangeEvents-index.sql"
+                "MySimpleRangeLog.Database.scripts.002-SimpleRangeEvents-index.sql",
+                "MySimpleRangeLog.Database.scripts.004-Images-schema.sql",
+                "MySimpleRangeLog.Database.scripts.005-SimpleRangeEventImages-schema.sql"
             ];
         }
 

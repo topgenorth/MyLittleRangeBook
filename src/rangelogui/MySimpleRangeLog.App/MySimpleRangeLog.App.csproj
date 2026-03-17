@@ -21,9 +21,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Database\scripts\001-SimpleRangeEvents-schema.sql"/>
-        <EmbeddedResource Include="Database\scripts\002-SimpleRangeEvents-index.sql"/>
-        <EmbeddedResource Include="Database\scripts\003-SimpleRangeEvents-data.sql"/>
+        <EmbeddedResource Include="Database\scripts\**\*.*" />
     </ItemGroup>
 
     <ItemGroup>

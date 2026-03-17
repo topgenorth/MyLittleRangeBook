@@ -1,4 +1,4 @@
-CREATE TABLE SimpleRangeEvents
+CREATE TABLE IF NOT EXISTS SimpleRangeEvents
 (
     Id              INTEGER PRIMARY KEY AUTOINCREMENT,
     EventDate       TEXT                              NOT NULL,
