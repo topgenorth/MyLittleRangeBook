@@ -108,7 +108,9 @@ public class DialogCommand : ICommand
     /// is never raised. In more advanced commands (e.g., only enabled
     /// when text is entered), this would fire when conditions change.
     /// </summary>
+    #pragma warning disable CS0067
     public event EventHandler? CanExecuteChanged;
+    #pragma warning restore CS0067
 }
 
 /// <summary>
