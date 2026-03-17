@@ -5,7 +5,7 @@
         xmlns:views1="clr-namespace:MySimpleRangeLog.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="MySimpleRangeLog.Views.MainWindow"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/AppIcon256.ico"
         Title="My Simple Range Log">
 
     <!-- This is only used on Desktop and can add more items if you want a different UI for the Desktop version of your App -->
