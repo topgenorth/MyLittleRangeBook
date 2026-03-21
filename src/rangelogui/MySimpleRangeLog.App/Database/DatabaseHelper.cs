@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -9,39 +10,48 @@ using Avalonia.Controls;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
+using MySimpleRangeLog.Helper;
 using MySimpleRangeLog.Models;
 using MySimpleRangeLog.Services;
 using Serilog;
 
-namespace MySimpleRangeLog.Helper
+namespace MySimpleRangeLog.Database
 {
-    /// <summary>
-    ///     This is a helper class for working with our Database.
-    /// </summary>
     public static class DatabaseHelper
     {
-        static DatabaseHelper()
-        {
-            DATABASE_SCRIPTS = [
-                "MySimpleRangeLog.Database.scripts.001-SimpleRangeEvents-schema.sql",
-                "MySimpleRangeLog.Database.scripts.002-SimpleRangeEvents-index.sql",
-                "MySimpleRangeLog.Database.scripts.004-Images-schema.sql",
-                "MySimpleRangeLog.Database.scripts.005-SimpleRangeEventImages-schema.sql"
-            ];
-        }
-
         // A flag that indicates if the DB is yet initialized.
         static bool _initialized;
+
+
+        static readonly Firearm[] TestFirearms =
+        [
+            new()
+            {
+                Id = 1,
+                Created = DateTimeOffset.UtcNow,
+                Modified = DateTimeOffset.UtcNow,
+                Name = "STAG-10",
+                Notes = null
+            },
+            new()
+            {
+                Id = 2,
+                Created = DateTimeOffset.UtcNow,
+                Modified = DateTimeOffset.UtcNow,
+                Name = "Ruger 10/22",
+                Notes = "Mapleseed rifle."
+            }
+        ];
 
         static readonly SimpleRangeEvent[] TestRangeEvents =
         [
             new()
             {
+                Id = 1,
                 Created = DateTimeOffset.UtcNow,
                 Modified = DateTimeOffset.UtcNow,
                 EventDate = new DateTime(2024, 03, 12),
                 FirearmName = "Ruger 10/122",
-                Id = 1,
                 RangeName = "CHAS",
                 RoundsFired = 350,
                 AmmoDescription = "CCI SV",
@@ -49,11 +59,11 @@ namespace MySimpleRangeLog.Helper
             },
             new()
             {
+                Id = 2,
                 Created = DateTimeOffset.UtcNow,
                 Modified = DateTimeOffset.UtcNow,
                 EventDate = new DateTime(2025, 03, 12),
                 FirearmName = "Tikka T3",
-                Id = 2,
                 RangeName = "SPFGA",
                 RoundsFired = 10,
                 AmmoDescription = "178gr Hornady BTHP;39.1gr IMR-3031;CCI #200; Federal Brass;2.902 COAL",
@@ -62,6 +72,18 @@ namespace MySimpleRangeLog.Helper
         ];
 
         static readonly string[] DATABASE_SCRIPTS;
+
+        static DatabaseHelper()
+        {
+            DATABASE_SCRIPTS =
+            [
+                "MySimpleRangeLog.Database.scripts.001-SimpleRangeEvents-schema.sql",
+                "MySimpleRangeLog.Database.scripts.002-SimpleRangeEvents-index.sql",
+                "MySimpleRangeLog.Database.scripts.004-Images-schema.sql",
+                "MySimpleRangeLog.Database.scripts.005-SimpleRangeEventImages-schema.sql",
+                "MySimpleRangeLog.Database.scripts.006-Firearms-schema.sql"
+            ];
+        }
 
         /// <summary>
         ///     Creates a new <see cref="SqliteConnection" /> and opens it for usage.
@@ -72,41 +94,30 @@ namespace MySimpleRangeLog.Helper
         /// <returns>The opened connection.</returns>
         internal static async Task<SqliteConnection> GetOpenConnectionAsync(IDatabaseService dbService)
         {
-            var dbPath = dbService.GetDatabasePath();
-            // Ensure the directory exists for the database file
-            var dir = Path.GetDirectoryName(dbPath);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            try
             {
-                Directory.CreateDirectory(dir);
-            }
+                var connectionString = dbService.GetConnectionString();
+                var connection = new SqliteConnection(connectionString);
 
-            var force = false;
-            string connectionString;
-            if (":memory:".Equals(dbPath, StringComparison.OrdinalIgnoreCase))
+                await connection.OpenAsync();
+
+                await EnsureSQLiteDatabaseExists(connection, connection.IsInMemoryDb());
+
+                Log.Verbose("Using SQLite database {connectionString}", connectionString);
+
+                return connection;
+            }
+            catch (Exception e)
             {
-                connectionString = "DataSource=:memory:";
-                Log.Logger.Verbose("Using in memory database.");
-                force = true;
+                Trace.TraceError(e.Message);
+                Log.Logger.Error(e, "Failed to open database connection");
+
+                throw;
             }
-            else
-            {
-                var builder = new SqliteConnectionStringBuilder()
-                {
-                    Mode = SqliteOpenMode.ReadWriteCreate, DataSource = dbPath
-                };
-                connectionString = builder.ConnectionString;
-            }
-
-            var connection = new SqliteConnection(connectionString);
-            await connection.OpenAsync();
-
-            await EnsureSQLiteDatabaseExists(connection, force);
-
-            return connection;
         }
 
 
-        public static bool InMemoryDb(this SqliteConnection connection)
+        public static bool IsInMemoryDb(this SqliteConnection connection)
         {
             return connection.ConnectionString.Contains(":memory:", StringComparison.OrdinalIgnoreCase);
         }
@@ -120,8 +131,9 @@ namespace MySimpleRangeLog.Helper
                                """;
 
             SimpleRangeEvent[] rangeEvents;
-            await using var connection = await GetOpenConnectionAsync(App.Services.GetRequiredService<IDatabaseService>());
-            if (connection.InMemoryDb())
+            await using var connection =
+                await GetOpenConnectionAsync(App.Services.GetRequiredService<IDatabaseService>());
+            if (connection.IsInMemoryDb())
             {
                 return TestRangeEvents;
             }
@@ -175,6 +187,7 @@ namespace MySimpleRangeLog.Helper
 
                 Log.Verbose("Table 'SimpleRangeEvents' already exists, skipping initialization.");
                 _initialized = true;
+
                 return;
             }
 
@@ -200,7 +213,7 @@ namespace MySimpleRangeLog.Helper
             await PopulateSampleDataIfNeeded(connection);
 
             // For in memory DataSource, we cannot set the _init flag to true. 
-            _initialized = App.Services.GetRequiredService<IDatabaseService>().GetDatabasePath() != ":memory:";
+            _initialized = App.Services.GetRequiredService<IDatabaseService>().GetConnectionString() != ":memory:";
         }
 
         static async Task PopulateSampleDataIfNeeded(SqliteConnection connection)
@@ -224,7 +237,8 @@ namespace MySimpleRangeLog.Helper
             // Populate some data for the designer and our unit tests if it has none yet.
             else if (connection.ConnectionString.Contains(":memory:"))
             {
-                var sql = await typeof(DatabaseHelper).Assembly!.ReadEmbeddedTextFileAsync("003-SimpleRangeEvents-data.sql");
+                var sql = await typeof(DatabaseHelper).Assembly!.ReadEmbeddedTextFileAsync(
+                    "003-SimpleRangeEvents-data.sql");
                 await connection.ExecuteAsync(sql);
             }
         }
@@ -253,6 +267,35 @@ namespace MySimpleRangeLog.Helper
 
             await JsonSerializer.SerializeAsync(targetStream, dto,
                 JsonContextHelper.Default.DatabaseDto);
+        }
+
+        public static async Task<IEnumerable<Firearm>> GetFirearmsAsync()
+        {
+            const string sql = """
+                               SELECT *
+                               FROM Firearms 
+                               ORDER BY Name;
+                               """;
+
+            Firearm[] firearms;
+            await using var connection =
+                await GetOpenConnectionAsync(App.Services.GetRequiredService<IDatabaseService>());
+            if (connection.IsInMemoryDb())
+            {
+                return TestFirearms;
+            }
+
+            try
+            {
+                firearms = (await connection.QueryAsync<Firearm>(sql)).ToArray();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to retrieve simple range events from database");
+                firearms = [];
+            }
+
+            return firearms;
         }
     }
 }

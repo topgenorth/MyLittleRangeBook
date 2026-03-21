@@ -8,7 +8,7 @@ using MySimpleRangeLog.Models;
 namespace MySimpleRangeLog.ViewModels
 {
     /// <summary>
-    ///     ViewModel representing a single SimpleRangeEventViewModel with comprehensive property management and validation.
+    ///     ViewModel representing a single ManageSimpleRangeEventsVM with comprehensive property management and validation.
     ///     Provides observable properties for UI binding, calculated status properties, and
     ///     persistence operations for ToDoItems in the application.
     /// </summary>

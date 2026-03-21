@@ -21,7 +21,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Database\scripts\**\*.*" />
+        <EmbeddedResource Include="Database\scripts\**\*.*"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -46,8 +46,8 @@
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
         <PackageReference Include="CsvHelper" Version="33.1.0"/>
         <PackageReference Include="Dapper" Version="2.1.72"/>
-        <PackageReference Include="dbup-core" Version="6.1.1" />
-        <PackageReference Include="dbup-sqlite" Version="6.0.4" />
+        <PackageReference Include="dbup-core" Version="6.1.1"/>
+        <PackageReference Include="dbup-sqlite" Version="6.0.4"/>
         <PackageReference Include="JetBrains.Annotations" Version="2025.2.4"/>
         <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.5"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5"/>

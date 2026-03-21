@@ -15,6 +15,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SharedControls\SharedControls.csproj" />
+        <ProjectReference Include="..\SharedControls\SharedControls.csproj"/>
     </ItemGroup>
 </Project>

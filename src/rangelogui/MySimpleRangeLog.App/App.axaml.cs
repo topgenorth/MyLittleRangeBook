@@ -12,10 +12,12 @@ using Avalonia.Media;
 using Avalonia.Themes.Fluent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MySimpleRangeLog.Database;
+using MySimpleRangeLog.Main.ViewModels;
 using MySimpleRangeLog.Properties;
 using MySimpleRangeLog.Services;
-using MySimpleRangeLog.ViewModels;
-using MySimpleRangeLog.Views;
+using MainView = MySimpleRangeLog.Main.Views.MainView;
+using MainWindow = MySimpleRangeLog.Main.Views.MainWindow;
 
 namespace MySimpleRangeLog
 {
@@ -57,6 +59,11 @@ namespace MySimpleRangeLog
                 if (services.All(x => x.ServiceType != typeof(ISimpleRangeEventService)))
                 {
                     services.AddSingleton<ISimpleRangeEventService, SimpleRangeEventService>();
+                }
+
+                if (services.All(x => x.ServiceType != typeof(IFirearmsService)))
+                {
+                    services.AddSingleton<IFirearmsService, FirearmsService>();
                 }
 
                 Services = services.BuildServiceProvider();

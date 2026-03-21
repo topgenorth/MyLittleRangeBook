@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
-using MySimpleRangeLog.Helper;
+using MySimpleRangeLog.Database;
 using MySimpleRangeLog.Services;
 using Serilog;
 
@@ -30,7 +30,6 @@ namespace MySimpleRangeLog.Models
                 await using var connection = await DatabaseHelper.GetOpenConnectionAsync(dbService);
                 if (Id is null)
                 {
-                    // INSERT with RETURNING (SQLite 3.35+ supports this)
                     Id = await connection.QuerySingleAsync<long>(
                         """
                         INSERT INTO SimpleRangeEvents (EventDate, FirearmName, RangeName, RoundsFired, AmmoDescription, Notes, Created, Modified)
@@ -41,7 +40,6 @@ namespace MySimpleRangeLog.Models
                 }
                 else
                 {
-                    // UPDATE
                     await connection.ExecuteAsync(
                         """
                         UPDATE SimpleRangeEvents 
@@ -53,23 +51,13 @@ namespace MySimpleRangeLog.Models
                         this);
                 }
 
-
-                // Id = await connection.ExecuteScalarAsync<long?>(
-                //     """
-                //     REPLACE INTO SimpleRangeEvents (Id, EventDate, FirearmName, RangeName, RoundsFired, AmmoDescription, Notes, Modified)
-                //             VALUES (@Id, @EventDate, @FirearmName, @RangeName, @RoundsFired, @AmmoDescription, @Notes, @Modified);
-                //     SELECT Last_insert_rowid();
-                //     """, this
-                // );
-
-                // Remember to sync the Indexed-DB.
                 await DatabaseHelper.SyncUnderlyingDatabaseAsync();
 
                 return Id != null;
             }
             catch (Exception e)
             {
-                Log.Logger.Error(e, "Could not save SimpleRangeEvent `{0}`", Id);
+                Log.Logger.Error(e, "Could not save SimpleRangeEvent `{Id}`", Id);
                 Trace.TraceError(e.Message);
 
                 return false;
@@ -85,11 +73,10 @@ namespace MySimpleRangeLog.Models
 
             try
             {
-                await using var connection = await DatabaseHelper.GetOpenConnectionAsync(App.Services.GetRequiredService<IDatabaseService>());
+                await using var connection =
+                    await DatabaseHelper.GetOpenConnectionAsync(App.Services.GetRequiredService<IDatabaseService>());
                 await connection.ExecuteAsync("DELETE FROM SimpleRangeEvents WHERE Id = @Id;", this);
                 await DatabaseHelper.SyncUnderlyingDatabaseAsync();
-
-                return true;
             }
             catch (Exception e)
             {
@@ -98,6 +85,8 @@ namespace MySimpleRangeLog.Models
 
                 return false;
             }
+
+            return true;
         }
     }
 }

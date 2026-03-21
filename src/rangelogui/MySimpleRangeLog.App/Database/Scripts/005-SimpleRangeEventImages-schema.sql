@@ -4,7 +4,7 @@ create table IF NOT EXISTS SimpleRangeEventImages
     SimpleRangeEventID INTEGER not null
         constraint SimpleRangeEventImages_SimpleRangeEvents_Id_fk
             references SimpleRangeEvents,
-    ImageId            INTEGER not null
-        constraint SimpleRangeEventImages_Images_Id_fk
-            references Images
+    FirearmId          INTEGER not null
+        constraint SimpleRangeEventImages_Firearms_Id_fk
+            references Firearms
 );

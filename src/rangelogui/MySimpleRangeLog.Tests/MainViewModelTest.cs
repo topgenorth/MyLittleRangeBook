@@ -1,6 +1,6 @@
 ﻿using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
-using MySimpleRangeLog.ViewModels;
+using MySimpleRangeLog.Main.ViewModels;
 
 namespace MySimpleRangeLog.Tests
 {
@@ -25,7 +25,7 @@ namespace MySimpleRangeLog.Tests
     {
         /// <summary>
         ///     Tests that the MainViewModel constructor initializes all child ViewModels.
-        ///     Verifies that CategoriesViewModel, ToDoItemsViewModel, and SettingsViewModel
+        ///     Verifies that CategoriesViewModel, ToDoItemsViewModel, and SettingsVM
         ///     are properly instantiated and not null after construction.
         /// </summary>
         /// <remarks>
@@ -42,8 +42,8 @@ namespace MySimpleRangeLog.Tests
             Dispatcher.UIThread.RunJobs();
             await Task.Delay(100); // wait some milliseconds to process the I/O operations
 
-            Assert.NotNull(vm.SimpleRangeEventViewModel);
-            Assert.NotNull(vm.SettingsViewModel);
+            Assert.NotNull(vm.ManageSimpleRangeEventsVM);
+            Assert.NotNull(vm.SettingsVM);
         }
     }
 }

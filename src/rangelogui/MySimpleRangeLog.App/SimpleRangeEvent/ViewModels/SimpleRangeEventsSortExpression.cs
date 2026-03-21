@@ -2,12 +2,11 @@
 
 namespace MySimpleRangeLog.ViewModels
 {
-    public class SimpleRangeEventsSortExpression
+    public class SimpleRangeEventsSortExpression : SortableViewModelExpression<SimpleRangeEventViewModel>
     {
         public SimpleRangeEventsSortExpression(Func<SimpleRangeEventViewModel, IComparable> sortExpression, string name)
+            : base(sortExpression, name)
         {
-            DisplayName = name;
-            SortExpression = sortExpression;
         }
 
 
@@ -26,14 +25,5 @@ namespace MySimpleRangeLog.ViewModels
             SortByFirearmNameExpression,
             SortByRangeNameExpression
         ];
-
-        public string DisplayName { get; }
-
-        public Func<SimpleRangeEventViewModel, IComparable> SortExpression { get; }
-
-        public override string ToString()
-        {
-            return DisplayName;
-        }
     }
 }

@@ -1,16 +1,19 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 using MySimpleRangeLog.Helper;
+using MySimpleRangeLog.Services;
 using Serilog;
 
-namespace MySimpleRangeLog.Services
+namespace MySimpleRangeLog.Database
 {
     /// <summary>
     ///     Desktop-specific implementation of the database service.
     ///     Uses the OS-specific local application data folder (e.g., %LOCALAPPDATA% on Windows,
     ///     ~/.local/share on Linux, ~/Library/Application Support on macOS) to store the SQLite database.
     /// </summary>
+    // ReSharper disable once InconsistentNaming
     public class SQLiteDbService : IDatabaseService
     {
         /// <summary>
@@ -23,7 +26,7 @@ namespace MySimpleRangeLog.Services
         ///     Creates the app-specific subdirectory in the local app data folder if it doesn't exist.
         /// </summary>
         /// <returns>The full path to the database file (e.g., C:\Users\Name\AppData\Local\SimpleRangeLog\fileName.db on Windows)</returns>
-        public string GetDatabasePath()
+        public string GetConnectionString()
         {
             var settingsDirectory = JsonSettingsFileStorageService.SettingsDirectory;
 
@@ -45,7 +48,11 @@ namespace MySimpleRangeLog.Services
                 dbPath = Path.Combine(settingsDirectory, dbName);
             }
 
-            return dbPath;
+
+            var cb = new SqliteConnectionStringBuilder { DataSource = dbPath, Mode = SqliteOpenMode.ReadWriteCreate };
+
+
+            return cb.ConnectionString;
         }
 
         /// <summary>

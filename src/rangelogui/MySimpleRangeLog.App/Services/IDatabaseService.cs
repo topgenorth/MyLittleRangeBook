@@ -4,7 +4,12 @@ namespace MySimpleRangeLog.Services
 {
     public interface IDatabaseService
     {
-        string GetDatabasePath();
+        /// <summary>
+        ///     Returns the connection string for the database.
+        /// </summary>
+        /// <returns></returns>
+        string GetConnectionString();
+
         Task SaveAsync();
     }
 }

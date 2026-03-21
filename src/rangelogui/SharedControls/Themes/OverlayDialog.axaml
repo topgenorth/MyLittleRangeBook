@@ -5,7 +5,7 @@
         <Border Width="400"
                 Height="400">
             <controls:OverlayDialog DialogCommands="{x:Static controls:DialogCommands.OkCancel}" Header="Test">
-                <ComboBox ItemsSource="Hello World" /> 
+                <ComboBox ItemsSource="Hello World" />
             </controls:OverlayDialog>
         </Border>
     </Design.PreviewWith>

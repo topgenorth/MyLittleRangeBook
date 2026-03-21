@@ -1,9 +1,32 @@
 CREATE TABLE IF NOT EXISTS Images
 (
-    Id       INTEGER PRIMARY KEY AUTOINCREMENT,
-    FileName TEXT                           NOT NULL,
-    MimeType TEXT                           NOT NULL,
-    Data     BLOB                           NOT NULL,
-    Created  TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    Modified TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+    Id
+    INTEGER
+    PRIMARY
+    KEY
+    AUTOINCREMENT,
+    FileName
+    TEXT
+    NOT
+    NULL,
+    MimeType
+    TEXT
+    NOT
+    NULL,
+    Data
+    BLOB
+    NOT
+    NULL,
+    Created
+    TEXT
+    DEFAULT
+    CURRENT_TIMESTAMP
+    NOT
+    NULL,
+    Modified
+    TEXT
+    DEFAULT
+    CURRENT_TIMESTAMP
+    NOT
+    NULL
 );

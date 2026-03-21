@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="clr-namespace:SharedControls.Controls"
                     xmlns:converters="clr-namespace:SharedControls.Converters">
 
@@ -9,13 +9,14 @@
             </controls:LabeledControl>
         </StackPanel>
     </Design.PreviewWith>
-    
+
     <Thickness x:Key="LabeledControl.HeaderMargin">0,6,0,4</Thickness>
 
     <ControlTheme x:Key="{x:Type controls:LabeledControl}" TargetType="controls:LabeledControl">
 
         <Setter Property="Padding" Value="3" />
-        <Setter Property="HeaderPosition" Value="{Binding $self.Bounds, Converter={x:Static converters:BoundsToHeaderPositionConverter.Instance}}" />
+        <Setter Property="HeaderPosition"
+                Value="{Binding $self.Bounds, Converter={x:Static converters:BoundsToHeaderPositionConverter.Instance}}" />
         <Setter Property="Template">
             <ControlTemplate>
                 <Border Name="PART_Border"
@@ -34,15 +35,15 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <Label Name="PART_HeaderLabel"
-                                          Margin="{DynamicResource HeaderedControl.HeaderMargin}"
-                                          Content="{TemplateBinding Header}"
-                                          ContentTemplate="{TemplateBinding HeaderTemplate}"
-                                          FontFamily="{TemplateBinding FontFamily}"
-                                          FontSize="{TemplateBinding FontSize}"
-                                          FontStyle="{TemplateBinding FontStyle}"
-                                          FontWeight="{TemplateBinding FontWeight}"
-                                          Target="{Binding #PART_ContentPresenter.Child}" />
-                        <ContentPresenter Grid.Row="1" Grid.Column="0" 
+                               Margin="{DynamicResource HeaderedControl.HeaderMargin}"
+                               Content="{TemplateBinding Header}"
+                               ContentTemplate="{TemplateBinding HeaderTemplate}"
+                               FontFamily="{TemplateBinding FontFamily}"
+                               FontSize="{TemplateBinding FontSize}"
+                               FontStyle="{TemplateBinding FontStyle}"
+                               FontWeight="{TemplateBinding FontWeight}"
+                               Target="{Binding #PART_ContentPresenter.Child}" />
+                        <ContentPresenter Grid.Row="1" Grid.Column="0"
                                           Name="PART_ContentPresenter"
                                           HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"

@@ -1,5 +1,6 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
+using MySimpleRangeLog.Database;
 using MySimpleRangeLog.Helper;
 using MySimpleRangeLog.Models;
 

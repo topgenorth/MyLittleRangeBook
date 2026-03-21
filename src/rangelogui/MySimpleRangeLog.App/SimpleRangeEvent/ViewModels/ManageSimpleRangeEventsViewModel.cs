@@ -11,7 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using DynamicData;
 using DynamicData.Binding;
-using MySimpleRangeLog.Helper;
+using MySimpleRangeLog.Database;
 using MySimpleRangeLog.Messages;
 using MySimpleRangeLog.Models;
 using SharedControls.Controls;
@@ -39,7 +39,7 @@ namespace MySimpleRangeLog.ViewModels
         readonly ReadOnlyObservableCollection<SimpleRangeEventViewModel> _simpleRangeEvents;
 
         /// <summary>
-        ///     Source cache for managing SimpleRangeEventViewModel instances with reactive updates.
+        ///     Source cache for managing ManageSimpleRangeEventsVM instances with reactive updates.
         ///     Uses the SimpleRangeEvent ID as the key for efficient lookups and updates.
         /// </summary>
         readonly SourceCache<SimpleRangeEventViewModel, long> _simpleRangeEventSourceCache = new(x => x.Id ?? -1);
@@ -54,7 +54,8 @@ namespace MySimpleRangeLog.ViewModels
                               throw new InvalidOperationException("No SynchronizationContext provided.");
 
             // Create reactive observable for text filtering with 300ms throttle to reduce frequent updates
-            var filterByFirearmOrRangeObservable = this.ObserveValue(nameof(FilterString), () => FilterString)
+            var filterByFirearmOrRangeObservable = this.ObserveValue(nameof(FilterString),
+                    () => FilterString)
                 .Throttle(TimeSpan.FromMilliseconds(300))
                 .DistinctUntilChanged()
                 .Select(FilterByFirearmOrRangeObservable);
@@ -64,7 +65,9 @@ namespace MySimpleRangeLog.ViewModels
                 .CombineLatest(
                     this.ObserveValue(nameof(SortExpression2), () => SortExpression2),
                     this.ObserveValue(nameof(SortExpression3), () => SortExpression3),
-                    (s1, s2, s3) => SortExpressionComparer<SimpleRangeEventViewModel>
+                    (s1,
+                        s2,
+                        s3) => SortExpressionComparer<SimpleRangeEventViewModel>
                         .Ascending(s1.SortExpression)
                         .ThenByAscending(s2.SortExpression)
                         .ThenByAscending(s3.SortExpression)
@@ -154,7 +157,7 @@ namespace MySimpleRangeLog.ViewModels
 
         /// <summary>
         ///     Loads SimpleRangeEvents from the database and populates the source cache.
-        ///     Creates SimpleRangeEventViewModel wrappers for each database item.
+        ///     Creates ManageSimpleRangeEventsVM wrappers for each database item.
         /// </summary>
         async Task LoadDataAsync()
         {

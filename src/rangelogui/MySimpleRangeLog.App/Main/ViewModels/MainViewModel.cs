@@ -1,6 +1,9 @@
-﻿using SharedControls.Services;
+﻿using MySimpleRangeLog.ViewModels;
+using SharedControls.Services;
+using ManageSimpleRangeEventsViewModel = MySimpleRangeLog.ViewModels.ManageSimpleRangeEventsViewModel;
+using SettingsViewModel = MySimpleRangeLog.ViewModels.SettingsViewModel;
 
-namespace MySimpleRangeLog.ViewModels
+namespace MySimpleRangeLog.Main.ViewModels
 {
     /// <summary>
     ///     Main ViewModel that orchestrates the entire application's ViewModels.
@@ -13,11 +16,13 @@ namespace MySimpleRangeLog.ViewModels
         /// <summary>
         ///     The ViewModel that manages the SimpleRangeEvents and CRUD operations.
         /// </summary>
-        public ManageSimpleRangeEventsViewModel SimpleRangeEventViewModel { get; set; } = new();
+        public ManageSimpleRangeEventsViewModel ManageSimpleRangeEventsVM { get; set; } = new();
+
+        public ManageFirearmsViewModel ManageFirearmsVM { get; set; } = new();
 
         /// <summary>
         ///     The ViewModel that manages application settings and configuration.
         /// </summary>
-        public SettingsViewModel SettingsViewModel { get; set; } = new();
+        public SettingsViewModel SettingsVM { get; set; } = new();
     }
 }

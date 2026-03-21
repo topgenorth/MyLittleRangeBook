@@ -5,14 +5,15 @@
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
              xmlns:vm="using:MySimpleRangeLog.ViewModels"
              xmlns:views="clr-namespace:MySimpleRangeLog.Views"
+             xmlns:viewModels="clr-namespace:MySimpleRangeLog.Main.ViewModels"
              mc:Ignorable="d" d:DesignWidth="690" d:DesignHeight="450"
-             x:Class="MySimpleRangeLog.Views.MainView"
+             x:Class="MySimpleRangeLog.Main.Views.MainView"
              x:Name="Root"
-             x:DataType="vm:MainViewModel">
+             x:DataType="viewModels:MainViewModel">
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainViewModel />
+        <viewModels:MainViewModel />
     </Design.DataContext>
 
     <!-- Note: Content refers to the selected item's tag -->
@@ -24,19 +25,27 @@
         <controls:HamburgerMenu.MenuItems>
             <controls:HamburgerMenuItem Label="Range Events"
                                         Icon="{DynamicResource PhosphorIcons.CirclesThreePlusThin}"
-                                        Tag="{Binding SimpleRangeEventViewModel}" />
+                                        Tag="{Binding ManageSimpleRangeEventsVM}" />
+        </controls:HamburgerMenu.MenuItems>
+        <controls:HamburgerMenu.MenuItems>
+            <controls:HamburgerMenuItem Label="Firearms"
+                                        Icon="{DynamicResource PhosphorIcons.CirclesThreePlusThin}"
+                                        Tag="{Binding ManageFirearmsVM}" />
         </controls:HamburgerMenu.MenuItems>
 
         <controls:HamburgerMenu.OptionsMenuItems>
             <controls:HamburgerMenuItem Label="Settings"
                                         Icon="{DynamicResource PhosphorIcons.GearLight}"
-                                        Tag="{Binding SettingsViewModel}" />
+                                        Tag="{Binding SettingsVM}" />
         </controls:HamburgerMenu.OptionsMenuItems>
 
         <!-- Specify DataTemplates for the Content -->
         <controls:HamburgerMenu.DataTemplates>
             <DataTemplate DataType="vm:ManageSimpleRangeEventsViewModel">
                 <views:ManageSimpleRangeEventsView />
+            </DataTemplate>
+            <DataTemplate DataType="vm:ManageFirearmsViewModel">
+                <views:ManageFirearmsView />
             </DataTemplate>
             <DataTemplate DataType="vm:EditSimpleRangeEventViewModel">
                 <views:EditSimpleRangeEventView />

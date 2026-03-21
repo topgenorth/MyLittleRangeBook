@@ -1,5 +1,5 @@
 using System.Linq;
-using MySimpleRangeLog.Helper;
+using MySimpleRangeLog.Database;
 
 namespace MySimpleRangeLog.ViewModels
 {

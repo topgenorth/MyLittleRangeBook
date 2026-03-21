@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Dapper;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
+using MySimpleRangeLog.Database;
 using MySimpleRangeLog.Helper;
 using MySimpleRangeLog.Messages;
 using MySimpleRangeLog.Models;
@@ -154,7 +155,8 @@ namespace MySimpleRangeLog.ViewModels
             if (choice == DialogResult.Yes)
             {
                 // Get database connection and clear all data
-                await using var connection = await DatabaseHelper.GetOpenConnectionAsync(App.Services.GetRequiredService<IDatabaseService>());
+                await using var connection =
+                    await DatabaseHelper.GetOpenConnectionAsync(App.Services.GetRequiredService<IDatabaseService>());
 
                 // Drop existing tables and vacuum the database to reclaim space
                 await connection.ExecuteAsync(
