@@ -10,7 +10,7 @@
         <AssemblyName>MySimpleRangeLog</AssemblyName>
         <LangVersion>preview</LangVersion>
         <RootNamespace>MySimpleRangeLog</RootNamespace>
-        <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
+        <ApplicationIcon>Assets\AppIcon256.ico</ApplicationIcon>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
