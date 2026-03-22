@@ -10,6 +10,8 @@
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <DocumentationFile></DocumentationFile>
         <NoWarn>1701;1702;1591</NoWarn>
+        <WarningLevel>3</WarningLevel>
+        <WarningsAsErrors>NU1605;SYSLIB0011</WarningsAsErrors>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
