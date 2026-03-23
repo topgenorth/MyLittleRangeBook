@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"flag"
@@ -13,9 +13,25 @@ import (
 
 type recordListener struct{}
 
+func debugMessage(m proto.Message) {
+	fmt.Println("Debug message for message number:", m.Num)
+}
+func parseSerialNumber(m proto.Message) uint64 {
+	if m.Num != mesgnum.FileId {
+		return 0
+	}
+
+	f := m.FieldByNum(3)
+	fmt.Println("  field name", f.Name)
+	return 1
+}
+
 func (rl *recordListener) OnMesg(m proto.Message) {
-	if m.Num != mesgnum.Record {
-		return
+
+	if m.Num == mesgnum.FileId {
+		fmt.Println("Serial number: ", parseSerialNumber(m))
+	} else {
+		debugMessage(m)
 	}
 
 	// This SDK exposes decoded messages through the listener; the exact
@@ -24,7 +40,6 @@ func (rl *recordListener) OnMesg(m proto.Message) {
 	// ft/s = m/s * 3.28084
 	//
 	// Add the message-specific field extraction once the record type is known.
-	fmt.Println("Record message found")
 }
 
 func main() {
