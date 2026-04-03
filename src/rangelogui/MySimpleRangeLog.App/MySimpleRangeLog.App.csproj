@@ -7,7 +7,7 @@
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <AssemblyName>MySimpleRangeLog</AssemblyName>
+        <AssemblyName>mlrb-gui</AssemblyName>
         <LangVersion>preview</LangVersion>
         <RootNamespace>MySimpleRangeLog</RootNamespace>
         <ApplicationIcon>Assets\AppIcon256.ico</ApplicationIcon>
