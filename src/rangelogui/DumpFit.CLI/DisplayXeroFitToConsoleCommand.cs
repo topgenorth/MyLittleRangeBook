@@ -5,7 +5,7 @@ using Spectre.Console;
 
 namespace MySimpleRangeLog.CLI
 {
-    [RegisterCommands("display")]
+    [RegisterCommands("console")]
     public class DisplayXeroFitToConsoleCommand
     {
         const int SUCCESS = 0;
@@ -26,10 +26,12 @@ namespace MySimpleRangeLog.CLI
 
 
         /// <summary>
+        /// Displays the FIT file to the console.
         /// </summary>
         /// <param name="file">Path to the FIT file</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
+        [Command("")]
         public async Task<int> Console(string file, CancellationToken cancellationToken)
         {
             if (!File.Exists(file))
