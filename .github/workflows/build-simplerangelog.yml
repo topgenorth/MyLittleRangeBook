@@ -19,7 +19,17 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Publish single-file EXE
+      - name: Publish single-file EXE for the CLI
+        run: |
+          dotnet publish src/rangelogui/DumpFit.CLI/DumpFit.CLI.csproj -c Release \
+            -r ${{ matrix.platform == 'windows' && 'win-x64' || 'linux-x64' }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            -o ./out/DumpFit
+        shell: bash
+
+      - name: Publish single-file EXE for the GUI
         run: |
           dotnet publish src/rangelogui/MySimpleRangeLog.App/MySimpleRangeLog.App.csproj -c Release \
             -r ${{ matrix.platform == 'windows' && 'win-x64' || 'linux-x64' }} \
@@ -29,10 +39,11 @@ jobs:
             -o ./out/SimpleRangeLog
         shell: bash
 
-      - name: Upload ${{ matrix.platform }} artifact
+      - name: Upload ${{ matrix.platform }} artifacts
         if: success()
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ matrix.platform }}-SimpleRangeLog-exe
+          name: ${{ matrix.platform }}-executables
           path: |
             out/SimpleRangeLog/
+            out/DumpFit/
