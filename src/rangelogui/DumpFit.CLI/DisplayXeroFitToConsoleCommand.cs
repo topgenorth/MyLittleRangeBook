@@ -8,10 +8,6 @@ namespace MySimpleRangeLog.CLI
     [RegisterCommands("console")]
     public class DisplayXeroFitToConsoleCommand
     {
-        const int SUCCESS = 0;
-        const int FILE_NOT_FOUND = 1;
-        const int FAILED_TO_LOAD = 2;
-        const int FAILED_TO_PARSE = 3;
         readonly IAnsiConsole _console;
 
         readonly ILogger _logger;
@@ -29,20 +25,20 @@ namespace MySimpleRangeLog.CLI
         /// Displays the FIT file to the console.
         /// </summary>
         /// <param name="file">Path to the FIT file</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
         [Command("")]
-        public async Task<int> Console(string file, CancellationToken cancellationToken)
+        public async Task<int> ToConsoleAsync(string file, CancellationToken ct)
         {
             if (!File.Exists(file))
             {
                 _logger.Warning("File {file} not found.", file);
                 _console.MarkupLineInterpolated($"[bold red]✗ Error:[/] Could not find '{file}'.");
 
-                return FILE_NOT_FOUND;
+                return ReturnCodes.FILE_NOT_FOUND;
             }
 
-            var result = (await file.LoadAsync(cancellationToken))
+            var result = (await file.LoadAsync(ct))
                 .Bind(bytesFromFitFile =>
                 {
                     _logger.Verbose("Loaded {bytes} bytes.", bytesFromFitFile.Length);
@@ -56,7 +52,7 @@ namespace MySimpleRangeLog.CLI
                 _console.MarkupLineInterpolated($"[bold red]✗ Error:[/] Failed to parse FIT file '{file}'");
                 _logger.Error("Failed to process FIT file {file}.", file);
 
-                return result.HasError<UnexpectedFitFileTypeError>() ? FAILED_TO_PARSE : FAILED_TO_LOAD;
+                return result.HasError<UnexpectedFitFileTypeError>() ? ReturnCodes.FAILED_TO_PARSE : ReturnCodes.FAILED_TO_LOAD;
             }
 
             var shotSession = result.Value;
@@ -64,7 +60,7 @@ namespace MySimpleRangeLog.CLI
 
             DisplaySessionToConsole(_console, shotSession);
 
-            return SUCCESS;
+            return ReturnCodes.SUCCESS;
         }
 
         static void DisplayFileProcessingPath(IAnsiConsole console, string file)

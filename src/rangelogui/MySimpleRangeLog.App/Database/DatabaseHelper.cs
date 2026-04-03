@@ -77,11 +77,11 @@ namespace MySimpleRangeLog.Database
         {
             DATABASE_SCRIPTS =
             [
-                "MySimpleRangeLog.Database.scripts.001-SimpleRangeEvents-schema.sql",
+                "MySimpleRangeLog.Database.scripts.001-initial-schema.sql",
                 "MySimpleRangeLog.Database.scripts.002-SimpleRangeEvents-index.sql",
-                "MySimpleRangeLog.Database.scripts.004-Images-schema.sql",
-                "MySimpleRangeLog.Database.scripts.005-SimpleRangeEventImages-schema.sql",
-                "MySimpleRangeLog.Database.scripts.006-Firearms-schema.sql"
+                "MySimpleRangeLog.Database.scripts.013-Images-schema.sql",
+                "MySimpleRangeLog.Database.scripts.015-SimpleRangeEventImages-schema.sql",
+                "MySimpleRangeLog.Database.scripts.014-Firearms-schema.sql"
             ];
         }
 
