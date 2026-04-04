@@ -1,12 +1,9 @@
 ﻿using ConsoleAppFramework;
 using DbUp;
-using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
-using MySimpleRangeLog.CLI;
 using Spectre.Console;
-using SQLitePCL;
 
-namespace MySimpleRangeLog.Database
+namespace MySimpleRangeLog.CLI.Database
 {
     [RegisterCommands("schema")]
     public class SqliteMigrator
@@ -49,17 +46,17 @@ namespace MySimpleRangeLog.Database
             if (!File.Exists(file))
             {
                 _logger.Warning("File {file} not found.", file);
-                _console.MarkupLineInterpolated($"[bold yellow]✗ [/] Could not find '{file}'.");
-                return ReturnCodes.FILE_NOT_FOUND;
+                _console.MarkupLineInterpolated($"[bold yellow]✗ Could not find '{file}'.[/]");
+                return ReturnCodes.DATABASE_FILE_NOT_FOUND;
             }
             
-            _console.MarkupLineInterpolated($"[bold green]✓ [/] Checking migration version for '{file}'...");
+            _console.MarkupLineInterpolated($"[bold green]✓ Checking migration version for '{file}'.[/]");
             
             using var connection = new SqliteConnection(BuildConnectionString(file));
             await connection.OpenAsync(ct);
             
             var cmd = connection.CreateCommand();
-            cmd.CommandText = "SELECT * FROM SchemaVersions ORDER BY Applied ASC";
+            cmd.CommandText = "SELECT * FROM SchemaVersions ORDER BY Applied";
             await using var rdr = await cmd.ExecuteReaderAsync(ct);
             
             var table = new Table();
@@ -69,9 +66,9 @@ namespace MySimpleRangeLog.Database
 
             while (await rdr.ReadAsync(ct))
             {
-                string schemaVersionId = rdr.IsDBNull(0) ? string.Empty : rdr.GetValue(0).ToString();
+                string schemaVersionId = (rdr.IsDBNull(0) ? string.Empty : rdr.GetValue(0).ToString()) ?? string.Empty;
                 string scriptName = rdr.IsDBNull(1) ? string.Empty : rdr.GetString(1);
-                string applied = rdr.IsDBNull(2) ? string.Empty : rdr.GetValue(2).ToString();
+                string applied = rdr.IsDBNull(2) ? string.Empty : rdr.GetValue(2).ToString()?? string.Empty;
 
                 table.AddRow(schemaVersionId!, scriptName, applied!);
             }
@@ -79,7 +76,51 @@ namespace MySimpleRangeLog.Database
             _console.Write(table);
             return ReturnCodes.SUCCESS;
         }
-        
+
+        /// <summary>
+        /// Run the SQL statements to insert data into the database.
+        /// </summary>
+        /// <param name="file">The database file.</param>
+        /// <param name="sqlfile">The SQL file to use.</param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        [Command("sql")]
+        public async Task<int> RunSqlOnDatabase(string file, string sqlfile, CancellationToken ct)
+        {
+            if (!File.Exists(file))
+            {
+                _logger.Warning("File {file} not found.", file);
+                _console.MarkupLineInterpolated($"[bold red]✗ Could not find the database '{file}'.[/]");
+                return ReturnCodes.DATABASE_FILE_NOT_FOUND;
+            }
+
+            if (!File.Exists(sqlfile))
+            {
+                _logger.Warning("SQL File {sqlFile} not found.", sqlfile);
+                _console.MarkupLineInterpolated($"[bold red]✗ Could not find the SQL '{sqlfile}'.[/]");
+                return ReturnCodes.SQL_FILE_NOT_FOUND;
+            }
+            try
+            {
+                var sql = await File.ReadAllTextAsync(sqlfile, ct);
+                using var connection = new SqliteConnection(BuildConnectionString(file));
+                await connection.OpenAsync(ct);
+
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = sql;
+                await cmd.ExecuteNonQueryAsync(ct);
+                return ReturnCodes.SUCCESS;
+
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Failed to run SQL.");
+                _console.MarkupLineInterpolated($"[bold red]✗ Error: failed to run SQL '{e.Message}'.[/]");
+                return ReturnCodes.FAILED_TO_RUN_SQL;
+            }
+            
+            return ReturnCodes.SUCCESS;
+        }
         /// <summary>
         /// Ensures that all database schema migrations are applied to the specified SQLite database file.
         /// </summary>
@@ -92,7 +133,7 @@ namespace MySimpleRangeLog.Database
             if (!File.Exists(file))
             {
                 _logger.Warning("File {file} not found.", file);
-                _console.MarkupLineInterpolated($"[bold yellow]✗ [/] Could not find '{file}'; database will be created.");
+                _console.MarkupLineInterpolated($"[bold yellow]✗ Could not find '{file}'; database will be created.[/]");
             }
 
             try
@@ -103,20 +144,15 @@ namespace MySimpleRangeLog.Database
                     .LogToConsole()
                     .Build();
 
-                if (upgrader.IsUpgradeRequired())
-                {
-                    _console.MarkupLine("[Green]Migrations will be applied.[/]");
-                }
-                else
-                {
-                    _console.MarkupLine("[yellow]✓ No upgrade is required.[/]");
-                }
+                _console.MarkupLine(upgrader.IsUpgradeRequired()
+                    ? "[Green]Migrations will be applied.[/]"
+                    : "[yellow]✓ No upgrade is required.[/]");
 
                 var result = upgrader.PerformUpgrade();
                 if (!result.Successful)
                 {
                     _console.MarkupLineInterpolated(
-                        $"[bold red]✗ Error:[/] failed to apply migrations '{result.Error}'");
+                        $"[bold red]✗ Error: failed to apply migrations '{result.Error}'.[/]");
 
                     return ReturnCodes.FAILED_TO_APPLY_MIGRATIONS;
                 }
@@ -128,7 +164,7 @@ namespace MySimpleRangeLog.Database
             catch (Exception e)
             {
                 _logger.Error(e, "Failed to apply migrations");
-                _console.MarkupLineInterpolated($"[bold red]✗ Error:[/] failed to apply migrations '{e.Message}'");
+                _console.MarkupLineInterpolated($"[bold red]✗ Error: failed to apply migrations '{e.Message}'.[/]");
 
                 return ReturnCodes.FAILED_TO_APPLY_MIGRATIONS;
             }

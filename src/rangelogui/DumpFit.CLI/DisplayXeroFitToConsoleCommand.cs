@@ -35,7 +35,7 @@ namespace MySimpleRangeLog.CLI
                 _logger.Warning("File {file} not found.", file);
                 _console.MarkupLineInterpolated($"[bold red]✗ Error:[/] Could not find '{file}'.");
 
-                return ReturnCodes.FILE_NOT_FOUND;
+                return ReturnCodes.DATABASE_FILE_NOT_FOUND;
             }
 
             var result = (await file.LoadAsync(ct))
