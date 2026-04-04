@@ -11,6 +11,7 @@ using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Gui.Database.Sqlite;
 using MyLittleRangeBook.Gui.Helper;
 using MyLittleRangeBook.Gui.Services;
+using MyLittleRangeBook.Gui.ViewModels;
 using Serilog;
 
 namespace MyLittleRangeBook.Gui
@@ -25,16 +26,22 @@ namespace MyLittleRangeBook.Gui
         {
             ConfigureLogging();
 
-            // Register the Desktop service
             var services = new ServiceCollection();
-            services.TryAddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
-
-            services.AddSqliteHelper()
-                .TryAddSingleton<IDatabaseService, SqliteDbService>();
-
+            services.AddSqliteHelper();
             // [TO20260311] Need to register a handler for Dapper to convert strings to DateTimeOffset values.
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SQLiteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SQLiteDateTimeOffsetHandler());
+
+            services.TryAddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
+            services.TryAddSingleton<ISimpleRangeEventService, SimpleRangeEventService>();
+            services.TryAddSingleton<IFirearmsService, FirearmsService>();
+
+            services.AddTransient<MainViewModel>();
+            services.AddTransient<ManageSimpleRangeEventsViewModel>();
+            services.AddTransient<ManageFirearmsViewModel>();
+            services.AddTransient<SettingsViewModel>();
+
+
 
             App.RegisterAppServices(services);
 

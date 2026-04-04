@@ -52,16 +52,7 @@ namespace MyLittleRangeBook.Gui
         {
             try
             {
-                services.AddSqliteHelper();
-                services.TryAddSingleton<IDatabaseService, DesignDbService>();
-                services.TryAddSingleton<ISimpleRangeEventService, SimpleRangeEventService>();
-                services.TryAddSingleton<IFirearmsService, FirearmsService>();
 
-                // Register ViewModels for injection
-                services.AddTransient<MainViewModel>();
-                services.AddTransient<ManageSimpleRangeEventsViewModel>();
-                services.AddTransient<ManageFirearmsViewModel>();
-                services.AddTransient<SettingsViewModel>();
 
                 Services = services.BuildServiceProvider();
 
@@ -80,7 +71,6 @@ namespace MyLittleRangeBook.Gui
             if (Design.IsDesignMode)
             {
                 var serviceCollection = new ServiceCollection();
-                serviceCollection.TryAddSingleton<IDatabaseService>(new DesignDbService());
                 serviceCollection.TryAddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
                 RegisterAppServices(serviceCollection);
             }

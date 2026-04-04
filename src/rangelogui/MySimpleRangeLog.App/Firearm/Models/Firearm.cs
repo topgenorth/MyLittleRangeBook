@@ -48,7 +48,6 @@ namespace MyLittleRangeBook.Gui.Models
             try
             {
                 await connection.ExecuteAsync("DELETE FROM Firearms WHERE Id = @Id;", this);
-                await DatabaseHelper.SyncUnderlyingDatabaseAsync();
             }
             catch (Exception e)
             {
@@ -71,7 +70,6 @@ namespace MyLittleRangeBook.Gui.Models
         public async Task<bool> SaveAsync(SqliteConnection db, CancellationToken cancellationToken = default)
         {
             Modified = DateTimeOffset.UtcNow;
-            var dbService = App.Services.GetRequiredService<IDatabaseService>();
 
             try
             {
@@ -92,8 +90,6 @@ namespace MyLittleRangeBook.Gui.Models
                                           WHERE Id = @Id
                                           """, this);
                 }
-
-                await DatabaseHelper.SyncUnderlyingDatabaseAsync();
 
                 return RowId != null;
             }

@@ -74,7 +74,6 @@ namespace MyLittleRangeBook.Gui.Models
         public async Task<bool> SaveAsync(SqliteConnection connection, CancellationToken cancellationToken = default)
         {
             Modified = DateTimeOffset.UtcNow;
-            var dbService = App.Services.GetRequiredService<IDatabaseService>();
             try
             {
                 Id ??= await Nanoid.GenerateAsync();
@@ -101,9 +100,6 @@ namespace MyLittleRangeBook.Gui.Models
                         """,
                         this);
                 }
-
-                await DatabaseHelper.SyncUnderlyingDatabaseAsync();
-
                 return RowId != null;
             }
             catch (Exception e)
@@ -125,7 +121,6 @@ namespace MyLittleRangeBook.Gui.Models
             try
             {
                 await connection.ExecuteAsync("DELETE FROM SimpleRangeEvents WHERE Id = @Id;", this);
-                await DatabaseHelper.SyncUnderlyingDatabaseAsync();
             }
             catch (Exception e)
             {

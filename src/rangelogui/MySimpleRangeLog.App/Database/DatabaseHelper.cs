@@ -56,19 +56,6 @@ namespace MyLittleRangeBook.Gui.Database
         }
 
         /// <summary>
-        ///     Syncs the database with the underlying data store if needed.
-        /// </summary>
-        /// <remarks>
-        ///     Wasm uses IndexedDB to store the data. This needs to be synced.
-        ///     This helper will do it for us. If you don't need the WASM-target, this can be omitted.
-        /// </remarks>
-        public static async Task SyncUnderlyingDatabaseAsync()
-        {
-            await App.Services.GetRequiredService<IDatabaseService>().SaveAsync();
-        }
-
-
-        /// <summary>
         ///     Saves a JSON representation of the entire database into the provided Stream.
         /// </summary>
         /// <param name="connection"></param>
@@ -94,9 +81,6 @@ namespace MyLittleRangeBook.Gui.Database
                                FROM Firearms 
                                ORDER BY Name;
                                """;
-
-            Firearm[] firearms;
-
             return (await connection.QueryAsync<Firearm>(sql)).ToArray();
         }
     }

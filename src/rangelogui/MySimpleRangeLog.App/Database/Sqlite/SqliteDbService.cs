@@ -12,7 +12,7 @@ namespace MyLittleRangeBook.Gui.Database.Sqlite
     ///     ~/.local/share on Linux, ~/Library/Application Support on macOS) to store the SQLite database.
     /// </summary>
     // ReSharper disable once InconsistentNaming
-    public class SqliteDbService : IDatabaseService, ISqliteHelper
+    public class SqliteDbService : ISqliteHelper
     {
         readonly ISqliteHelper _sqliteHelper;
 
@@ -32,15 +32,6 @@ namespace MyLittleRangeBook.Gui.Database.Sqlite
             return _sqliteHelper.GetSqliteConnectionString();
         }
 
-        /// <summary>
-        ///     Saves database changes.
-        ///     Currently, a no-op implementation as SQLite operations are handled directly
-        ///     by the database connection and don't require explicit save operations.
-        /// </summary>
-        public Task SaveAsync()
-        {
-            return Task.CompletedTask;
-        }
 
         public string GetSqliteConnectionString()
         {
