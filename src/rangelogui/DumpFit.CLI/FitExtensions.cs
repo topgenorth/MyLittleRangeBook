@@ -19,7 +19,7 @@ namespace MySimpleRangeLog.CLI
         public static System.DateTime FitEpoch = new(1989, 12, 31, 0, 0, 0, DateTimeKind.Utc);
 
 
-        public static async Task<Result<ReadOnlyMemory<byte>>> LoadAsync(this string filename, CancellationToken ct)
+        public static async Task<Result<ReadOnlyMemory<byte>>> LoadBytesAsync(this string filename, CancellationToken ct)
         {
             try
             {

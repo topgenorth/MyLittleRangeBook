@@ -2,6 +2,13 @@ using FluentResults;
 
 namespace MySimpleRangeLog.CLI
 {
+    public class FitFileNotFoundError : Error
+    {
+        public FitFileNotFoundError(string file) : base($"Could not find FIT file '{file}'")
+        {
+            Metadata.Add("FilePath", file);
+        }
+    }
     public class UnexpectedFitFileTypeError : Error
     {
         public UnexpectedFitFileTypeError(int expectedFileType) : base($"Can only handle FIT file type {expectedFileType}")

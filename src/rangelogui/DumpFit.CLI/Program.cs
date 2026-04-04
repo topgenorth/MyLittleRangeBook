@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using MySimpleRangeLog.CLI;
 using MySimpleRangeLog.CLI.Console;
 using Spectre.Console;
 using SQLitePCL;
@@ -18,6 +19,7 @@ builder.Configuration
 
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
+builder.Services.TryAddSingleton<IXeroShotSessionParser, XeroShotSessionParser>();
 
 builder.Services.AddSerilog(lc =>
 {

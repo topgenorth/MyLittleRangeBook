@@ -13,15 +13,14 @@ namespace MySimpleRangeLog.CLI
     {
         readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
+        readonly IXeroShotSessionParser _xeroParser;
 
-        // TODO [TO20260404] Inject this.
-        readonly XeroShotSessionParser _xeroParser;
-
-        public DisplayXeroFitToConsoleCommand(ILogger logger, ICliDisplay cliDisplay)
+        public DisplayXeroFitToConsoleCommand(ILogger logger, ICliDisplay cliDisplay, IXeroShotSessionParser xeroParser)
         {
             _logger = logger;
             _xeroParser = new XeroShotSessionParser(logger);
             _cliDisplay = cliDisplay;
+            _xeroParser = xeroParser;
         }
 
 
@@ -46,14 +45,7 @@ namespace MySimpleRangeLog.CLI
             var result = await _cliDisplay.RunStatusAsync("Loading FIT file...",
                 async ct =>
                 {
-                    var result = (await file.LoadAsync(ct))
-                        .Bind(bytesFromFitFile =>
-                        {
-                            _logger.Verbose("Loaded {bytes} bytes.", bytesFromFitFile.Length);
-                            using var stream = bytesFromFitFile.AsStream();
-
-                            return _xeroParser.Decode(stream);
-                        });
+                    var result = await _xeroParser.DecodeShotSessionAsync(file, ct);
 
                     if (result.IsFailed)
                     {
