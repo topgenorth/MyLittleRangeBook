@@ -2,9 +2,13 @@
 using DbUp;
 using Microsoft.Data.Sqlite;
 using Spectre.Console;
+using static MySimpleRangeLog.CLI.ReturnCodes;
 
 namespace MySimpleRangeLog.CLI.Database
 {
+    /// <summary>
+    /// This class provides functionality for managing SQLite database migrations.
+    /// </summary>
     [RegisterCommands("schema")]
     public class SqliteMigrator
     {
@@ -47,7 +51,7 @@ namespace MySimpleRangeLog.CLI.Database
             {
                 _logger.Warning("File {file} not found.", file);
                 _console.MarkupLineInterpolated($"[bold yellow]✗ Could not find '{file}'.[/]");
-                return ReturnCodes.DATABASE_FILE_NOT_FOUND;
+                return DATABASE_FILE_NOT_FOUND;
             }
             
             _console.MarkupLineInterpolated($"[bold green]✓ Checking migration version for '{file}'.[/]");
@@ -74,52 +78,62 @@ namespace MySimpleRangeLog.CLI.Database
             }
             
             _console.Write(table);
-            return ReturnCodes.SUCCESS;
+            return SUCCESS;
         }
 
         /// <summary>
-        /// Run the SQL statements to insert data into the database.
+        /// Run the SQL statements to insert data into the database. The SQL file is not recorded as a migration.
         /// </summary>
         /// <param name="file">The database file.</param>
         /// <param name="sqlfile">The SQL file to use.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        [Command("sql")]
+        [Command("runsql")]
+        // ReSharper disable once IdentifierTypo
         public async Task<int> RunSqlOnDatabase(string file, string sqlfile, CancellationToken ct)
         {
             if (!File.Exists(file))
             {
                 _logger.Warning("File {file} not found.", file);
                 _console.MarkupLineInterpolated($"[bold red]✗ Could not find the database '{file}'.[/]");
-                return ReturnCodes.DATABASE_FILE_NOT_FOUND;
+                return DATABASE_FILE_NOT_FOUND;
             }
 
             if (!File.Exists(sqlfile))
             {
                 _logger.Warning("SQL File {sqlFile} not found.", sqlfile);
                 _console.MarkupLineInterpolated($"[bold red]✗ Could not find the SQL '{sqlfile}'.[/]");
-                return ReturnCodes.SQL_FILE_NOT_FOUND;
+                return SQL_FILE_NOT_FOUND;
             }
             try
             {
+                _console.MarkupLineInterpolated($"[green]✓ Loading SQL file {sqlfile}.[/]");
                 var sql = await File.ReadAllTextAsync(sqlfile, ct);
+
+                if (string.IsNullOrWhiteSpace(sql))
+                {
+                    _logger.Information("SQL File {sqlFile} is empty - nothing done.", sqlfile);
+                    _console.MarkupLine("[green]✓ SQL File  applied.[/]");
+                    return SUCCESS;
+                }
                 using var connection = new SqliteConnection(BuildConnectionString(file));
                 await connection.OpenAsync(ct);
 
                 using var cmd = connection.CreateCommand();
                 cmd.CommandText = sql;
                 await cmd.ExecuteNonQueryAsync(ct);
-                return ReturnCodes.SUCCESS;
+                _console.MarkupLine("[green]✓ SQL File  applied.[/]");
+                return SUCCESS;
 
             }
             catch (Exception e)
             {
                 _logger.Error(e, "Failed to run SQL.");
                 _console.MarkupLineInterpolated($"[bold red]✗ Error: failed to run SQL '{e.Message}'.[/]");
-                return ReturnCodes.FAILED_TO_RUN_SQL;
+                return FAILED_TO_RUN_SQL;
             }
             
-            return ReturnCodes.SUCCESS;
+            return SUCCESS;
         }
         /// <summary>
         /// Ensures that all database schema migrations are applied to the specified SQLite database file.
@@ -154,19 +168,19 @@ namespace MySimpleRangeLog.CLI.Database
                     _console.MarkupLineInterpolated(
                         $"[bold red]✗ Error: failed to apply migrations '{result.Error}'.[/]");
 
-                    return ReturnCodes.FAILED_TO_APPLY_MIGRATIONS;
+                    return FAILED_TO_APPLY_MIGRATIONS;
                 }
 
-                _console.MarkupLine("[green]✓ Finished.[/]");
+                _console.MarkupLine("[green]✓ Migrations applied.[/]");
 
-                return ReturnCodes.SUCCESS;
+                return SUCCESS;
             }
             catch (Exception e)
             {
                 _logger.Error(e, "Failed to apply migrations");
                 _console.MarkupLineInterpolated($"[bold red]✗ Error: failed to apply migrations '{e.Message}'.[/]");
 
-                return ReturnCodes.FAILED_TO_APPLY_MIGRATIONS;
+                return FAILED_TO_APPLY_MIGRATIONS;
             }
         }
     }

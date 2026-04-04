@@ -2,6 +2,7 @@
 using ConsoleAppFramework;
 using MySimpleRangeLog.CLI.Model;
 using Spectre.Console;
+using static MySimpleRangeLog.CLI.ReturnCodes;
 
 namespace MySimpleRangeLog.CLI
 {
@@ -35,7 +36,7 @@ namespace MySimpleRangeLog.CLI
                 _logger.Warning("File {file} not found.", file);
                 _console.MarkupLineInterpolated($"[bold red]✗ Error:[/] Could not find '{file}'.");
 
-                return ReturnCodes.DATABASE_FILE_NOT_FOUND;
+                return DATABASE_FILE_NOT_FOUND;
             }
 
             var result = (await file.LoadAsync(ct))
@@ -52,7 +53,7 @@ namespace MySimpleRangeLog.CLI
                 _console.MarkupLineInterpolated($"[bold red]✗ Error:[/] Failed to parse FIT file '{file}'");
                 _logger.Error("Failed to process FIT file {file}.", file);
 
-                return result.HasError<UnexpectedFitFileTypeError>() ? ReturnCodes.FAILED_TO_PARSE : ReturnCodes.FAILED_TO_LOAD;
+                return result.HasError<UnexpectedFitFileTypeError>() ? FAILED_TO_PARSE : FAILED_TO_LOAD;
             }
 
             var shotSession = result.Value;
@@ -60,7 +61,7 @@ namespace MySimpleRangeLog.CLI
 
             DisplaySessionToConsole(_console, shotSession);
 
-            return ReturnCodes.SUCCESS;
+            return SUCCESS;
         }
 
         static void DisplayFileProcessingPath(IAnsiConsole console, string file)
