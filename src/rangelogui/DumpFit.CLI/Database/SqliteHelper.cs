@@ -27,7 +27,7 @@ namespace MySimpleRangeLog.CLI.Database
         ///     Ensure that the connection is disposed of after use.
         /// </remarks>
         /// <returns>The opened connection.</returns>
-        internal static async Task<SqliteConnection> GetOpenConnectionAsync(string connectionString = null,
+        internal static async Task<SqliteConnection> GetOpenConnectionAsync(string? connectionString = null,
             CancellationToken cancellationToken = default)
         {
             connectionString ??= new SqliteHelper().GetConnectionString();
