@@ -18,7 +18,6 @@ namespace MySimpleRangeLog.Tests
             await using var connection = new SqliteConnection("Data Source=:memory:");
             await connection.OpenAsync();
 
-            await DatabaseHelper.EnsureSQLiteDatabaseExists(connection);
 
             var rangeEvent = new SimpleRangeEvent
             {

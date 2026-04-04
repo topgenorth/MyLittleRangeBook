@@ -15,7 +15,7 @@ namespace MySimpleRangeLog.ViewModels
     {
         public FirearmViewModel(Firearm firearm)
         {
-            Id = firearm.Id;
+            Id = firearm.RowId;
             Name = firearm.Name;
             Modified = firearm.Modified;
             Created = firearm.Created;
@@ -35,7 +35,7 @@ namespace MySimpleRangeLog.ViewModels
 
         public Firearm ToFirearm()
         {
-            return new Firearm { Id = Id, Modified = Modified, Created = Created, Name = Name };
+            return new Firearm { RowId = Id, Modified = Modified, Created = Created, Name = Name };
         }
 
         public FirearmViewModel CloneFirearmViewModel()

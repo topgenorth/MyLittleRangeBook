@@ -2,7 +2,12 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MySimpleRangeLog.CLI;
+using SQLitePCL;
+
+// We need this for SQLite - 
+raw.SetProvider(new SQLite3Provider_e_sqlite3());
+// or, if you’re using bundle_e_sqlite3:
+Batteries.Init();
 
 var builder = Host.CreateApplicationBuilder();
 builder.Configuration

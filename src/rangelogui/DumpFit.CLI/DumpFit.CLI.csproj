@@ -25,8 +25,11 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="dbup" Version="5.0.41" />
+        <PackageReference Include="dbup-sqlite" Version="6.0.4" />
         <PackageReference Include="FluentResults" Version="4.0.0"/>
         <PackageReference Include="Garmin.FIT.Sdk" Version="21.195.0"/>
+        <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.5" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.5"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5"/>
@@ -42,10 +45,15 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
     </ItemGroup>
 
     <ItemGroup>
       <AvaloniaResource Include="AppIcon256.ico" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Database\Scripts\001-initial-schema.sql" />
     </ItemGroup>
 
 </Project>

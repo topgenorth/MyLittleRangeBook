@@ -1,21 +1,37 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using Microsoft.Data.Sqlite;
-using MySimpleRangeLog.Helper;
-using MySimpleRangeLog.Services;
-using Serilog;
 
-namespace MySimpleRangeLog.Database
+namespace MySimpleRangeLog.CLI.Database
 {
-    /// <summary>
-    ///     Desktop-specific implementation of the database service.
-    ///     Uses the OS-specific local application data folder (e.g., %LOCALAPPDATA% on Windows,
-    ///     ~/.local/share on Linux, ~/Library/Application Support on macOS) to store the SQLite database.
-    /// </summary>
-    // ReSharper disable once InconsistentNaming
-    public class SQLiteDbService : IDatabaseService
+    public  class SqliteHelper
     {
+        /// <summary>
+        ///     Creates a new <see cref="SqliteConnection" /> and opens it for usage.
+        /// </summary>
+        /// <remarks>
+        ///     Ensure that the connection is disposed of after use.
+        /// </remarks>
+        /// <returns>The opened connection.</returns>
+        internal static async Task<SqliteConnection> GetOpenConnectionAsync(string connectionString)
+        {
+            try
+            {
+                var connection = new SqliteConnection(connectionString);
+                Log.Verbose("Using SQLite database {connectionString}", connectionString);
+
+                await connection.OpenAsync();
+
+                return connection;
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError(e.Message);
+                Log.Logger.Error(e, "Failed to open database connection");
+
+                throw;
+            }
+        }
+        
         /// <summary>
         ///     Name of the database for "production".
         /// </summary>
@@ -41,21 +57,10 @@ namespace MySimpleRangeLog.Database
 
 
             return cb.ConnectionString;
-        }
-
-        /// <summary>
-        ///     Saves database changes.
-        ///     Currently, a no-op implementation as SQLite operations are handled directly
-        ///     by the database connection and don't require explicit save operations.
-        /// </summary>
-        public Task SaveAsync()
-        {
-            return Task.CompletedTask;
-        }
-
+        } 
         public string GetDatabaseName()
         {
-            var settingsDirectory = JsonSettingsFileStorageService.SettingsDirectory;
+            var settingsDirectory = SettingsDirectory;
             string dbPath;
             if (EnvironmentHelper.IsProduction)
             {
@@ -70,5 +75,14 @@ namespace MySimpleRangeLog.Database
 
             return dbPath;
         }
+        
+        /// <summary>
+        ///     Gets the settings directory path for storing user configuration.
+        ///     Uses OS-specific local application data directory.
+        ///     Creates a dedicated folder for this application to avoid conflicts.
+        /// </summary>
+        internal static string SettingsDirectory => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "SimpleRangeLog");
     }
 }
