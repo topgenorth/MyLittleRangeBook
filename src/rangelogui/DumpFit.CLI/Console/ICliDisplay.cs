@@ -18,5 +18,6 @@ namespace MySimpleRangeLog.CLI.Console
             string status,
             Func<CancellationToken, Task<T>> action,
             CancellationToken cancellationToken = default);
+
     }
 }
