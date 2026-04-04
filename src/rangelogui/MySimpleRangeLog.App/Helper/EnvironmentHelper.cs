@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MySimpleRangeLog.Helper
+namespace MyLittleRangeBook.Gui.Helper
 {
     public static class EnvironmentHelper
     {

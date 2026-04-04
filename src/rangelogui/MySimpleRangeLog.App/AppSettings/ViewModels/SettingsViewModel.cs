@@ -9,16 +9,16 @@ using CommunityToolkit.Mvvm.Messaging;
 using Dapper;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Database.Sqlite;
-using MySimpleRangeLog.Database;
-using MySimpleRangeLog.Helper;
-using MySimpleRangeLog.Messages;
-using MySimpleRangeLog.Models;
-using MySimpleRangeLog.Properties;
+using MyLittleRangeBook.Gui.Database;
+using MyLittleRangeBook.Gui.Helper;
+using MyLittleRangeBook.Gui.Messages;
+using MyLittleRangeBook.Gui.Models;
+using MyLittleRangeBook.Gui.Properties;
 using SharedControls.Controls;
 using SharedControls.Services;
 using WeakReferenceMessenger = CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger;
 
-namespace MySimpleRangeLog.ViewModels
+namespace MyLittleRangeBook.Gui.ViewModels
 {
     /// <summary>
     ///     ViewModel responsible for managing application settings and data operations.

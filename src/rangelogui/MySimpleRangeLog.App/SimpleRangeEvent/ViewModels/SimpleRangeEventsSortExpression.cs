@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MySimpleRangeLog.ViewModels
+namespace MyLittleRangeBook.Gui.ViewModels
 {
     public class SimpleRangeEventsSortExpression : SortableViewModelExpression<SimpleRangeEventViewModel>
     {

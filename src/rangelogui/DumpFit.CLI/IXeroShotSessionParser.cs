@@ -1,7 +1,7 @@
 ﻿using FluentResults;
-using MySimpleRangeLog.CLI.Model;
+using MyLittleRangeBook.Cli.Model;
 
-namespace MySimpleRangeLog.CLI
+namespace MyLittleRangeBook.Cli
 {
     public interface IXeroShotSessionParser
     {

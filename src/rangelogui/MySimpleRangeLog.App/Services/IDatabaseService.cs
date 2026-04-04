@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace MySimpleRangeLog.Services
+namespace MyLittleRangeBook.Gui.Services
 {
     public interface IDatabaseService
     {

@@ -8,12 +8,12 @@ using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Database.Sqlite;
-using MySimpleRangeLog.Database.Sqlite;
-using MySimpleRangeLog.Helper;
-using MySimpleRangeLog.Services;
+using MyLittleRangeBook.Gui.Database.Sqlite;
+using MyLittleRangeBook.Gui.Helper;
+using MyLittleRangeBook.Gui.Services;
 using Serilog;
 
-namespace MySimpleRangeLog
+namespace MyLittleRangeBook.Gui
 {
     sealed class Program
     {

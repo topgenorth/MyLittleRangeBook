@@ -2,10 +2,10 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Avalonia.Media;
-using MySimpleRangeLog.Models;
-using MySimpleRangeLog.Properties;
+using MyLittleRangeBook.Gui.Models;
+using MyLittleRangeBook.Gui.Properties;
 
-namespace MySimpleRangeLog.Helper
+namespace MyLittleRangeBook.Gui.Helper
 {
     /// <summary>
     ///     JSON serialization context that enables AOT-compatible and trimming-friendly JSON operations.

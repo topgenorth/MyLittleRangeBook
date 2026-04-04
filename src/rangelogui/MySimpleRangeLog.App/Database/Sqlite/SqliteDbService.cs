@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
-using MySimpleRangeLog.Services;
+using MyLittleRangeBook.Gui.Services;
 
-namespace MySimpleRangeLog.Database.Sqlite
+namespace MyLittleRangeBook.Gui.Database.Sqlite
 {
     /// <summary>
     ///     Desktop-specific implementation of the database service.

@@ -11,14 +11,14 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using DynamicData;
 using MyLittleRangeBook.Database.Sqlite;
-using MySimpleRangeLog.Database;
-using MySimpleRangeLog.Messages;
-using MySimpleRangeLog.Models;
+using MyLittleRangeBook.Gui.Database;
+using MyLittleRangeBook.Gui.Messages;
+using MyLittleRangeBook.Gui.Models;
 using SharedControls.Controls;
 using SharedControls.Helper;
 using SharedControls.Services;
 
-namespace MySimpleRangeLog.ViewModels
+namespace MyLittleRangeBook.Gui.ViewModels
 {
     [UnconditionalSuppressMessage("Trimming", "IL2112",
         Justification = "We have all needed members added via DynamicallyAccessedMembers-Attribute")]

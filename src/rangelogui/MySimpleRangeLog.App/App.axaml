@@ -1,19 +1,19 @@
-<Application x:Class="MySimpleRangeLog.App"
+<Application x:Class="MyLittleRangeBook.Gui.App"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
              xmlns:converters="clr-namespace:SharedControls.Converters;assembly=SharedControls"
              xmlns:themes="clr-namespace:SharedControls.Themes;assembly=SharedControls"
-             xmlns:viewModels="clr-namespace:MySimpleRangeLog.ViewModels"
-             xmlns:views="clr-namespace:MySimpleRangeLog.Views"
-             xmlns:properties="clr-namespace:MySimpleRangeLog.Properties"
-             x:DataType="viewModels:SettingsViewModel"
+             xmlns:viewModels1="clr-namespace:MyLittleRangeBook.Gui.ViewModels"
+             xmlns:properties="clr-namespace:MyLittleRangeBook.Gui.Properties"
+             xmlns:views1="clr-namespace:MyLittleRangeBook.Gui.Views"
+             x:DataType="viewModels1:SettingsViewModel"
              RequestedThemeVariant="{Binding AppTheme, Source={x:Static properties:Settings.Default}}">
 
     <Application.DataTemplates>
         <!-- EditCategoryViewModel: Maps to the edit category view -->
-        <DataTemplate DataType="viewModels:EditSimpleRangeEventViewModel">
-            <views:EditSimpleRangeEventView />
+        <DataTemplate DataType="viewModels1:EditSimpleRangeEventViewModel">
+            <views1:EditSimpleRangeEventView />
         </DataTemplate>
 
     </Application.DataTemplates>

@@ -1,7 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 
-namespace MySimpleRangeLog.Helper
+namespace MyLittleRangeBook.Gui.Helper
 {
     /// <summary>
     ///     Internal helper class for accessing application-level resources.

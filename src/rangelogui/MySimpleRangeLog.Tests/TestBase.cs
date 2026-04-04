@@ -1,7 +1,8 @@
 ﻿using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
-using MySimpleRangeLog.Database;
-using MySimpleRangeLog.Services;
+using MyLittleRangeBook.Gui;
+using MyLittleRangeBook.Gui.Database;
+using MyLittleRangeBook.Gui.Services;
 
 namespace MySimpleRangeLog.Tests
 {

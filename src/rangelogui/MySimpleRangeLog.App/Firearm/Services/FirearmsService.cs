@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
 using MyLittleRangeBook.Database.Sqlite;
-using MySimpleRangeLog.Models;
+using MyLittleRangeBook.Gui.Models;
 
-namespace MySimpleRangeLog.Services
+namespace MyLittleRangeBook.Gui.Services
 {
     public class FirearmsService : IFirearmsService
     {

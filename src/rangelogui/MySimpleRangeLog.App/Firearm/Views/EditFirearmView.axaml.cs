@@ -1,6 +1,6 @@
 ﻿using Avalonia.Controls;
 
-namespace MySimpleRangeLog.Views
+namespace MyLittleRangeBook.Gui.Views
 {
     public partial class EditFirearmView : UserControl
     {

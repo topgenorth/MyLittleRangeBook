@@ -9,12 +9,11 @@ using System.Threading.Tasks;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
-using MySimpleRangeLog.Helper;
-using MySimpleRangeLog.Services;
-using JsonContextHelper = MySimpleRangeLog.Helper.JsonContextHelper;
+using MyLittleRangeBook.Gui.Helper;
+using MyLittleRangeBook.Gui.Services;
 
 
-namespace MySimpleRangeLog.Properties
+namespace MyLittleRangeBook.Gui.Properties
 {
     /// <summary>
     ///     This class defines the App settings. It implements INotifyPropertyChanged so that the App can

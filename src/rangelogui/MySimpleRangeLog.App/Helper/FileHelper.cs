@@ -1,6 +1,6 @@
 using Avalonia.Platform.Storage;
 
-namespace MySimpleRangeLog.Helper
+namespace MyLittleRangeBook.Gui.Helper
 {
     /// <summary>
     ///     Internal helper class for file input/output operations.

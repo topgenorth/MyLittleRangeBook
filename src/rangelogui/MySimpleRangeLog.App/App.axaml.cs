@@ -13,14 +13,14 @@ using Avalonia.Themes.Fluent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Database.Sqlite;
-using MySimpleRangeLog.Database;
-using MySimpleRangeLog.ViewModels;
-using MySimpleRangeLog.Properties;
-using MySimpleRangeLog.Services;
-using MainView = MySimpleRangeLog.Views.MainView;
-using MainWindow = MySimpleRangeLog.Views.MainWindow;
+using MyLittleRangeBook.Gui.Database;
+using MyLittleRangeBook.Gui.Properties;
+using MyLittleRangeBook.Gui.Services;
+using MyLittleRangeBook.Gui.ViewModels;
+using MainView = MyLittleRangeBook.Gui.Views.MainView;
+using MainWindow = MyLittleRangeBook.Gui.Views.MainWindow;
 
-namespace MySimpleRangeLog
+namespace MyLittleRangeBook.Gui
 {
     /// <summary>
     ///     Main application entry point for My Simple Range App app.

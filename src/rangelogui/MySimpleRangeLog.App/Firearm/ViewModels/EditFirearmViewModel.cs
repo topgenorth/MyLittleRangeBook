@@ -2,11 +2,11 @@
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
-using MySimpleRangeLog.Services;
+using MyLittleRangeBook.Gui.Services;
 using SharedControls.Controls;
 using SharedControls.Services;
 
-namespace MySimpleRangeLog.ViewModels
+namespace MyLittleRangeBook.Gui.ViewModels
 {
     public partial class EditFirearmViewModel : ViewModelBase, IDialogParticipant
     {

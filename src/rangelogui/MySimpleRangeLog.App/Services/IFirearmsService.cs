@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using MySimpleRangeLog.Models;
+using MyLittleRangeBook.Gui.Models;
 
-namespace MySimpleRangeLog.Services
+namespace MyLittleRangeBook.Gui.Services
 {
     public interface IFirearmsService
     {

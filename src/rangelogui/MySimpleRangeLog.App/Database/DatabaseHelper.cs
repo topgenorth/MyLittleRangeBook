@@ -9,12 +9,12 @@ using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Database.Sqlite;
-using MySimpleRangeLog.Helper;
-using MySimpleRangeLog.Models;
-using MySimpleRangeLog.Services;
+using MyLittleRangeBook.Gui.Helper;
+using MyLittleRangeBook.Gui.Models;
+using MyLittleRangeBook.Gui.Services;
 using Serilog;
 
-namespace MySimpleRangeLog.Database
+namespace MyLittleRangeBook.Gui.Database
 {
     public static class DatabaseHelper
     {

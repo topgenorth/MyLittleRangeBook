@@ -4,13 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
              xmlns:services="clr-namespace:SharedControls.Services;assembly=SharedControls"
-             xmlns:viewModels="clr-namespace:MySimpleRangeLog.ViewModels"
+             xmlns:viewModels1="clr-namespace:MyLittleRangeBook.Gui.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              services:DialogManager.Register="{Binding}"
-             x:DataType="viewModels:SettingsViewModel"
-             x:Class="MySimpleRangeLog.Views.SettingsView">
+             x:DataType="viewModels1:SettingsViewModel"
+             x:Class="MyLittleRangeBook.Gui.Views.SettingsView">
     <Design.DataContext>
-        <viewModels:SettingsViewModel />
+        <viewModels1:SettingsViewModel />
     </Design.DataContext>
     <ScrollViewer MaxWidth="400">
         <StackPanel Spacing="10"

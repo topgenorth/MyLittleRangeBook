@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
-using MySimpleRangeLog.Database;
-using MySimpleRangeLog.Services;
+using MyLittleRangeBook.Gui.Database;
+using MyLittleRangeBook.Gui.Services;
 using NanoidDotNet;
 using Serilog;
 
-namespace MySimpleRangeLog.Models
+namespace MyLittleRangeBook.Gui.Models
 {
     public record Firearm
     {

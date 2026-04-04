@@ -3,9 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using MyLittleRangeBook.Cli;
+using MyLittleRangeBook.Cli.Console;
 using MyLittleRangeBook.Database.Sqlite;
-using MySimpleRangeLog.CLI;
-using MySimpleRangeLog.CLI.Console;
 using Spectre.Console;
 using SQLitePCL;
 

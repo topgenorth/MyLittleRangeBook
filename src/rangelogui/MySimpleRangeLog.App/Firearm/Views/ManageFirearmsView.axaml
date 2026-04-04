@@ -1,26 +1,26 @@
-﻿<UserControl x:Class="MySimpleRangeLog.Views.ManageFirearmsView"
+﻿<UserControl x:Class="MyLittleRangeBook.Gui.Views.ManageFirearmsView"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:services="clr-namespace:SharedControls.Services;assembly=SharedControls"
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
-             xmlns:viewModels1="clr-namespace:MySimpleRangeLog.ViewModels"
+             xmlns:viewModels="clr-namespace:MyLittleRangeBook.Gui.ViewModels"
              d:DesignHeight="450"
              d:DesignWidth="800"
              x:Name="Root"
              services:DialogManager.Register="{Binding}"
-             x:DataType="viewModels1:ManageFirearmsViewModel"
+             x:DataType="viewModels:ManageFirearmsViewModel"
              mc:Ignorable="d">
     <Design.DataContext>
-        <viewModels1:ManageFirearmsViewModel />
+        <viewModels:ManageFirearmsViewModel />
     </Design.DataContext>
 
     <UserControl.Resources>
         <!-- Defining a MenuFlyout for shared usage -->
-        <MenuFlyout x:Key="ToDoItemContextMenu" x:DataType="viewModels1:FirearmViewModel">
+        <MenuFlyout x:Key="ToDoItemContextMenu" x:DataType="viewModels:FirearmViewModel">
             <MenuItem Header="Edit Item"
-                      Command="{Binding #Root.((viewModels1:ManageFirearmsViewModel)DataContext).EditFirearmCommand}"
+                      Command="{Binding #Root.((viewModels:ManageFirearmsViewModel)DataContext).EditFirearmCommand}"
                       CommandParameter="{Binding}">
                 <MenuItem.Icon>
                     <PathIcon Data="{DynamicResource PhosphorIcons.NotePencilLight}" />
@@ -28,7 +28,7 @@
             </MenuItem>
 
             <MenuItem Header="Delete Item"
-                      Command="{Binding #Root.((viewModels1:ManageFirearmsViewModel)DataContext).DeleteFirearmCommand}"
+                      Command="{Binding #Root.((viewModels:ManageFirearmsViewModel)DataContext).DeleteFirearmCommand}"
                       CommandParameter="{Binding}">
                 <MenuItem.Icon>
                     <PathIcon Data="{DynamicResource PhosphorIcons.TrashLight}" />

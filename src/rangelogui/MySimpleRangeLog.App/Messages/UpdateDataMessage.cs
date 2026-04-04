@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 
-namespace MySimpleRangeLog.Messages
+namespace MyLittleRangeBook.Gui.Messages
 {
     /// <summary>
     ///     A class that represents a message for communication between different ViewModels.

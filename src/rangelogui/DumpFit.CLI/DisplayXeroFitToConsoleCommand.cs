@@ -1,12 +1,11 @@
-﻿using CommunityToolkit.HighPerformance;
-using ConsoleAppFramework;
+﻿using ConsoleAppFramework;
 using FluentResults;
-using MySimpleRangeLog.CLI.Console;
-using MySimpleRangeLog.CLI.Model;
+using MyLittleRangeBook.Cli.Console;
+using MyLittleRangeBook.Cli.Model;
 using Spectre.Console;
-using static MySimpleRangeLog.CLI.ReturnCodes;
+using static MyLittleRangeBook.Cli.ReturnCodes;
 
-namespace MySimpleRangeLog.CLI
+namespace MyLittleRangeBook.Cli
 {
     [RegisterCommands("console")]
     public class DisplayXeroFitToConsoleCommand

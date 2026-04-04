@@ -1,6 +1,6 @@
-using MySimpleRangeLog.Models;
+using MyLittleRangeBook.Gui.Models;
 
-namespace MySimpleRangeLog.Helper
+namespace MyLittleRangeBook.Gui.Helper
 {
     public class DatabaseDto
     {

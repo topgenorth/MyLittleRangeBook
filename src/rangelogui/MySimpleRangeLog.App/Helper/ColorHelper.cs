@@ -1,7 +1,7 @@
 using System;
 using Avalonia.Media;
 
-namespace MySimpleRangeLog.Helper
+namespace MyLittleRangeBook.Gui.Helper
 {
     /// <summary>
     ///     Internal helper class for generating and working with Avalonia Color objects.

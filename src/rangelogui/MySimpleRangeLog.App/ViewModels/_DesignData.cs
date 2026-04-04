@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
-using MySimpleRangeLog.Models;
+using MyLittleRangeBook.Gui.Models;
 
-namespace MySimpleRangeLog.ViewModels
+namespace MyLittleRangeBook.Gui.ViewModels
 {
     /// <summary>
     ///     Provides design-time data for the Avalonia previewer and designer.

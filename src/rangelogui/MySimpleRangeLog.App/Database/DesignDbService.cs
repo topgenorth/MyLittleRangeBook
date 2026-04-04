@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
-using MySimpleRangeLog.Services;
+using MyLittleRangeBook.Gui.Services;
 
-namespace MySimpleRangeLog.Database
+namespace MyLittleRangeBook.Gui.Database
 {
     public class DesignDbService : IDatabaseService
     {

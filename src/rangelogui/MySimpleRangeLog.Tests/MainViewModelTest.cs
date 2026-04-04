@@ -1,6 +1,5 @@
 ﻿using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
-using MySimpleRangeLog.ViewModels;
 
 namespace MySimpleRangeLog.Tests
 {
