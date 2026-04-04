@@ -7,6 +7,5 @@
         public const int FAILED_TO_LOAD = 2;
         public const int FAILED_TO_PARSE = 3;
         public const int FAILED_TO_APPLY_MIGRATIONS = 4;
-
     }
 }

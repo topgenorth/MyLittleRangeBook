@@ -1,5 +1,6 @@
 ﻿using ConsoleAppFramework;
 using DbUp;
+using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
 using MySimpleRangeLog.CLI;
 using Spectre.Console;
@@ -36,7 +37,49 @@ namespace MySimpleRangeLog.Database
             return builder.ToString();
         }
 
+        /// <summary>
+        /// Will return all the migrations that have been applied to the database.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        [Command("version")]
+        public async Task<int> MigrationVersionAsync(string file, CancellationToken ct)
+        {
+            if (!File.Exists(file))
+            {
+                _logger.Warning("File {file} not found.", file);
+                _console.MarkupLineInterpolated($"[bold yellow]✗ [/] Could not find '{file}'.");
+                return ReturnCodes.FILE_NOT_FOUND;
+            }
+            
+            _console.MarkupLineInterpolated($"[bold green]✓ [/] Checking migration version for '{file}'...");
+            
+            using var connection = new SqliteConnection(BuildConnectionString(file));
+            await connection.OpenAsync(ct);
+            
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "SELECT * FROM SchemaVersions ORDER BY Applied ASC";
+            await using var rdr = await cmd.ExecuteReaderAsync(ct);
+            
+            var table = new Table();
+            table.AddColumn("ID");
+            table.AddColumn("Script Name");
+            table.AddColumn("Date Applied");
 
+            while (await rdr.ReadAsync(ct))
+            {
+                string schemaVersionId = rdr.IsDBNull(0) ? string.Empty : rdr.GetValue(0).ToString();
+                string scriptName = rdr.IsDBNull(1) ? string.Empty : rdr.GetString(1);
+                string applied = rdr.IsDBNull(2) ? string.Empty : rdr.GetValue(2).ToString();
+
+                table.AddRow(schemaVersionId!, scriptName, applied!);
+            }
+            
+            _console.Write(table);
+            return ReturnCodes.SUCCESS;
+        }
+        
         /// <summary>
         /// Ensures that all database schema migrations are applied to the specified SQLite database file.
         /// </summary>
@@ -46,12 +89,6 @@ namespace MySimpleRangeLog.Database
         [Command("migrate")]
         public async Task<int> MigrateSchemaAsync(string file, CancellationToken ct)
         {
-
-// At app startup, e.g. in your shell or Program.cs
-            raw.SetProvider(new SQLite3Provider_e_sqlite3());
-// or, if you’re using bundle_e_sqlite3:
-            Batteries.Init();
-
             if (!File.Exists(file))
             {
                 _logger.Warning("File {file} not found.", file);
