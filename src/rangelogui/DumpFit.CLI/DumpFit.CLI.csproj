@@ -29,6 +29,7 @@
         <PackageReference Include="dbup-sqlite" Version="6.0.4" />
         <PackageReference Include="FluentResults" Version="4.0.0"/>
         <PackageReference Include="Garmin.FIT.Sdk" Version="21.195.0"/>
+        <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
         <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.5" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.5"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5"/>
@@ -54,6 +55,10 @@
 
     <ItemGroup>
       <EmbeddedResource Include="Database\Scripts\001-initial-schema.sql" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MyLittleRangeBook.Sqlite\MyLittleRangeBook.Sqlite.csproj" />
     </ItemGroup>
 
 </Project>

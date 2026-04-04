@@ -63,6 +63,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\MyLittleRangeBook.Sqlite\MyLittleRangeBook.Sqlite.csproj" />
         <ProjectReference Include="..\SharedControls\SharedControls.csproj"/>
     </ItemGroup>
 

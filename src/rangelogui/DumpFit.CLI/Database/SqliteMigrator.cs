@@ -1,6 +1,8 @@
 ﻿using ConsoleAppFramework;
 using DbUp;
+using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
+using MyLittleRangeBook.Database.Sqlite;
 using MySimpleRangeLog.CLI.Console;
 using Spectre.Console;
 using static MySimpleRangeLog.CLI.ReturnCodes;
@@ -11,32 +13,20 @@ namespace MySimpleRangeLog.CLI.Database
     ///     This class provides functionality for managing SQLite database migrations.
     /// </summary>
     [RegisterCommands("schema")]
+    [UsedImplicitly]
     public class SqliteMigrator
     {
         readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
+        readonly ISqliteHelper _sqliteHelper;
 
-        public SqliteMigrator(ILogger logger, ICliDisplay cliDisplay)
+        public SqliteMigrator(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper)
         {
             _logger = logger;
             _cliDisplay = cliDisplay;
+            _sqliteHelper = sqliteHelper;
         }
 
-
-        /// <summary>
-        ///     Creates a connection string for the specified SQLite database file.
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        internal string BuildConnectionString(string filename)
-        {
-            var builder = new SqliteConnectionStringBuilder
-            {
-                DataSource = filename, Mode = SqliteOpenMode.ReadWriteCreate
-            };
-
-            return builder.ToString();
-        }
 
         /// <summary>
         ///     Will return all the migrations that have been applied to the database.
@@ -45,6 +35,7 @@ namespace MySimpleRangeLog.CLI.Database
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("version")]
+        [UsedImplicitly]
         public async Task<int> MigrationVersionAsync(string file, CancellationToken cancellationToken)
         {
             _cliDisplay.WriteHeader("Migration Version");
@@ -56,16 +47,13 @@ namespace MySimpleRangeLog.CLI.Database
                 return DATABASE_FILE_NOT_FOUND;
             }
 
-            var result  = await _cliDisplay.RunStatusAsync(
+            var result = await _cliDisplay.RunStatusAsync(
                 "Importing FIT data...",
                 async ct =>
                 {
-                    await using var connection = new SqliteConnection(BuildConnectionString(file));
-                    await connection.OpenAsync(ct);
-
-                    var cmd = connection.CreateCommand();
-                    cmd.CommandText = "SELECT * FROM SchemaVersions ORDER BY Applied";
-                    await using var rdr = await cmd.ExecuteReaderAsync(cancellationToken);
+                    await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync(file, ct);
+                    await using var cmd = new SqliteCommand("SELECT * FROM SchemaVersions ORDER BY Applied", connection);
+                    await using var rdr = await cmd.ExecuteReaderAsync(ct);
 
                     var table = new Table();
                     table.AddColumn("ID");
@@ -74,19 +62,18 @@ namespace MySimpleRangeLog.CLI.Database
 
                     while (await rdr.ReadAsync(ct))
                     {
-                        var schemaVersionId = (rdr.IsDBNull(0) ? string.Empty : rdr.GetValue(0).ToString()) ?? string.Empty;
+                        var schemaVersionId = rdr.IsDBNull(0) ? string.Empty : rdr.GetValue(0).ToString();
                         var scriptName = rdr.IsDBNull(1) ? string.Empty : rdr.GetString(1);
                         var applied = rdr.IsDBNull(2) ? string.Empty : rdr.GetValue(2).ToString() ?? string.Empty;
-
-                        table.AddRow(schemaVersionId!, scriptName, applied!);
+                        table.AddRow(schemaVersionId!, scriptName, applied);
                     }
 
                     _cliDisplay.Console.Write(table);
                     _cliDisplay.WriteSuccess("Migration Versions listed.");
-                    return SUCCESS;
 
+                    return SUCCESS;
                 },
-                cancellationToken);;
+                cancellationToken);
 
             return result;
         }
@@ -99,6 +86,7 @@ namespace MySimpleRangeLog.CLI.Database
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("runsql")]
+        [UsedImplicitly]
         // ReSharper disable once IdentifierTypo
         public async Task<int> RunSqlOnDatabase(string file, string sqlfile, CancellationToken cancellationToken)
         {
@@ -124,7 +112,10 @@ namespace MySimpleRangeLog.CLI.Database
             var result = await _cliDisplay.RunStatusAsync("Loading SQL file...",
                 async ct =>
                 {
-                    void WriteSuccess() => _cliDisplay.WriteSuccess("SQL file applied to database.");
+                    void WriteSuccess()
+                    {
+                        _cliDisplay.WriteSuccess("SQL file applied to database.");
+                    }
 
                     try
                     {
@@ -139,12 +130,9 @@ namespace MySimpleRangeLog.CLI.Database
                             return SUCCESS;
                         }
 
-                        var connectionString = BuildConnectionString(file);
 
-                        await using var connection = await SqliteHelper.GetOpenConnectionAsync(connectionString, ct);
-
-                        await using var cmd = connection.CreateCommand();
-                        cmd.CommandText = sql;
+                        await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync(file, ct);
+                        await using var cmd = new SqliteCommand(sql, connection);
                         await cmd.ExecuteNonQueryAsync(ct);
                         WriteSuccess();
 
@@ -169,6 +157,7 @@ namespace MySimpleRangeLog.CLI.Database
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("migrate")]
+        [UsedImplicitly]
         public async Task<int> MigrateSchemaAsync(string file, CancellationToken cancellationToken)
         {
             _cliDisplay.WriteHeader("Applying Migrations");
@@ -179,40 +168,47 @@ namespace MySimpleRangeLog.CLI.Database
                     $"[bold yellow]✗ Could not find '{file}'; database will be created.[/]");
             }
 
-            var result = await _cliDisplay.RunStatusAsync("Applying migrations...",
-                async ct =>
+            var result = await _cliDisplay.RunStatusAsync($"Applying migrations to {file}",
+                _ =>
                 {
                     try
                     {
-                        var upgrader = DeployChanges.To
-                            .SqliteDatabase(BuildConnectionString(file))
-                            .WithScriptsEmbeddedInAssembly(typeof(SqliteMigrator).Assembly)
-                            .LogToConsole()
-                            .Build();
-
-
-                        var result = upgrader.PerformUpgrade();
-                        if (!result.Successful)
+                        try
                         {
-                            _cliDisplay.WriteFailure("Failed to apply migrations.");
-                            return FAILED_TO_APPLY_MIGRATIONS;
+                            var upgrader = DeployChanges.To
+                                .SqliteDatabase(_sqliteHelper.GetSqliteConnectionString())
+                                .WithScriptsEmbeddedInAssembly(typeof(SqliteMigrator).Assembly)
+                                .LogToConsole()
+                                .Build();
+
+
+                            var result = upgrader.PerformUpgrade();
+                            if (!result.Successful)
+                            {
+                                _cliDisplay.WriteFailure("Failed to apply migrations.");
+
+                                return Task.FromResult(FAILED_TO_APPLY_MIGRATIONS);
+                            }
+
+                            _cliDisplay.WriteSuccess("Migrations applied.");
+
+                            return Task.FromResult(SUCCESS);
                         }
+                        catch (Exception e)
+                        {
+                            _logger.Error(e, "Failed to apply migrations");
+                            _cliDisplay.WriteFailure($"Failed to apply migrations '{e.Message}'.[/]");
 
-                        _cliDisplay.WriteSuccess("Migrations applied.");
-
-                        return SUCCESS;
+                            return Task.FromResult(FAILED_TO_APPLY_MIGRATIONS);
+                        }
                     }
-                    catch (Exception e)
+                    catch (Exception exception)
                     {
-                        _logger.Error(e, "Failed to apply migrations");
-                        _cliDisplay.WriteFailure($"Failed to apply migrations '{e.Message}'.[/]");
-
-                        return FAILED_TO_APPLY_MIGRATIONS;
+                        return Task.FromException<int>(exception);
                     }
                 }, cancellationToken);
 
             return result;
-
         }
     }
 }
