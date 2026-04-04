@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MySimpleRangeLog.Helper;
 using MySimpleRangeLog.Models;
 using MySimpleRangeLog.Services;
+using NanoidDotNet;
 using Serilog;
 
 namespace MySimpleRangeLog.Database
@@ -100,6 +101,9 @@ namespace MySimpleRangeLog.Database
                 var connection = new SqliteConnection(connectionString);
 
                 await connection.OpenAsync();
+
+                connection.CreateFunction("nanoid", () => Nanoid.Generate());
+                connection.CreateFunction("utcnow", () => DateTimeOffset.UtcNow.ToString("O"));
 
                 await EnsureSQLiteDatabaseExists(connection, connection.IsInMemoryDb());
 
