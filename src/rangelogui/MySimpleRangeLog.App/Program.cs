@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.Database.Sqlite;
 using MySimpleRangeLog.Database;
 using MySimpleRangeLog.Helper;
 using MySimpleRangeLog.Services;
@@ -25,11 +26,10 @@ namespace MySimpleRangeLog
 
             // Register the Desktop service
             var services = new ServiceCollection();
-
+            services.AddSqliteHelper();
             services.AddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
             var dbService = new SQLiteDbService();
             services.AddSingleton<IDatabaseService>(dbService);
-
             // [TO20260311] Need to register a handler to convert strings to DateTimeOffset values.
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SQLiteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SQLiteDateTimeOffsetHandler());
