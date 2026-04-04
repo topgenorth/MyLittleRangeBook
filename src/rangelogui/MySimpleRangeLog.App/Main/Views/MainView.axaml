@@ -5,15 +5,14 @@
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
              xmlns:vm="using:MySimpleRangeLog.ViewModels"
              xmlns:views="clr-namespace:MySimpleRangeLog.Views"
-             xmlns:viewModels="clr-namespace:MySimpleRangeLog.Main.ViewModels"
              mc:Ignorable="d" d:DesignWidth="690" d:DesignHeight="450"
-             x:Class="MySimpleRangeLog.Main.Views.MainView"
+             x:Class="MySimpleRangeLog.Views.MainView"
              x:Name="Root"
-             x:DataType="viewModels:MainViewModel">
+             x:DataType="vm:MainViewModel">
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <viewModels:MainViewModel />
+        <vm:MainViewModel />
     </Design.DataContext>
 
     <!-- Note: Content refers to the selected item's tag -->

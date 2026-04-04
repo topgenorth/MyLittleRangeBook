@@ -8,14 +8,12 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Dapper;
 using JetBrains.Annotations;
-using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Database.Sqlite;
 using MySimpleRangeLog.Database;
 using MySimpleRangeLog.Helper;
 using MySimpleRangeLog.Messages;
 using MySimpleRangeLog.Models;
 using MySimpleRangeLog.Properties;
-using MySimpleRangeLog.Services;
 using SharedControls.Controls;
 using SharedControls.Services;
 using WeakReferenceMessenger = CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger;
@@ -124,10 +122,12 @@ namespace MySimpleRangeLog.ViewModels
                         throw new FileLoadException("Could not load data");
                     }
 
+                    await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
                     // Save all ToDoItems from imported data (updates existing ones)
                     foreach (var rangeEvent in dto.SimpleRangeEvents ?? [])
                     {
-                        await rangeEvent.SaveAsync();
+                        // TODO [TO20260404] CancellationToken; and cancel if there is a problem saving.
+                        await rangeEvent.SaveAsync(connection);
                     }
 
                     // Notify other ViewModels about updated DB to refresh their views

@@ -18,59 +18,6 @@ namespace MySimpleRangeLog.Database
 {
     public static class DatabaseHelper
     {
-        internal static readonly Firearm[] TestFirearms =
-        [
-            new()
-            {
-                RowId = 1,
-                Id = "NANOID-1",
-                Created = DateTimeOffset.UtcNow,
-                Modified = DateTimeOffset.UtcNow,
-                Name = "STAG-10",
-                Notes = null
-            },
-            new()
-            {
-                Id = "NANOID-2",
-                RowId = 2,
-                Created = DateTimeOffset.UtcNow,
-                Modified = DateTimeOffset.UtcNow,
-                Name = "Ruger 10/22",
-                Notes = "Mapleseed rifle."
-            }
-        ];
-
-        internal static readonly SimpleRangeEvent[] TestRangeEvents =
-        [
-            new()
-            {
-                Id = "NANOID-3",
-                RowId = 1,
-                Created = DateTimeOffset.UtcNow,
-                Modified = DateTimeOffset.UtcNow,
-                EventDate = new DateTime(2024, 03, 12),
-                FirearmName = "Ruger 10/122",
-                RangeName = "CHAS",
-                RoundsFired = 350,
-                AmmoDescription = "CCI SV",
-                Notes = "Sample Event #1"
-            },
-            new()
-            {
-                Id = "NANOID-4",
-                RowId = 2,
-                Created = DateTimeOffset.UtcNow,
-                Modified = DateTimeOffset.UtcNow,
-                EventDate = new DateTime(2025, 03, 12),
-                FirearmName = "Tikka T3",
-                RangeName = "SPFGA",
-                RoundsFired = 10,
-                AmmoDescription = "178gr Hornady BTHP;39.1gr IMR-3031;CCI #200; Federal Brass;2.902 COAL",
-                Notes = "Sample event #2"
-            }
-        ];
-
-
         [Obsolete("Use ISqliteHelper.OpenSqliteConnectionToFileAsync instead", true)]
         internal static async Task<SqliteConnection> GetOpenConnectionAsync(ISqliteHelper dbService,
             CancellationToken cancellationToken = default)
@@ -87,11 +34,6 @@ namespace MySimpleRangeLog.Database
         public static async Task<IEnumerable<SimpleRangeEvent>> GetSimpleRangeEventsAsync(SqliteConnection connection,
             CancellationToken cancellationToken = default)
         {
-            if (connection.IsInMemoryDb())
-            {
-                return TestRangeEvents;
-            }
-
             const string sql = """
                                SELECT *
                                FROM SimpleRangeEvents 
@@ -147,11 +89,6 @@ namespace MySimpleRangeLog.Database
         public static async Task<IEnumerable<Firearm>> GetFirearmsAsync(SqliteConnection connection,
             CancellationToken cancellationToken = default)
         {
-            if (connection.IsInMemoryDb())
-            {
-                return TestFirearms;
-            }
-
             const string sql = """
                                SELECT *
                                FROM Firearms 

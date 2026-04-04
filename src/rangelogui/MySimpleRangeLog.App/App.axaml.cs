@@ -14,11 +14,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Database.Sqlite;
 using MySimpleRangeLog.Database;
-using MySimpleRangeLog.Main.ViewModels;
+using MySimpleRangeLog.ViewModels;
 using MySimpleRangeLog.Properties;
 using MySimpleRangeLog.Services;
-using MainView = MySimpleRangeLog.Main.Views.MainView;
-using MainWindow = MySimpleRangeLog.Main.Views.MainWindow;
+using MainView = MySimpleRangeLog.Views.MainView;
+using MainWindow = MySimpleRangeLog.Views.MainWindow;
 
 namespace MySimpleRangeLog
 {
@@ -56,6 +56,12 @@ namespace MySimpleRangeLog
                 services.TryAddSingleton<IDatabaseService, DesignDbService>();
                 services.TryAddSingleton<ISimpleRangeEventService, SimpleRangeEventService>();
                 services.TryAddSingleton<IFirearmsService, FirearmsService>();
+
+                // Register ViewModels for injection
+                services.AddTransient<MainViewModel>();
+                services.AddTransient<ManageSimpleRangeEventsViewModel>();
+                services.AddTransient<ManageFirearmsViewModel>();
+                services.AddTransient<SettingsViewModel>();
 
                 Services = services.BuildServiceProvider();
 
@@ -120,12 +126,12 @@ namespace MySimpleRangeLog
                 // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
                 DisableAvaloniaDataAnnotationValidation();
 
-                desktop.MainWindow = new MainWindow { DataContext = new MainViewModel() };
+                desktop.MainWindow = new MainWindow { DataContext = Services.GetRequiredService<MainViewModel>() };
             }
 
             else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
             {
-                singleViewPlatform.MainView = new MainView { DataContext = new MainViewModel() };
+                singleViewPlatform.MainView = new MainView { DataContext = Services.GetRequiredService<MainViewModel>() };
             }
 
             base.OnFrameworkInitializationCompleted();

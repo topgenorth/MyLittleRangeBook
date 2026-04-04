@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MySimpleRangeLog.Database;
 using MySimpleRangeLog.Services;
@@ -69,7 +71,7 @@ namespace MySimpleRangeLog.Models
         ///     This requires that the SQLite connection has a function registered called nanoid().
         /// </remarks>
         /// <returns></returns>
-        public async Task<bool> SaveAsync()
+        public async Task<bool> SaveAsync(SqliteConnection connection, CancellationToken cancellationToken = default)
         {
             Modified = DateTimeOffset.UtcNow;
             var dbService = App.Services.GetRequiredService<IDatabaseService>();
@@ -77,7 +79,6 @@ namespace MySimpleRangeLog.Models
             {
                 Id ??= await Nanoid.GenerateAsync();
 
-                await using var connection = await DatabaseHelper.GetOpenConnectionAsync(dbService);
                 if (RowId is null)
                 {
                     RowId = await connection.QuerySingleAsync<long>(
@@ -114,7 +115,7 @@ namespace MySimpleRangeLog.Models
             }
         }
 
-        public async Task<bool> DeleteAsync()
+        public async Task<bool> DeleteAsync(SqliteConnection connection, CancellationToken cancellationToken = default)
         {
             if (RowId is null)
             {
@@ -123,8 +124,6 @@ namespace MySimpleRangeLog.Models
 
             try
             {
-                await using var connection =
-                    await DatabaseHelper.GetOpenConnectionAsync(App.Services.GetRequiredService<IDatabaseService>());
                 await connection.ExecuteAsync("DELETE FROM SimpleRangeEvents WHERE Id = @Id;", this);
                 await DatabaseHelper.SyncUnderlyingDatabaseAsync();
             }
