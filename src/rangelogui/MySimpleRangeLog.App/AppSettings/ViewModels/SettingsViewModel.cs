@@ -161,12 +161,12 @@ namespace MySimpleRangeLog.ViewModels
                 // Drop existing tables and vacuum the database to reclaim space
                 await connection.ExecuteAsync(
                     """
-                    DROP TABLE IF EXISTS SimpleRangeEvents;
+                    TRUNCATE SimpleRangeEvents;
+                    TRUNCATE TABLE Firearms;
+                    TRUNCATE TABLE FitFiles;
                     VACUUM;
                     """);
 
-                // Recreate the database schema
-                await DatabaseHelper.EnsureSQLiteDatabaseExists(connection, true);
 
                 // Notify other ViewModels about updated DB to refresh their views
                 WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(UpdateAction.Reset));

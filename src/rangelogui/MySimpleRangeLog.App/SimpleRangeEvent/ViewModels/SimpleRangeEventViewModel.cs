@@ -21,7 +21,7 @@ namespace MySimpleRangeLog.ViewModels
     {
         public SimpleRangeEventViewModel(SimpleRangeEvent rangeEvent)
         {
-            Id = rangeEvent.Id;
+            Id = rangeEvent.RowId;
             EventDate = rangeEvent.EventDate;
             FirearmName = rangeEvent.FirearmName;
             RangeName = rangeEvent.RangeName;
@@ -64,7 +64,7 @@ namespace MySimpleRangeLog.ViewModels
         {
             return new SimpleRangeEvent
             {
-                Id = Id,
+                RowId = Id,
                 EventDate = EventDate,
                 FirearmName = FirearmName,
                 RangeName = RangeName,

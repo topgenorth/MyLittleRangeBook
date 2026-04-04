@@ -22,7 +22,7 @@ namespace MySimpleRangeLog.Database
         [
             new()
             {
-                Id = 1,
+                RowId = 1,
                 Created = DateTimeOffset.UtcNow,
                 Modified = DateTimeOffset.UtcNow,
                 Name = "STAG-10",
@@ -30,7 +30,7 @@ namespace MySimpleRangeLog.Database
             },
             new()
             {
-                Id = 2,
+                RowId = 2,
                 Created = DateTimeOffset.UtcNow,
                 Modified = DateTimeOffset.UtcNow,
                 Name = "Ruger 10/22",
@@ -42,7 +42,7 @@ namespace MySimpleRangeLog.Database
         [
             new()
             {
-                Id = 1,
+                RowId = 1,
                 Created = DateTimeOffset.UtcNow,
                 Modified = DateTimeOffset.UtcNow,
                 EventDate = new DateTime(2024, 03, 12),
@@ -54,7 +54,7 @@ namespace MySimpleRangeLog.Database
             },
             new()
             {
-                Id = 2,
+                RowId = 2,
                 Created = DateTimeOffset.UtcNow,
                 Modified = DateTimeOffset.UtcNow,
                 EventDate = new DateTime(2025, 03, 12),
