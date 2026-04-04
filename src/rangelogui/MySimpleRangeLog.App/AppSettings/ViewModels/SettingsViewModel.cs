@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Dapper;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.Database.Sqlite;
 using MySimpleRangeLog.Database;
 using MySimpleRangeLog.Helper;
 using MySimpleRangeLog.Messages;
@@ -27,10 +28,16 @@ namespace MySimpleRangeLog.ViewModels
     /// </summary>
     public partial class SettingsViewModel : ViewModelBase, IDialogParticipant
     {
+        readonly ISqliteHelper _sqliteHelper;
+
+        public SettingsViewModel(ISqliteHelper sqliteHelper)
+        {
+            _sqliteHelper = sqliteHelper;
+        }
+
         /// <summary>
         ///     Gets the application settings instance for binding to UI controls.
         /// </summary>
-
         public Settings Settings => Settings.Default;
 
         /// <summary>
@@ -63,8 +70,8 @@ namespace MySimpleRangeLog.ViewModels
 
                     try
                     {
-                        // Export all database data to JSON format
-                        await DatabaseHelper.ExportToJsonAsync(fs);
+                        var conn = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
+                        await DatabaseHelper.ExportToJsonAsync(conn, fs);
                     }
                     catch (Exception e)
                     {
@@ -155,8 +162,7 @@ namespace MySimpleRangeLog.ViewModels
             if (choice == DialogResult.Yes)
             {
                 // Get database connection and clear all data
-                await using var connection =
-                    await DatabaseHelper.GetOpenConnectionAsync(App.Services.GetRequiredService<IDatabaseService>());
+                await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
 
                 // Drop existing tables and vacuum the database to reclaim space
                 await connection.ExecuteAsync(

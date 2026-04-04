@@ -31,6 +31,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
 
             SetSqlite3ProviderAndInit();
+
             services.AddSingleton<ISqliteHelper, SqliteHelper>();
             return services;
         }

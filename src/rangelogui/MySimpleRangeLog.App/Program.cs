@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using Avalonia;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Database.Sqlite;
-using MySimpleRangeLog.Database;
+using MySimpleRangeLog.Database.Sqlite;
 using MySimpleRangeLog.Helper;
 using MySimpleRangeLog.Services;
 using Serilog;
@@ -26,11 +27,12 @@ namespace MySimpleRangeLog
 
             // Register the Desktop service
             var services = new ServiceCollection();
-            services.AddSqliteHelper();
-            services.AddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
-            var dbService = new SQLiteDbService();
-            services.AddSingleton<IDatabaseService>(dbService);
-            // [TO20260311] Need to register a handler to convert strings to DateTimeOffset values.
+            services.TryAddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
+
+            services.AddSqliteHelper()
+                .TryAddSingleton<IDatabaseService, SqliteDbService>();
+
+            // [TO20260311] Need to register a handler for Dapper to convert strings to DateTimeOffset values.
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SQLiteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SQLiteDateTimeOffsetHandler());
 
@@ -42,10 +44,7 @@ namespace MySimpleRangeLog
                     !RuntimeFeature.IsDynamicCodeCompiled,
                     Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
                 );
-                
-                
-                Log.Information(dbService.GetDatabaseName());
-                Log.Information(dbService.GetConnectionString());
+
                 BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
             }
             catch (Exception ex)
