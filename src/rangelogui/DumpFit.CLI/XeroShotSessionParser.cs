@@ -1,13 +1,15 @@
+using CommunityToolkit.HighPerformance;
 using Dynastream.Fit;
 using FluentResults;
 using MySimpleRangeLog.CLI.Model;
+using File = System.IO.File;
 
 namespace MySimpleRangeLog.CLI
 {
     /// <summary>
-    ///    Will decode a byte stream from a Xero C1 FIT file into a ShotSession.
+    ///     Will decode a byte stream from a Xero C1 FIT file into a ShotSession.
     /// </summary>
-    public class XeroShotSessionParser
+    public class XeroShotSessionParser : IXeroShotSessionParser
     {
         internal const int ExpectedFileType = 54;
         readonly FitListener _fitListener = new();
@@ -23,6 +25,40 @@ namespace MySimpleRangeLog.CLI
         public XeroShotSessionParser(ILogger logger)
         {
             _logger = logger.ForContext<XeroShotSessionParser>();
+        }
+
+        /// <summary>
+        ///     Decodes a FIT file into a ShotSession.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task<Result<ShotSession>> DecodeShotSessionAsync(string filePath, CancellationToken ct)
+        {
+            if (!File.Exists(filePath))
+            {
+                return Result.Fail(new FitFileNotFoundError(filePath));
+            }
+
+            Result<ShotSession> result;
+            try
+            {
+                result = (await filePath.LoadBytesAsync(ct))
+                    .Bind(bytesFromFitFile =>
+                    {
+                        _logger.Verbose("Loaded {bytes} bytes.", bytesFromFitFile.Length);
+                        using var stream = bytesFromFitFile.AsStream();
+
+                        return Decode(stream);
+                    });
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Failed to parse FIT file at {filePath}", filePath);
+                result = Result.Fail(new FailedToParseFitFileError().CausedBy(e));
+            }
+
+            return result;
         }
 
         public Result<ShotSession> Decode(Stream input)
@@ -54,6 +90,8 @@ namespace MySimpleRangeLog.CLI
             }
             catch (Exception e)
             {
+                _logger.Error(e, "Failed to parse FIT bytes");
+
                 return Result.Fail(new FailedToParseFitFileError().CausedBy(e));
             }
 
@@ -75,14 +113,13 @@ namespace MySimpleRangeLog.CLI
             var dt = msg.GetTimestamp().GetDateTime();
             _shotSession!.DateTimeUtc = dt;
 
-            _shotSession!.ProjectileWeight= Convert.ToInt32(msg.GetGrainWeight() ?? 0f);
+            _shotSession!.ProjectileWeight = Convert.ToInt32(msg.GetGrainWeight() ?? 0f);
             _shotSession!.ProjectileType = msg.GetProjectileType().ToString() ?? "Unknown";
             _shotSession.AverageSpeed = Convert.ToInt32(msg.GetAvgSpeed() ?? 0f);
             _shotSession.MaxSpeed = Convert.ToInt32(msg.GetMaxSpeed() ?? 0f);
             _shotSession.MinSpeed = Convert.ToInt32(msg.GetMinSpeed() ?? 0f);
             _shotSession.StandardDeviation = msg.GetStandardDeviation() ?? 0f;
             _shotSession.ExtremeSpread = _shotSession.MaxSpeed - _shotSession.MinSpeed;
-            _logger.Verbose("loaded session");
         }
 
         void OnChronoShotMsg(object sender, MesgEventArgs e)
@@ -121,7 +158,7 @@ namespace MySimpleRangeLog.CLI
 
             if (ExpectedFileType != (int)t!)
             {
-                throw new($"Expected FIT File type {ExpectedFileType}, received {t}.");
+                throw new Exception($"Expected FIT File type {ExpectedFileType}, received {t}.");
             }
         }
     }

@@ -6,6 +6,7 @@
     <Folder Name="/SolutionItems/">
         <File Path=".editorconfig" />
         <File Path=".gitignore" />
+        <File Path="DumpFit.CLI/test.sql" />
         <File Path="README.md" />
     </Folder>
     <Project Path="DumpFit.CLI/DumpFit.CLI.csproj" />

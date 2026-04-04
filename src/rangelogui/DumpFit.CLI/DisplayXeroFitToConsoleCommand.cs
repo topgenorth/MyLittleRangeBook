@@ -1,66 +1,79 @@
 ﻿using CommunityToolkit.HighPerformance;
 using ConsoleAppFramework;
+using FluentResults;
+using MySimpleRangeLog.CLI.Console;
 using MySimpleRangeLog.CLI.Model;
 using Spectre.Console;
+using static MySimpleRangeLog.CLI.ReturnCodes;
 
 namespace MySimpleRangeLog.CLI
 {
     [RegisterCommands("console")]
     public class DisplayXeroFitToConsoleCommand
     {
-        readonly IAnsiConsole _console;
-
+        readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
-        readonly XeroShotSessionParser _xeroParser;
+        readonly IXeroShotSessionParser _xeroParser;
 
-        public DisplayXeroFitToConsoleCommand(ILogger logger, IAnsiConsole? console)
+        public DisplayXeroFitToConsoleCommand(ILogger logger, ICliDisplay cliDisplay, IXeroShotSessionParser xeroParser)
         {
             _logger = logger;
             _xeroParser = new XeroShotSessionParser(logger);
-            _console = console ?? AnsiConsole.Console;
+            _cliDisplay = cliDisplay;
+            _xeroParser = xeroParser;
         }
 
 
         /// <summary>
-        /// Displays the FIT file to the console.
+        ///     Displays the FIT file to the console.
         /// </summary>
         /// <param name="file">Path to the FIT file</param>
-        /// <param name="ct"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("")]
-        public async Task<int> ToConsoleAsync(string file, CancellationToken ct)
+        public async Task<int> ToConsoleAsync(string file, CancellationToken cancellationToken)
         {
+            _cliDisplay.WriteHeader("Displaying FIT File");
             if (!File.Exists(file))
             {
                 _logger.Warning("File {file} not found.", file);
-                _console.MarkupLineInterpolated($"[bold red]✗ Error:[/] Could not find '{file}'.");
+                _cliDisplay.WriteFailure($"Could not find '{file}'.");
 
-                return ReturnCodes.FILE_NOT_FOUND;
+                return DATABASE_FILE_NOT_FOUND;
             }
 
-            var result = (await file.LoadAsync(ct))
-                .Bind(bytesFromFitFile =>
+            var result = await _cliDisplay.RunStatusAsync("Loading FIT file...",
+                async ct =>
                 {
-                    _logger.Verbose("Loaded {bytes} bytes.", bytesFromFitFile.Length);
-                    using var stream = bytesFromFitFile.AsStream();
+                    var result = await _xeroParser.DecodeShotSessionAsync(file, ct);
 
-                    return _xeroParser.Decode(stream);
-                });
+                    if (result.IsFailed)
+                    {
+                        _logger.Error("Failed to process FIT file {file}.", file);
+
+                        return Result.Fail<ShotSession>(result.Errors);
+                    }
+
+                    var shotSession = result.Value;
+                    shotSession.FileName = file;
+
+                    return Result.Ok(shotSession);
+                },
+                cancellationToken
+            );
 
             if (result.IsFailed)
             {
-                _console.MarkupLineInterpolated($"[bold red]✗ Error:[/] Failed to parse FIT file '{file}'");
-                _logger.Error("Failed to process FIT file {file}.", file);
+                _cliDisplay.WriteFailure("Failed to parse FIT file.");
 
-                return result.HasError<UnexpectedFitFileTypeError>() ? ReturnCodes.FAILED_TO_PARSE : ReturnCodes.FAILED_TO_LOAD;
+                return result.HasError<UnexpectedFitFileTypeError>() ? FAILED_TO_PARSE : FAILED_TO_LOAD;
             }
 
-            var shotSession = result.Value;
-            shotSession.FileName = file;
+            var session = result.Value;
+            DisplaySessionToConsole(_cliDisplay, session);
+            _cliDisplay.WriteSuccess("FIT file loaded.");
 
-            DisplaySessionToConsole(_console, shotSession);
-
-            return ReturnCodes.SUCCESS;
+            return SUCCESS;
         }
 
         static void DisplayFileProcessingPath(IAnsiConsole console, string file)
@@ -73,9 +86,8 @@ namespace MySimpleRangeLog.CLI
             console.Write(path);
         }
 
-        void DisplaySessionToConsole(IAnsiConsole console, ShotSession session)
+        void DisplaySessionToConsole(ICliDisplay cliDisplay, ShotSession session)
         {
-            console.MarkupLine("[green]✓ Parsed FIT file.[/]");
             var title = new TableTitle("Session Stats").SetStyle(Style.Parse("bold"));
             var captionStyle = Style.Parse("italic").Foreground(Color.White);
 
@@ -93,7 +105,8 @@ namespace MySimpleRangeLog.CLI
             table.AddRow("S/D", session.StandardDeviation.ToFps().ToString("F1"));
             table.AddRow("ES", session.ExtremeSpread.ToFps().ToString());
 
-            console.Write(table);
+            cliDisplay.Console.Write(table);
+            cliDisplay.Console.WriteLine();
         }
     }
 }
