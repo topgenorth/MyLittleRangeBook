@@ -28,24 +28,12 @@ namespace MySimpleRangeLog.Database
         /// <returns>The full path to the database file (e.g., C:\Users\Name\AppData\Local\SimpleRangeLog\fileName.db on Windows)</returns>
         public string GetConnectionString()
         {
-            var settingsDirectory = JsonSettingsFileStorageService.SettingsDirectory;
-
+            var dbPath = GetDatabaseName();
+            string settingsDirectory = Path.GetDirectoryName(dbPath)!;
             if (!Directory.Exists(settingsDirectory))
             {
                 Directory.CreateDirectory(settingsDirectory);
                 Log.Logger.Verbose("Creating folder for database {SettingsDirectory}.", settingsDirectory);
-            }
-
-            string dbPath;
-            if (EnvironmentHelper.IsProduction)
-            {
-                dbPath = Path.Combine(settingsDirectory, DATABASE_NAME);
-            }
-            else
-            {
-                var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
-                var dbName = $"simplerangelog-{env!.ToLower()}.db";
-                dbPath = Path.Combine(settingsDirectory, dbName);
             }
 
 
@@ -63,6 +51,24 @@ namespace MySimpleRangeLog.Database
         public Task SaveAsync()
         {
             return Task.CompletedTask;
+        }
+
+        public string GetDatabaseName()
+        {
+            var settingsDirectory = JsonSettingsFileStorageService.SettingsDirectory;
+            string dbPath;
+            if (EnvironmentHelper.IsProduction)
+            {
+                dbPath = Path.Combine(settingsDirectory, DATABASE_NAME);
+            }
+            else
+            {
+                var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
+                var dbName = $"simplerangelog-{env!.ToLower()}.db";
+                dbPath = Path.Combine(settingsDirectory, dbName);
+            }
+
+            return dbPath;
         }
     }
 }

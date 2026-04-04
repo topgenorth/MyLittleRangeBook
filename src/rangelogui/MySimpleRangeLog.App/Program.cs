@@ -27,7 +27,8 @@ namespace MySimpleRangeLog
             var services = new ServiceCollection();
 
             services.AddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
-            services.AddSingleton<IDatabaseService>(new SQLiteDbService());
+            var dbService = new SQLiteDbService();
+            services.AddSingleton<IDatabaseService>(dbService);
 
             // [TO20260311] Need to register a handler to convert strings to DateTimeOffset values.
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SQLiteDateTimeOffsetHandler());
@@ -41,7 +42,10 @@ namespace MySimpleRangeLog
                     !RuntimeFeature.IsDynamicCodeCompiled,
                     Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
                 );
-
+                
+                
+                Log.Information(dbService.GetDatabaseName());
+                Log.Information(dbService.GetConnectionString());
                 BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
             }
             catch (Exception ex)
