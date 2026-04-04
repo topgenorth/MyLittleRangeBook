@@ -1,18 +1,23 @@
 ﻿using ConsoleAppFramework;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using MySimpleRangeLog.CLI.Console;
+using Spectre.Console;
 using SQLitePCL;
 
-// We need this for SQLite - 
 raw.SetProvider(new SQLite3Provider_e_sqlite3());
-// or, if you’re using bundle_e_sqlite3:
 Batteries.Init();
 
 var builder = Host.CreateApplicationBuilder();
+
 builder.Configuration
     .AddJsonFile("appsettings.json", true, true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
+
+builder.Services.TryAddSingleton(AnsiConsole.Console);
+builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
 
 builder.Services.AddSerilog(lc =>
 {
@@ -31,6 +36,7 @@ builder.Services.AddSerilog(lc =>
         lc.MinimumLevel.Verbose();
     }
 });
+
 
 using var host = builder.Build();
 using var scope = host.Services.CreateScope();
