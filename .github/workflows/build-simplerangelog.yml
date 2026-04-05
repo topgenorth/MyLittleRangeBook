@@ -21,22 +21,22 @@ jobs:
 
       - name: Publish single-file EXE for the CLI
         run: |
-          dotnet publish src/rangelogui/DumpFit.CLI/DumpFit.CLI.csproj -c Release \
+          dotnet publish src/mlrb/MyLittleRangeBook.CLI/MyLittleRangeBook.CLI.csproj -c Release \
             -r ${{ matrix.platform == 'windows' && 'win-x64' || 'linux-x64' }} \
             --self-contained true \
             -p:PublishSingleFile=true \
             -p:IncludeNativeLibrariesForSelfExtract=true \
-            -o ./out/DumpFit
+            -o ./out/MyLittleRangeBook-CLI
         shell: bash
 
       - name: Publish single-file EXE for the GUI
         run: |
-          dotnet publish src/rangelogui/MySimpleRangeLog.App/MySimpleRangeLog.App.csproj -c Release \
+          dotnet publish src/mlrb/MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj -c Release \
             -r ${{ matrix.platform == 'windows' && 'win-x64' || 'linux-x64' }} \
             --self-contained true \
             -p:PublishSingleFile=true \
             -p:IncludeNativeLibrariesForSelfExtract=true \
-            -o ./out/SimpleRangeLog
+            -o ./out/MyLittleRangeBook-GUI
         shell: bash
 
       - name: Upload ${{ matrix.platform }} artifacts
@@ -45,5 +45,5 @@ jobs:
         with:
           name: ${{ matrix.platform }}-executables
           path: |
-            out/SimpleRangeLog/
-            out/DumpFit/
+            out/MyLittleRangeBook-GUI/
+            out/MyLittleRangeBook-CLI/

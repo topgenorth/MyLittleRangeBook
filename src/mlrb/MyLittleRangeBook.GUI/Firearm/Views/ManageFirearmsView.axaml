@@ -1,0 +1,160 @@
+﻿<UserControl x:Class="MyLittleRangeBook.GUI.Views.ManageFirearmsView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:services="clr-namespace:SharedControls.Services;assembly=SharedControls"
+             xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
+             xmlns:viewModels="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
+             xmlns:viewModels1="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             x:Name="Root"
+             services:DialogManager.Register="{Binding}"
+             x:DataType="viewModels1:ManageFirearmsViewModel"
+             mc:Ignorable="d">
+    <Design.DataContext>
+        <viewModels1:ManageFirearmsViewModel />
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <!-- Defining a MenuFlyout for shared usage -->
+        <MenuFlyout x:Key="ToDoItemContextMenu" x:DataType="viewModels1:FirearmViewModel">
+            <MenuItem Header="Edit Item"
+                      Command="{Binding #Root.((viewModels1:ManageFirearmsViewModel)DataContext).EditFirearmCommand}"
+                      CommandParameter="{Binding}">
+                <MenuItem.Icon>
+                    <PathIcon Data="{DynamicResource PhosphorIcons.NotePencilLight}" />
+                </MenuItem.Icon>
+            </MenuItem>
+
+            <MenuItem Header="Delete Item"
+                      Command="{Binding #Root.((viewModels1:ManageFirearmsViewModel)DataContext).DeleteFirearmCommand}"
+                      CommandParameter="{Binding}">
+                <MenuItem.Icon>
+                    <PathIcon Data="{DynamicResource PhosphorIcons.TrashLight}" />
+                </MenuItem.Icon>
+            </MenuItem>
+
+        </MenuFlyout>
+    </UserControl.Resources>
+
+    <DockPanel VerticalSpacing="5">
+        <!-- The ToolBar  -->
+        <Border DockPanel.Dock="Top"
+                Padding="4"
+                Margin="10,5"
+                Background="{DynamicResource CommandBarBackground}"
+                CornerRadius="20"
+                BoxShadow="2 2 5 1 gray">
+            <WrapPanel ItemSpacing="5">
+                <Button Classes="toolBar"
+                        Content="{DynamicResource PhosphorIcons.ArrowCounterClockwiseLight}"
+                        Command="{Binding RefreshCommand}"
+                        ToolTip.Tip="Refresh the List" />
+
+                <Separator VerticalAlignment="Stretch" Width="1" Height="NaN"
+                           Margin="0,5" />
+
+                <Button Classes="toolBar"
+                        Content="{DynamicResource PhosphorIcons.PlusCircleLight}"
+                        Command="{Binding AddNewFirearmCommand}"
+                        ToolTip.Tip="New Range Event" />
+                <Button Classes="toolBar"
+                        Content="{DynamicResource PhosphorIcons.NotePencilLight}"
+                        Command="{Binding EditFirearmCommand}"
+                        CommandParameter="{Binding SelectedFirearm}"
+                        ToolTip.Tip="Edit Range Event" />
+                <Button Classes="toolBar"
+                        Content="{DynamicResource PhosphorIcons.TrashLight}"
+                        Command="{Binding DeleteFirearmCommand}"
+                        CommandParameter="{Binding SelectedFirearm}"
+                        ToolTip.Tip="Delete Range Event" />
+
+                <Separator VerticalAlignment="Stretch" Width="1" Height="NaN"
+                           Margin="0,5" />
+
+                <controls:LabeledControl Header="Search:" HeaderPosition="Left">
+                    <TextBox CornerRadius="8"
+                             Width="300"
+                             Text="{Binding FilterString}"
+                             Watermark="Find Items..." />
+                </controls:LabeledControl>
+
+                <Separator VerticalAlignment="Stretch" Width="1" Height="NaN"
+                           Margin="0,5" />
+
+                <Button Classes="toolBar"
+                        Content="{DynamicResource PhosphorIcons.CaretUpDownLight}"
+                        ToolTip.Tip="Sort Items">
+                    <Button.Flyout>
+                        <Flyout>
+                            <!-- <StackPanel Spacing="5" Grid.IsSharedSizeScope="True" -->
+                            <!--             Width="200"> -->
+                            <!--     <controls:LabeledControl Header="Sort by:" HeaderPosition="Left"> -->
+                            <!--         <ComboBox SelectedItem="{Binding SortExpression1}" -->
+                            <!--                   ItemsSource="{x:Static viewModels1:SimpleRangeEventsSortExpression.AvailableSortExpressions}" /> -->
+                            <!--     </controls:LabeledControl> -->
+                            <!--     <controls:LabeledControl Header="Then by:" HeaderPosition="Left"> -->
+                            <!--         <ComboBox SelectedItem="{Binding SortExpression2}" -->
+                            <!--                   ItemsSource="{x:Static viewModels1:SimpleRangeEventsSortExpression.AvailableSortExpressions}" /> -->
+                            <!--     </controls:LabeledControl> -->
+                            <!--     <controls:LabeledControl Header="Then by:" HeaderPosition="Left"> -->
+                            <!--         <ComboBox SelectedItem="{Binding SortExpression3}" -->
+                            <!--                   ItemsSource="{x:Static viewModels1:SimpleRangeEventsSortExpression.AvailableSortExpressions}" /> -->
+                            <!--     </controls:LabeledControl> -->
+                            <!-- </StackPanel> -->
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+            </WrapPanel>
+        </Border>
+
+        <!-- The Firearms list -->
+        <ListBox x:Name="ToDoItemsListBox"
+                 ItemsSource="{Binding FirearmViewModels}"
+                 SelectedItem="{Binding SelectedFirearm }">
+            <ListBox.ItemContainerTheme>
+                <ControlTheme TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                    <Setter Property="ContextFlyout" Value="{StaticResource ToDoItemContextMenu}" />
+                </ControlTheme>
+            </ListBox.ItemContainerTheme>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnDefinitions="*, Auto"
+                          RowDefinitions="Auto, Auto, Auto"
+                          RowSpacing="1"
+                          ColumnSpacing="3">
+
+                        <!-- A Button that shows the ContextMenu (Useful esp. on mobile devices) -->
+                        <Button Grid.Row="0" Grid.Column="1"
+                                Grid.RowSpan="3" Classes="toolBar"
+                                VerticalAlignment="Top"
+                                HorizontalAlignment="Right"
+                                HorizontalContentAlignment="Right"
+                                Content="{DynamicResource PhosphorIcons.DotsThreeVertical}"
+                                Flyout="{StaticResource ToDoItemContextMenu}" />
+
+                        <!-- The first thing is a grid hold the relevant stuff -->
+                        <Grid
+                            Grid.Row="0"
+                            Grid.Column="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <!-- Id -->
+                            <TextBlock HorizontalAlignment="Left" Grid.Column="0"
+                                       TextAlignment="Center"
+                                       Text="{Binding Id}" />
+                            <!-- Firearm Name -->
+                            <TextBlock Grid.Column="1"
+                                       HorizontalAlignment="Left"
+                                       Text="{Binding Name}" />
+                        </Grid>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</UserControl>
