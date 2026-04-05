@@ -2,9 +2,9 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using MySimpleRangeLog.ViewModels;
+using MyLittleRangeBook.Gui.ViewModels;
 
-namespace MySimpleRangeLog.Views
+namespace MyLittleRangeBook.Gui.Views
 {
     /// <summary>
     ///     Given a view model, returns the corresponding view if possible.

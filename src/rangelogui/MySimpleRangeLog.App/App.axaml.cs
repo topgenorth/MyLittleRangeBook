@@ -12,14 +12,15 @@ using Avalonia.Media;
 using Avalonia.Themes.Fluent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using MySimpleRangeLog.Database;
-using MySimpleRangeLog.Main.ViewModels;
-using MySimpleRangeLog.Properties;
-using MySimpleRangeLog.Services;
-using MainView = MySimpleRangeLog.Main.Views.MainView;
-using MainWindow = MySimpleRangeLog.Main.Views.MainWindow;
+using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Gui.Database;
+using MyLittleRangeBook.Gui.Properties;
+using MyLittleRangeBook.Gui.Services;
+using MyLittleRangeBook.Gui.ViewModels;
+using MainView = MyLittleRangeBook.Gui.Views.MainView;
+using MainWindow = MyLittleRangeBook.Gui.Views.MainWindow;
 
-namespace MySimpleRangeLog
+namespace MyLittleRangeBook.Gui
 {
     /// <summary>
     ///     Main application entry point for My Simple Range App app.
@@ -51,20 +52,7 @@ namespace MySimpleRangeLog
         {
             try
             {
-                if (services.All(x => x.ServiceType != typeof(IDatabaseService)))
-                {
-                    services.AddSingleton<IDatabaseService, DesignDbService>();
-                }
 
-                if (services.All(x => x.ServiceType != typeof(ISimpleRangeEventService)))
-                {
-                    services.AddSingleton<ISimpleRangeEventService, SimpleRangeEventService>();
-                }
-
-                if (services.All(x => x.ServiceType != typeof(IFirearmsService)))
-                {
-                    services.AddSingleton<IFirearmsService, FirearmsService>();
-                }
 
                 Services = services.BuildServiceProvider();
 
@@ -83,7 +71,6 @@ namespace MySimpleRangeLog
             if (Design.IsDesignMode)
             {
                 var serviceCollection = new ServiceCollection();
-                serviceCollection.TryAddSingleton<IDatabaseService>(new DesignDbService());
                 serviceCollection.TryAddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
                 RegisterAppServices(serviceCollection);
             }
@@ -129,12 +116,12 @@ namespace MySimpleRangeLog
                 // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
                 DisableAvaloniaDataAnnotationValidation();
 
-                desktop.MainWindow = new MainWindow { DataContext = new MainViewModel() };
+                desktop.MainWindow = new MainWindow { DataContext = Services.GetRequiredService<MainViewModel>() };
             }
 
             else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
             {
-                singleViewPlatform.MainView = new MainView { DataContext = new MainViewModel() };
+                singleViewPlatform.MainView = new MainView { DataContext = Services.GetRequiredService<MainViewModel>() };
             }
 
             base.OnFrameworkInitializationCompleted();

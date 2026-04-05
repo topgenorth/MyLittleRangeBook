@@ -1,7 +1,8 @@
 ﻿using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
-using MySimpleRangeLog.Database;
-using MySimpleRangeLog.Services;
+using MyLittleRangeBook.Gui;
+using MyLittleRangeBook.Gui.Database;
+using MyLittleRangeBook.Gui.Services;
 
 namespace MySimpleRangeLog.Tests
 {
@@ -57,8 +58,6 @@ namespace MySimpleRangeLog.Tests
             // This allows ViewModels to work without needing real database connections
             var serviceCollection = new ServiceCollection();
 
-            // Use DesignDbService for in-memory testing without file system dependencies
-            serviceCollection.AddSingleton<IDatabaseService>(new DesignDbService());
 
             // Use JsonSettingsFileStorageService (in-memory for tests, no file system)
             serviceCollection.AddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());

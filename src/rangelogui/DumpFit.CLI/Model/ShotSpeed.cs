@@ -1,4 +1,4 @@
-namespace MySimpleRangeLog.CLI.Model
+namespace MyLittleRangeBook.Cli.Model
 {
     public struct ShotSpeed : IEquatable<ShotSpeed>, IComparable<ShotSpeed>
     {

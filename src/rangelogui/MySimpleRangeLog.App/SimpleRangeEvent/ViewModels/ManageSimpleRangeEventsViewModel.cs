@@ -11,14 +11,15 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using DynamicData;
 using DynamicData.Binding;
-using MySimpleRangeLog.Database;
-using MySimpleRangeLog.Messages;
-using MySimpleRangeLog.Models;
+using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Gui.Database;
+using MyLittleRangeBook.Gui.Messages;
+using MyLittleRangeBook.Gui.Models;
 using SharedControls.Controls;
 using SharedControls.Helper;
 using SharedControls.Services;
 
-namespace MySimpleRangeLog.ViewModels
+namespace MyLittleRangeBook.Gui.ViewModels
 {
     /// <summary>
     ///     ViewModel for managing the display and manipulation of SimpleRangeEvents.
@@ -44,8 +45,11 @@ namespace MySimpleRangeLog.ViewModels
         /// </summary>
         readonly SourceCache<SimpleRangeEventViewModel, long> _simpleRangeEventSourceCache = new(x => x.Id ?? -1);
 
-        public ManageSimpleRangeEventsViewModel()
+        readonly ISqliteHelper _sqliteHelper;
+
+        public ManageSimpleRangeEventsViewModel(ISqliteHelper sqliteHelper)
         {
+            _sqliteHelper = sqliteHelper;
             // Register for message notifications from other ViewModels
             WeakReferenceMessenger.Default.Register(this);
 
@@ -161,7 +165,9 @@ namespace MySimpleRangeLog.ViewModels
         /// </summary>
         async Task LoadDataAsync()
         {
-            var simpleRangeEvents = await DatabaseHelper.GetSimpleRangeEventsAsync();
+            await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
+
+            var simpleRangeEvents = await DatabaseHelper.GetSimpleRangeEventsAsync(connection);
 
             // Convert database items to ViewModels and add to cache
             _simpleRangeEventSourceCache.AddOrUpdate(simpleRangeEvents.Select(x => new SimpleRangeEventViewModel(x)));
@@ -195,7 +201,8 @@ namespace MySimpleRangeLog.ViewModels
             var result = await this.ShowOverlayDialogAsync<DialogResult>("Delete the Range Event",
                 "Are you sure you want to delete this range event?", DialogCommands.YesNoCancel);
 
-            if (result == DialogResult.Yes && await simpleRangeEvent.ToSimpleRangeEvent().DeleteAsync())
+            await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
+            if (result == DialogResult.Yes && await simpleRangeEvent.ToSimpleRangeEvent().DeleteAsync(connection))
             {
                 _simpleRangeEventSourceCache.Remove(simpleRangeEvent);
             }

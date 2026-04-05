@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MySimpleRangeLog.ViewModels
+namespace MyLittleRangeBook.Gui.ViewModels
 {
     public abstract class SortableViewModelExpression<T> : ISortableExpression<T> where T : ViewModelBase
     {

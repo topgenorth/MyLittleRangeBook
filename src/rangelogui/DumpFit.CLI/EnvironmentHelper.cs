@@ -1,4 +1,4 @@
-namespace MySimpleRangeLog.CLI
+namespace MyLittleRangeBook.Cli
 {
     public static class EnvironmentHelper
     {

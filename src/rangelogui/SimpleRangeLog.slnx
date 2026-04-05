@@ -10,6 +10,7 @@
         <File Path="README.md" />
     </Folder>
     <Project Path="DumpFit.CLI/DumpFit.CLI.csproj" />
+    <Project Path="MyLittleRangeBook.Sqlite/MyLittleRangeBook.Sqlite.csproj" />
     <Project Path="MySimpleRangeLog.App/MySimpleRangeLog.App.csproj" />
     <Project Path="MySimpleRangeLog.Tests/MySimpleRangeLog.Tests.csproj" />
 </Solution>

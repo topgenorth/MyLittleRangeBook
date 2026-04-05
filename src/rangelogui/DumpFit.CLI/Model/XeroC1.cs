@@ -1,6 +1,6 @@
 using NanoidDotNet;
 
-namespace MySimpleRangeLog.CLI.Model
+namespace MyLittleRangeBook.Cli.Model
 {
     /// <summary>
     ///     First attempt at an abstraction around a physical Garmin Xero X1 device.

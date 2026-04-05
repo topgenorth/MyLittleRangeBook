@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace MySimpleRangeLog.Helper
+namespace MyLittleRangeBook.Gui.Helper
 {
     public static class AssemblyHelper
     {

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using SharedControls.Controls;
 
-namespace MySimpleRangeLog.Services
+namespace MyLittleRangeBook.Gui.Services
 {
     /// <summary>
     ///     Service interface for managing modal overlay dialogs.

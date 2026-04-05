@@ -1,18 +1,26 @@
 ﻿using System.Threading.Tasks;
-using MySimpleRangeLog.Models;
+using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Gui.Models;
 
-namespace MySimpleRangeLog.Services
+namespace MyLittleRangeBook.Gui.Services
 {
     public class FirearmsService : IFirearmsService
     {
-        public Task<bool> SaveFirearmAsync(Firearm firearm)
+        readonly ISqliteHelper _sqliteHelper;
+
+        public FirearmsService(ISqliteHelper sqliteHelper)
         {
-            return firearm.SaveAsync();
+            _sqliteHelper = sqliteHelper;
         }
 
-        public Task<bool> DeleteFirearmEvent(Firearm firearm)
+        public async Task<bool> SaveFirearmAsync(Firearm firearm)
         {
-            return firearm.DeleteAsync();
+            return await firearm.SaveAsync(await _sqliteHelper.OpenSqliteConnectionToFileAsync());
+        }
+
+        public async Task<bool> DeleteFirearmEvent(Firearm firearm)
+        {
+            return await firearm.DeleteAsync(await _sqliteHelper.OpenSqliteConnectionToFileAsync());
         }
     }
 }

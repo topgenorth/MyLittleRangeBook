@@ -10,7 +10,7 @@ using Dynastream.Fit;
 using FluentResults;
 using DateTime = Dynastream.Fit.DateTime;
 
-namespace MySimpleRangeLog.CLI
+namespace MyLittleRangeBook.Cli
 {
     public static class FitExtensions
     {

@@ -1,6 +1,6 @@
 ﻿using Spectre.Console;
 
-namespace MySimpleRangeLog.CLI.Console
+namespace MyLittleRangeBook.Cli.Console
 {
     public interface ICliDisplay
     {

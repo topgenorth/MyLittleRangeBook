@@ -9,7 +9,7 @@
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <AssemblyName>mlrb-gui</AssemblyName>
         <LangVersion>preview</LangVersion>
-        <RootNamespace>MySimpleRangeLog</RootNamespace>
+        <RootNamespace>MyLittleRangeBook.Gui</RootNamespace>
         <ApplicationIcon>Assets\AppIcon256.ico</ApplicationIcon>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -63,6 +63,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\MyLittleRangeBook.Sqlite\MyLittleRangeBook.Sqlite.csproj" />
         <ProjectReference Include="..\SharedControls\SharedControls.csproj"/>
     </ItemGroup>
 

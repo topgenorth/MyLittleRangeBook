@@ -10,14 +10,15 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using DynamicData;
-using MySimpleRangeLog.Database;
-using MySimpleRangeLog.Messages;
-using MySimpleRangeLog.Models;
+using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Gui.Database;
+using MyLittleRangeBook.Gui.Messages;
+using MyLittleRangeBook.Gui.Models;
 using SharedControls.Controls;
 using SharedControls.Helper;
 using SharedControls.Services;
 
-namespace MySimpleRangeLog.ViewModels
+namespace MyLittleRangeBook.Gui.ViewModels
 {
     [UnconditionalSuppressMessage("Trimming", "IL2112",
         Justification = "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
@@ -26,12 +27,15 @@ namespace MySimpleRangeLog.ViewModels
     public partial class ManageFirearmsViewModel : ViewModelBase, IDialogParticipant,
         IRecipient<UpdateDataMessage<Firearm>>
     {
+        readonly ISqliteHelper _sqliteHelper;
+
         readonly SourceCache<FirearmViewModel, long> _firearmViewModelCache = new(x => x.Id ?? -1);
 
         readonly ReadOnlyObservableCollection<FirearmViewModel> _firearmViewModels;
 
-        public ManageFirearmsViewModel()
+        public ManageFirearmsViewModel(ISqliteHelper sqliteHelper)
         {
+            _sqliteHelper = sqliteHelper;
             WeakReferenceMessenger.Default.Register(this);
 
             // Get the current synchronization context for UI thread operations
@@ -105,7 +109,8 @@ namespace MySimpleRangeLog.ViewModels
         [RelayCommand]
         async Task LoadDataAsync()
         {
-            var firearms = await DatabaseHelper.GetFirearmsAsync();
+            await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
+            var firearms = await DatabaseHelper.GetFirearmsAsync(connection);
             _firearmViewModelCache.AddOrUpdate(firearms.Select(x => new FirearmViewModel(x)));
         }
 
@@ -133,7 +138,8 @@ namespace MySimpleRangeLog.ViewModels
             var result = await this.ShowOverlayDialogAsync<DialogResult>("Delete the Firearm",
                 "Are you sure you want to delete this Firearm?", DialogCommands.YesNoCancel);
 
-            if (result == DialogResult.Yes && await firearm.ToFirearm().DeleteAsync())
+            await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
+            if (result == DialogResult.Yes && await firearm.ToFirearm().DeleteAsync(connection))
             {
                 _firearmViewModelCache.Remove(firearm);
             }

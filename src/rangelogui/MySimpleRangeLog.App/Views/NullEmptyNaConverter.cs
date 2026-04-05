@@ -2,7 +2,7 @@
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace MySimpleRangeLog.Views
+namespace MyLittleRangeBook.Gui.Views
 {
     public class NullEmptyNAConverter : IValueConverter
     {

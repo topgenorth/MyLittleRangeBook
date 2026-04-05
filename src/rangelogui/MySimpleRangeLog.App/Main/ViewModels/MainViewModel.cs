@@ -1,9 +1,7 @@
-﻿using MySimpleRangeLog.ViewModels;
+﻿using System.Diagnostics.CodeAnalysis;
 using SharedControls.Services;
-using ManageSimpleRangeEventsViewModel = MySimpleRangeLog.ViewModels.ManageSimpleRangeEventsViewModel;
-using SettingsViewModel = MySimpleRangeLog.ViewModels.SettingsViewModel;
 
-namespace MySimpleRangeLog.Main.ViewModels
+namespace MyLittleRangeBook.Gui.ViewModels
 {
     /// <summary>
     ///     Main ViewModel that orchestrates the entire application's ViewModels.
@@ -11,18 +9,28 @@ namespace MySimpleRangeLog.Main.ViewModels
     ///     between SimpleLogEvents and Settings. Implements IDialogParticipant to support
     ///     dialog interactions throughout the application.
     /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class MainViewModel : ViewModelBase, IDialogParticipant
     {
+        public MainViewModel(ManageSimpleRangeEventsViewModel manageSimpleRangeEventsVM,
+            ManageFirearmsViewModel manageFirearmsVM,
+            SettingsViewModel settingsVM)
+        {
+            ManageSimpleRangeEventsVM = manageSimpleRangeEventsVM;
+            ManageFirearmsVM = manageFirearmsVM;
+            SettingsVM = settingsVM;
+        }
+
         /// <summary>
         ///     The ViewModel that manages the SimpleRangeEvents and CRUD operations.
         /// </summary>
-        public ManageSimpleRangeEventsViewModel ManageSimpleRangeEventsVM { get; set; } = new();
+        public ManageSimpleRangeEventsViewModel ManageSimpleRangeEventsVM { get; set; }
 
-        public ManageFirearmsViewModel ManageFirearmsVM { get; set; } = new();
+        public ManageFirearmsViewModel ManageFirearmsVM { get; set; }
 
         /// <summary>
         ///     The ViewModel that manages application settings and configuration.
         /// </summary>
-        public SettingsViewModel SettingsVM { get; set; } = new();
+        public SettingsViewModel SettingsVM { get; set; }
     }
 }

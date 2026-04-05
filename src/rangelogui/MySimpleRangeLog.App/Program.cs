@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 using Avalonia;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
-using MySimpleRangeLog.Database;
-using MySimpleRangeLog.Helper;
-using MySimpleRangeLog.Services;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Gui.Database.Sqlite;
+using MyLittleRangeBook.Gui.Helper;
+using MyLittleRangeBook.Gui.Services;
+using MyLittleRangeBook.Gui.ViewModels;
 using Serilog;
 
-namespace MySimpleRangeLog
+namespace MyLittleRangeBook.Gui
 {
     sealed class Program
     {
@@ -23,16 +26,22 @@ namespace MySimpleRangeLog
         {
             ConfigureLogging();
 
-            // Register the Desktop service
             var services = new ServiceCollection();
-
-            services.AddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
-            var dbService = new SQLiteDbService();
-            services.AddSingleton<IDatabaseService>(dbService);
-
-            // [TO20260311] Need to register a handler to convert strings to DateTimeOffset values.
+            services.AddSqliteHelper();
+            // [TO20260311] Need to register a handler for Dapper to convert strings to DateTimeOffset values.
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SQLiteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SQLiteDateTimeOffsetHandler());
+
+            services.TryAddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
+            services.TryAddSingleton<ISimpleRangeEventService, SimpleRangeEventService>();
+            services.TryAddSingleton<IFirearmsService, FirearmsService>();
+
+            services.AddTransient<MainViewModel>();
+            services.AddTransient<ManageSimpleRangeEventsViewModel>();
+            services.AddTransient<ManageFirearmsViewModel>();
+            services.AddTransient<SettingsViewModel>();
+
+
 
             App.RegisterAppServices(services);
 
@@ -42,10 +51,7 @@ namespace MySimpleRangeLog
                     !RuntimeFeature.IsDynamicCodeCompiled,
                     Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
                 );
-                
-                
-                Log.Information(dbService.GetDatabaseName());
-                Log.Information(dbService.GetConnectionString());
+
                 BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
             }
             catch (Exception ex)

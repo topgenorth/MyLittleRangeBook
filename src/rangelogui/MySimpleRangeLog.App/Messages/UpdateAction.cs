@@ -1,4 +1,4 @@
-﻿namespace MySimpleRangeLog.Messages
+﻿namespace MyLittleRangeBook.Gui.Messages
 {
     public enum UpdateAction
     {

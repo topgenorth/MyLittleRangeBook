@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace MySimpleRangeLog.Services
+namespace MyLittleRangeBook.Gui.Services
 {
     /// <summary>
     ///     Default file system-based settings storage service.

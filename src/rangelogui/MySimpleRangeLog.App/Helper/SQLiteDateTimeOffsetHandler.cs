@@ -2,7 +2,7 @@
 using System.Data;
 using Dapper;
 
-namespace MySimpleRangeLog.Helper
+namespace MyLittleRangeBook.Gui.Helper
 {
     public class SQLiteDateTimeOffsetHandler : SqlMapper.TypeHandler<DateTimeOffset>
     {

@@ -1,12 +1,12 @@
-﻿using CommunityToolkit.HighPerformance;
-using ConsoleAppFramework;
+﻿using ConsoleAppFramework;
 using FluentResults;
-using MySimpleRangeLog.CLI.Console;
-using MySimpleRangeLog.CLI.Model;
+using JetBrains.Annotations;
+using MyLittleRangeBook.Cli.Console;
+using MyLittleRangeBook.Cli.Model;
 using Spectre.Console;
-using static MySimpleRangeLog.CLI.ReturnCodes;
+using static MyLittleRangeBook.Cli.ReturnCodes;
 
-namespace MySimpleRangeLog.CLI
+namespace MyLittleRangeBook.Cli
 {
     [RegisterCommands("console")]
     public class DisplayXeroFitToConsoleCommand
@@ -18,7 +18,7 @@ namespace MySimpleRangeLog.CLI
         public DisplayXeroFitToConsoleCommand(ILogger logger, ICliDisplay cliDisplay, IXeroShotSessionParser xeroParser)
         {
             _logger = logger;
-            _xeroParser = new XeroShotSessionParser(logger);
+            _xeroParser = xeroParser;
             _cliDisplay = cliDisplay;
             _xeroParser = xeroParser;
         }
@@ -31,6 +31,7 @@ namespace MySimpleRangeLog.CLI
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("")]
+        [UsedImplicitly]
         public async Task<int> ToConsoleAsync(string file, CancellationToken cancellationToken)
         {
             _cliDisplay.WriteHeader("Displaying FIT File");
@@ -74,16 +75,6 @@ namespace MySimpleRangeLog.CLI
             _cliDisplay.WriteSuccess("FIT file loaded.");
 
             return SUCCESS;
-        }
-
-        static void DisplayFileProcessingPath(IAnsiConsole console, string file)
-        {
-            var path = new TextPath(file).RootColor(Color.Red)
-                .StemColor(Color.White)
-                .LeafColor(Color.Blue);
-
-            console.Write("Processing file ");
-            console.Write(path);
         }
 
         void DisplaySessionToConsole(ICliDisplay cliDisplay, ShotSession session)

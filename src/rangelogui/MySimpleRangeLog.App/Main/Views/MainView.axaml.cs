@@ -1,6 +1,6 @@
 ﻿using Avalonia.Controls;
 
-namespace MySimpleRangeLog.Main.Views
+namespace MyLittleRangeBook.Gui.Views
 {
     // ReSharper disable once PartialTypeWithSinglePart
 

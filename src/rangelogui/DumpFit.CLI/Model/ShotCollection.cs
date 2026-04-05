@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace MySimpleRangeLog.CLI.Model
+namespace MyLittleRangeBook.Cli.Model
 {
     /// <summary>
     ///     This class contains a sorted list of Shots.

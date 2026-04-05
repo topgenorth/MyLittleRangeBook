@@ -8,18 +8,17 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Dapper;
 using JetBrains.Annotations;
-using Microsoft.Extensions.DependencyInjection;
-using MySimpleRangeLog.Database;
-using MySimpleRangeLog.Helper;
-using MySimpleRangeLog.Messages;
-using MySimpleRangeLog.Models;
-using MySimpleRangeLog.Properties;
-using MySimpleRangeLog.Services;
+using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Gui.Database;
+using MyLittleRangeBook.Gui.Helper;
+using MyLittleRangeBook.Gui.Messages;
+using MyLittleRangeBook.Gui.Models;
+using MyLittleRangeBook.Gui.Properties;
 using SharedControls.Controls;
 using SharedControls.Services;
 using WeakReferenceMessenger = CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger;
 
-namespace MySimpleRangeLog.ViewModels
+namespace MyLittleRangeBook.Gui.ViewModels
 {
     /// <summary>
     ///     ViewModel responsible for managing application settings and data operations.
@@ -27,10 +26,16 @@ namespace MySimpleRangeLog.ViewModels
     /// </summary>
     public partial class SettingsViewModel : ViewModelBase, IDialogParticipant
     {
+        readonly ISqliteHelper _sqliteHelper;
+
+        public SettingsViewModel(ISqliteHelper sqliteHelper)
+        {
+            _sqliteHelper = sqliteHelper;
+        }
+
         /// <summary>
         ///     Gets the application settings instance for binding to UI controls.
         /// </summary>
-
         public Settings Settings => Settings.Default;
 
         /// <summary>
@@ -63,8 +68,8 @@ namespace MySimpleRangeLog.ViewModels
 
                     try
                     {
-                        // Export all database data to JSON format
-                        await DatabaseHelper.ExportToJsonAsync(fs);
+                        var conn = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
+                        await DatabaseHelper.ExportToJsonAsync(conn, fs);
                     }
                     catch (Exception e)
                     {
@@ -117,10 +122,12 @@ namespace MySimpleRangeLog.ViewModels
                         throw new FileLoadException("Could not load data");
                     }
 
+                    await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
                     // Save all ToDoItems from imported data (updates existing ones)
                     foreach (var rangeEvent in dto.SimpleRangeEvents ?? [])
                     {
-                        await rangeEvent.SaveAsync();
+                        // TODO [TO20260404] CancellationToken; and cancel if there is a problem saving.
+                        await rangeEvent.SaveAsync(connection);
                     }
 
                     // Notify other ViewModels about updated DB to refresh their views
@@ -155,8 +162,7 @@ namespace MySimpleRangeLog.ViewModels
             if (choice == DialogResult.Yes)
             {
                 // Get database connection and clear all data
-                await using var connection =
-                    await DatabaseHelper.GetOpenConnectionAsync(App.Services.GetRequiredService<IDatabaseService>());
+                await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
 
                 // Drop existing tables and vacuum the database to reclaim space
                 await connection.ExecuteAsync(

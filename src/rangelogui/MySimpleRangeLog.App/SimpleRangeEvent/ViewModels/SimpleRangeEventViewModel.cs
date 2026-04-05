@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
-using MySimpleRangeLog.Models;
+using MyLittleRangeBook.Gui.Models;
 
-namespace MySimpleRangeLog.ViewModels
+namespace MyLittleRangeBook.Gui.ViewModels
 {
     /// <summary>
     ///     ViewModel representing a single ManageSimpleRangeEventsVM with comprehensive property management and validation.

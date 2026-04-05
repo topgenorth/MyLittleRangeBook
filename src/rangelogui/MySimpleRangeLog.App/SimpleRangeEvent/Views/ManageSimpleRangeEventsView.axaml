@@ -1,27 +1,27 @@
-﻿<UserControl x:Class="MySimpleRangeLog.Views.ManageSimpleRangeEventsView"
+﻿<UserControl x:Class="MyLittleRangeBook.Gui.Views.ManageSimpleRangeEventsView"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:services="clr-namespace:SharedControls.Services;assembly=SharedControls"
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
-             xmlns:viewModels1="clr-namespace:MySimpleRangeLog.ViewModels"
-             xmlns:converters="clr-namespace:MySimpleRangeLog.Views"
+             xmlns:viewModels="clr-namespace:MyLittleRangeBook.Gui.ViewModels"
+             xmlns:views="clr-namespace:MyLittleRangeBook.Gui.Views"
              d:DesignHeight="450"
              d:DesignWidth="800"
              x:Name="Root"
              services:DialogManager.Register="{Binding}"
-             x:DataType="viewModels1:ManageSimpleRangeEventsViewModel"
+             x:DataType="viewModels:ManageSimpleRangeEventsViewModel"
              mc:Ignorable="d">
     <Design.DataContext>
-        <viewModels1:ManageSimpleRangeEventsViewModel />
+        <viewModels:ManageSimpleRangeEventsViewModel />
     </Design.DataContext>
 
     <UserControl.Resources>
         <!-- Defining a MenuFlyout for shared usage -->
-        <MenuFlyout x:Key="ToDoItemContextMenu" x:DataType="viewModels1:SimpleRangeEventViewModel">
+        <MenuFlyout x:Key="ToDoItemContextMenu" x:DataType="viewModels:SimpleRangeEventViewModel">
             <MenuItem Header="Edit Item"
-                      Command="{Binding #Root.((viewModels1:ManageSimpleRangeEventsViewModel)DataContext).EditSimpleRangeEventCommand}"
+                      Command="{Binding #Root.((viewModels:ManageSimpleRangeEventsViewModel)DataContext).EditSimpleRangeEventCommand}"
                       CommandParameter="{Binding}">
                 <MenuItem.Icon>
                     <PathIcon Data="{DynamicResource PhosphorIcons.NotePencilLight}" />
@@ -29,7 +29,7 @@
             </MenuItem>
 
             <MenuItem Header="Delete Item"
-                      Command="{Binding #Root.((viewModels1:ManageSimpleRangeEventsViewModel)DataContext).DeleteSimpleRangeEventCommand}"
+                      Command="{Binding #Root.((viewModels:ManageSimpleRangeEventsViewModel)DataContext).DeleteSimpleRangeEventCommand}"
                       CommandParameter="{Binding}">
                 <MenuItem.Icon>
                     <PathIcon Data="{DynamicResource PhosphorIcons.TrashLight}" />
@@ -93,15 +93,15 @@
                                         Width="200">
                                 <controls:LabeledControl Header="Sort by:" HeaderPosition="Left">
                                     <ComboBox SelectedItem="{Binding SortExpression1}"
-                                              ItemsSource="{x:Static viewModels1:SimpleRangeEventsSortExpression.AvailableSortExpressions}" />
+                                              ItemsSource="{x:Static viewModels:SimpleRangeEventsSortExpression.AvailableSortExpressions}" />
                                 </controls:LabeledControl>
                                 <controls:LabeledControl Header="Then by:" HeaderPosition="Left">
                                     <ComboBox SelectedItem="{Binding SortExpression2}"
-                                              ItemsSource="{x:Static viewModels1:SimpleRangeEventsSortExpression.AvailableSortExpressions}" />
+                                              ItemsSource="{x:Static viewModels:SimpleRangeEventsSortExpression.AvailableSortExpressions}" />
                                 </controls:LabeledControl>
                                 <controls:LabeledControl Header="Then by:" HeaderPosition="Left">
                                     <ComboBox SelectedItem="{Binding SortExpression3}"
-                                              ItemsSource="{x:Static viewModels1:SimpleRangeEventsSortExpression.AvailableSortExpressions}" />
+                                              ItemsSource="{x:Static viewModels:SimpleRangeEventsSortExpression.AvailableSortExpressions}" />
                                 </controls:LabeledControl>
                             </StackPanel>
                         </Flyout>
@@ -172,14 +172,14 @@
                         <!-- Ammo (hidden if not provided) -->
                         <TextBlock Grid.Row="1"
                                    Grid.Column="0"
-                                   IsVisible="{Binding AmmoDescription, Converter={x:Static converters:NullEmptyNAConverter.Instance}}"
+                                   IsVisible="{Binding AmmoDescription, Converter={x:Static views:NullEmptyNAConverter.Instance}}"
                                    Text="{Binding AmmoDescription}" />
 
                         <!-- Notes (hidden if not provided) -->
                         <TextBlock Grid.Row="2"
                                    Grid.Column="0"
                                    FontStyle="Italic"
-                                   IsVisible="{Binding Notes, Converter={x:Static converters:NullEmptyNAConverter.Instance}}"
+                                   IsVisible="{Binding Notes, Converter={x:Static views:NullEmptyNAConverter.Instance}}"
                                    Text="{Binding Notes}" />
                     </Grid>
                 </DataTemplate>

@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace MySimpleRangeLog.CLI.Model
+namespace MyLittleRangeBook.Cli.Model
 {
     public class ShotSessionCollection : ICollection<ShotSession>
     {
