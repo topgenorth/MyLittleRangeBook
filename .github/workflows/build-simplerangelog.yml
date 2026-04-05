@@ -31,7 +31,7 @@ jobs:
 
       - name: Publish single-file EXE for the GUI
         run: |
-          dotnet publish src/rangelogui/MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj -c Release \
+          dotnet publish src/mlrb/MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj -c Release \
             -r ${{ matrix.platform == 'windows' && 'win-x64' || 'linux-x64' }} \
             --self-contained true \
             -p:PublishSingleFile=true \
