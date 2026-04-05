@@ -16,8 +16,8 @@ namespace MyLittleRangeBook.FIT.Model
 
         public ShotSession() : this(Nanoid.Generate())
         {
-
         }
+
         public ShotSession(uint xeroSerialNumber)
         {
             Id = xeroSerialNumber.ToShotSessionId();
@@ -56,7 +56,7 @@ namespace MyLittleRangeBook.FIT.Model
 
         public double StandardDeviation { get; set; }
 
-        public IEnumerable<Shot> Shots => _shots;
+        public ShotCollection Shots => _shots;
         public uint SerialNumber { get; set; }
 
         public string Notes { get; set; }
@@ -81,18 +81,6 @@ namespace MyLittleRangeBook.FIT.Model
             _shots.Add(shot);
         }
 
-        public void Mutate(Action<ShotSession> mutator)
-        {
-            mutator(this);
-        }
-
-        public void Mutate(List<Action<ShotSession>> mutators)
-        {
-            foreach (var mutator in mutators)
-            {
-                mutator(this);
-            }
-        }
 
         public override string ToString()
         {

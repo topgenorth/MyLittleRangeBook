@@ -50,10 +50,7 @@ namespace MyLittleRangeBook.GUI
         {
             try
             {
-
-
                 Services = services.BuildServiceProvider();
-
                 await Settings.Default.LoadSettingsAsync();
             }
             catch (Exception ex)

@@ -9,9 +9,11 @@ namespace MyLittleRangeBook.FIT
             Metadata.Add("FilePath", file);
         }
     }
+
     public class UnexpectedFitFileTypeError : Error
     {
-        public UnexpectedFitFileTypeError(int expectedFileType) : base($"Can only handle FIT file type {expectedFileType}")
+        public UnexpectedFitFileTypeError(int expectedFileType) : base(
+            $"Can only handle FIT file type {expectedFileType}")
         {
             Metadata.Add("ExpectedFileTypeId", XeroShotSessionParser.ExpectedFileType);
         }
@@ -19,7 +21,7 @@ namespace MyLittleRangeBook.FIT
 
     public class FailedToParseFitFileError : Error
     {
-        public FailedToParseFitFileError() : base($"Could not parse the FIT file.")
+        public FailedToParseFitFileError() : base("Could not parse the FIT file.")
         {
         }
     }

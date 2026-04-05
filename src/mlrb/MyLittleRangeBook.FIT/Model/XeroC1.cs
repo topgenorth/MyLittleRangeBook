@@ -9,7 +9,6 @@ namespace MyLittleRangeBook.FIT.Model
         {
             SerialNumber = serialNumber;
             Id = serialNumber.ToString();
-            Sessions = new object();
         }
 
         public string Id { get; private set; }
@@ -17,7 +16,7 @@ namespace MyLittleRangeBook.FIT.Model
         public float SoftwareVersion { get; set; }
         public ushort Manufacturer { get; set; }
 
-        public object Sessions { get; private set; }
+        public ShotSessionCollection Sessions { get; private set; } = new();
 
         public static XeroC1 New(int serialNumber)
         {

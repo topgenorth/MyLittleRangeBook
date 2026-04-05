@@ -8,7 +8,7 @@ namespace MyLittleRangeBook.FIT.Model
 
         internal ShotSessionCollection()
         {
-            _sessions = new List<ShotSession>();
+            _sessions = [];
         }
 
         public IEnumerator<ShotSession> GetEnumerator()
@@ -24,7 +24,14 @@ namespace MyLittleRangeBook.FIT.Model
         public void Add(ShotSession item)
         {
             // TODO [TO20240929] should check that we're not adding a duplicate.
-            _sessions.Add(item);
+            if (_sessions.Contains(item))
+            {
+                throw new ArgumentException("Duplicate shot session cannot be added", nameof(item));
+            }
+            else
+            {
+                _sessions.Add(item);
+            }
         }
 
         public void Clear()
@@ -50,14 +57,6 @@ namespace MyLittleRangeBook.FIT.Model
         public int Count => _sessions.Count;
         public bool IsReadOnly => false;
 
-        /// <summary>
-        ///     This will combine all the shot sessions returning a single <c cref="ShotSession" />.
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public ShotSession MergeAll()
-        {
-            throw new NotImplementedException();
-        }
+
     }
 }

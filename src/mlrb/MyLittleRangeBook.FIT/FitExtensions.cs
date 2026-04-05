@@ -20,7 +20,10 @@ namespace MyLittleRangeBook.CLI
         const byte TimestampFieldId = 253;
         public static System.DateTime FitEpoch = new(1989, 12, 31, 0, 0, 0, DateTimeKind.Utc);
 
-        internal static string ToShotSessionId(this uint serialNumber) => serialNumber == 0 ? Nanoid.Generate() : $"{serialNumber.ToString()}-0";
+        internal static string ToShotSessionId(this uint serialNumber)
+        {
+            return serialNumber == 0 ? Nanoid.Generate() : $"{serialNumber.ToString()}-0";
+        }
 
         public static async Task<Result<ReadOnlyMemory<byte>>> LoadBytesAsync(this string filename,
             CancellationToken ct)

@@ -2,7 +2,7 @@ namespace MyLittleRangeBook.FIT.Model
 {
     public struct ShotSpeed : IEquatable<ShotSpeed>, IComparable<ShotSpeed>
     {
-        public static readonly ShotSpeed Zero = new(0, "fps");
+        public static readonly ShotSpeed Zero = new(0, "m/s");
 
         public ShotSpeed(double value, string units = "m/s")
         {

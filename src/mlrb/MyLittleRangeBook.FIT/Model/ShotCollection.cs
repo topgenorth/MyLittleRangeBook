@@ -19,7 +19,7 @@ namespace MyLittleRangeBook.FIT.Model
             get
             {
                 var shotValues = ActiveShots.ToArray();
-                if (!shotValues.Any())
+                if (shotValues.Length == 0)
                 {
                     return ShotSpeed.Zero;
                 }

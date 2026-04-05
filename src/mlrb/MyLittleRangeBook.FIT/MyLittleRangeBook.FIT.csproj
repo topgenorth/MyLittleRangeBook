@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.1" />
+        <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.1"/>
         <PackageReference Include="Nanoid" Version="3.1.0"/>
         <PackageReference Include="FluentResults" Version="4.0.0"/>
         <PackageReference Include="Garmin.FIT.Sdk" Version="21.195.0"/>
