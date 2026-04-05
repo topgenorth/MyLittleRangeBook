@@ -1,5 +1,6 @@
 ﻿using ConsoleAppFramework;
 using FluentResults;
+using JetBrains.Annotations;
 using MyLittleRangeBook.Cli.Console;
 using MyLittleRangeBook.Cli.Model;
 using Spectre.Console;
@@ -17,7 +18,7 @@ namespace MyLittleRangeBook.Cli
         public DisplayXeroFitToConsoleCommand(ILogger logger, ICliDisplay cliDisplay, IXeroShotSessionParser xeroParser)
         {
             _logger = logger;
-            _xeroParser = new XeroShotSessionParser(logger);
+            _xeroParser = xeroParser;
             _cliDisplay = cliDisplay;
             _xeroParser = xeroParser;
         }
@@ -30,6 +31,7 @@ namespace MyLittleRangeBook.Cli
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("")]
+        [UsedImplicitly]
         public async Task<int> ToConsoleAsync(string file, CancellationToken cancellationToken)
         {
             _cliDisplay.WriteHeader("Displaying FIT File");
@@ -73,16 +75,6 @@ namespace MyLittleRangeBook.Cli
             _cliDisplay.WriteSuccess("FIT file loaded.");
 
             return SUCCESS;
-        }
-
-        static void DisplayFileProcessingPath(IAnsiConsole console, string file)
-        {
-            var path = new TextPath(file).RootColor(Color.Red)
-                .StemColor(Color.White)
-                .LeafColor(Color.Blue);
-
-            console.Write("Processing file ");
-            console.Write(path);
         }
 
         void DisplaySessionToConsole(ICliDisplay cliDisplay, ShotSession session)

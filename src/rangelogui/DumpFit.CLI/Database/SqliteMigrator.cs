@@ -14,20 +14,8 @@ namespace MyLittleRangeBook.Cli.Database
     /// </summary>
     [RegisterCommands("schema")]
     [UsedImplicitly]
-    public class SqliteMigrator
+    public class SqliteMigrator(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper)
     {
-        readonly ICliDisplay _cliDisplay;
-        readonly ILogger _logger;
-        readonly ISqliteHelper _sqliteHelper;
-
-        public SqliteMigrator(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper)
-        {
-            _logger = logger;
-            _cliDisplay = cliDisplay;
-            _sqliteHelper = sqliteHelper;
-        }
-
-
         /// <summary>
         ///     Will return all the migrations that have been applied to the database.
         /// </summary>
@@ -38,20 +26,20 @@ namespace MyLittleRangeBook.Cli.Database
         [UsedImplicitly]
         public async Task<int> MigrationVersionAsync(string file, CancellationToken cancellationToken)
         {
-            _cliDisplay.WriteHeader("Migration Version");
+            cliDisplay.WriteHeader("Migration Version");
             if (!File.Exists(file))
             {
-                _logger.Warning("File {file} not found.", file);
-                _cliDisplay.WriteFailure($"Could not find the database '{file}'.");
+                logger.Warning("File {file} not found.", file);
+                cliDisplay.WriteFailure($"Could not find the database '{file}'.");
 
                 return DATABASE_FILE_NOT_FOUND;
             }
 
-            var result = await _cliDisplay.RunStatusAsync(
+            var result = await cliDisplay.RunStatusAsync(
                 "Importing FIT data...",
                 async ct =>
                 {
-                    await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync(file, ct);
+                    await using var connection = await sqliteHelper.OpenSqliteConnectionToFileAsync(file, ct);
                     await using var cmd = new SqliteCommand("SELECT * FROM SchemaVersions ORDER BY Applied", connection);
                     await using var rdr = await cmd.ExecuteReaderAsync(ct);
 
@@ -68,8 +56,8 @@ namespace MyLittleRangeBook.Cli.Database
                         table.AddRow(schemaVersionId!, scriptName, applied);
                     }
 
-                    _cliDisplay.Console.Write(table);
-                    _cliDisplay.WriteSuccess("Migration Versions listed.");
+                    cliDisplay.Console.Write(table);
+                    cliDisplay.WriteSuccess("Migration Versions listed.");
 
                     return SUCCESS;
                 },
@@ -90,48 +78,48 @@ namespace MyLittleRangeBook.Cli.Database
         // ReSharper disable once IdentifierTypo
         public async Task<int> RunSqlOnDatabase(string file, string sqlfile, CancellationToken cancellationToken)
         {
-            _cliDisplay.WriteHeader("Apply SQL to Database.");
+            cliDisplay.WriteHeader("Apply SQL to Database.");
 
             if (!File.Exists(file))
             {
-                _logger.Warning("File {file} not found.", file);
-                _cliDisplay.WriteFailure($"Could not find the database '{file}'.");
+                logger.Warning("File {file} not found.", file);
+                cliDisplay.WriteFailure($"Could not find the database '{file}'.");
 
                 return DATABASE_FILE_NOT_FOUND;
             }
 
             if (!File.Exists(sqlfile))
             {
-                _logger.Warning("SQL File {sqlFile} not found.", sqlfile);
-                _cliDisplay.WriteFailure($"Could not find the SQL file '{sqlfile}'.");
+                logger.Warning("SQL File {sqlFile} not found.", sqlfile);
+                cliDisplay.WriteFailure($"Could not find the SQL file '{sqlfile}'.");
 
                 return SQL_FILE_NOT_FOUND;
             }
 
 
-            var result = await _cliDisplay.RunStatusAsync("Loading SQL file...",
+            var result = await cliDisplay.RunStatusAsync("Loading SQL file...",
                 async ct =>
                 {
                     void WriteSuccess()
                     {
-                        _cliDisplay.WriteSuccess("SQL file applied to database.");
+                        cliDisplay.WriteSuccess("SQL file applied to database.");
                     }
 
                     try
                     {
-                        _cliDisplay.Console.MarkupLineInterpolated($"[green]✓ Loading SQL file {sqlfile}.[/]");
+                        cliDisplay.Console.MarkupLineInterpolated($"[green]✓ Loading SQL file {sqlfile}.[/]");
                         var sql = await File.ReadAllTextAsync(sqlfile, ct);
 
                         if (string.IsNullOrWhiteSpace(sql))
                         {
-                            _logger.Information("SQL File {sqlFile} is empty - nothing done.", sqlfile);
+                            logger.Information("SQL File {sqlFile} is empty - nothing done.", sqlfile);
                             WriteSuccess();
 
                             return SUCCESS;
                         }
 
 
-                        await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync(file, ct);
+                        await using var connection = await sqliteHelper.OpenSqliteConnectionToFileAsync(file, ct);
                         await using var cmd = new SqliteCommand(sql, connection);
                         await cmd.ExecuteNonQueryAsync(ct);
                         WriteSuccess();
@@ -140,8 +128,8 @@ namespace MyLittleRangeBook.Cli.Database
                     }
                     catch (Exception e)
                     {
-                        _logger.Error(e, "Failed to run SQL.");
-                        _cliDisplay.WriteFailure($"Failed to run SQL '{e.Message}'.");
+                        logger.Error(e, "Failed to run SQL.");
+                        cliDisplay.WriteFailure($"Failed to run SQL '{e.Message}'.");
 
                         return FAILED_TO_RUN_SQL;
                     }
@@ -160,15 +148,15 @@ namespace MyLittleRangeBook.Cli.Database
         [UsedImplicitly]
         public async Task<int> MigrateSchemaAsync(string file, CancellationToken cancellationToken)
         {
-            _cliDisplay.WriteHeader("Applying Migrations");
+            cliDisplay.WriteHeader("Applying Migrations");
             if (!File.Exists(file))
             {
-                _logger.Warning("File {file} not found.", file);
-                _cliDisplay.Console.MarkupLineInterpolated(
+                logger.Warning("File {file} not found.", file);
+                cliDisplay.Console.MarkupLineInterpolated(
                     $"[bold yellow]✗ Could not find '{file}'; database will be created.[/]");
             }
 
-            var result = await _cliDisplay.RunStatusAsync($"Applying migrations to {file}",
+            var result = await cliDisplay.RunStatusAsync($"Applying migrations to {file}\n",
                 _ =>
                 {
                     try
@@ -176,7 +164,7 @@ namespace MyLittleRangeBook.Cli.Database
                         try
                         {
                             var upgrader = DeployChanges.To
-                                .SqliteDatabase(_sqliteHelper.GetSqliteConnectionString())
+                                .SqliteDatabase(sqliteHelper.GetSqliteConnectionString())
                                 .WithScriptsEmbeddedInAssembly(typeof(SqliteMigrator).Assembly)
                                 .LogToConsole()
                                 .Build();
@@ -185,19 +173,19 @@ namespace MyLittleRangeBook.Cli.Database
                             var result = upgrader.PerformUpgrade();
                             if (!result.Successful)
                             {
-                                _cliDisplay.WriteFailure("Failed to apply migrations.");
+                                cliDisplay.WriteFailure("Failed to apply migrations.");
 
                                 return Task.FromResult(FAILED_TO_APPLY_MIGRATIONS);
                             }
 
-                            _cliDisplay.WriteSuccess("Migrations applied.");
+                            cliDisplay.WriteSuccess("Migrations applied.");
 
                             return Task.FromResult(SUCCESS);
                         }
                         catch (Exception e)
                         {
-                            _logger.Error(e, "Failed to apply migrations");
-                            _cliDisplay.WriteFailure($"Failed to apply migrations '{e.Message}'.[/]");
+                            logger.Error(e, "Failed to apply migrations");
+                            cliDisplay.WriteFailure($"Failed to apply migrations '{e.Message}'.[/]");
 
                             return Task.FromResult(FAILED_TO_APPLY_MIGRATIONS);
                         }
