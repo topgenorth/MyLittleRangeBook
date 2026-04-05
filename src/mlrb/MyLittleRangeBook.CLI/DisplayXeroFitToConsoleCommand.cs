@@ -9,7 +9,7 @@ using static MyLittleRangeBook.CLI.ReturnCodes;
 
 namespace MyLittleRangeBook.CLI
 {
-    [RegisterCommands("console")]
+    [RegisterCommands("display")]
     public class DisplayXeroFitToConsoleCommand
     {
         readonly ICliDisplay _cliDisplay;
@@ -31,7 +31,7 @@ namespace MyLittleRangeBook.CLI
         /// <param name="file">Path to the FIT file</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("")]
+        [Command("console")]
         [UsedImplicitly]
         public async Task<int> ToConsoleAsync(string file, CancellationToken cancellationToken)
         {

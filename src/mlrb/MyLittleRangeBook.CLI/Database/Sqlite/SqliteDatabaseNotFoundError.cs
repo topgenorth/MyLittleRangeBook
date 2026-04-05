@@ -1,6 +1,6 @@
 ﻿using FluentResults;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.CLI.Database.Sqlite
 {
     public class SqliteDatabaseNotFoundError : Error
     {

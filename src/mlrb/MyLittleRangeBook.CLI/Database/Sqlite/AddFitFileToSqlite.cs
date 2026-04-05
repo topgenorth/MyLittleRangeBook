@@ -6,18 +6,18 @@ using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
 using NanoidDotNet;
-using static MyLittleRangeBook.FIT.FluentResultExtensions;
+using static MyLittleRangeBook.CLI.FluentResultExtensions;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.CLI.Database.Sqlite
 {
     [RegisterCommands("import")]
-    public class ImportFitFile
+    public class AddFitFileToSqlite
     {
         readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
         readonly ISqliteHelper _sqliteHelper;
 
-        public ImportFitFile(ICliDisplay cliDisplay, ILogger logger, ISqliteHelper sqliteHelper)
+        public AddFitFileToSqlite(ICliDisplay cliDisplay, ILogger logger, ISqliteHelper sqliteHelper)
         {
             _cliDisplay = cliDisplay;
             _logger = logger;
@@ -29,7 +29,9 @@ namespace MyLittleRangeBook.CLI
         /// </summary>
         [Command("fit")]
         [UsedImplicitly]
-        public async Task<int> AddFitFileToDatabaseAsync(string file, string fitFile, CancellationToken cancellationToken = default)
+        public async Task<int> AddFitFileToDatabaseAsync(string file,
+            string fitFile,
+            CancellationToken cancellationToken = default)
         {
             _cliDisplay.WriteHeader("Importing FIT File");
 
@@ -54,22 +56,26 @@ namespace MyLittleRangeBook.CLI
 
             if (!File.Exists(fitFile))
             {
+                _logger.Error("FIT file {file} not found.", fitFile);
                 return Result.Fail(new FitFileNotFoundError(file)).ToResult(ReturnCodes.FIT_FILE_NOT_FOUND);
             }
 
             if (!File.Exists(file))
             {
+                _logger.Error("Database file {file} not found.", file);
                 return Result.Fail(new SqliteDatabaseNotFoundError(file)).ToResult(ReturnCodes.DATABASE_FILE_NOT_FOUND);
             }
 
             var fileContents = await file.LoadFitFileBytesAsync(cancellationToken);
             if (fileContents.IsFailed)
             {
+                _logger.Error("Failed to load FIT file {file}.", file);
                 return Result.Fail(new FailedToLoadFitFileError(file)).ToResult(ReturnCodes.FAILED_TO_LOAD);
             }
+
             var bytesToSave = fileContents.Value.ToArray();
 
-            var rowId =-1;
+            var rowId = -1;
             try
             {
                 await using var connection =
@@ -78,10 +84,12 @@ namespace MyLittleRangeBook.CLI
             }
             catch (Exception e)
             {
+                _logger.Error(e, "Failed to write {bytes} bytes from FIT file {fitFile} to database {database}.",
+                    bytesToSave.Length, fitFile, file);
+
                 var err = new Error($"Failed to write to database. {e.Message}")
                     .WithMetadata("Filename", fitFile)
                     .CausedBy(e);
-
                 return Result.Fail(err).ToResult(ReturnCodes.FAILED_TO_WRITE_TO_DATABASE);
             }
 
@@ -90,10 +98,16 @@ namespace MyLittleRangeBook.CLI
                 .WithMetadata("bytes", bytesToSave.Length)
                 .WithMetadata("RowId", rowId);
 
+            _logger.Information("Saved {bytes} bytes from FIT file {fitFile} to database {database}.",
+                bytesToSave.Length, fitFile, file);
+
             return Result.Ok(ReturnCodes.SUCCESS).WithSuccess(success);
         }
 
-        internal async Task<int> SaveBytesAsync(SqliteConnection connection, byte[] fileContents, string filename, CancellationToken cancellationToken = default)
+        internal async Task<int> SaveBytesAsync(SqliteConnection connection,
+            byte[] fileContents,
+            string filename,
+            CancellationToken cancellationToken = default)
         {
             var cmd = new SqliteCommand(
                 "INSERT INTO FitFiles (Id, Filename, Contents) VALUES (@id, @filename, @filecontents) RETURNING RowId",

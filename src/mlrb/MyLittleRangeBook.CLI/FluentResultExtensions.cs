@@ -1,7 +1,7 @@
 ﻿using FluentResults;
-using MyLittleRangeBook.CLI;
+using MyLittleRangeBook.CLI.Database.Sqlite;
 
-namespace MyLittleRangeBook.FIT
+namespace MyLittleRangeBook.CLI
 {
     public static class FluentResultExtensions
     {
