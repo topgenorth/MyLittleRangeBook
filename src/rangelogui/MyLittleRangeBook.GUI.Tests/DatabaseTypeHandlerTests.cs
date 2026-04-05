@@ -1,7 +1,8 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.Gui.Helper;
-using MyLittleRangeBook.Gui.Models;
+using MyLittleRangeBook.GUI.Helper;
+using MyLittleRangeBook.GUI.Helper;
+using MyLittleRangeBook.GUI.Models;
 
 namespace MyLittleRangeBook.GUI.Tests
 {

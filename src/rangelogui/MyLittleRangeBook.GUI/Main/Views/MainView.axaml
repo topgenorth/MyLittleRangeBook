@@ -1,0 +1,59 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
+             xmlns:viewModels="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
+             xmlns:views1="clr-namespace:MyLittleRangeBook.GUI.Views"
+             xmlns:viewModels1="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
+             xmlns:views="clr-namespace:MyLittleRangeBook.GUI.Views"
+             mc:Ignorable="d" d:DesignWidth="690" d:DesignHeight="450"
+             x:Class="MyLittleRangeBook.GUI.Views.MainView"
+             x:Name="Root"
+             x:DataType="viewModels1:MainViewModel">
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <viewModels1:MainViewModel />
+    </Design.DataContext>
+
+    <!-- Note: Content refers to the selected item's tag -->
+    <controls:HamburgerMenu x:Name="MainMenu"
+                            Content="{Binding $self.SelectedMenuItem.Tag}"
+                            AutoClosePaneThreshold="700">
+
+        <!-- The available Items -->
+        <controls:HamburgerMenu.MenuItems>
+            <controls:HamburgerMenuItem Label="Range Events"
+                                        Icon="{DynamicResource PhosphorIcons.CirclesThreePlusThin}"
+                                        Tag="{Binding ManageSimpleRangeEventsVM}" />
+        </controls:HamburgerMenu.MenuItems>
+        <controls:HamburgerMenu.MenuItems>
+            <controls:HamburgerMenuItem Label="Firearms"
+                                        Icon="{DynamicResource PhosphorIcons.CirclesThreePlusThin}"
+                                        Tag="{Binding ManageFirearmsVM}" />
+        </controls:HamburgerMenu.MenuItems>
+
+        <controls:HamburgerMenu.OptionsMenuItems>
+            <controls:HamburgerMenuItem Label="Settings"
+                                        Icon="{DynamicResource PhosphorIcons.GearLight}"
+                                        Tag="{Binding SettingsVM}" />
+        </controls:HamburgerMenu.OptionsMenuItems>
+
+        <!-- Specify DataTemplates for the Content -->
+        <controls:HamburgerMenu.DataTemplates>
+            <DataTemplate DataType="viewModels1:ManageSimpleRangeEventsViewModel">
+                <views:ManageSimpleRangeEventsView />
+            </DataTemplate>
+            <DataTemplate DataType="viewModels1:ManageFirearmsViewModel">
+                <views:ManageFirearmsView />
+            </DataTemplate>
+            <DataTemplate DataType="viewModels1:EditSimpleRangeEventViewModel">
+                <views:EditSimpleRangeEventView />
+            </DataTemplate>
+            <DataTemplate DataType="viewModels1:SettingsViewModel">
+                <views:SettingsView />
+            </DataTemplate>
+        </controls:HamburgerMenu.DataTemplates>
+    </controls:HamburgerMenu>
+</UserControl>

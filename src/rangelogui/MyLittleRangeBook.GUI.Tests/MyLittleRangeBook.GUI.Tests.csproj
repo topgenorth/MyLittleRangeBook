@@ -24,7 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\MySimpleRangeLog.App\MySimpleRangeLog.App.csproj"/>
+        <ProjectReference Include="..\MyLittleRangeBook.GUI\MyLittleRangeBook.GUI.csproj" />
     </ItemGroup>
 
 </Project>

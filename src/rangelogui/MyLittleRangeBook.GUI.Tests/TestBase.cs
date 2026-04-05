@@ -1,7 +1,6 @@
 ﻿using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.Gui;
-using MyLittleRangeBook.Gui.Services;
+using MyLittleRangeBook.GUI.Services;
 
 namespace MyLittleRangeBook.GUI.Tests
 {
