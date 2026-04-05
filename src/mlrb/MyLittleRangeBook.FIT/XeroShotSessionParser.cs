@@ -44,7 +44,7 @@ namespace MyLittleRangeBook.FIT
             Result<ShotSession> result;
             try
             {
-                result = (await filePath.LoadBytesAsync(ct))
+                result = (await filePath.LoadFitFileBytesAsync(ct))
                     .Bind(bytesFromFitFile =>
                     {
                         using var
