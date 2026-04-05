@@ -1,7 +1,6 @@
 ﻿using Avalonia.Headless.XUnit;
-using Avalonia.Threading;
 
-namespace MySimpleRangeLog.Tests
+namespace MyLittleRangeBook.GUI.Tests
 {
     /// <summary>
     ///     Unit tests for MainViewModel.

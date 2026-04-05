@@ -10,7 +10,7 @@
         <File Path="README.md" />
     </Folder>
     <Project Path="MyLittleRangeBook.CLI/MyLittleRangeBook.CLI.csproj" />
+    <Project Path="MyLittleRangeBook.GUI.Tests/MyLittleRangeBook.GUI.Tests.csproj" />
     <Project Path="MyLittleRangeBook.Sqlite/MyLittleRangeBook.Sqlite.csproj" />
     <Project Path="MySimpleRangeLog.App/MySimpleRangeLog.App.csproj" />
-    <Project Path="MySimpleRangeLog.Tests/MySimpleRangeLog.Tests.csproj" />
 </Solution>

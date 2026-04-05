@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Gui.Helper;
 using MyLittleRangeBook.Gui.Models;
 
-namespace MySimpleRangeLog.Tests
+namespace MyLittleRangeBook.GUI.Tests
 {
     public class DatabaseTypeHandlerTests : TestBase
     {

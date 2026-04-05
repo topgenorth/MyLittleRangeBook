@@ -1,10 +1,9 @@
 ﻿using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Gui;
-using MyLittleRangeBook.Gui.Database;
 using MyLittleRangeBook.Gui.Services;
 
-namespace MySimpleRangeLog.Tests
+namespace MyLittleRangeBook.GUI.Tests
 {
     /// <summary>
     ///     Base class for all test classes in the AdvancedToDoList project.
