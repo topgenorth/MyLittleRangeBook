@@ -1,7 +1,7 @@
 ﻿using FluentResults;
-using MyLittleRangeBook.CLI.Model;
+using MyLittleRangeBook.FIT.Model;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.FIT
 {
     public interface IXeroShotSessionParser
     {
@@ -11,7 +11,7 @@ namespace MyLittleRangeBook.CLI
         /// <param name="filePath"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task<Result<ShotSession>> DecodeShotSessionAsync(string filePath, CancellationToken ct);
+        Task<Result<ShotSession>> DecodeFITFileAsync(string filePath, CancellationToken ct);
 
         Result<ShotSession> Decode(Stream input);
     }

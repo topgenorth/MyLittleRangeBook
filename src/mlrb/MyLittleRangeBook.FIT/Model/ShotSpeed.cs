@@ -1,4 +1,4 @@
-namespace MyLittleRangeBook.CLI.Model
+namespace MyLittleRangeBook.FIT.Model
 {
     public struct ShotSpeed : IEquatable<ShotSpeed>, IComparable<ShotSpeed>
     {

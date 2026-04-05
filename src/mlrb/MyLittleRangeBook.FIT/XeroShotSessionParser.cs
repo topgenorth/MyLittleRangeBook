@@ -1,10 +1,11 @@
 using CommunityToolkit.HighPerformance;
 using Dynastream.Fit;
 using FluentResults;
-using MyLittleRangeBook.CLI.Model;
+using MyLittleRangeBook.CLI;
+using MyLittleRangeBook.FIT.Model;
 using File = System.IO.File;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.FIT
 {
     /// <summary>
     ///     Will decode a byte stream from a Xero C1 FIT file into a ShotSession.
@@ -33,7 +34,7 @@ namespace MyLittleRangeBook.CLI
         /// <param name="filePath"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public async Task<Result<ShotSession>> DecodeShotSessionAsync(string filePath, CancellationToken ct)
+        public async Task<Result<ShotSession>> DecodeFITFileAsync(string filePath, CancellationToken ct)
         {
             if (!File.Exists(filePath))
             {
@@ -46,8 +47,10 @@ namespace MyLittleRangeBook.CLI
                 result = (await filePath.LoadBytesAsync(ct))
                     .Bind(bytesFromFitFile =>
                     {
+                        using var
+                            stream = bytesFromFitFile
+                                .AsStream(); // TODO [TO20260405] Refactor this to get rid of the dependency on CommunityToolkit.HighPerformance
                         _logger.Verbose("Loaded {bytes} bytes.", bytesFromFitFile.Length);
-                        using var stream = bytesFromFitFile.AsStream();
 
                         return Decode(stream);
                     });
@@ -102,8 +105,8 @@ namespace MyLittleRangeBook.CLI
         {
             var msg = (DeviceInfoMesg)e.mesg;
             var serialNumber = msg?.GetSerialNumber() ?? 0;
-
             _shotSession!.SerialNumber = serialNumber;
+            _shotSession!.Id = serialNumber.ToShotSessionId();
         }
 
         void OnChronoShotSessionMsg(object sender, MesgEventArgs e)

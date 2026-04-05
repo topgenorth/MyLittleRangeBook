@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using MyLittleRangeBook.CLI;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.FIT;
 using Spectre.Console;
 using SQLitePCL;
 

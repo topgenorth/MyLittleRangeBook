@@ -1,13 +1,11 @@
-﻿using NanoidDotNet;
-
-namespace MyLittleRangeBook.CLI.Model
+﻿namespace MyLittleRangeBook.FIT.Model
 {
     /// <summary>
     ///     Represents a single shot that has be recorded by a Xero.
     /// </summary>
     public class Shot
     {
-        public Shot() : this(Nanoid.Generate())
+        public Shot()
         {
         }
 

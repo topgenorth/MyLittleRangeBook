@@ -1,6 +1,7 @@
+using MyLittleRangeBook.CLI;
 using NanoidDotNet;
 
-namespace MyLittleRangeBook.CLI.Model
+namespace MyLittleRangeBook.FIT.Model
 {
     /// <summary>
     ///     A session holds data about a single Xero shooting session.
@@ -13,16 +14,32 @@ namespace MyLittleRangeBook.CLI.Model
         readonly uint _xeroSerialNumber;
 #pragma warning restore CS0414 // Field is assigned but its value is never used
 
-        public ShotSession()
+        public ShotSession() : this(Nanoid.Generate())
         {
-            Id = Nanoid.Generate();
-            _xeroSerialNumber = 0;
+
+        }
+        public ShotSession(uint xeroSerialNumber)
+        {
+            Id = xeroSerialNumber.ToShotSessionId();
+            _xeroSerialNumber = xeroSerialNumber;
             FileName = string.Empty;
             ProjectileType = "Rifle";
             Notes = string.Empty;
             ProjectileUnits = "grains";
             VelocityUnits = "m/s";
         }
+
+        public ShotSession(string id)
+        {
+            Id = id;
+            _xeroSerialNumber = 0; // TODO [TO20260405] Try to parse the serial number from the ID.
+            FileName = string.Empty;
+            ProjectileType = "Rifle";
+            Notes = string.Empty;
+            ProjectileUnits = "grains";
+            VelocityUnits = "m/s";
+        }
+
 
         public string Id { get; set; }
 
@@ -46,7 +63,7 @@ namespace MyLittleRangeBook.CLI.Model
         public string ProjectileUnits { get; set; }
 
         /// <summary>
-        /// The Xero uses m/s as the default.
+        ///     The Xero uses m/s as the default.
         /// </summary>
         public string VelocityUnits { get; set; }
 
@@ -79,7 +96,8 @@ namespace MyLittleRangeBook.CLI.Model
 
         public override string ToString()
         {
-            return $"{_shots.Count} shots. Avg: {AverageSpeed} {VelocityUnits}, Max: {MaxSpeed} {VelocityUnits}, Min: {MinSpeed} {VelocityUnits}, SD: {StandardDeviation:F1} {VelocityUnits}";
+            return
+                $"{_shots.Count} shots. Avg: {AverageSpeed} {VelocityUnits}, Max: {MaxSpeed} {VelocityUnits}, Min: {MinSpeed} {VelocityUnits}, SD: {StandardDeviation:F1} {VelocityUnits}";
         }
     }
 }

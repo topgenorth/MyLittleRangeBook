@@ -8,7 +8,9 @@
 using System.Text;
 using Dynastream.Fit;
 using FluentResults;
+using NanoidDotNet;
 using DateTime = Dynastream.Fit.DateTime;
+using File = System.IO.File;
 
 namespace MyLittleRangeBook.CLI
 {
@@ -18,17 +20,21 @@ namespace MyLittleRangeBook.CLI
         const byte TimestampFieldId = 253;
         public static System.DateTime FitEpoch = new(1989, 12, 31, 0, 0, 0, DateTimeKind.Utc);
 
+        internal static string ToShotSessionId(this uint serialNumber) => serialNumber == 0 ? Nanoid.Generate() : $"{serialNumber.ToString()}-0";
 
-        public static async Task<Result<ReadOnlyMemory<byte>>> LoadBytesAsync(this string filename, CancellationToken ct)
+        public static async Task<Result<ReadOnlyMemory<byte>>> LoadBytesAsync(this string filename,
+            CancellationToken ct)
         {
             try
             {
-                byte[] result = await System.IO.File.ReadAllBytesAsync(filename, ct).ConfigureAwait(false);
+                var result = await File.ReadAllBytesAsync(filename, ct).ConfigureAwait(false);
+
                 return Result.Ok<ReadOnlyMemory<byte>>(result);
             }
             catch (OperationCanceledException oce)
             {
                 var err = new Error($"Failed to read file {filename}").CausedBy(oce);
+
                 return Result.Fail<ReadOnlyMemory<byte>>(err);
             }
             catch (Exception e)
@@ -142,7 +148,14 @@ namespace MyLittleRangeBook.CLI
                    && mesg.GetTimestamp()!.GetDateTime() <= session.GetEndTime()!.GetDateTime();
         }
 
-        public static int ToFps(this int metresPerSecond) => (int)Math.Round(metresPerSecond*MetresToFeet);
-        public static double ToFps(this double metresPerSecond) => metresPerSecond*MetresToFeet;
+        public static int ToFps(this int metresPerSecond)
+        {
+            return (int)Math.Round(metresPerSecond * MetresToFeet);
+        }
+
+        public static double ToFps(this double metresPerSecond)
+        {
+            return metresPerSecond * MetresToFeet;
+        }
     }
 }

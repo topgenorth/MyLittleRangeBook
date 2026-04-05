@@ -2,7 +2,8 @@
 using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.CLI.Console;
-using MyLittleRangeBook.CLI.Model;
+using MyLittleRangeBook.FIT;
+using MyLittleRangeBook.FIT.Model;
 using Spectre.Console;
 using static MyLittleRangeBook.CLI.ReturnCodes;
 
@@ -46,7 +47,7 @@ namespace MyLittleRangeBook.CLI
             var result = await _cliDisplay.RunStatusAsync("Loading FIT file...",
                 async ct =>
                 {
-                    var result = await _xeroParser.DecodeShotSessionAsync(file, ct);
+                    var result = await _xeroParser.DecodeFITFileAsync(file, ct);
 
                     if (result.IsFailed)
                     {

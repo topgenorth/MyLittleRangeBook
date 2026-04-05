@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace MyLittleRangeBook.CLI.Model
+namespace MyLittleRangeBook.FIT.Model
 {
     /// <summary>
     ///     This class contains a sorted list of Shots.

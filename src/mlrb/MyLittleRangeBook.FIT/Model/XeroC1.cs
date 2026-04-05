@@ -1,6 +1,4 @@
-using NanoidDotNet;
-
-namespace MyLittleRangeBook.CLI.Model
+namespace MyLittleRangeBook.FIT.Model
 {
     /// <summary>
     ///     First attempt at an abstraction around a physical Garmin Xero X1 device.
@@ -10,7 +8,7 @@ namespace MyLittleRangeBook.CLI.Model
         internal XeroC1(uint serialNumber)
         {
             SerialNumber = serialNumber;
-            Id = Nanoid.Generate();
+            Id = serialNumber.ToString();
             Sessions = new object();
         }
 
