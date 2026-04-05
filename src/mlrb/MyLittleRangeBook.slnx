@@ -6,7 +6,6 @@
     <Folder Name="/SolutionItems/">
         <File Path=".editorconfig" />
         <File Path=".gitignore" />
-        <File Path="DumpFit.CLI/test.sql" />
         <File Path="README.md" />
     </Folder>
     <Project Path="MyLittleRangeBook.CLI/MyLittleRangeBook.CLI.csproj" />
