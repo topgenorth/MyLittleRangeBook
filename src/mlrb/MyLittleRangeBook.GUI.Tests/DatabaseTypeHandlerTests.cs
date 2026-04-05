@@ -18,9 +18,28 @@ namespace MyLittleRangeBook.GUI.Tests
             await using var connection = new SqliteConnection("Data Source=:memory:");
             await connection.OpenAsync();
 
+            await connection.ExecuteAsync(
+                """
+                CREATE TABLE IF NOT EXISTS SimpleRangeEvents
+                (
+                    RowId           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Id              TEXT                              NOT NULL, --NanoID unique key.
+                    EventDate       TEXT                              NOT NULL, -- The date of the event.
+                    FirearmName     TEXT                              NOT NULL, -- The name of the firearm. Should match the Firearms table
+                    RangeName       TEXT, -- The name of the range.
+                    RoundsFired     INTEGER DEFAULT 0                 NOT NULL, -- How many rounds were fired.
+                    AmmoDescription TEXT,
+                    Notes           TEXT,
+                    Created  TEXT default CURRENT_TIMESTAMP          not null, -- The date the record was created.
+                    Modified TEXT default CURRENT_TIMESTAMP          not null, -- The date the file was last modified.
+                    CONSTRAINT SimpleRangeEvents_Id UNIQUE (ID)
+                );
+                """);
+
 
             var rangeEvent = new SimpleRangeEvent
             {
+                Id = NanoidDotNet.Nanoid.Generate(),
                 EventDate = DateTime.Now,
                 FirearmName = "Test Firearm",
                 RangeName = "Test Range",
@@ -32,8 +51,8 @@ namespace MyLittleRangeBook.GUI.Tests
             // Save using Dapper
             await connection.ExecuteAsync(
                 """
-                INSERT INTO SimpleRangeEvents (EventDate, FirearmName, RangeName, RoundsFired, Created, Modified)
-                VALUES (@EventDate, @FirearmName, @RangeName, @RoundsFired, @Created, @Modified)
+                INSERT INTO SimpleRangeEvents (Id, EventDate, FirearmName, RangeName, RoundsFired, Created, Modified)
+                VALUES (@Id, @EventDate, @FirearmName, @RangeName, @RoundsFired, @Created, @Modified)
                 """, rangeEvent);
 
             // Query back - this is where it fails in the issue description

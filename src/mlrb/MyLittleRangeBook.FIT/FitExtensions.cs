@@ -18,7 +18,8 @@ namespace MyLittleRangeBook.CLI
     {
         const double MetresToFeet = 3.2808399;
         const byte TimestampFieldId = 253;
-        public static System.DateTime FitEpoch = new(1989, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+
+        public static DateTimeOffset FitEpoch = new(1989, 12, 31, 0, 0, 0, TimeSpan.Zero);
 
         internal static string ToShotSessionId(this uint serialNumber)
         {
@@ -63,10 +64,9 @@ namespace MyLittleRangeBook.CLI
                 (int)activity.GetLocalTimestamp()! - (int)activity.GetTimestamp().GetTimeStamp());
         }
 
-        public static System.DateTime LocalTimestampAsSystemDateTime(this ActivityMesg activity)
+        public static DateTimeOffset LocalTimestampAsDateTimeOffset(this ActivityMesg activity)
         {
-            return new System.DateTime((activity.GetLocalTimestamp() ?? 0) * 10000000L + FitEpoch.Ticks,
-                DateTimeKind.Local);
+            return FitEpoch.AddTicks((activity.GetLocalTimestamp() ?? 0) * 10000000L);
         }
 
         public static DateTime LocalTimestampAsFitDateTime(this ActivityMesg activity)

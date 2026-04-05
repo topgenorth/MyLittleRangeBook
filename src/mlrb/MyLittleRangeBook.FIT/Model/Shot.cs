@@ -1,4 +1,7 @@
-﻿namespace MyLittleRangeBook.FIT.Model
+﻿using MyLittleRangeBook.CLI;
+using NanoidDotNet;
+
+namespace MyLittleRangeBook.FIT.Model
 {
     /// <summary>
     ///     Represents a single shot that has be recorded by a Xero.
@@ -11,7 +14,6 @@
 
         public Shot(string shotId)
         {
-            DateTimeUtc = DateTime.UtcNow;
             Id = shotId;
         }
 
@@ -28,16 +30,16 @@
             Notes = otherShot.Notes;
         }
 
-        public string Id { get; }
-        public DateTime DateTimeUtc { get; set; }
-        public int ShotNumber { get; set; }
+        public string Id { get; } = Nanoid.Generate();
+        public DateTimeOffset DateTimeUtc { get; set; } = FitExtensions.FitEpoch;
+        public int ShotNumber { get; set; } = -1;
         public ShotSpeed Speed { get; set; } = ShotSpeed.Zero;
 
-        public bool CleanBore { get; set; }
-        public bool ColdBore { get; set; }
+        public bool CleanBore { get; set; } = false;
+        public bool ColdBore { get; set; } = false;
         public string? Notes { get; set; }
 
-        public bool IgnoreShot { get; set; }
+        public bool IgnoreShot { get; set; } = false;
 
         public override string ToString()
         {
