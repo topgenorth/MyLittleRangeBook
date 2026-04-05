@@ -8,6 +8,8 @@ namespace MyLittleRangeBook.Database.Sqlite
     /// </summary>
     public class SqliteHelper : ISqliteHelper
     {
+        internal static readonly string DatabaseName = "mlrb.db";
+
         /// <summary>
         ///     Gets the settings directory path for storing user configuration.
         ///     Uses OS-specific local application data directory.
@@ -69,14 +71,14 @@ namespace MyLittleRangeBook.Database.Sqlite
             var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
 
             string dbPath;
-            if ("Production".Equals(env, StringComparison.OrdinalIgnoreCase))
+            if ("Production".Equals(env, StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(env))
             {
-                dbPath = Path.Combine(settingsDirectory, "mlrb.db");
+                dbPath = Path.Combine(settingsDirectory, DatabaseName);
             }
             else
             {
-                var dbName = $"mlrb-{env!.ToLower()}.db";
-                dbPath = Path.Combine(settingsDirectory, dbName);
+                var f = new FileInfo(DatabaseName);
+                dbPath = Path.Combine(settingsDirectory, $"{f.Name}-{env.ToLower()}.{f.Extension}");
             }
 
             return dbPath;
