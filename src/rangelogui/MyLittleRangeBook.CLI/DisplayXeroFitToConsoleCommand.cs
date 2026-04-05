@@ -1,12 +1,12 @@
 ﻿using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
-using MyLittleRangeBook.Cli.Console;
-using MyLittleRangeBook.Cli.Model;
+using MyLittleRangeBook.CLI.Console;
+using MyLittleRangeBook.CLI.Model;
 using Spectre.Console;
-using static MyLittleRangeBook.Cli.ReturnCodes;
+using static MyLittleRangeBook.CLI.ReturnCodes;
 
-namespace MyLittleRangeBook.Cli
+namespace MyLittleRangeBook.CLI
 {
     [RegisterCommands("console")]
     public class DisplayXeroFitToConsoleCommand

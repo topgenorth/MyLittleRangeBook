@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace MyLittleRangeBook.Cli.Model
+namespace MyLittleRangeBook.CLI.Model
 {
     public class ShotSessionCollection : ICollection<ShotSession>
     {

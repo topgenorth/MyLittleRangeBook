@@ -1,6 +1,6 @@
 using FluentResults;
 
-namespace MyLittleRangeBook.Cli
+namespace MyLittleRangeBook.CLI
 {
     public class FitFileNotFoundError : Error
     {

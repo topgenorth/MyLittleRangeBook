@@ -1,10 +1,10 @@
 using CommunityToolkit.HighPerformance;
 using Dynastream.Fit;
 using FluentResults;
-using MyLittleRangeBook.Cli.Model;
+using MyLittleRangeBook.CLI.Model;
 using File = System.IO.File;
 
-namespace MyLittleRangeBook.Cli
+namespace MyLittleRangeBook.CLI
 {
     /// <summary>
     ///     Will decode a byte stream from a Xero C1 FIT file into a ShotSession.

@@ -9,7 +9,7 @@
         <File Path="DumpFit.CLI/test.sql" />
         <File Path="README.md" />
     </Folder>
-    <Project Path="DumpFit.CLI/DumpFit.CLI.csproj" />
+    <Project Path="MyLittleRangeBook.CLI/MyLittleRangeBook.CLI.csproj" />
     <Project Path="MyLittleRangeBook.Sqlite/MyLittleRangeBook.Sqlite.csproj" />
     <Project Path="MySimpleRangeLog.App/MySimpleRangeLog.App.csproj" />
     <Project Path="MySimpleRangeLog.Tests/MySimpleRangeLog.Tests.csproj" />

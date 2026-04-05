@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Spectre.Console;
 
-namespace MyLittleRangeBook.Cli.Console
+namespace MyLittleRangeBook.CLI.Console
 {
     public sealed class CliDisplay : ICliDisplay
     {

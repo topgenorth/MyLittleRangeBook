@@ -2,12 +2,12 @@
 using DbUp;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.Cli.Console;
+using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using Spectre.Console;
-using static MyLittleRangeBook.Cli.ReturnCodes;
+using static MyLittleRangeBook.CLI.ReturnCodes;
 
-namespace MyLittleRangeBook.Cli.Database
+namespace MyLittleRangeBook.CLI.Database
 {
     /// <summary>
     ///     This class provides functionality for managing SQLite database migrations.

@@ -1,6 +1,6 @@
 using NanoidDotNet;
 
-namespace MyLittleRangeBook.Cli.Model
+namespace MyLittleRangeBook.CLI.Model
 {
     /// <summary>
     ///     A session holds data about a single Xero shooting session.

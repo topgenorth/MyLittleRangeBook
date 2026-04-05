@@ -1,6 +1,6 @@
 ﻿using NanoidDotNet;
 
-namespace MyLittleRangeBook.Cli.Model
+namespace MyLittleRangeBook.CLI.Model
 {
     /// <summary>
     ///     Represents a single shot that has be recorded by a Xero.

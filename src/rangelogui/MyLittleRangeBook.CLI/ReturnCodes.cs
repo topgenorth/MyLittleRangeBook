@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.Cli
+﻿namespace MyLittleRangeBook.CLI
 {
     public static class ReturnCodes
     {
