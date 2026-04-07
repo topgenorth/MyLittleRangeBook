@@ -68,7 +68,7 @@ namespace MyLittleRangeBook.CLI
             {
                 _cliDisplay.WriteFailure("Failed to parse FIT file.");
 
-                return result.HasError<UnexpectedFitFileTypeError>() ? FAILED_TO_PARSE : FAILED_TO_LOAD;
+                return result.HasError<UnsupportedFitFileTypeError>() ? FAILED_TO_PARSE : FAILED_TO_LOAD;
             }
 
             var session = result.Value;

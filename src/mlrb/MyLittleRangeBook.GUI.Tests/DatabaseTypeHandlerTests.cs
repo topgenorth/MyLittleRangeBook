@@ -1,8 +1,8 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.GUI.Helper;
-using MyLittleRangeBook.GUI.Helper;
 using MyLittleRangeBook.GUI.Models;
+using NanoidDotNet;
 
 namespace MyLittleRangeBook.GUI.Tests
 {
@@ -39,7 +39,7 @@ namespace MyLittleRangeBook.GUI.Tests
 
             var rangeEvent = new SimpleRangeEvent
             {
-                Id = NanoidDotNet.Nanoid.Generate(),
+                Id = await Nanoid.GenerateAsync(),
                 EventDate = DateTime.Now,
                 FirearmName = "Test Firearm",
                 RangeName = "Test Range",

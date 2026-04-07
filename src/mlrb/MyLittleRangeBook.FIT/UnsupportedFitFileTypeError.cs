@@ -2,9 +2,9 @@ using FluentResults;
 
 namespace MyLittleRangeBook.FIT
 {
-    public class UnexpectedFitFileTypeError : Error
+    public class UnsupportedFitFileTypeError : Error
     {
-        public UnexpectedFitFileTypeError(int expectedFileType) : base(
+        public UnsupportedFitFileTypeError(int expectedFileType) : base(
             $"Can only handle FIT file type {expectedFileType}")
         {
             Metadata.Add("ExpectedFileTypeId", XeroShotSessionParser.ExpectedFileType);
