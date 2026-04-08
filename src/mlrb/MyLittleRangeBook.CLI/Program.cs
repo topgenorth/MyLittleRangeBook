@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using MyLittleRangeBook.CLI;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
@@ -13,7 +12,7 @@ using SQLitePCL;
 raw.SetProvider(new SQLite3Provider_e_sqlite3());
 Batteries.Init();
 
-var builder = Host.CreateApplicationBuilder();
+HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 
 builder.Configuration
     .AddJsonFile("appsettings.json", true, true)
@@ -43,11 +42,11 @@ builder.Services.AddSerilog(lc =>
 });
 
 
-using var host = builder.Build();
-using var scope = host.Services.CreateScope();
+using IHost host = builder.Build();
+using IServiceScope scope = host.Services.CreateScope();
 
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
-var app = ConsoleApp.Create();
+ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
 await app.RunAsync(args);
 

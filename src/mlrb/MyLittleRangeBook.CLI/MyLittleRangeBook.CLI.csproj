@@ -57,6 +57,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\MyLittleRangeBook.FIT\MyLittleRangeBook.FIT.csproj" />
+      <ProjectReference Include="..\MyLittleRangeBook.PgSQL\MyLittleRangeBook.PgSQL.csproj" />
       <ProjectReference Include="..\MyLittleRangeBook.Sqlite\MyLittleRangeBook.Sqlite.csproj" />
     </ItemGroup>
 

@@ -1,3 +1,4 @@
+using System.Data;
 using NanoidDotNet;
 
 namespace MyLittleRangeBook.Database.Sqlite
@@ -6,7 +7,7 @@ namespace MyLittleRangeBook.Database.Sqlite
     ///     A helper class for managing SQLite database connections, initialization, and configuration.
     ///     Provides methods for setting up the database environment, obtaining connections, and generating connection strings.
     /// </summary>
-    public class SqliteHelper : ISqliteHelper
+    public class SqliteHelper : ISqliteHelper, IDatabaseHelper
     {
         internal static readonly string DatabaseName = "mlrb.db";
 
@@ -40,14 +41,14 @@ namespace MyLittleRangeBook.Database.Sqlite
         }
 
         /// <summary>
-        ///     Generates a SQLite connection string based on the current environment and file path settings.
+        ///     Generates an SQLite connection string based on the current environment and file path settings.
         ///     Ensures the parent directory for the database file exists.
         /// </summary>
         /// <returns>A connection string configured for the local database file.</returns>
         public string GetSqliteConnectionString()
         {
-            var dbPath = GetSqliteDatabaseName();
-            var settingsDirectory = Path.GetDirectoryName(dbPath)!;
+            string dbPath = GetSqliteDatabaseName();
+            string settingsDirectory = Path.GetDirectoryName(dbPath)!;
             if (!Directory.Exists(settingsDirectory))
             {
                 Directory.CreateDirectory(settingsDirectory);
@@ -67,8 +68,8 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <returns>The full path to the SQLite database file.</returns>
         public string GetSqliteDatabaseName()
         {
-            var settingsDirectory = DatabaseDirectory;
-            var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
+            string settingsDirectory = DatabaseDirectory;
+            string env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
 
             string dbPath;
             if ("Production".Equals(env, StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(env))
@@ -109,6 +110,13 @@ namespace MyLittleRangeBook.Database.Sqlite
             var sb = new SqliteConnectionStringBuilder { DataSource = file, Mode = SqliteOpenMode.ReadWriteCreate };
 
             return await OpenSqliteConnectionAsync(sb.ConnectionString, cancellationToken);
+        }
+
+        public async Task<IDbConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
+        {
+            string connectionString = GetSqliteConnectionString();
+
+            return await OpenSqliteConnectionAsync(connectionString, cancellationToken);
         }
     }
 }
