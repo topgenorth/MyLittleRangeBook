@@ -61,4 +61,8 @@
       <ProjectReference Include="..\MyLittleRangeBook.Sqlite\MyLittleRangeBook.Sqlite.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Database\Postgres\" />
+    </ItemGroup>
+
 </Project>

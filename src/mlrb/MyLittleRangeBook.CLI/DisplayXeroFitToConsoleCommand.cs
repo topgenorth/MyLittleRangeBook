@@ -9,7 +9,7 @@ using static MyLittleRangeBook.CLI.ReturnCodes;
 
 namespace MyLittleRangeBook.CLI
 {
-    [RegisterCommands("display")]
+    [RegisterCommands("display fit")]
     public class DisplayXeroFitToConsoleCommand
     {
         readonly ICliDisplay _cliDisplay;

@@ -12,20 +12,20 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
     /// <summary>
     ///     Provides functionality to import FIT files into a SQLite database.
     /// </summary>
-    [RegisterCommands("import")]
-    public class AddFitFileToSqlite
+    [RegisterCommands("import fit")]
+    public class ImportFitFileToSqliteCommand
     {
         readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
         readonly ISqliteHelper _sqliteHelper;
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="AddFitFileToSqlite" /> class.
+        ///     Initializes a new instance of the <see cref="ImportFitFileToSqliteCommand" /> class.
         /// </summary>
         /// <param name="cliDisplay">The CLI display helper for user interaction.</param>
         /// <param name="logger">The logger for recording operation details.</param>
         /// <param name="sqliteHelper">The helper for SQLite database operations.</param>
-        public AddFitFileToSqlite(ICliDisplay cliDisplay, ILogger logger, ISqliteHelper sqliteHelper)
+        public ImportFitFileToSqliteCommand(ICliDisplay cliDisplay, ILogger logger, ISqliteHelper sqliteHelper)
         {
             _cliDisplay = cliDisplay;
             _logger = logger;
@@ -33,13 +33,13 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         }
 
         /// <summary>
-        ///     Imports a FIT sqliteFile into the database.
+        ///     Imports a FIT file into the specified SQLite database.
         /// </summary>
         /// <param name="sqliteFile">The path to the SQLite database sqliteFile.</param>
         /// <param name="fitFile">The path to the FIT sqliteFile to be imported.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A task that represents the asynchronous import operation. The task result contains the exit code.</returns>
-        [Command("fit")]
+        [Command("sqlite")]
         [UsedImplicitly]
         public async Task<int> AddFitFileToDatabaseAsync(string sqliteFile,
             string fitFile,

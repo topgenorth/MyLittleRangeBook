@@ -13,6 +13,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
     /// <summary>
     ///     Command for importing a Garmin FIT file into a PostgreSQL database.
     /// </summary>
+    [RegisterCommands("import fit")]
     public class ImportFitFileToPostgresqlCommand
     {
         readonly ICliDisplay _cliDisplay;
@@ -33,7 +34,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
         }
 
         /// <summary>
-        ///     Executes the import operation for a specified FIT file.
+        ///     Import the FIT file into PostgreSQL.
         /// </summary>
         /// <param name="sourceFile">The path to the source FIT file to be imported.</param>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
@@ -41,7 +42,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
         ///     A task that represents the asynchronous import operation. The task result contains the status code (0 for
         ///     success).
         /// </returns>
-        [Command("fit pgsql")]
+        [Command("pgsql")]
         [UsedImplicitly]
         public async Task<int> ImportFileAsync(string sourceFile, CancellationToken cancellationToken = default)
         {
