@@ -1,10 +1,26 @@
-﻿using static MyLittleRangeBook.Config.ConfigurationExtensions;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
+using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.Config
 {
-    public class AppSettingsBootstrapper
+    public interface IAppSettingsBootstrapper
     {
-        const string DefaultAppSettingsJson = @"{}";
+    }
+
+    public class AppSettingsBootstrapper : IAppSettingsBootstrapper
+    {
+        const string DefaultAppSettingsJson = @"{
+  ""ConnectionStrings"": {
+    ""SqliteConnection"": ""Data Source=mlrb.db""
+  },
+  ""Logging"": {
+    ""LogLevel"": {
+      ""Default"": ""Error"",
+      ""Microsoft.Hosting.Lifetime"": ""Error""
+    }
+  }
+}";
 
         /// <summary>
         ///     Ensures that the appsettings.json file exists in the user's settings directory. If it
@@ -28,13 +44,18 @@ namespace MyLittleRangeBook.Config
                 return appSettingsInfo.FullName;
             }
 
-            // var json = JsonSerializer.Serialize(
-            //     defaults,
-            //     new JsonSerializerOptions { WriteIndented = true });
-            //
-            // await File.WriteAllTextAsync(settingsPath, json, cancellationToken);
-
-            await File.WriteAllTextAsync(appSettingsInfo.FullName, DefaultAppSettingsJson, cancellationToken);
+            var node = JsonNode.Parse(DefaultAppSettingsJson);
+            if (node != null)
+            {
+                node["ConnectionStrings"]!["SqliteConnection"] = $"Data Source={DefaultSqliteDatabaseName()}";
+                
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                await File.WriteAllTextAsync(appSettingsInfo.FullName, node.ToJsonString(options), cancellationToken);
+            }
+            else
+            {
+                await File.WriteAllTextAsync(appSettingsInfo.FullName, DefaultAppSettingsJson, cancellationToken);
+            }
 
             return appSettingsInfo.FullName;
         }

@@ -28,9 +28,9 @@
         public static string DefaultSqliteDatabaseName(bool inferFromEnvironment = true)
         {
             string fullPath = Path.Combine(DefaultUserSettingsDirectory, SqliteDatabaseName);
-            if (!inferFromEnvironment)
+            if (inferFromEnvironment)
             {
-                new FileInfo(fullPath).InjectEnvironmentIntoFileName();
+                fullPath = new FileInfo(fullPath).InjectEnvironmentIntoFileName().FullName;
             }
 
             if (!OperatingSystem.IsWindows())
