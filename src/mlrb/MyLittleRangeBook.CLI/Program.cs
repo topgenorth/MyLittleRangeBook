@@ -3,17 +3,18 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using MyLittleRangeBook.CLI;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
 using Spectre.Console;
 using SQLitePCL;
+using  MyLittleRangeBook.PgSQL;
 
 raw.SetProvider(new SQLite3Provider_e_sqlite3());
 Batteries.Init();
 
-var builder = Host.CreateApplicationBuilder();
+HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+builder.Configuration.Sources.Clear();
 
 builder.Configuration
     .AddJsonFile("appsettings.json", true, true)
@@ -22,7 +23,8 @@ builder.Configuration
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
 builder.Services.TryAddSingleton<IXeroShotSessionParser, XeroShotSessionParser>();
-builder.Services.AddSqliteHelper();
+builder.Services.AddSqliteHelper(builder.Configuration);
+builder.Services.AddPostgresHelper(builder.Configuration);
 
 builder.Services.AddSerilog(lc =>
 {
@@ -43,11 +45,11 @@ builder.Services.AddSerilog(lc =>
 });
 
 
-using var host = builder.Build();
-using var scope = host.Services.CreateScope();
+using IHost host = builder.Build();
+using IServiceScope scope = host.Services.CreateScope();
 
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
-var app = ConsoleApp.Create();
+ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
 await app.RunAsync(args);
 

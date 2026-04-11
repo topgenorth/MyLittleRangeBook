@@ -9,7 +9,7 @@ using static MyLittleRangeBook.CLI.ReturnCodes;
 
 namespace MyLittleRangeBook.CLI
 {
-    [RegisterCommands("console")]
+    [RegisterCommands("display fit")]
     public class DisplayXeroFitToConsoleCommand
     {
         readonly ICliDisplay _cliDisplay;
@@ -31,7 +31,7 @@ namespace MyLittleRangeBook.CLI
         /// <param name="file">Path to the FIT file</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("")]
+        [Command("console")]
         [UsedImplicitly]
         public async Task<int> ToConsoleAsync(string file, CancellationToken cancellationToken)
         {
@@ -68,7 +68,7 @@ namespace MyLittleRangeBook.CLI
             {
                 _cliDisplay.WriteFailure("Failed to parse FIT file.");
 
-                return result.HasError<UnexpectedFitFileTypeError>() ? FAILED_TO_PARSE : FAILED_TO_LOAD;
+                return result.HasError<UnsupportedFitFileTypeError>() ? FAILED_TO_PARSE : FAILED_TO_LOAD;
             }
 
             var session = result.Value;

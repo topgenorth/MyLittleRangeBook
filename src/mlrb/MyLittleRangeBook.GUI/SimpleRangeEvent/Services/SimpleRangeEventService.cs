@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Models;
 
@@ -13,16 +15,18 @@ namespace MyLittleRangeBook.GUI.Services
             _sqliteHelper = sqliteHelper;
         }
 
-        public async Task<bool> SaveRangeEventAsync(SimpleRangeEvent rangeEvent)
+        public async Task<bool> SaveRangeEventAsync(SimpleRangeEvent rangeEvent, CancellationToken cancellationToken)
         {
-            await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
-            return await rangeEvent.SaveAsync(connection);
+            await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+
+            return await rangeEvent.SaveAsync(connection, cancellationToken);
         }
 
-        public async Task<bool> DeleteRangeEvent(SimpleRangeEvent rangeEvent)
+        public async Task<bool> DeleteRangeEvent(SimpleRangeEvent rangeEvent, CancellationToken cancellationToken)
         {
-            await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
-            return await rangeEvent.DeleteAsync(connection);
+            await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+
+            return await rangeEvent.DeleteAsync(connection, cancellationToken);
         }
     }
 }

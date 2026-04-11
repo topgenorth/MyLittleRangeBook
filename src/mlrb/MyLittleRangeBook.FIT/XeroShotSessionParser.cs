@@ -44,7 +44,7 @@ namespace MyLittleRangeBook.FIT
             Result<ShotSession> result;
             try
             {
-                result = (await filePath.LoadBytesAsync(ct))
+                result = (await filePath.LoadFitFileBytesAsync(ct))
                     .Bind(bytesFromFitFile =>
                     {
                         using var
@@ -72,7 +72,7 @@ namespace MyLittleRangeBook.FIT
             // Check that this is a FIT file
             if (!decoder.IsFIT(input))
             {
-                return Result.Fail(new UnexpectedFitFileTypeError(ExpectedFileType));
+                return Result.Fail(new UnsupportedFitFileTypeError(ExpectedFileType));
             }
 
             MesgBroadcaster msgBroadcaster = new();

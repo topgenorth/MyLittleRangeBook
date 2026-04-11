@@ -26,7 +26,7 @@ namespace MyLittleRangeBook.CLI
             return serialNumber == 0 ? Nanoid.Generate() : $"{serialNumber.ToString()}-0";
         }
 
-        public static async Task<Result<ReadOnlyMemory<byte>>> LoadBytesAsync(this string filename,
+        public static async Task<Result<ReadOnlyMemory<byte>>> LoadFitFileBytesAsync(this string filename,
             CancellationToken ct)
         {
             try

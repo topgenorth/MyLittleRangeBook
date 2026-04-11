@@ -406,3 +406,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /src/rangelogui/DumpFit.CLI/appsettings.Development.json
+appsettings.Development.json

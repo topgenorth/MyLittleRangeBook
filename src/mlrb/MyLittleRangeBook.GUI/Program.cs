@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Avalonia;
 using Dapper;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Database.Sqlite;
@@ -25,11 +26,18 @@ namespace MyLittleRangeBook.GUI
         {
             ConfigureLogging();
 
+            var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env}.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();
+
             var services = new ServiceCollection();
-            services.AddSqliteHelper();
-            // [TO20260311] Need to register a handler for Dapper to convert strings to DateTimeOffset values.
-            SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SQLiteDateTimeOffsetHandler());
-            SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SQLiteDateTimeOffsetHandler());
+            services.AddSingleton<IConfiguration>(configuration);
+            services.AddSqliteHelper(configuration);
 
             services.TryAddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
             services.TryAddSingleton<ISimpleRangeEventService, SimpleRangeEventService>();
@@ -40,6 +48,9 @@ namespace MyLittleRangeBook.GUI
             services.AddTransient<ManageFirearmsViewModel>();
             services.AddTransient<SettingsViewModel>();
 
+            // [TO20260311] Need to register a handler for Dapper to convert strings to DateTimeOffset values.
+            SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SQLiteDateTimeOffsetHandler());
+            SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SQLiteDateTimeOffsetHandler());
 
 
             App.RegisterAppServices(services);

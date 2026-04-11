@@ -1,5 +1,6 @@
 ﻿using ConsoleAppFramework;
 using DbUp;
+using DbUp.Engine;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.CLI.Console;
@@ -35,13 +36,14 @@ namespace MyLittleRangeBook.CLI.Database
                 return DATABASE_FILE_NOT_FOUND;
             }
 
-            var result = await cliDisplay.RunStatusAsync(
+            int result = await cliDisplay.RunStatusAsync(
                 "Importing FIT data...",
                 async ct =>
                 {
-                    await using var connection = await sqliteHelper.OpenSqliteConnectionToFileAsync(file, ct);
-                    await using var cmd = new SqliteCommand("SELECT * FROM SchemaVersions ORDER BY Applied", connection);
-                    await using var rdr = await cmd.ExecuteReaderAsync(ct);
+                    await using SqliteConnection connection = await sqliteHelper.GetDatabaseConnectionAsync(ct);
+                    await using var cmd =
+                        new SqliteCommand("SELECT * FROM SchemaVersions ORDER BY Applied", connection);
+                    await using SqliteDataReader rdr = await cmd.ExecuteReaderAsync(ct);
 
                     var table = new Table();
                     table.AddColumn("ID");
@@ -50,9 +52,9 @@ namespace MyLittleRangeBook.CLI.Database
 
                     while (await rdr.ReadAsync(ct))
                     {
-                        var schemaVersionId = rdr.IsDBNull(0) ? string.Empty : rdr.GetValue(0).ToString();
-                        var scriptName = rdr.IsDBNull(1) ? string.Empty : rdr.GetString(1);
-                        var applied = rdr.IsDBNull(2) ? string.Empty : rdr.GetValue(2).ToString() ?? string.Empty;
+                        string? schemaVersionId = rdr.IsDBNull(0) ? string.Empty : rdr.GetValue(0).ToString();
+                        string scriptName = rdr.IsDBNull(1) ? string.Empty : rdr.GetString(1);
+                        string applied = rdr.IsDBNull(2) ? string.Empty : rdr.GetValue(2).ToString() ?? string.Empty;
                         table.AddRow(schemaVersionId!, scriptName, applied);
                     }
 
@@ -97,7 +99,7 @@ namespace MyLittleRangeBook.CLI.Database
             }
 
 
-            var result = await cliDisplay.RunStatusAsync("Loading SQL file...",
+            int result = await cliDisplay.RunStatusAsync("Loading SQL file...",
                 async ct =>
                 {
                     void WriteSuccess()
@@ -108,7 +110,7 @@ namespace MyLittleRangeBook.CLI.Database
                     try
                     {
                         cliDisplay.Console.MarkupLineInterpolated($"[green]✓ Loading SQL file {sqlfile}.[/]");
-                        var sql = await File.ReadAllTextAsync(sqlfile, ct);
+                        string sql = await File.ReadAllTextAsync(sqlfile, ct);
 
                         if (string.IsNullOrWhiteSpace(sql))
                         {
@@ -119,7 +121,7 @@ namespace MyLittleRangeBook.CLI.Database
                         }
 
 
-                        await using var connection = await sqliteHelper.OpenSqliteConnectionToFileAsync(file, ct);
+                        await using SqliteConnection connection = await sqliteHelper.GetDatabaseConnectionAsync(ct);
                         await using var cmd = new SqliteCommand(sql, connection);
                         await cmd.ExecuteNonQueryAsync(ct);
                         WriteSuccess();
@@ -156,21 +158,22 @@ namespace MyLittleRangeBook.CLI.Database
                     $"[bold yellow]✗ Could not find '{file}'; database will be created.[/]");
             }
 
-            var result = await cliDisplay.RunStatusAsync($"Applying migrations to {file}\n",
+            int result = await cliDisplay.RunStatusAsync($"Applying migrations to {file}\n",
                 _ =>
                 {
                     try
                     {
                         try
                         {
-                            var upgrader = DeployChanges.To
-                                .SqliteDatabase(sqliteHelper.GetSqliteConnectionString())
+                            var connectionString = new SqliteConnectionStringBuilder(file).ConnectionString;
+                            UpgradeEngine? upgrader = DeployChanges.To
+                                .SqliteDatabase(connectionString)
                                 .WithScriptsEmbeddedInAssembly(typeof(SqliteMigrator).Assembly)
                                 .LogToConsole()
                                 .Build();
 
 
-                            var result = upgrader.PerformUpgrade();
+                            DatabaseUpgradeResult? result = upgrader.PerformUpgrade();
                             if (!result.Successful)
                             {
                                 cliDisplay.WriteFailure("Failed to apply migrations.");
