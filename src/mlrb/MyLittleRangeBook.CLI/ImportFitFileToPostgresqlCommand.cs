@@ -92,7 +92,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
             byte[] bytesToSave = fileContents.Value.ToArray();
 
 
-            int rowId;
+            long rowId;
             try
             {
                 using IDbConnection connection = await _databaseHelper.GetDatabaseConnectionAsync(cancellationToken);
@@ -130,13 +130,13 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
         ///     A task that represents the asynchronous save operation. The task result contains the row ID of the inserted
         ///     record, or -1 if the operation failed.
         /// </returns>
-        async Task<int> SaveBytesAsync(NpgsqlConnection connection,
+        async Task<long> SaveBytesAsync(NpgsqlConnection connection,
             byte[] fileContents,
             string filename,
             CancellationToken cancellationToken = default)
         {
             var cmd = new NpgsqlCommand(
-                "INSERT INTO fit_files (id, file_name, contents) VALUES (@id, @filename, @filecontents);",
+                "INSERT INTO fit_files (id, file_name, contents) VALUES (@id, @filename, @filecontents) RETURNING row_id;",
                 connection);
 
             // TODO [TO20260408] Confirm the fields....
@@ -146,7 +146,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
 
             object? rowId = await cmd.ExecuteScalarAsync(cancellationToken);
 
-            return rowId is null ? 0 : (int)rowId;
+            return rowId is null ? -1 : Convert.ToInt64(rowId);
         }
     }
 }

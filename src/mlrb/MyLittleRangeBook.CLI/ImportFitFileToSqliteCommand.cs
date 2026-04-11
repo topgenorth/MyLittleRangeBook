@@ -98,7 +98,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             }
             byte[] bytesToSave = fileContents.Value.ToArray();
 
-            int rowId;
+            long rowId;
             try
             {
                 await using SqliteConnection connection =
@@ -134,7 +134,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         ///     A task that represents the asynchronous save operation. The task result contains the row ID of the inserted
         ///     record, or -1 if the operation failed.
         /// </returns>
-        async Task<int> WriteBytesToDatabaseAsync(SqliteConnection connection,
+        async Task<long> WriteBytesToDatabaseAsync(SqliteConnection connection,
             byte[] fileContents,
             string filename,
             CancellationToken cancellationToken = default)
@@ -148,7 +148,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
 
             object? rowId = await cmd.ExecuteScalarAsync(cancellationToken);
 
-            return rowId is null ? -1 : Convert.ToInt32(rowId);
+            return rowId is null ? -1 : Convert.ToInt64(rowId);
         }
     }
 }
