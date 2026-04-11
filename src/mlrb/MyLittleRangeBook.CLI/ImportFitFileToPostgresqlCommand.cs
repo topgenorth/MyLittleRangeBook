@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database;
 using MyLittleRangeBook.FIT;
+using MyLittleRangeBook.PgSQL;
 using NanoidDotNet;
 using Npgsql;
 
@@ -17,7 +18,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
     public class ImportFitFileToPostgresqlCommand
     {
         readonly ICliDisplay _cliDisplay;
-        readonly IDatabaseHelper _databaseHelper;
+        readonly IPostgresHelper _databaseHelper;
         readonly ILogger _logger;
 
         /// <summary>
@@ -26,7 +27,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
         /// <param name="cliDisplay">The command-line display interface.</param>
         /// <param name="logger">The logger for recording operation progress and errors.</param>
         /// <param name="databaseHelper">The database helper for managing database connections.</param>
-        public ImportFitFileToPostgresqlCommand(ICliDisplay cliDisplay, ILogger logger, IDatabaseHelper databaseHelper)
+        public ImportFitFileToPostgresqlCommand(ICliDisplay cliDisplay, ILogger logger, IPostgresHelper databaseHelper)
         {
             _cliDisplay = cliDisplay;
             _logger = logger;
@@ -36,7 +37,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
         /// <summary>
         ///     Import the FIT file into PostgreSQL.
         /// </summary>
-        /// <param name="sourceFile">The path to the source FIT file to be imported.</param>
+        /// <param name="fitFile">The path to the source FIT file to be imported.</param>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         /// <returns>
         ///     A task that represents the asynchronous import operation. The task result contains the status code (0 for
@@ -44,19 +45,19 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
         /// </returns>
         [Command("pgsql")]
         [UsedImplicitly]
-        public async Task<int> ImportFileAsync(string sourceFile, CancellationToken cancellationToken = default)
+        public async Task<int> ImportFileAsync(string fitFile, CancellationToken cancellationToken = default)
         {
             _cliDisplay.WriteHeader("Importing FIT file to Postgresql");
             Result<int> result = await _cliDisplay.RunStatusAsync<Result<int>>("Importing FIT file to Postgresql",
-                async ct => await DoWorkAsync(sourceFile, ct), cancellationToken);
+                async ct => await DoWorkAsync(fitFile, ct), cancellationToken);
 
             if (result.IsSuccess)
             {
-                _cliDisplay.WriteSuccess("Imported FIT file to Postgresql");
+                _cliDisplay.WriteSuccess($"Imported FIT file {fitFile} to Postgresql");
             }
             else
             {
-                _cliDisplay.WriteFailure("Failed to import FIT file to Postgresql");
+                _cliDisplay.WriteFailure($"Failed to import FIT file {fitFile} to Postgresql");
             }
 
             return result.Value;
@@ -135,7 +136,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
             CancellationToken cancellationToken = default)
         {
             var cmd = new NpgsqlCommand(
-                "INSERT INTO FitFiles (Id, Filename, Contents) VALUES (@id, @filename, @filecontents) RETURNING RowId",
+                "INSERT INTO fit_files (id, file_name, contents) VALUES (@id, @filename, @filecontents);",
                 connection);
 
             // TODO [TO20260408] Confirm the fields....
@@ -145,7 +146,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
 
             object? rowId = await cmd.ExecuteScalarAsync(cancellationToken);
 
-            return rowId is null ? -1 : (int)rowId;
+            return rowId is null ? 0 : (int)rowId;
         }
     }
 }
