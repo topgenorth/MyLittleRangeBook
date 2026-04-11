@@ -4,23 +4,22 @@ using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.Config
 {
-    public interface IAppSettingsBootstrapper
-    {
-    }
 
     public class AppSettingsBootstrapper : IAppSettingsBootstrapper
     {
-        const string DefaultAppSettingsJson = @"{
-  ""ConnectionStrings"": {
-    ""SqliteConnection"": ""Data Source=mlrb.db""
-  },
-  ""Logging"": {
-    ""LogLevel"": {
-      ""Default"": ""Error"",
-      ""Microsoft.Hosting.Lifetime"": ""Error""
-    }
-  }
-}";
+        const string DefaultAppSettingsJson = """
+                                              {
+                                                "ConnectionStrings": {
+                                                  "SqliteConnection": "Data Source=mlrb.db"
+                                                },
+                                                "Logging": {
+                                                  "LogLevel": {
+                                                    "Default": "Error",
+                                                    "Microsoft.Hosting.Lifetime": "Error"
+                                                  }
+                                                }
+                                              }
+                                              """;
 
         /// <summary>
         ///     Ensures that the appsettings.json file exists in the user's settings directory. If it

@@ -96,6 +96,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 var err = new FailedToLoadFitFileError(fitFile);
                 var r = Result.Fail(err);
             }
+
             byte[] bytesToSave = fileContents.Value.ToArray();
 
             long rowId;
