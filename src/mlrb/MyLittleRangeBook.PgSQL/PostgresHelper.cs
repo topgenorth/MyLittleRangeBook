@@ -1,13 +1,29 @@
 ﻿using System.Data;
 using MyLittleRangeBook.Database;
+using Npgsql;
 
 namespace MyLittleRangeBook.PgSQL
 {
-    public class PostgresHelper : IDatabaseHelper
+    public class PostgresHelper : IDatabaseHelper, IPostgresHelper
     {
-        public Task<IDbConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken=default)
+        readonly string _connectionString;
+
+        public PostgresHelper(string connectionString)
         {
-            throw new NotImplementedException();
+            _connectionString = connectionString;
+        }
+
+        async Task<IDbConnection> IDatabaseHelper.GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
+        {
+            return await GetDatabaseConnectionAsync(cancellationToken);
+        }
+
+        public async Task<NpgsqlConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
+        {
+            var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync(cancellationToken);
+
+            return connection;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,7 +31,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public FirearmViewModel Item { get; }
 
         [RelayCommand]
-        async Task SaveAsync()
+        async Task SaveAsync(CancellationToken cancellationToken)
         {
             Item.Validate();
             if (Item.HasErrors)
@@ -42,7 +43,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             }
 
             var f = Item.ToFirearm();
-            var success = await _firearmsService.SaveFirearmAsync(f);
+            bool success = await _firearmsService.SaveFirearmAsync(f, cancellationToken);
             if (success)
             {
                 _dialogService.ReturnResultFromOverlayDialog(new FirearmViewModel(f));
@@ -59,7 +60,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         async Task CancelAsync()
         {
             DialogCommand[] commands = [DialogCommands.No, DialogCommands.Yes];
-            var userResponse = await _dialogService.ShowOverlayDialogAsync<DialogResult>(
+            DialogResult userResponse = await _dialogService.ShowOverlayDialogAsync<DialogResult>(
                 "Cancel editing?",
                 "Do you want to discard your changes?",
                 commands);

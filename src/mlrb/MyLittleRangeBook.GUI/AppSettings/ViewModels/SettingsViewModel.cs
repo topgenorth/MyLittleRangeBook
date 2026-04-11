@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Dapper;
 using JetBrains.Annotations;
+using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Database;
 using MyLittleRangeBook.GUI.Helper;
@@ -55,22 +59,22 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     A command that will export the entire database to JSON.
         /// </summary>
         [RelayCommand]
-        async Task ExportDataAsync()
+        async Task ExportDataAsync(CancellationToken cancellationToken = default)
         {
             try
             {
                 // Show the file save dialog for the user to choose an export location
-                var safeFilePickerResult = await this.SafeFileDialogAsync("Export Data",
+                SaveFilePickerResult? safeFilePickerResult = await this.SafeFileDialogAsync("Export Data",
                     [FileHelper.JsonFileType]);
 
                 if (safeFilePickerResult?.File is { } storageFile)
                 {
-                    await using var fs = await storageFile.OpenWriteAsync();
+                    await using Stream fs = await storageFile.OpenWriteAsync();
 
                     try
                     {
-                        var conn = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
-                        await DatabaseHelper.ExportToJsonAsync(conn, fs);
+                        SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+                        await DatabaseHelper.ExportToJsonAsync(conn, fs, cancellationToken);
                     }
                     catch (Exception e)
                     {
@@ -98,7 +102,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     Existing items will be updated.
         /// </summary>
         [RelayCommand]
-        async Task ImportDataAsync()
+        async Task ImportDataAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -106,29 +110,29 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 // how to handle it.
 
                 // Show file open dialog for user to select JSON import file
-                var openFilePickerResult = await this.OpenFileDialogAsync("Import Data",
+                IEnumerable<IStorageFile>? openFilePickerResult = await this.OpenFileDialogAsync("Import Data",
                     [FileHelper.JsonFileType]);
 
                 if (openFilePickerResult?.FirstOrDefault() is { } storageFile)
                 {
                     // Open a file stream for reading
-                    await using var fs = await storageFile.OpenReadAsync();
+                    await using Stream fs = await storageFile.OpenReadAsync();
 
                     // Deserialize JSON into database DTO structure
-                    var dto = await JsonSerializer.DeserializeAsync<DatabaseDto>(fs,
-                        JsonContextHelper.Default.DatabaseDto);
+                    DatabaseDto? dto = await JsonSerializer.DeserializeAsync<DatabaseDto>(fs,
+                        JsonContextHelper.Default.DatabaseDto, cancellationToken);
 
                     if (dto is null)
                     {
                         throw new FileLoadException("Could not load data");
                     }
 
-                    await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
+                    await using SqliteConnection connection =
+                        await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
                     // Save all ToDoItems from imported data (updates existing ones)
-                    foreach (var rangeEvent in dto.SimpleRangeEvents ?? [])
+                    foreach (SimpleRangeEvent rangeEvent in dto.SimpleRangeEvents ?? [])
                     {
-                        // TODO [TO20260404] CancellationToken; and cancel if there is a problem saving.
-                        await rangeEvent.SaveAsync(connection);
+                        await rangeEvent.SaveAsync(connection, cancellationToken);
                     }
 
                     // Notify other ViewModels about updated DB to refresh their views
@@ -148,10 +152,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     Notifies other ViewModels to refresh their data after completion.
         /// </summary>
         [RelayCommand]
-        async Task ClearDatabaseAsync()
+        async Task ClearDatabaseAsync(CancellationToken cancellationToken = default)
         {
             // Show a confirmation dialog with a warning about data loss
-            var choice = await this.ShowOverlayDialogAsync<DialogResult>("Clear Database",
+            DialogResult choice = await this.ShowOverlayDialogAsync<DialogResult>("Clear Database",
                 """
                 Are you sure you want to clear the database? This cannot be undone.
                 TIP: Consider to export the data before you continue.
@@ -163,7 +167,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
             if (choice == DialogResult.Yes)
             {
                 // Get database connection and clear all data
-                await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
+                await using SqliteConnection connection =
+                    await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
 
                 // Drop existing tables and vacuum the database to reclaim space
                 await connection.ExecuteAsync(

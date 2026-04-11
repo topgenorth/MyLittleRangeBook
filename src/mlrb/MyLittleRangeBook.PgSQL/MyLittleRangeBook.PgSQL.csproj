@@ -9,7 +9,8 @@
     <ItemGroup>
       <PackageReference Include="Npgsql" Version="10.0.2" />
         <PackageReference Include="Nanoid" Version="3.1.0"/>
-
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
     </ItemGroup>
 
     <ItemGroup>

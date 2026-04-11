@@ -103,8 +103,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             int rowId = -1;
             try
             {
-                await using SqliteConnection connection =
-                    await _sqliteHelper.OpenSqliteConnectionToFileAsync(sqliteFile, cancellationToken);
+                await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken) ;
                 rowId = await SaveBytesAsync(connection, bytesToSave, fitFile, cancellationToken);
             }
             catch (Exception e)

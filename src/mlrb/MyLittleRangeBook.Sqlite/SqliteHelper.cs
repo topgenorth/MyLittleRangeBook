@@ -5,20 +5,17 @@ namespace MyLittleRangeBook.Database.Sqlite
 {
     /// <summary>
     ///     A helper class for managing SQLite database connections, initialization, and configuration.
-    ///     Provides methods for setting up the database environment, obtaining connections, and generating connection strings.
+    ///     Provides methods for setting up the database environment, getting connections, and generating connection strings.
     /// </summary>
     public class SqliteHelper : ISqliteHelper, IDatabaseHelper
     {
-        internal static readonly string DatabaseName = "mlrb.db";
+        readonly string _connectionString;
 
-        /// <summary>
-        ///     Gets the settings directory path for storing user configuration.
-        ///     Uses OS-specific local application data directory.
-        ///     Creates a dedicated folder for this application to avoid conflicts.
-        /// </summary>
-        internal static string DatabaseDirectory => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "MyLittleRangeBook");
+        public SqliteHelper(string connectionString)
+        {
+            var builder = new SqliteConnectionStringBuilder(connectionString) { Mode = SqliteOpenMode.ReadWriteCreate };
+            _connectionString = builder.ConnectionString;
+        }
 
         /// <summary>
         ///     Creates a new <see cref="SqliteConnection" /> and opens it for usage.
@@ -26,13 +23,11 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <remarks>
         ///     Ensure that the connection is disposed of after use.
         /// </remarks>
-        /// <param name="connectionString">Optional connection string to use. If null, the default connection string is generated.</param>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         /// <returns>The opened connection.</returns>
-        public async Task<SqliteConnection> OpenSqliteConnectionAsync(string connectionString,
-            CancellationToken cancellationToken = default)
+        public async Task<SqliteConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
         {
-            var connection = new SqliteConnection(connectionString);
+            var connection = new SqliteConnection(_connectionString);
             connection.CreateFunction("nanoid", () => Nanoid.Generate());
             connection.CreateFunction("utcnow", () => DateTimeOffset.UtcNow.ToString("O"));
             await connection.OpenAsync(cancellationToken);
@@ -40,83 +35,10 @@ namespace MyLittleRangeBook.Database.Sqlite
             return connection;
         }
 
-        /// <summary>
-        ///     Generates an SQLite connection string based on the current environment and file path settings.
-        ///     Ensures the parent directory for the database file exists.
-        /// </summary>
-        /// <returns>A connection string configured for the local database file.</returns>
-        public string GetSqliteConnectionString()
+        async Task<IDbConnection> IDatabaseHelper.GetDatabaseConnectionAsync(CancellationToken cancellationToken=default)
         {
-            string dbPath = GetSqliteDatabaseName();
-            string settingsDirectory = Path.GetDirectoryName(dbPath)!;
-            if (!Directory.Exists(settingsDirectory))
-            {
-                Directory.CreateDirectory(settingsDirectory);
-            }
+            return await GetDatabaseConnectionAsync(cancellationToken);
 
-
-            var cb = new SqliteConnectionStringBuilder { DataSource = dbPath, Mode = SqliteOpenMode.ReadWriteCreate };
-
-
-            return cb.ConnectionString;
-        }
-
-        /// <summary>
-        ///     Determines the full file path for the SQLite database based on the current environment.
-        ///     Suffixes the database name with the environment name (e.g., Development) if not in Production.
-        /// </summary>
-        /// <returns>The full path to the SQLite database file.</returns>
-        public string GetSqliteDatabaseName()
-        {
-            string settingsDirectory = DatabaseDirectory;
-            string env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
-
-            string dbPath;
-            if ("Production".Equals(env, StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(env))
-            {
-                dbPath = Path.Combine(settingsDirectory, DatabaseName);
-            }
-            else
-            {
-                var f = new FileInfo(DatabaseName);
-                dbPath = Path.Combine(settingsDirectory, $"{f.Name}-{env.ToLower()}.{f.Extension}");
-            }
-
-            return dbPath;
-        }
-
-        /// <summary>
-        ///     Returns the connection string for this instance.
-        /// </summary>
-        /// <returns>The database connection string.</returns>
-        public override string ToString()
-        {
-            return GetSqliteConnectionString();
-        }
-
-        /// <summary>
-        ///     Checks if the SQLite database file exists on disk.
-        /// </summary>
-        /// <returns><c>true</c> if the database file exists; otherwise, <c>false</c>.</returns>
-        public bool DoesDatabaseExist()
-        {
-            return File.Exists(GetSqliteDatabaseName());
-        }
-
-        public async Task<SqliteConnection> OpenSqliteConnectionToFileAsync(string? file = null,
-            CancellationToken cancellationToken = default)
-        {
-            file ??= GetSqliteConnectionString();
-            var sb = new SqliteConnectionStringBuilder { DataSource = file, Mode = SqliteOpenMode.ReadWriteCreate };
-
-            return await OpenSqliteConnectionAsync(sb.ConnectionString, cancellationToken);
-        }
-
-        public async Task<IDbConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
-        {
-            string connectionString = GetSqliteConnectionString();
-
-            return await OpenSqliteConnectionAsync(connectionString, cancellationToken);
         }
     }
 }

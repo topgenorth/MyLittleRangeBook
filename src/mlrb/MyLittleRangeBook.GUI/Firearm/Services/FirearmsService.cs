@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Models;
 
@@ -13,14 +14,15 @@ namespace MyLittleRangeBook.GUI.Services
             _sqliteHelper = sqliteHelper;
         }
 
-        public async Task<bool> SaveFirearmAsync(Firearm firearm)
+        public async Task<bool> SaveFirearmAsync(Firearm firearm, CancellationToken cancellationToken)
         {
-            return await firearm.SaveAsync(await _sqliteHelper.OpenSqliteConnectionToFileAsync());
+            return await firearm.SaveAsync(await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken),
+                cancellationToken);
         }
 
-        public async Task<bool> DeleteFirearmEvent(Firearm firearm)
+        public async Task<bool> DeleteFirearmEvent(Firearm firearm, CancellationToken cancellationToken)
         {
-            return await firearm.DeleteAsync(await _sqliteHelper.OpenSqliteConnectionToFileAsync());
+            return await firearm.DeleteAsync(await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken));
         }
     }
 }

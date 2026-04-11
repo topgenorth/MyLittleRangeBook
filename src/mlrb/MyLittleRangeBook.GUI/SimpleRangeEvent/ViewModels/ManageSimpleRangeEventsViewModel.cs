@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -11,6 +12,8 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using DynamicData;
 using DynamicData.Binding;
+using DynamicData.Kernel;
+using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Database;
 using MyLittleRangeBook.GUI.Messages;
@@ -54,18 +57,21 @@ namespace MyLittleRangeBook.GUI.ViewModels
             WeakReferenceMessenger.Default.Register(this);
 
             // Get the current synchronization context for UI thread operations
-            var syncContext = SynchronizationContext.Current ??
-                              throw new InvalidOperationException("No SynchronizationContext provided.");
+            SynchronizationContext syncContext = SynchronizationContext.Current ??
+                                                 throw new InvalidOperationException(
+                                                     "No SynchronizationContext provided.");
 
             // Create reactive observable for text filtering with 300ms throttle to reduce frequent updates
-            var filterByFirearmOrRangeObservable = this.ObserveValue(nameof(FilterString),
+            IObservable<Func<SimpleRangeEventViewModel, bool>> filterByFirearmOrRangeObservable = this.ObserveValue(
+                    nameof(FilterString),
                     () => FilterString)
                 .Throttle(TimeSpan.FromMilliseconds(300))
                 .DistinctUntilChanged()
                 .Select(FilterByFirearmOrRangeObservable);
 
             // Create a reactive observable for sorting with a three-level sort priority
-            var sortObservable = this.ObserveValue(nameof(SortExpression1), () => SortExpression1)
+            IObservable<SortExpressionComparer<SimpleRangeEventViewModel>> sortObservable = this
+                .ObserveValue(nameof(SortExpression1), () => SortExpression1)
                 .CombineLatest(
                     this.ObserveValue(nameof(SortExpression2), () => SortExpression2),
                     this.ObserveValue(nameof(SortExpression3), () => SortExpression3),
@@ -135,7 +141,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
         public void Receive(UpdateDataMessage<SimpleRangeEvent> message)
         {
-            var updatedEvents = message.ItemsAffected;
+            SimpleRangeEvent[] updatedEvents = message.ItemsAffected;
             switch (message.Action)
             {
                 case UpdateAction.Added:
@@ -163,11 +169,12 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     Loads SimpleRangeEvents from the database and populates the source cache.
         ///     Creates ManageSimpleRangeEventsVM wrappers for each database item.
         /// </summary>
-        async Task LoadDataAsync()
+        async Task LoadDataAsync(CancellationToken cancellationToken = default)
         {
-            await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
+            await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
 
-            var simpleRangeEvents = await DatabaseHelper.GetSimpleRangeEventsAsync(connection);
+            IEnumerable<SimpleRangeEvent> simpleRangeEvents =
+                await DatabaseHelper.GetSimpleRangeEventsAsync(connection, cancellationToken);
 
             // Convert database items to ViewModels and add to cache
             _simpleRangeEventSourceCache.AddOrUpdate(simpleRangeEvents.Select(x => new SimpleRangeEventViewModel(x)));
@@ -191,18 +198,20 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteSimpleRangeEvent))]
-        async Task DeleteSimpleRangeEventAsync(SimpleRangeEventViewModel? simpleRangeEvent)
+        async Task DeleteSimpleRangeEventAsync(SimpleRangeEventViewModel? simpleRangeEvent,
+            CancellationToken cancellationToken = default)
         {
             if (simpleRangeEvent is null)
             {
                 return;
             }
 
-            var result = await this.ShowOverlayDialogAsync<DialogResult>("Delete the Range Event",
+            DialogResult result = await this.ShowOverlayDialogAsync<DialogResult>("Delete the Range Event",
                 "Are you sure you want to delete this range event?", DialogCommands.YesNoCancel);
 
-            await using var connection = await _sqliteHelper.OpenSqliteConnectionToFileAsync();
-            if (result == DialogResult.Yes && await simpleRangeEvent.ToSimpleRangeEvent().DeleteAsync(connection))
+            await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+            if (result == DialogResult.Yes &&
+                await simpleRangeEvent.ToSimpleRangeEvent().DeleteAsync(connection, cancellationToken))
             {
                 _simpleRangeEventSourceCache.Remove(simpleRangeEvent);
             }
@@ -217,7 +226,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             }
 
             var vm = new EditSimpleRangeEventViewModel(simpleRangeEvent.CloneSimpleRangeEventViewModel());
-            var result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
+            SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
                 "Edit the Range Event",
                 vm);
 
@@ -231,11 +240,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand]
         async Task RefreshAsync()
         {
-            var previousSelectedId = SelectedSimpleRangeEvent?.Id ?? -1;
+            long previousSelectedId = SelectedSimpleRangeEvent?.Id ?? -1;
             _simpleRangeEventSourceCache.Clear();
             await LoadDataAsync();
 
-            var previousEvent = _simpleRangeEventSourceCache.Lookup(previousSelectedId);
+            Optional<SimpleRangeEventViewModel> previousEvent = _simpleRangeEventSourceCache.Lookup(previousSelectedId);
 
             Dispatcher.UIThread.Post(() =>
                 SelectedSimpleRangeEvent = previousEvent.HasValue ? previousEvent.Value : null);

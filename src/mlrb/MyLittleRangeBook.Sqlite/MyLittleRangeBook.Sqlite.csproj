@@ -12,6 +12,7 @@
         <PackageReference Include="dbup" Version="5.0.41" />
         <PackageReference Include="dbup-sqlite" Version="6.0.4" />
         <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.5" />
         <PackageReference Include="Nanoid" Version="3.1.0"/>
         <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
     </ItemGroup>

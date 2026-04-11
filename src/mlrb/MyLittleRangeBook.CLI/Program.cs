@@ -8,11 +8,13 @@ using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
 using Spectre.Console;
 using SQLitePCL;
+using  MyLittleRangeBook.PgSQL;
 
 raw.SetProvider(new SQLite3Provider_e_sqlite3());
 Batteries.Init();
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+builder.Configuration.Sources.Clear();
 
 builder.Configuration
     .AddJsonFile("appsettings.json", true, true)
@@ -21,7 +23,8 @@ builder.Configuration
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
 builder.Services.TryAddSingleton<IXeroShotSessionParser, XeroShotSessionParser>();
-builder.Services.AddSqliteHelper();
+builder.Services.AddSqliteHelper(builder.Configuration);
+builder.Services.AddPostgresHelper(builder.Configuration);
 
 builder.Services.AddSerilog(lc =>
 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,7 +32,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
 
         [RelayCommand]
-        async Task SaveAsync()
+        async Task SaveAsync(CancellationToken cancellationToken = default)
         {
             Item.Validate();
             if (Item.HasErrors)
@@ -43,7 +44,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             }
 
             var simpleRangeEvent = Item.ToSimpleRangeEvent();
-            var success = await _rangeEventService.SaveRangeEventAsync(simpleRangeEvent);
+            var success = await _rangeEventService.SaveRangeEventAsync(simpleRangeEvent, cancellationToken);
             if (success)
             {
                 _dialogService.ReturnResultFromOverlayDialog(new SimpleRangeEventViewModel(simpleRangeEvent));
