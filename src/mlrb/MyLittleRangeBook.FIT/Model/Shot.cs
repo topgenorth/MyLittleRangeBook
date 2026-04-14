@@ -7,7 +7,7 @@ namespace MyLittleRangeBook.FIT.Model
     /// </summary>
     public class Shot
     {
-        public Shot()
+        public Shot(): this(Nanoid.Generate())
         {
         }
 
