@@ -1,7 +1,6 @@
 using CommunityToolkit.HighPerformance;
 using Dynastream.Fit;
 using FluentResults;
-using MyLittleRangeBook.CLI;
 using MyLittleRangeBook.FIT.Model;
 using File = System.IO.File;
 
@@ -12,7 +11,7 @@ namespace MyLittleRangeBook.FIT
     /// </summary>
     public class XeroShotSessionParser : IXeroShotSessionParser
     {
-        internal const int ExpectedFileType = 54;
+        internal const int ExpectedFileType = 54; // TODO [TO20260414] Change the name to a FITMessageType
         readonly FitListener _fitListener = new();
 
         readonly ILogger _logger;

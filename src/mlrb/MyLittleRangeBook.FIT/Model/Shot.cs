@@ -1,5 +1,4 @@
-﻿using MyLittleRangeBook.CLI;
-using NanoidDotNet;
+﻿using NanoidDotNet;
 
 namespace MyLittleRangeBook.FIT.Model
 {

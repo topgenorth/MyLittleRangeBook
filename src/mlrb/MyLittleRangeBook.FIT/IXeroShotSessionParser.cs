@@ -11,6 +11,7 @@ namespace MyLittleRangeBook.FIT
         /// <param name="filePath"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
+        // ReSharper disable once InconsistentNaming
         Task<Result<ShotSession>> DecodeFITFileAsync(string filePath, CancellationToken ct);
 
         /// <summary>
