@@ -52,8 +52,6 @@ builder.Services.AddSqliteHelper(builder.Configuration)
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
 
-
-
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 

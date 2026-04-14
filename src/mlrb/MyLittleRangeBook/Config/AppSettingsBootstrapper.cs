@@ -4,7 +4,6 @@ using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.Config
 {
-
     public class AppSettingsBootstrapper : IAppSettingsBootstrapper
     {
         const string DefaultAppSettingsJson = """
@@ -34,29 +33,37 @@ namespace MyLittleRangeBook.Config
         public async Task<string> EnsureAppSettingsExistsAsync(
             CancellationToken cancellationToken = default)
         {
-            Directory.CreateDirectory(DefaultUserSettingsDirectory);
-            FileInfo appSettingsInfo = new FileInfo(Path.Combine(DefaultUserSettingsDirectory, "appsettings.json"))
-                .InjectEnvironmentIntoFileName();
-
-            if (appSettingsInfo.Exists)
+            DefaultUserSettingsDirectory.Create();
+            if (DefaultAppSettingsFile.Exists)
             {
-                return appSettingsInfo.FullName;
+                return DefaultAppSettingsFile.FullName;
             }
+
+            string appSettingsFile = DefaultAppSettingsFile.FullName;
+
+            string defaultLogLevel = EnvironmentHelper.IsProduction ? "Error" :
+                EnvironmentHelper.IsStaging ? "Debug" : "Verbose";
 
             var node = JsonNode.Parse(DefaultAppSettingsJson);
             if (node != null)
             {
+                // [TO20260414] Just wondering if the Mode should be set to ReadWriteCreate?
                 node["ConnectionStrings"]!["SqliteConnection"] = $"Data Source={DefaultSqliteDatabaseName()}";
-                
+
+                JsonNode logLevelNode = node["Logging"]!["LogLevel"]!;
+                logLevelNode["Default"] = defaultLogLevel;
+                logLevelNode["Microsoft.Hosting.Lifetime"] =
+                    EnvironmentHelper.IsProduction ? "Error" : "Warning";
+
                 var options = new JsonSerializerOptions { WriteIndented = true };
-                await File.WriteAllTextAsync(appSettingsInfo.FullName, node.ToJsonString(options), cancellationToken);
+                await File.WriteAllTextAsync(appSettingsFile, node.ToJsonString(options), cancellationToken);
             }
             else
             {
-                await File.WriteAllTextAsync(appSettingsInfo.FullName, DefaultAppSettingsJson, cancellationToken);
+                await File.WriteAllTextAsync(appSettingsFile, DefaultAppSettingsJson, cancellationToken);
             }
 
-            return appSettingsInfo.FullName;
+            return appSettingsFile;
         }
     }
 }

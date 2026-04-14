@@ -12,7 +12,6 @@
         /// </remarks>
         /// <param name="cancellationToken"></param>
         /// <returns>The name of the appsettings.json file.</returns>
-        Task<string> EnsureAppSettingsExistsAsync(
-            CancellationToken cancellationToken = default);
+        Task<string> EnsureAppSettingsExistsAsync(CancellationToken cancellationToken = default);
     }
 }
