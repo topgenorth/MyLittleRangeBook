@@ -3,7 +3,6 @@ using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.CLI.Console;
-using MyLittleRangeBook.Database;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.PgSQL;
 using NanoidDotNet;

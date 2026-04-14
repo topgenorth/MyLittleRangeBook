@@ -10,16 +10,7 @@ namespace MyLittleRangeBook.Database.Sqlite
     /// </summary>
     public static class SqliteHelperExtensions
     {
-        internal static readonly string DatabaseName = "mlrb.db";
 
-        /// <summary>
-        ///     Gets the settings directory path for storing user configuration.
-        ///     Uses OS-specific local application data directory.
-        ///     Creates a dedicated folder for this application to avoid conflicts.
-        /// </summary>
-        internal static string DatabaseDirectory => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "MyLittleRangeBook");
 
         /// <summary>
         ///     Sets the SQLite3 provider and initializes the SQLite environment.
@@ -57,28 +48,5 @@ namespace MyLittleRangeBook.Database.Sqlite
             return services;
         }
 
-        /// <summary>
-        ///     Determines the full file path for the SQLite database based on the current environment.
-        ///     Suffixes the database name with the environment name (e.g., Development) if not in Production.
-        /// </summary>
-        /// <returns>The full path to the SQLite database file.</returns>
-        public static string GetSqliteDatabaseName()
-        {
-            string settingsDirectory = DatabaseDirectory;
-            string env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
-
-            string dbPath;
-            if ("Production".Equals(env, StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(env))
-            {
-                dbPath = Path.Combine(settingsDirectory, DatabaseName);
-            }
-            else
-            {
-                var f = new FileInfo(DatabaseName);
-                dbPath = Path.Combine(settingsDirectory, $"{f.Name}-{env.ToLower()}.{f.Extension}");
-            }
-
-            return dbPath;
-        }
     }
 }

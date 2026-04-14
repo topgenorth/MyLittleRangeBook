@@ -16,9 +16,22 @@ namespace MyLittleRangeBook.GUI.Services
         ///     Uses OS-specific local application data directory.
         ///     Creates a dedicated folder for this application to avoid conflicts.
         /// </summary>
-        internal static string SettingsDirectory => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "SimpleRangeLog");
+        internal static string SettingsDirectory
+        {
+            get
+            {
+                var settingsDirectory = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "SimpleRangeLog");
+
+                if (!OperatingSystem.IsWindows())
+                {
+                    settingsDirectory = settingsDirectory.ToLowerInvariant();
+                }
+
+                return settingsDirectory;
+            }
+        }
 
         /// <summary>
         ///     Gets the full path to the settings file.

@@ -44,10 +44,10 @@ namespace MyLittleRangeBook.CLI
                 return DATABASE_FILE_NOT_FOUND;
             }
 
-            var result = await _cliDisplay.RunStatusAsync("Loading FIT file...",
+            Result<ShotSession>? result = await _cliDisplay.RunStatusAsync("Loading FIT file...",
                 async ct =>
                 {
-                    var result = await _xeroParser.DecodeFITFileAsync(file, ct);
+                    Result<ShotSession> result = await _xeroParser.DecodeFITFileAsync(file, ct);
 
                     if (result.IsFailed)
                     {
@@ -56,7 +56,7 @@ namespace MyLittleRangeBook.CLI
                         return Result.Fail<ShotSession>(result.Errors);
                     }
 
-                    var shotSession = result.Value;
+                    ShotSession? shotSession = result.Value;
                     shotSession.FileName = file;
 
                     return Result.Ok(shotSession);
@@ -71,7 +71,7 @@ namespace MyLittleRangeBook.CLI
                 return result.HasError<UnsupportedFitFileTypeError>() ? FAILED_TO_PARSE : FAILED_TO_LOAD;
             }
 
-            var session = result.Value;
+            ShotSession? session = result.Value;
             DisplaySessionToConsole(_cliDisplay, session);
             _cliDisplay.WriteSuccess("FIT file loaded.");
 
@@ -80,10 +80,10 @@ namespace MyLittleRangeBook.CLI
 
         void DisplaySessionToConsole(ICliDisplay cliDisplay, ShotSession session)
         {
-            var title = new TableTitle("Session Stats").SetStyle(Style.Parse("bold"));
-            var captionStyle = Style.Parse("italic").Foreground(Color.White);
+            TableTitle title = new TableTitle("Session Stats").SetStyle(Style.Parse("bold"));
+            Style captionStyle = Style.Parse("italic").Foreground(Color.White);
 
-            var table = new Table()
+            Table table = new Table()
                 .Title(title)
                 .Caption($"File: {Path.GetFileName(session.FileName)}", captionStyle)
                 .Border(TableBorder.DoubleEdge);

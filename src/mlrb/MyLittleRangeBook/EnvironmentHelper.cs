@@ -1,4 +1,4 @@
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook
 {
     public static class EnvironmentHelper
     {
@@ -13,7 +13,7 @@ namespace MyLittleRangeBook.CLI
         {
             get
             {
-                var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "";
+                string env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "";
 
                 return string.IsNullOrWhiteSpace(env) || env.Equals("Production", StringComparison.OrdinalIgnoreCase);
             }
