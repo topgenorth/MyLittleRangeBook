@@ -14,8 +14,6 @@ using DynamicData;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using FluentResults;
-using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.Models;
@@ -40,6 +38,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
     {
         readonly IDialogService _dialogService;
         readonly ILogger _logger;
+        readonly ISimpleRangeEventRepository _repo;
 
         /// <summary>
         ///     Read-only collection bound to the UI for displaying filtered and sorted SimpleRangeEvents.
@@ -53,17 +52,12 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         readonly SourceCache<SimpleRangeEventViewModel, long> _simpleRangeEventSourceCache = new(x => x.Id ?? -1);
 
-        readonly ISimpleRangeLogService _simpleRangeLogService;
-        readonly ISqliteHelper _sqliteHelper;
 
-
-        public ManageSimpleRangeEventsViewModel(ISimpleRangeLogService simpleRangeLogService,
+        public ManageSimpleRangeEventsViewModel(ILogger logger,
             IDialogService dialogService,
-            ISqliteHelper sqliteHelper,
-            ILogger logger)
+            ISimpleRangeEventRepository repo)
         {
-            _sqliteHelper = sqliteHelper;
-            _simpleRangeLogService = simpleRangeLogService;
+            _repo = repo;
             _dialogService = dialogService;
             _logger = logger;
 
@@ -185,10 +179,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         async Task LoadDataAsync(CancellationToken cancellationToken = default)
         {
-            await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-
-            Result<IEnumerable<SimpleRangeEvent>> r =
-                await _simpleRangeLogService.GetSimpleRangeEventsAsync(connection, cancellationToken);
+            Result<IEnumerable<SimpleRangeEvent>> r = await _repo.GetSimpleRangeEventsAsync(cancellationToken);
 
             if (r.IsSuccess)
             {
@@ -234,10 +225,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
             if (result == DialogResult.Yes)
             {
-                await using SqliteConnection connection =
-                    await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
                 var x = simpleRangeEvent.ToSimpleRangeEvent();
-                Result<bool> r = await _simpleRangeLogService.DeleteAsync(connection, x, cancellationToken);
+                Result<bool> r = await _repo.DeleteAsync(x, cancellationToken);
 
                 if (r.IsSuccess)
                 {
@@ -254,10 +243,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            var vm = new EditSimpleRangeEventViewModel(
-                simpleRangeEvent,
-                _simpleRangeLogService,
-                _dialogService, _sqliteHelper, _logger);
+            var vm = new EditSimpleRangeEventViewModel(simpleRangeEvent, _logger, _dialogService, _repo);
 
             SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
                 "Edit the Range Event",
@@ -300,8 +286,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 }
 
                 // Search filter text in title and description (case-insensitive)
-                return (item.FirearmName?.Contains(filterText, StringComparison.OrdinalIgnoreCase) ?? false)
-                       || (item.RangeName?.Contains(filterText, StringComparison.OrdinalIgnoreCase) ?? false);
+                string firearmName = item.FirearmName ?? string.Empty;
+                string rangeName = item.RangeName ?? string.Empty;
+                return firearmName.Contains(filterText, StringComparison.OrdinalIgnoreCase)
+                       || rangeName.Contains(filterText, StringComparison.OrdinalIgnoreCase);
             };
         }
     }

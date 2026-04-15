@@ -12,11 +12,13 @@ namespace MyLittleRangeBook.Database.Sqlite
     /// </summary>
     public static class SqliteHelperExtensions
     {
+        // ReSharper disable once MemberCanBePrivate.Global
         public const string SQLITE_KEY = "sqlite";
         /// <summary>
         ///     Sets the SQLite3 provider and initializes the SQLite environment.
         ///     This should be called at application startup before any database operations.
         /// </summary>
+        // ReSharper disable once MemberCanBePrivate.Global
         public static void SetSqlite3ProviderAndInit()
         {
             raw.SetProvider(new SQLite3Provider_e_sqlite3());
@@ -24,9 +26,10 @@ namespace MyLittleRangeBook.Database.Sqlite
         }
 
         /// <summary>
-        ///     Add the necessary services to work with SQLite.  Some services are registered as keyed services.
+        ///     Register the necessary things in DI as keyed services.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection" /> to add the service to.</param>
+        /// <param name="configuration"></param>
         /// <returns>The original <see cref="IServiceCollection" /> for chaining.</returns>
         public static IServiceCollection AddMyLittleRangeBookSqlite(this IServiceCollection services, IConfiguration configuration)
         {
@@ -40,7 +43,9 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
 
             services.TryAddSingleton<ISqliteHelper>(new SqliteHelper(connectionString));
-            services.TryAddKeyedSingleton<ISimpleRangeLogService, SqliteSimpleRangeLogService>(SQLITE_KEY);
+            services.TryAddKeyedSingleton<ISimpleRangeLogService, SqliteSimpleRangeEventService>(SQLITE_KEY);
+            services.TryAddKeyedSingleton<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(SQLITE_KEY);
+
             services.TryAddKeyedSingleton<IFirearmsService, SqliteFirearmsService>(SQLITE_KEY);
 
             return services;

@@ -7,7 +7,7 @@ using NanoidDotNet;
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
-    public class SqliteSimpleRangeLogService : ISimpleRangeLogService
+    public class SqliteSimpleRangeEventService : ISimpleRangeLogService
     {
         const string SelectSql = """
                                  SELECT *

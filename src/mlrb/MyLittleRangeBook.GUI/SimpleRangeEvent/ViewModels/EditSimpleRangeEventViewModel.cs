@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using FluentResults;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.Services;
 using SharedControls.Controls;
@@ -15,21 +14,17 @@ namespace MyLittleRangeBook.GUI.ViewModels
     {
         readonly IDialogService _dialogService;
         readonly ILogger _logger;
-        readonly ISimpleRangeLogService _simpleRangeLogService;
-        readonly ISqliteHelper _sqliteHelper;
-
+        readonly ISimpleRangeEventRepository _repo;
 
         public EditSimpleRangeEventViewModel(SimpleRangeEventViewModel simpleRangeEvent,
-            ISimpleRangeLogService simpleRangeLogService,
+            ILogger logger,
             IDialogService dialogService,
-            ISqliteHelper sqliteHelper,
-            ILogger logger)
+            ISimpleRangeEventRepository repo)
         {
             Item = simpleRangeEvent;
-            _simpleRangeLogService = simpleRangeLogService;
             _dialogService = dialogService;
-            _sqliteHelper = sqliteHelper;
             _logger = logger;
+            _repo = repo;
         }
 
         public SimpleRangeEventViewModel Item { get; }
@@ -48,15 +43,12 @@ namespace MyLittleRangeBook.GUI.ViewModels
             }
 
             var simpleRangeEvent = Item.ToSimpleRangeEvent();
+
             try
             {
-                await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-                Result<long?> result =
-                    await _simpleRangeLogService.UpsertAsync(conn, simpleRangeEvent, cancellationToken);
+                Result<long?> result = await _repo.UpsertAsync(simpleRangeEvent, cancellationToken);
                 if (result.IsSuccess)
                 {
-                    _logger.Debug("SimpleRangeEvent {Id} saved RowId: {RowId}", simpleRangeEvent.Id,
-                        result.Value);
                     _dialogService.ReturnResultFromOverlayDialog(new SimpleRangeEventViewModel(simpleRangeEvent));
                 }
                 else

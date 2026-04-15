@@ -11,7 +11,6 @@ using MyLittleRangeBook.PgSQL;
 using Spectre.Console;
 using SQLitePCL;
 
-// [TO20260411] Make sure that we have appsettings.json.
 IAppSettingsBootstrapper appSettings = new AppSettingsBootstrapper();
 await appSettings.EnsureAppSettingsExistsAsync();
 
