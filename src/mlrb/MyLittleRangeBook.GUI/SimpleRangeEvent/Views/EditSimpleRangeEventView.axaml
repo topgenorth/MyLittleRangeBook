@@ -5,17 +5,17 @@
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
              xmlns:services="clr-namespace:SharedControls.Services;assembly=SharedControls"
              xmlns:converters="clr-namespace:SharedControls.Converters;assembly=SharedControls"
-             xmlns:viewModels1="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              xmlns:viewModels="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              services:DialogManager.Register="{Binding}"
              Width="{Binding $parent[controls:OverlayDialog].Bounds.Width, Converter={x:Static converters:MathConverter.Multiply}, ConverterParameter=0.7}"
              MaxWidth="700"
-             Design.DataContext="{x:Static viewModels:_DesignData.EditSimpleRangeEventViewModel}"
              x:Name="Root"
              x:Class="MyLittleRangeBook.GUI.Views.EditSimpleRangeEventView"
              x:DataType="viewModels:EditSimpleRangeEventViewModel">
 
+    <!--             Design.DataContext="{x:Static viewModels:_DesignData.EditSimpleRangeEventViewModel}"
+-->
     <Grid Margin="10"
           RowDefinitions="*, Auto"
           RowSpacing="10">

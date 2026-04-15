@@ -12,7 +12,7 @@ using NanoidDotNet;
 using DateTime = Dynastream.Fit.DateTime;
 using File = System.IO.File;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.FIT
 {
     public static class FitExtensions
     {
@@ -26,18 +26,19 @@ namespace MyLittleRangeBook.CLI
             return serialNumber == 0 ? Nanoid.Generate() : $"{serialNumber.ToString()}-0";
         }
 
+
         public static async Task<Result<ReadOnlyMemory<byte>>> LoadFitFileBytesAsync(this string filename,
             CancellationToken ct)
         {
             try
             {
-                var result = await File.ReadAllBytesAsync(filename, ct).ConfigureAwait(false);
+                byte[] result = await File.ReadAllBytesAsync(filename, ct).ConfigureAwait(false);
 
                 return Result.Ok<ReadOnlyMemory<byte>>(result);
             }
             catch (OperationCanceledException oce)
             {
-                var err = new Error($"Failed to read file {filename}").CausedBy(oce);
+                Error? err = new Error($"Failed to read file {filename}").CausedBy(oce);
 
                 return Result.Fail<ReadOnlyMemory<byte>>(err);
             }
@@ -76,7 +77,7 @@ namespace MyLittleRangeBook.CLI
 
         public static DateTime? GetTimestamp(this Mesg mesg)
         {
-            var val = mesg.GetFieldValue(TimestampFieldId);
+            object? val = mesg.GetFieldValue(TimestampFieldId);
             if (val == null)
             {
                 return null;
@@ -87,7 +88,7 @@ namespace MyLittleRangeBook.CLI
 
         public static DateTime? GetStartTime(this Mesg mesg)
         {
-            var val = mesg.GetFieldValue("StartTime");
+            object? val = mesg.GetFieldValue("StartTime");
             if (val == null)
             {
                 return null;
@@ -98,13 +99,13 @@ namespace MyLittleRangeBook.CLI
 
         public static DateTime? GetEndTime(this Mesg mesg)
         {
-            var startTime = mesg.GetStartTime();
+            DateTime? startTime = mesg.GetStartTime();
             if (startTime == null)
             {
                 return null;
             }
 
-            var val = mesg.GetFieldValue("TotalElapsedTime");
+            object? val = mesg.GetFieldValue("TotalElapsedTime");
             if (val == null)
             {
                 return null;
@@ -117,7 +118,7 @@ namespace MyLittleRangeBook.CLI
 
         public static string? GetValueAsString(this Mesg mesg, string name)
         {
-            var field = mesg.GetField(name, false);
+            Field? field = mesg.GetField(name, false);
             if (field == null)
             {
                 return null;

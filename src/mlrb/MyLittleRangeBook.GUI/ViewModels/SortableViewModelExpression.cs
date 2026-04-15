@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MyLittleRangeBook.GUI.ViewModels
+﻿namespace MyLittleRangeBook.GUI.ViewModels
 {
     public abstract class SortableViewModelExpression<T> : ISortableExpression<T> where T : ViewModelBase
     {

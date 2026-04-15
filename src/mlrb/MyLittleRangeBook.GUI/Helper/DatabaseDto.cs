@@ -1,4 +1,4 @@
-using MyLittleRangeBook.GUI.Models;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.GUI.Helper
 {

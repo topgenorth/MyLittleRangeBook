@@ -1,9 +1,10 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
+using FluentResults;
+using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.GUI.Services;
+using MyLittleRangeBook.Services;
 using SharedControls.Controls;
 using SharedControls.Services;
 
@@ -12,20 +13,18 @@ namespace MyLittleRangeBook.GUI.ViewModels
     public partial class EditSimpleRangeEventViewModel : ViewModelBase, IDialogParticipant
     {
         readonly IDialogService _dialogService;
-        readonly ISimpleRangeEventService _rangeEventService;
-
-        public EditSimpleRangeEventViewModel(SimpleRangeEventViewModel simpleRangeEvent) : this(simpleRangeEvent,
-            App.Services.GetRequiredService<ISimpleRangeEventService>(), null)
-        {
-        }
+        readonly ILogger _logger;
+        readonly ISimpleRangeEventRepository _repo;
 
         public EditSimpleRangeEventViewModel(SimpleRangeEventViewModel simpleRangeEvent,
-            ISimpleRangeEventService eventService,
-            IDialogService? dialogService)
+            ILogger logger,
+            IDialogService dialogService,
+            ISimpleRangeEventRepository repo)
         {
-            _dialogService = dialogService ?? new DialogService(this);
-            _rangeEventService = eventService;
             Item = simpleRangeEvent;
+            _dialogService = dialogService;
+            _logger = logger;
+            _repo = repo;
         }
 
         public SimpleRangeEventViewModel Item { get; }
@@ -44,13 +43,24 @@ namespace MyLittleRangeBook.GUI.ViewModels
             }
 
             var simpleRangeEvent = Item.ToSimpleRangeEvent();
-            var success = await _rangeEventService.SaveRangeEventAsync(simpleRangeEvent, cancellationToken);
-            if (success)
+
+            try
             {
-                _dialogService.ReturnResultFromOverlayDialog(new SimpleRangeEventViewModel(simpleRangeEvent));
+                Result<long?> result = await _repo.UpsertAsync(simpleRangeEvent, cancellationToken);
+                if (result.IsSuccess)
+                {
+                    _dialogService.ReturnResultFromOverlayDialog(new SimpleRangeEventViewModel(simpleRangeEvent));
+                }
+                else
+                {
+                    await _dialogService.ShowOverlayDialogAsync<bool>("Error",
+                        "An error occured while trying to save the event.",
+                        DialogCommands.Ok);
+                }
             }
-            else
+            catch (Exception e)
             {
+                _logger.Error(e, "Failed to save simple range event {Id}.", simpleRangeEvent.Id);
                 await _dialogService.ShowOverlayDialogAsync<bool>("Error",
                     "An error occured while trying to save the event.",
                     DialogCommands.Ok);
@@ -61,7 +71,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         async Task CancelAsync()
         {
             DialogCommand[] commands = [DialogCommands.No, DialogCommands.Yes];
-            var userResponse = await _dialogService.ShowOverlayDialogAsync<DialogResult>(
+            DialogResult userResponse = await _dialogService.ShowOverlayDialogAsync<DialogResult>(
                 "Cancel editing?",
                 "Do you want to discard your changes?",
                 commands);
@@ -74,6 +84,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
                     break;
                 case DialogResult.No:
                     break;
+                case DialogResult.None:
+                case DialogResult.Ok:
+                case DialogResult.Cancel:
                 default:
                     throw new ArgumentOutOfRangeException();
             }

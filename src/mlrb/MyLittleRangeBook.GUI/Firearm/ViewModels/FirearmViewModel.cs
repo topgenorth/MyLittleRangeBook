@@ -1,8 +1,7 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
-using MyLittleRangeBook.GUI.Models;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.GUI.ViewModels
 {

@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -12,11 +12,13 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using DynamicData;
 using DynamicData.Kernel;
+using FluentResults;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
-using MyLittleRangeBook.GUI.Database;
 using MyLittleRangeBook.GUI.Messages;
-using MyLittleRangeBook.GUI.Models;
+using MyLittleRangeBook.GUI.Services;
+using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Services;
 using SharedControls.Controls;
 using SharedControls.Helper;
 using SharedControls.Services;
@@ -30,14 +32,23 @@ namespace MyLittleRangeBook.GUI.ViewModels
     public partial class ManageFirearmsViewModel : ViewModelBase, IDialogParticipant,
         IRecipient<UpdateDataMessage<Firearm>>
     {
+        readonly IDialogService _dialogService;
+        readonly IFirearmsService _firearmsService;
         readonly SourceCache<FirearmViewModel, long> _firearmViewModelCache = new(x => x.Id ?? -1);
 
         readonly ReadOnlyObservableCollection<FirearmViewModel> _firearmViewModels;
+        readonly ILogger _logger;
         readonly ISqliteHelper _sqliteHelper;
 
-        public ManageFirearmsViewModel(ISqliteHelper sqliteHelper)
+        public ManageFirearmsViewModel(IFirearmsService firearmsService,
+            IDialogService dialogService,
+            ISqliteHelper sqliteHelper,
+            ILogger logger)
         {
             _sqliteHelper = sqliteHelper;
+            _firearmsService = firearmsService;
+            _dialogService = dialogService;
+            _logger = logger;
             WeakReferenceMessenger.Default.Register(this);
 
             // Get the current synchronization context for UI thread operations
@@ -112,9 +123,29 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand]
         async Task LoadDataAsync(CancellationToken cancellationToken = default)
         {
-            await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-            IEnumerable<Firearm> firearms = await DatabaseHelper.GetFirearmsAsync(connection, cancellationToken);
-            _firearmViewModelCache.AddOrUpdate(firearms.Select(x => new FirearmViewModel(x)));
+            try
+            {
+                await using SqliteConnection connection =
+                    await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+                Result<IEnumerable<Firearm>> result =
+                    await _firearmsService.GetFirearmsAsync(connection, cancellationToken);
+
+                if (result.IsSuccess)
+                {
+                    _firearmViewModelCache.AddOrUpdate(result.Value.Select(x => new FirearmViewModel(x)));
+                }
+                else
+                {
+                    var msg = new StringBuilder("There was a problem trying to get the range events.");
+                    result.Reasons.ForEach(x => msg.AppendLine(x.Message));
+                    _logger.Error(msg.ToString());
+                    _firearmViewModelCache.Clear();
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Failed to load firearms.");
+            }
         }
 
         [RelayCommand]
@@ -141,11 +172,25 @@ namespace MyLittleRangeBook.GUI.ViewModels
             DialogResult result = await this.ShowOverlayDialogAsync<DialogResult>("Delete the Firearm",
                 "Are you sure you want to delete this Firearm?", DialogCommands.YesNoCancel);
 
-            await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-            if (result == DialogResult.Yes && await firearm.ToFirearm().DeleteAsync(connection, cancellationToken))
+            if (result == DialogResult.Yes)
             {
-                _firearmViewModelCache.Remove(firearm);
+                try
+                {
+                    await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+                    Result<bool> r = await _firearmsService.DeleteAsync(connection, firearm.ToFirearm(), cancellationToken);
+                    if (r.IsSuccess)
+                    {
+                        _firearmViewModelCache.Remove(firearm);
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    _logger.Error(e, "Failed to delete firearm {Id}.", firearm.Id);
+                }
             }
+
+
         }
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteFirearm))]
@@ -156,9 +201,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            var vm = new EditFirearmViewModel(firearm.CloneFirearmViewModel());
+            var vm = new EditFirearmViewModel(firearm.CloneFirearmViewModel(), _firearmsService, _dialogService, _sqliteHelper, _logger);
             FirearmViewModel? result = await this.ShowDialogWindow<FirearmViewModel>(
                 "Edit firearm", firearm);
+
+
 
             if (result is not null)
             {

@@ -1,4 +1,3 @@
-using MyLittleRangeBook.CLI;
 using NanoidDotNet;
 
 namespace MyLittleRangeBook.FIT.Model
@@ -8,13 +7,11 @@ namespace MyLittleRangeBook.FIT.Model
     /// </summary>
     public class ShotSession
     {
-        readonly ShotCollection _shots = [];
-
 #pragma warning disable CS0414 // Field is assigned but its value is never used
         readonly uint _xeroSerialNumber;
 #pragma warning restore CS0414 // Field is assigned but its value is never used
 
-        public ShotSession() : this(Nanoid.Generate())
+        public ShotSession() : this($"{Nanoid.Generate()}-0")
         {
         }
 
@@ -45,8 +42,8 @@ namespace MyLittleRangeBook.FIT.Model
 
         public string FileName { get; set; }
 
-        public DateTime DateTimeUtc { get; set; }
-        public int ShotCount => _shots.Count;
+        public DateTimeOffset DateTimeUtc { get; set; }
+        public int ShotCount => Shots.Count;
         public int ProjectileWeight { get; set; }
         public string ProjectileType { get; set; }
 
@@ -56,7 +53,8 @@ namespace MyLittleRangeBook.FIT.Model
 
         public double StandardDeviation { get; set; }
 
-        public ShotCollection Shots => _shots;
+        public ShotCollection Shots { get; } = [];
+
         public uint SerialNumber { get; set; }
 
         public string Notes { get; set; }
@@ -72,20 +70,20 @@ namespace MyLittleRangeBook.FIT.Model
 
         public void AddShot(Shot shot)
         {
-            if (_shots.Contains(shot))
+            if (Shots.Contains(shot))
                 // TODO [TO20240928] Could check the .Id value, if these are the same, then "add" becomes "replace".
             {
                 throw new ArgumentException($"The collection already has a shot number {shot.ShotNumber}");
             }
 
-            _shots.Add(shot);
+            Shots.Add(shot);
         }
 
 
         public override string ToString()
         {
             return
-                $"{_shots.Count} shots. Avg: {AverageSpeed} {VelocityUnits}, Max: {MaxSpeed} {VelocityUnits}, Min: {MinSpeed} {VelocityUnits}, SD: {StandardDeviation:F1} {VelocityUnits}";
+                $"{Shots.Count} shots. Avg: {AverageSpeed} {VelocityUnits}, Max: {MaxSpeed} {VelocityUnits}, Min: {MinSpeed} {VelocityUnits}, SD: {StandardDeviation:F1} {VelocityUnits}";
         }
     }
 }

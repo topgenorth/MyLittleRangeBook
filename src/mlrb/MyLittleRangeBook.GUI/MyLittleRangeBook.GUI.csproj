@@ -99,6 +99,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Database\Sqlite\" />
+      <Folder Include="Firearm\Models\" />
+      <Folder Include="SimpleRangeEvent\Models\" />
     </ItemGroup>
 </Project>

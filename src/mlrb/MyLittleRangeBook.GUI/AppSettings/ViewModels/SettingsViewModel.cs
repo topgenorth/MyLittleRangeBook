@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -16,8 +15,8 @@ using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Database;
 using MyLittleRangeBook.GUI.Helper;
 using MyLittleRangeBook.GUI.Messages;
-using MyLittleRangeBook.GUI.Models;
 using MyLittleRangeBook.GUI.Properties;
+using MyLittleRangeBook.Models;
 using SharedControls.Controls;
 using SharedControls.Services;
 using JsonContextHelper = MyLittleRangeBook.GUI.Helper.JsonContextHelper;
@@ -61,7 +60,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand]
         async Task ExportDataAsync(CancellationToken cancellationToken = default)
         {
-            try
+            throw new NotImplementedException();
+            /*try
             {
                 // Show the file save dialog for the user to choose an export location
                 SaveFilePickerResult? safeFilePickerResult = await this.SafeFileDialogAsync("Export Data",
@@ -94,7 +94,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             {
                 await this.ShowOverlayDialogAsync<DialogResult>("Could not export the data",
                     e.Message, DialogCommands.OkOnly);
-            }
+            }*/
         }
 
         /// <summary>
@@ -104,7 +104,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand]
         async Task ImportDataAsync(CancellationToken cancellationToken = default)
         {
-            try
+            throw new NotImplementedException();
+            /*try
             {
                 // NOTE: Existing items will be updated / overridden. You may want to let the user choose
                 // how to handle it.
@@ -143,7 +144,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             {
                 await this.ShowOverlayDialogAsync<DialogResult>("Error importing JSON file",
                     e.Message, DialogCommands.OkOnly);
-            }
+            }*/
         }
 
         /// <summary>

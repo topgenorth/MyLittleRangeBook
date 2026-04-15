@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MyLittleRangeBook.GUI.Helper
+﻿namespace MyLittleRangeBook.GUI.Helper
 {
     public static class EnvironmentHelper
     {

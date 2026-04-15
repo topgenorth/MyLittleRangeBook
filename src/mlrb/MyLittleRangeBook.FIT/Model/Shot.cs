@@ -1,5 +1,4 @@
-﻿using MyLittleRangeBook.CLI;
-using NanoidDotNet;
+﻿using NanoidDotNet;
 
 namespace MyLittleRangeBook.FIT.Model
 {
@@ -8,7 +7,7 @@ namespace MyLittleRangeBook.FIT.Model
     /// </summary>
     public class Shot
     {
-        public Shot()
+        public Shot(): this(Nanoid.Generate())
         {
         }
 

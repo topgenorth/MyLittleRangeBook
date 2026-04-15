@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using MyLittleRangeBook.Services;
 using SQLitePCL;
 
 namespace MyLittleRangeBook.Database.Sqlite
@@ -10,12 +12,13 @@ namespace MyLittleRangeBook.Database.Sqlite
     /// </summary>
     public static class SqliteHelperExtensions
     {
-
-
+        // ReSharper disable once MemberCanBePrivate.Global
+        public const string SQLITE_KEY = "sqlite";
         /// <summary>
         ///     Sets the SQLite3 provider and initializes the SQLite environment.
         ///     This should be called at application startup before any database operations.
         /// </summary>
+        // ReSharper disable once MemberCanBePrivate.Global
         public static void SetSqlite3ProviderAndInit()
         {
             raw.SetProvider(new SQLite3Provider_e_sqlite3());
@@ -23,17 +26,13 @@ namespace MyLittleRangeBook.Database.Sqlite
         }
 
         /// <summary>
-        ///     Registers the <see cref="ISqliteHelper" /> service and initializes the SQLite provider.
+        ///     Register the necessary things in DI as keyed services.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection" /> to add the service to.</param>
+        /// <param name="configuration"></param>
         /// <returns>The original <see cref="IServiceCollection" /> for chaining.</returns>
-        public static IServiceCollection AddSqliteHelper(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddMyLittleRangeBookSqlite(this IServiceCollection services, IConfiguration configuration)
         {
-            if (services.Any(x => x.ServiceType == typeof(ISqliteHelper)))
-            {
-                return services;
-            }
-
             SetSqlite3ProviderAndInit();
 
             string? connectionString = configuration.GetConnectionString("SqliteConnection");
@@ -43,10 +42,14 @@ namespace MyLittleRangeBook.Database.Sqlite
                     "SQLite connection string 'SqliteConnection' is not configured.");
             }
 
-            services.AddSingleton<ISqliteHelper>(new SqliteHelper(connectionString));
+            services.TryAddSingleton<ISqliteHelper>(new SqliteHelper(connectionString));
+
+            services.TryAddKeyedSingleton<ISimpleRangeLogService, SqliteSimpleRangeEventService>(SQLITE_KEY);
+            services.TryAddKeyedSingleton<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(SQLITE_KEY);
+
+            services.TryAddKeyedSingleton<IFirearmsService, SqliteFirearmsService>(SQLITE_KEY);
 
             return services;
         }
-
     }
 }
