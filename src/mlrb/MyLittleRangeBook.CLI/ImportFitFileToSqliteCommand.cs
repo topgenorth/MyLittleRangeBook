@@ -12,7 +12,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
     /// <summary>
     ///     Provides functionality to import FIT files into a SQLite database.
     /// </summary>
-    [RegisterCommands("import fit")]
+    [RegisterCommands("fit import")]
     public class ImportFitFileToSqliteCommand
     {
         readonly ICliDisplay _cliDisplay;

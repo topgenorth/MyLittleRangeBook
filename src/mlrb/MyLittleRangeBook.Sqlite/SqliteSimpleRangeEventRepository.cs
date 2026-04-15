@@ -1,6 +1,8 @@
 ﻿using FluentResults;
+using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
+using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
@@ -11,7 +13,7 @@ namespace MyLittleRangeBook.Database.Sqlite
         readonly ISqliteHelper _sqliteHelper;
 
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
-            ISimpleRangeLogService simpleRangeLogService,
+            [FromKeyedServices(SQLITE_KEY)] ISimpleRangeLogService simpleRangeLogService,
             ILogger logger)
         {
             _sqliteHelper = sqliteHelper;
@@ -31,8 +33,11 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
             else
             {
-                _logger.Debug("SimpleRangeEvent {Id} could not be saved. RowId {RowId}", simpleRangeEvent.Id,
+                _logger.Warning("SimpleRangeEvent {Id} could not be saved. RowId {RowId}", simpleRangeEvent.Id,
                     result.Value ?? -1);
+                Error? reason  = new Error("SimpleRangeEvent could not be saved")
+                    .WithMetadata("DataSource", conn.DataSource);
+                result = result.WithError(reason);
             }
 
             return result;

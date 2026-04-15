@@ -43,6 +43,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
 
             services.TryAddSingleton<ISqliteHelper>(new SqliteHelper(connectionString));
+
             services.TryAddKeyedSingleton<ISimpleRangeLogService, SqliteSimpleRangeEventService>(SQLITE_KEY);
             services.TryAddKeyedSingleton<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(SQLITE_KEY);
 

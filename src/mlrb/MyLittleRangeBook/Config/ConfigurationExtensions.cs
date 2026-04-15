@@ -20,7 +20,7 @@
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             DefaultLocalAppDataFolder));
 
-        internal static FileInfo DefaultAppSettingsFile =>
+        public static FileInfo DefaultAppSettingsFile =>
             new FileInfo(Path.Combine(DefaultUserSettingsDirectory.FullName, AppSettingsFileName))
                 .InjectEnvironmentIntoFileName();
 

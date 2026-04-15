@@ -11,5 +11,6 @@
         public const int SQL_FILE_NOT_FOUND = 5;
         public const int FAILED_TO_RUN_SQL = 6;
         public const int FIT_FILE_NOT_FOUND = 7;
+        public const int FAILED_TO_CREATE_RANGE_EVENT = 9;
     }
 }

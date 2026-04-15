@@ -9,20 +9,18 @@ using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.PgSQL;
 using Spectre.Console;
-using SQLitePCL;
+using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
 IAppSettingsBootstrapper appSettings = new AppSettingsBootstrapper();
 await appSettings.EnsureAppSettingsExistsAsync();
-
-raw.SetProvider(new SQLite3Provider_e_sqlite3());
-Batteries.Init();
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.Sources.Clear();
 
 builder.Configuration
     .AddJsonFile("appsettings.json", true, true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
+    .AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
 
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
