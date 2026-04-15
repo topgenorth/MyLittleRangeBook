@@ -1,7 +1,7 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.GUI.Helper;
-using MyLittleRangeBook.GUI.Models;
+using MyLittleRangeBook.Models;
 using NanoidDotNet;
 
 namespace MyLittleRangeBook.GUI.Tests

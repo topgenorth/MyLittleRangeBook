@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -13,11 +13,13 @@ using CommunityToolkit.Mvvm.Messaging;
 using DynamicData;
 using DynamicData.Binding;
 using DynamicData.Kernel;
+using FluentResults;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
-using MyLittleRangeBook.GUI.Database;
 using MyLittleRangeBook.GUI.Messages;
-using MyLittleRangeBook.GUI.Models;
+using MyLittleRangeBook.GUI.Services;
+using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Services;
 using SharedControls.Controls;
 using SharedControls.Helper;
 using SharedControls.Services;
@@ -36,6 +38,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
     public partial class ManageSimpleRangeEventsViewModel : ViewModelBase, IDialogParticipant,
         IRecipient<UpdateDataMessage<SimpleRangeEvent>>
     {
+        readonly IDialogService _dialogService;
+        readonly ILogger _logger;
+
         /// <summary>
         ///     Read-only collection bound to the UI for displaying filtered and sorted SimpleRangeEvents.
         ///     Automatically updated through the reactive pipeline.
@@ -48,11 +53,20 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         readonly SourceCache<SimpleRangeEventViewModel, long> _simpleRangeEventSourceCache = new(x => x.Id ?? -1);
 
+        readonly ISimpleRangeLogService _simpleRangeLogService;
         readonly ISqliteHelper _sqliteHelper;
 
-        public ManageSimpleRangeEventsViewModel(ISqliteHelper sqliteHelper)
+
+        public ManageSimpleRangeEventsViewModel(ISimpleRangeLogService simpleRangeLogService,
+            IDialogService dialogService,
+            ISqliteHelper sqliteHelper,
+            ILogger logger)
         {
             _sqliteHelper = sqliteHelper;
+            _simpleRangeLogService = simpleRangeLogService;
+            _dialogService = dialogService;
+            _logger = logger;
+
             // Register for message notifications from other ViewModels
             WeakReferenceMessenger.Default.Register(this);
 
@@ -173,11 +187,20 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
 
-            IEnumerable<SimpleRangeEvent> simpleRangeEvents =
-                await DatabaseHelper.GetSimpleRangeEventsAsync(connection, cancellationToken);
+            Result<IEnumerable<SimpleRangeEvent>> r =
+                await _simpleRangeLogService.GetSimpleRangeEventsAsync(connection, cancellationToken);
 
-            // Convert database items to ViewModels and add to cache
-            _simpleRangeEventSourceCache.AddOrUpdate(simpleRangeEvents.Select(x => new SimpleRangeEventViewModel(x)));
+            if (r.IsSuccess)
+            {
+                _simpleRangeEventSourceCache.AddOrUpdate(r.Value.Select(x => new SimpleRangeEventViewModel(x)));
+            }
+            else
+            {
+                var msg = new StringBuilder("There was a problem trying to get the range events.");
+                r.Reasons.ForEach(x => msg.AppendLine(x.Message));
+                _logger.Error(msg.ToString());
+                _simpleRangeEventSourceCache.Clear();
+            }
         }
 
         [RelayCommand]
@@ -209,11 +232,17 @@ namespace MyLittleRangeBook.GUI.ViewModels
             DialogResult result = await this.ShowOverlayDialogAsync<DialogResult>("Delete the Range Event",
                 "Are you sure you want to delete this range event?", DialogCommands.YesNoCancel);
 
-            await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-            if (result == DialogResult.Yes &&
-                await simpleRangeEvent.ToSimpleRangeEvent().DeleteAsync(connection, cancellationToken))
+            if (result == DialogResult.Yes)
             {
-                _simpleRangeEventSourceCache.Remove(simpleRangeEvent);
+                await using SqliteConnection connection =
+                    await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+                var x = simpleRangeEvent.ToSimpleRangeEvent();
+                Result<bool> r = await _simpleRangeLogService.DeleteAsync(connection, x, cancellationToken);
+
+                if (r.IsSuccess)
+                {
+                    _simpleRangeEventSourceCache.Remove(simpleRangeEvent);
+                }
             }
         }
 
@@ -225,7 +254,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            var vm = new EditSimpleRangeEventViewModel(simpleRangeEvent.CloneSimpleRangeEventViewModel());
+            var vm = new EditSimpleRangeEventViewModel(
+                simpleRangeEvent,
+                _simpleRangeLogService,
+                _dialogService, _sqliteHelper, _logger);
+
             SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
                 "Edit the Range Event",
                 vm);

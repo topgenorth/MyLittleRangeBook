@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -37,11 +36,9 @@ namespace MyLittleRangeBook.GUI
 
             var services = new ServiceCollection();
             services.AddSingleton<IConfiguration>(configuration);
-            services.AddSqliteHelper(configuration);
+            services.AddMyLittleRangeBookSqlite(configuration);
 
             services.TryAddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
-            services.TryAddSingleton<ISimpleRangeEventService, SimpleRangeEventService>();
-            services.TryAddSingleton<IFirearmsService, FirearmsService>();
 
             services.AddTransient<MainViewModel>();
             services.AddTransient<ManageSimpleRangeEventsViewModel>();

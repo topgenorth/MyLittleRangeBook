@@ -28,7 +28,7 @@ builder.Configuration
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
 builder.Services.TryAddSingleton<IXeroShotSessionParser, XeroShotSessionParser>();
-builder.Services.AddSqliteHelper(builder.Configuration)
+builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration)
     .AddPostgresHelper(builder.Configuration)
     .AddSerilog(lc =>
     {

@@ -1,9 +1,8 @@
-using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Avalonia.Media;
-using MyLittleRangeBook.GUI.Models;
 using MyLittleRangeBook.GUI.Properties;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.GUI.Helper
 {

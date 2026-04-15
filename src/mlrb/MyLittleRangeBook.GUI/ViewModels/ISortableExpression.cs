@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MyLittleRangeBook.GUI.ViewModels
+﻿namespace MyLittleRangeBook.GUI.ViewModels
 {
     public interface ISortableExpression<in T> where T : ViewModelBase
     {

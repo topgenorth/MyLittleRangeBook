@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MyLittleRangeBook.GUI.ViewModels
+﻿namespace MyLittleRangeBook.GUI.ViewModels
 {
     public class FirearmsSortExpression : SortableViewModelExpression<FirearmViewModel>
     {

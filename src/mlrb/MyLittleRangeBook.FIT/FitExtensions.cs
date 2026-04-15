@@ -14,7 +14,7 @@ using File = System.IO.File;
 
 namespace MyLittleRangeBook.FIT
 {
-    static class FitExtensions
+    public static class FitExtensions
     {
         const double MetresToFeet = 3.2808399;
         const byte TimestampFieldId = 253;

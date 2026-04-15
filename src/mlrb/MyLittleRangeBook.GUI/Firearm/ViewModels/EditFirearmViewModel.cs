@@ -1,9 +1,11 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
+using FluentResults;
+using Microsoft.Data.Sqlite;
+using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Services;
+using MyLittleRangeBook.Services;
 using SharedControls.Controls;
 using SharedControls.Services;
 
@@ -13,20 +15,22 @@ namespace MyLittleRangeBook.GUI.ViewModels
     {
         readonly IDialogService _dialogService;
         readonly IFirearmsService _firearmsService;
+        readonly ILogger _logger;
+        readonly ISqliteHelper _sqliteHelper;
 
-        public EditFirearmViewModel(FirearmViewModel firearmViewModel) : this(firearmViewModel,
-            App.Services.GetRequiredService<IFirearmsService>(), null)
-        {
-        }
-
-        public EditFirearmViewModel(FirearmViewModel firearmViewModel,
+        public EditFirearmViewModel(FirearmViewModel firearm,
             IFirearmsService firearmsService,
-            IDialogService? dialogService)
+            IDialogService dialogService,
+            ISqliteHelper sqliteHelper,
+            ILogger logger)
         {
-            _dialogService = dialogService ?? new DialogService(this);
+            Item = firearm;
             _firearmsService = firearmsService;
-            Item = firearmViewModel;
+            _dialogService = dialogService;
+            _logger = logger;
+            _sqliteHelper = sqliteHelper;
         }
+
 
         public FirearmViewModel Item { get; }
 
@@ -43,15 +47,27 @@ namespace MyLittleRangeBook.GUI.ViewModels
             }
 
             var f = Item.ToFirearm();
-            bool success = await _firearmsService.SaveFirearmAsync(f, cancellationToken);
-            if (success)
+            try
             {
-                _dialogService.ReturnResultFromOverlayDialog(new FirearmViewModel(f));
+                SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+                Result<long?> result = await _firearmsService.UpsertAsync(connection, f, cancellationToken);
+                if (result.IsSuccess)
+                {
+                    _logger.Debug("Firearm {Id} saved RowId: {RowId}", f.Id, result.Value);
+                    _dialogService.ReturnResultFromOverlayDialog(new FirearmViewModel(f));
+                }
+                else
+                {
+                    await _dialogService.ShowOverlayDialogAsync<bool>("Error",
+                        "An error occured while trying to save the firearm.",
+                        DialogCommands.Ok);
+                }
             }
-            else
+            catch (Exception ex)
             {
+                _logger.Error(ex, "Failed to save firearm {Id}.", f.Id);
                 await _dialogService.ShowOverlayDialogAsync<bool>("Error",
-                    "An error occured while trying to save the firearm.",
+                    $"An unexpected error occured while trying to save the firearm: {ex.Message}",
                     DialogCommands.Ok);
             }
         }

@@ -1,6 +1,12 @@
-using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Linq;
-using MyLittleRangeBook.GUI.Models;
+using System.Threading;
+using System.Threading.Tasks;
+using FluentResults;
+using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Services;
+using Serilog.Events;
 
 namespace MyLittleRangeBook.GUI.ViewModels
 {
@@ -71,14 +77,14 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         static _DesignData()
         {
-            EditSimpleRangeEventViewModel =
-                new EditSimpleRangeEventViewModel(new SimpleRangeEventViewModel(TestRangeEvents.First()));
+            // EditSimpleRangeEventViewModel =
+            //     new EditSimpleRangeEventViewModel(new SimpleRangeEventViewModel(TestRangeEvents.First()));
         }
 
         /// <summary>
         ///     Gets the design-time data instance for the EditCategoryView.
         ///     Used by the visual designer to display a realistic category editing interface.
         /// </summary>
-        public static EditSimpleRangeEventViewModel EditSimpleRangeEventViewModel { get; }
+        public static EditSimpleRangeEventViewModel? EditSimpleRangeEventViewModel { get; }
     }
 }
