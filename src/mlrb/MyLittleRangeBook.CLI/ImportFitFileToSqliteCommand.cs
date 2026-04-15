@@ -15,6 +15,9 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
     [RegisterCommands("fit import")]
     public class ImportFitFileToSqliteCommand
     {
+        const string InsertFitFileSql =
+            @"INSERT INTO fitfiles (id, filename, filecontents) VALUES (@id, @filename, @filecontents)";
+
         readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
         readonly ISqliteHelper _sqliteHelper;
@@ -95,6 +98,8 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 _logger.Error("Failed to load FIT  {fitFile}.", fitFile);
                 var err = new FailedToLoadFitFileError(fitFile);
                 var r = Result.Fail(err);
+
+                return r;
             }
 
             byte[] bytesToSave = fileContents.Value.ToArray();
@@ -140,9 +145,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             string filename,
             CancellationToken cancellationToken = default)
         {
-            var cmd = new SqliteCommand(
-                "INSERT INTO FitFiles (Id, Filename, Contents) VALUES (@id, @filename, @filecontents) RETURNING RowId",
-                connection);
+            var cmd = new SqliteCommand(InsertFitFileSql, connection);
             cmd.Parameters.AddWithValue("@id", await Nanoid.GenerateAsync());
             cmd.Parameters.AddWithValue("@filename", filename);
             cmd.Parameters.AddWithValue("@filecontents", fileContents);

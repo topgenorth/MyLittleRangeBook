@@ -106,7 +106,6 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
             }
             catch (Exception e)
             {
-                rowId = -1;
                 _logger.Error(e, "Failed to save {bytes} bytes from FIT fitFile {fitFile} to database.",
                     bytesToSave.Length, sourceFile);
 

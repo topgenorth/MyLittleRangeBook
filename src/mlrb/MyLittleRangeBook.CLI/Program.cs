@@ -30,6 +30,7 @@ builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration)
     .AddSerilog(lc =>
     {
         lc.WriteTo.Console();
+        lc.WriteTo.Debug();
 
         if (builder.Environment.IsProduction())
         {

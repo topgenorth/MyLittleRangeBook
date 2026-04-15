@@ -165,7 +165,7 @@ namespace MyLittleRangeBook.CLI.Database
                     {
                         try
                         {
-                            var connectionString = new SqliteConnectionStringBuilder(file).ConnectionString;
+                            string connectionString = new SqliteConnectionStringBuilder(file).ConnectionString;
                             UpgradeEngine? upgrader = DeployChanges.To
                                 .SqliteDatabase(connectionString)
                                 .WithScriptsEmbeddedInAssembly(typeof(SqliteMigrator).Assembly)
