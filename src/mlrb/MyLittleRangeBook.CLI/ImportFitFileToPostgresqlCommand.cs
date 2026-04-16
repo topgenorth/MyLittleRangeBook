@@ -14,6 +14,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
     ///     Command for importing a Garmin FIT file into a PostgreSQL database.
     /// </summary>
     [RegisterCommands("fit import")]
+    [Hidden]
     public class ImportFitFileToPostgresqlCommand
     {
         readonly ICliDisplay _cliDisplay;

@@ -5,11 +5,15 @@ using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
+using Spectre.Console;
 using static MyLittleRangeBook.CLI.ReturnCodes;
 using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
 
 namespace MyLittleRangeBook.CLI
 {
+    /// <summary>
+    /// Allows us to create a new Range Event from the CLI.
+    /// </summary>
     [RegisterCommands("rangetrip")]
     [UsedImplicitly]
     public class AddSimpleRangeEventCommand
@@ -40,14 +44,40 @@ namespace MyLittleRangeBook.CLI
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("add")]
-        public async Task<int> AddSimpleRangeEventAsync(string firearm,
-            int rounds,
+        public async Task<int> AddSimpleRangeEventAsync(string firearm = "",
+            int rounds = 0,
             string range = "",
             string ammo = "",
             string notes = "",
             [RangeTripDateParser] DateOnly date = default,
             CancellationToken cancellationToken = default)
         {
+            var console = _cliDisplay.Console;
+
+            if (string.IsNullOrWhiteSpace(firearm))
+            {
+                firearm = await console.AskAsync<string>("Enter the name of the firearm (required)",  cancellationToken);
+                if (rounds == 0)
+                {
+                    rounds = await console.AskAsync<int>("Enter the number of rounds fired (required)", cancellationToken);
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(range))
+            {
+                range = await console.AskAsync<string>("Enter the name of the range (required)", cancellationToken);
+            }
+            if (string.IsNullOrWhiteSpace(ammo))
+            {
+                ammo = await console.AskAsync<string>("Enter the description of the ammo (required)", cancellationToken);
+            }
+
+            if (string.IsNullOrWhiteSpace(notes))
+            {
+                notes = await console.AskAsync<string>("Enter any notes about the trip (optional)", cancellationToken);
+            }
+
+
             try
             {
                 var sre = new SimpleRangeEvent
@@ -60,6 +90,7 @@ namespace MyLittleRangeBook.CLI
                     EventDate = date == default ? DateTime.Now.Date : date.ToDateTime(TimeOnly.MinValue).Date
                 };
 
+                // TODO [TO20260416] Data validation.
                 Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken);
 
                 return SUCCESS;
