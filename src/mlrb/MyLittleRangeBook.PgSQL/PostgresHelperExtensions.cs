@@ -10,7 +10,8 @@ namespace MyLittleRangeBook.PgSQL
             string? connectionString = configuration.GetConnectionString("PostgresqlConnection");
             if (string.IsNullOrEmpty(connectionString))
             {
-                throw new InvalidOperationException("PostgreSQL connection string 'PostgresqlConnection' is not configured.");
+                Serilog.Log.Warning("PostgreSQL connection string 'PostgresqlConnection' is not configured.");
+                return services;
             }
 
             services.AddSingleton<IPostgresHelper>(new PostgresHelper(connectionString));

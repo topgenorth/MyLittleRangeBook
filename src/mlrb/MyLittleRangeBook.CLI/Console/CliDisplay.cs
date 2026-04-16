@@ -9,6 +9,11 @@ namespace MyLittleRangeBook.CLI.Console
         readonly string _appName;
         readonly string _version;
 
+        public const string WarningGlyph = "⚠";
+        public const string SuccessGlyph = "✔";
+        public const string ErrorGlyph = "❌";
+
+
         public CliDisplay(IAnsiConsole console)
         {
             Assembly assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
@@ -47,7 +52,7 @@ namespace MyLittleRangeBook.CLI.Console
                 .LeftJustified();
 
             Console.Write(rule);
-            Console.MarkupLine($"[green]{Markup.Escape(message)}[/]");
+            Console.MarkupLine($"[green]{SuccessGlyph} {Markup.Escape(message)}[/]");
             Console.WriteLine();
         }
 
@@ -60,7 +65,7 @@ namespace MyLittleRangeBook.CLI.Console
                 .LeftJustified();
 
             Console.Write(rule);
-            Console.MarkupLine($"[red]{Markup.Escape(message)}[/]");
+            Console.MarkupLine($"[red]{ErrorGlyph} {Markup.Escape(message)}[/]");
             Console.WriteLine();
         }
 

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using MyLittleRangeBook;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database.Sqlite;
@@ -17,10 +18,18 @@ await appSettings.EnsureAppSettingsExistsAsync();
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.Sources.Clear();
 
-builder.Configuration
-    .AddJsonFile("appsettings.json", true, true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
-    .AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
+
+if (EnvironmentHelper.IsProduction)
+{
+    builder.Configuration.AddJsonFile("appsettings.json", true, true);
+}
+else
+{
+    builder.Configuration.AddJsonFile("appsettings.json", true, true)
+        .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
+        .AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
+}
+
 
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
