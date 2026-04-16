@@ -1,4 +1,4 @@
-name: Build .NET Framework Application
+name: Build .NET Application
 
 on:
   push:
@@ -10,6 +10,9 @@ jobs:
         platform: [ windows, linux ]
     runs-on: ${{ matrix.platform == 'windows' && 'windows-latest' || 'ubuntu-latest' }}
 
+    env:
+      VERSION_PREFIX: 1.0
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -19,11 +22,29 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Compute version info
+        shell: bash
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          VERSION="${VERSION_PREFIX}.${GITHUB_RUN_NUMBER}"
+          FILE_VERSION="${VERSION_PREFIX}.${GITHUB_RUN_NUMBER}.0"
+          INFORMATIONAL_VERSION="${VERSION}+${SHORT_SHA}"
+
+          echo "SHORT_SHA=$SHORT_SHA" >> "$GITHUB_ENV"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "FILE_VERSION=$FILE_VERSION" >> "$GITHUB_ENV"
+          echo "INFORMATIONAL_VERSION=$INFORMATIONAL_VERSION" >> "$GITHUB_ENV"
+
       - name: Publish single-file EXE for the CLI
         run: |
-          dotnet publish src/mlrb/MyLittleRangeBook.CLI/MyLittleRangeBook.CLI.csproj -c Release \
+          dotnet publish src/mlrb/MyLittleRangeBook.CLI/MyLittleRangeBook.CLI.csproj \
+            -c Release \
             -r ${{ matrix.platform == 'windows' && 'win-x64' || 'linux-x64' }} \
             --self-contained true \
+            -p:Version="${VERSION}" \
+            -p:AssemblyVersion="1.2.0.0" \
+            -p:FileVersion="${FILE_VERSION}" \
+            -p:InformationalVersion="${INFORMATIONAL_VERSION}" \          
             -p:PublishSingleFile=true \
             -p:IncludeNativeLibrariesForSelfExtract=true \
             -o ./out/MyLittleRangeBook-CLI
@@ -31,9 +52,14 @@ jobs:
 
       - name: Publish single-file EXE for the GUI
         run: |
-          dotnet publish src/mlrb/MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj -c Release \
+          dotnet publish src/mlrb/MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj \
+            -c Release \
             -r ${{ matrix.platform == 'windows' && 'win-x64' || 'linux-x64' }} \
             --self-contained true \
+            -p:Version="${VERSION}" \
+            -p:AssemblyVersion="1.2.0.0" \
+            -p:FileVersion="${FILE_VERSION}" \
+            -p:InformationalVersion="${INFORMATIONAL_VERSION}" \                    
             -p:PublishSingleFile=true \
             -p:IncludeNativeLibrariesForSelfExtract=true \
             -o ./out/MyLittleRangeBook-GUI
@@ -43,7 +69,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ matrix.platform }}-executables
+          name: mlrb-${{INFORMATIONAL_VERSION}}-${{ matrix.platform }}-executables
           path: |
             out/MyLittleRangeBook-GUI/
             out/MyLittleRangeBook-CLI/
