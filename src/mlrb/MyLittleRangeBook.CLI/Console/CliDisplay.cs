@@ -11,7 +11,7 @@ namespace MyLittleRangeBook.CLI.Console
 
         public CliDisplay(IAnsiConsole console)
         {
-            var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+            Assembly assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
             _appName = AppName;
             _version = assembly.GetName().Version?.ToString(3) ?? "0.0.0";
             Console = console;
@@ -28,7 +28,7 @@ namespace MyLittleRangeBook.CLI.Console
             grid.AddRow($"[grey]Version:[/] [green]{Markup.Escape(_version)}[/]");
             grid.AddRow($"[grey]Action:[/] [yellow]{Markup.Escape(action)}[/]");
 
-            var panel = new Panel(grid)
+            Panel panel = new Panel(grid).Expand()
                 .Header("[bold blue]Starting[/]")
                 .Border(BoxBorder.Rounded)
                 .BorderStyle(new Style(Color.SteelBlue1))
@@ -42,7 +42,7 @@ namespace MyLittleRangeBook.CLI.Console
         {
             Console.WriteLine();
 
-            var rule = new Rule("[green]Completed[/]")
+            Rule rule = new Rule("[green]Completed[/]")
                 .RuleStyle("green")
                 .LeftJustified();
 
@@ -55,7 +55,7 @@ namespace MyLittleRangeBook.CLI.Console
         {
             Console.WriteLine();
 
-            var rule = new Rule("[red]Failed[/]")
+            Rule rule = new Rule("[red]Failed[/]")
                 .RuleStyle("red")
                 .LeftJustified();
 
