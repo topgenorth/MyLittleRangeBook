@@ -69,7 +69,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v6
         with:
-          name: mlrb-${{INFORMATIONAL_VERSION}}-${{ matrix.platform }}-executables
+          name: mlrb-${{ env.INFORMATIONAL_VERSION }}-${{ matrix.platform }}-executables
           path: |
             out/MyLittleRangeBook-GUI/
             out/MyLittleRangeBook-CLI/
