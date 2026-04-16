@@ -21,21 +21,20 @@ builder.Configuration.Sources.Clear();
 
 if (EnvironmentHelper.IsProduction)
 {
-    builder.Configuration.AddJsonFile("appsettings.json", true, true);
+    builder.Configuration.AddJsonFile(DefaultAppSettingsFile.FullName, false, true);
 }
 else
 {
     builder.Configuration.AddJsonFile("appsettings.json", true, true)
         .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
         .AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
+    builder.Services.AddPostgresHelper(builder.Configuration);
 }
-
 
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
 builder.Services.TryAddSingleton<IXeroShotSessionParser, XeroShotSessionParser>();
 builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration)
-    .AddPostgresHelper(builder.Configuration)
     .AddSerilog(lc =>
     {
         lc.WriteTo.Console();
