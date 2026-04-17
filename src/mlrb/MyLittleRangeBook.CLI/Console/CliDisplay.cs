@@ -5,19 +5,19 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public sealed class CliDisplay : ICliDisplay
     {
-        const string AppName = "MyLittleRangeBook CLI";
+        public const string AppName = "MyLittleRangeBook CLI";
 
         public const string WarningGlyph = "⚠";
         public const string SuccessGlyph = "✔";
         public const string ErrorGlyph = "❌";
         readonly string _appName;
-        readonly string _version;
+        public string AppVersion { get; }
 
 
         public CliDisplay(IAnsiConsole console)
         {
             _appName = AppName;
-            _version = Assembly.GetExecutingAssembly()
+            AppVersion = Assembly.GetExecutingAssembly()
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 ?.InformationalVersion ?? "Unknown";
             Console = console;
@@ -31,7 +31,7 @@ namespace MyLittleRangeBook.CLI.Console
             grid.AddColumn();
 
             grid.AddRow($"[bold]{Markup.Escape(_appName)}[/]");
-            grid.AddRow($"[grey]Version:[/] [green]{Markup.Escape(_version)}[/]");
+            grid.AddRow($"[grey]Version:[/] [green]{Markup.Escape(AppVersion)}[/]");
             grid.AddRow($"[grey]Action:[/] [yellow]{Markup.Escape(action)}[/]");
 
             Panel panel = new Panel(grid).Expand()

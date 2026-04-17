@@ -21,6 +21,14 @@ namespace MyLittleRangeBook.CLI
     [UsedImplicitly]
     public class AddSimpleRangeEventCommand
     {
+        const string RangeSql = "SELECT DISTINCT RangeName FROM SimpleRangeEvents ORDER BY Modified DESC,  RangeName;";
+
+        const string FirearmSql =
+            "SELECT DISTINCT FirearmName FROM SimpleRangeEvents ORDER BY Modified DESC,  FirearmName;";
+
+        const string AmmoSql =
+            "SELECT DISTINCT AmmoDescription FROM SimpleRangeEvents WHERE FirearmName=@firearmname ORDER BY Modified DESC, AmmoDescription;";
+
         readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
         readonly ISimpleRangeEventRepository _repo;
@@ -36,7 +44,6 @@ namespace MyLittleRangeBook.CLI
             _repo = repo;
             _sqliteHelper = sqliteHelper;
         }
-
 
         /// <summary>
         ///     Add a new range trip.
@@ -59,32 +66,92 @@ namespace MyLittleRangeBook.CLI
             [RangeTripDateParser] DateOnly date = default,
             CancellationToken cancellationToken = default)
         {
-            _cliDisplay.WriteHeader("Add Range Trip");
-
             IAnsiConsole console = _cliDisplay.Console;
 
-            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+            IEnumerable<string> firearmChoices = [];
+            IEnumerable<string> rangeChoices = [];
+            IEnumerable<string> ammoChoices = [];
 
-            (firearm, rounds) = await PromptForFirearmAndRounds(console, conn, firearm, rounds, cancellationToken);
-            ammo = await PromptForAmmoNotes(console, conn, ammo, firearm, cancellationToken);
-            notes = await PromptForTripNotes(console, notes, cancellationToken);
-            range = await PromptForRangeSelection(console, conn, range, cancellationToken);
 
             try
             {
-                await SaveToDatabase(firearm, rounds, range, ammo, notes, date, cancellationToken);
+                await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+                firearmChoices = GetChoices(conn, FirearmSql);
+                rangeChoices = GetChoices(conn, RangeSql);
+
+                (firearm, rounds) =
+                    await PromptForFirearmAndRounds(console, firearm, firearmChoices, rounds, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(firearm))
+                {
+                    var cmd = new SqliteCommand(AmmoSql, conn);
+                    cmd.Parameters.AddWithValue("@firearmname", firearm);
+                    ammoChoices = GetChoices(cmd);
+                }
+
+                range = await PromptForRangeSelection(console, range, rangeChoices, cancellationToken);
+                ammo = await PromptForAmmoNotes(console, ammo, ammoChoices, cancellationToken);
+                notes = await PromptForTripNotes(console, notes, cancellationToken);
+
+                SimpleRangeEvent sre =
+                    await SaveToDatabase(firearm, rounds, range, ammo, notes, date, cancellationToken);
+
+                DisplayToConsole(console, sre);
 
                 return SUCCESS;
             }
             catch (Exception e)
             {
                 _logger.Error(e, "Failed to add SimpleRangeEvent");
+                _cliDisplay.WriteFailure($"Failed to add SimpleRangeEvent: {e.Message}");
 
                 return FAILED_TO_CREATE_RANGE_EVENT;
             }
         }
 
-        static async Task<string> PromptForTripNotes(IAnsiConsole console,
+        void DisplayToConsole(IAnsiConsole console, SimpleRangeEvent sre)
+        {
+            Grid bodyGrid = new Grid().AddColumns(2);
+            bodyGrid.AddRow("", "[green]Range Trip Added[/]");
+
+            bodyGrid.AddRow("  [white]RowId:[/]", sre.RowId.ToString() ?? string.Empty);
+            bodyGrid.AddRow("  [white]Id:[/]", sre.Id);
+            bodyGrid.AddRow("  [white]Date:[/]", sre.EventDate.ToString("yyyy-MMM-dd"));
+            bodyGrid.AddRow("  [white]Firearm:[/]", sre.FirearmName);
+            bodyGrid.AddRow("  [white]Range:[/] ", sre.RangeName);
+
+            if (sre.RoundsFired > 0)
+            {
+                bodyGrid.AddRow("  [white]Rounds:[/] ", sre.RoundsFired.ToString());
+            }
+
+            if (!string.IsNullOrWhiteSpace(sre.AmmoDescription))
+            {
+                bodyGrid.AddRow("  [white]Ammo:[/] ", sre.AmmoDescription);
+            }
+
+            if (!string.IsNullOrWhiteSpace(sre.Notes))
+            {
+                bodyGrid.AddRow("  [white]Notes:[/] ", sre.Notes);
+            }
+
+            Layout layout = new Layout("root")
+                .SplitRows(new Layout("header"), new Layout("body"));
+            Grid headerGrid = CreateHeaderGrid();
+            layout["header"].Update(headerGrid);
+            layout["body"].Update(bodyGrid);
+            console.Write(layout);
+        }
+
+        Grid CreateHeaderGrid()
+        {
+            var headerGrid = new Grid();
+            headerGrid.AddColumn();
+            headerGrid.AddRow($"[bold]{Markup.Escape(CliDisplay.AppName)}[/]");
+            headerGrid.AddRow($"[grey]Version:[/] [green]{Markup.Escape(_cliDisplay.AppVersion)}[/]");
+            return headerGrid;
+        }
+
+        async Task<string> PromptForTripNotes(IAnsiConsole console,
             string notes,
             CancellationToken cancellationToken)
         {
@@ -93,7 +160,7 @@ namespace MyLittleRangeBook.CLI
                 return notes;
             }
 
-            TextPrompt<string> p = new TextPrompt<string>("Enter any notes about the trip (optional)?")
+            TextPrompt<string> p = new TextPrompt<string>("Enter any [green]notes[/] (optional)")
                 .AllowEmpty();
             notes = await console.PromptAsync(p, cancellationToken);
 
@@ -101,60 +168,57 @@ namespace MyLittleRangeBook.CLI
         }
 
         async Task<string> PromptForAmmoNotes(IAnsiConsole console,
-            SqliteConnection conn,
-            string firearm,
             string ammo,
+            IEnumerable<string> ammoChoices,
             CancellationToken cancellationToken)
         {
-            const string AMMO_SQL =
-                "SELECT DISTINCT AmmoDescription FROM SimpleRangeEvents WHERE FirearmName=@firearmname ORDER BY AmmoDescription;";
             if (!string.IsNullOrWhiteSpace(ammo))
             {
                 return ammo;
             }
 
             IPrompt<string> prompt;
-            if (string.IsNullOrWhiteSpace(firearm))
+            if (ammoChoices.Any())
             {
-                prompt = new TextPrompt<string>("Enter [green]ammunition[/] (optional).")
-                    .AllowEmpty();
-            }
-            else
-            {
-                var cmd = new SqliteCommand(AMMO_SQL, conn);
-                cmd.Parameters.AddWithValue("@firearmname", firearm);
                 prompt = new SelectionPrompt<string>()
                     .Title("Select [green]ammunition[/]")
                     .HighlightStyle(new Style(Color.Green, Color.Black, Decoration.Bold))
                     .EnableSearch()
-                    .AddChoices(GetChoices(cmd));
+                    .AddChoices(ammoChoices);
+            }
+            else
+            {
+                prompt = new TextPrompt<string>("Enter [green]ammunition[/] (optional)?");
             }
 
-            ammo = await console.PromptAsync(prompt, cancellationToken);
-
-            return ammo;
+            return await console.PromptAsync(prompt, cancellationToken);
         }
 
         async Task<string> PromptForRangeSelection(IAnsiConsole console,
-            SqliteConnection conn,
             string range,
+            IEnumerable<string> rangeChoices,
             CancellationToken cancellationToken)
         {
-            const string RANGE_SQL = "SELECT DISTINCT RangeName FROM SimpleRangeEvents ORDER BY RangeName;";
             if (!string.IsNullOrWhiteSpace(range))
             {
                 return range;
             }
 
-            SelectionPrompt<string> selectionPrompt = new SelectionPrompt<string>()
-                .Title("Select a [green]range[/]")
-                .HighlightStyle(new Style(Color.Green, Color.Black, Decoration.Bold))
-                .EnableSearch()
-                .AddChoices(GetChoices(conn, RANGE_SQL));
+            IPrompt<string> prompt;
+            if (rangeChoices.Any())
+            {
+                prompt = new SelectionPrompt<string>()
+                    .Title("Select a [green]range[/]")
+                    .HighlightStyle(new Style(Color.Green, Color.Black, Decoration.Bold))
+                    .EnableSearch()
+                    .AddChoices(rangeChoices);
+            }
+            else
+            {
+                prompt = new TextPrompt<string>("Enter [green]range[/]?");
+            }
 
-            range = await console.PromptAsync(selectionPrompt, cancellationToken);
-
-            return range;
+            return await console.PromptAsync(prompt, cancellationToken);
         }
 
         static IEnumerable<string> GetChoices(SqliteCommand command)
@@ -176,31 +240,39 @@ namespace MyLittleRangeBook.CLI
         }
 
         async Task<(string firearm, int rounds)> PromptForFirearmAndRounds(IAnsiConsole console,
-            SqliteConnection conn,
             string firearm,
+            IEnumerable<string> firearmChoices,
             int rounds,
             CancellationToken cancellationToken)
         {
-            const string FIREARM_SQL = "SELECT DISTINCT FirearmName FROM SimpleRangeEvents ORDER BY FirearmName;";
             if (!string.IsNullOrWhiteSpace(firearm))
             {
                 return (firearm, rounds);
             }
 
-            SelectionPrompt<string> selectionPrompt = new SelectionPrompt<string>()
-                .Title("Select a [green]firearm[/]")
-                .HighlightStyle(new Style(Color.Green, Color.Black, Decoration.Bold))
-                .EnableSearch()
-                .AddChoices(GetChoices(conn, FIREARM_SQL));
+            IPrompt<string> prompt;
 
-            firearm = await console.PromptAsync(selectionPrompt, cancellationToken);
+            if (firearmChoices.Any())
+            {
+                prompt = new SelectionPrompt<string>()
+                    .Title("Select a [green]firearm[/]")
+                    .HighlightStyle(new Style(Color.Green, Color.Black, Decoration.Bold))
+                    .EnableSearch()
+                    .AddChoices(firearmChoices);
+            }
+            else
+            {
+                prompt = new TextPrompt<string>("Enter [green]firearm[/]?");
+            }
+
+            firearm = await console.PromptAsync(prompt, cancellationToken);
 
             if (rounds != 0)
             {
                 return (firearm, rounds);
             }
 
-            TextPrompt<int> p = new TextPrompt<int>("Enter the number of rounds fired (zero or greater)?")
+            TextPrompt<int> p = new TextPrompt<int>("      [green]Rounds[/]")
                 .DefaultValue(0)
                 .Validate(x => x > 0);
             rounds = await console.PromptAsync(p, cancellationToken);
@@ -208,7 +280,7 @@ namespace MyLittleRangeBook.CLI
             return (firearm, rounds);
         }
 
-        async Task SaveToDatabase(string firearm,
+        async Task<SimpleRangeEvent> SaveToDatabase(string firearm,
             int rounds,
             string range,
             string ammo,
@@ -228,6 +300,10 @@ namespace MyLittleRangeBook.CLI
 
             // TODO [TO20260416] Data validation.
             Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken);
+
+            sre.RowId = result.Value ?? -1;
+
+            return sre;
         }
     }
 }
