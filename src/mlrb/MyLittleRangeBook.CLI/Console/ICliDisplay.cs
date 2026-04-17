@@ -4,7 +4,6 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public interface ICliDisplay
     {
-        IAnsiConsole Console { get; }
         void WriteHeader(string action);
         void WriteSuccess(string message);
         void WriteFailure(string message);
@@ -18,5 +17,8 @@ namespace MyLittleRangeBook.CLI.Console
             string status,
             Func<CancellationToken, Task<T>> action,
             CancellationToken cancellationToken = default);
+
+        string AppVersion { get; }
+        IAnsiConsole Console { get; }
     }
 }
