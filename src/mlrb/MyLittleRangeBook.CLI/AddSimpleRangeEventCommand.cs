@@ -72,19 +72,64 @@ namespace MyLittleRangeBook.CLI
 
             try
             {
-                await SaveToDatabase(firearm, rounds, range, ammo, notes, date, cancellationToken);
+                SimpleRangeEvent? sre =
+                    await SaveToDatabase(firearm, rounds, range, ammo, notes, date, cancellationToken);
+
+                DisplayToConsole(console, sre);
+
 
                 return SUCCESS;
             }
             catch (Exception e)
             {
                 _logger.Error(e, "Failed to add SimpleRangeEvent");
+                _cliDisplay.WriteFailure($"Failed to add SimpleRangeEvent: {e.Message}");
 
                 return FAILED_TO_CREATE_RANGE_EVENT;
             }
         }
 
-        static async Task<string> PromptForTripNotes(IAnsiConsole console,
+        void DisplayToConsole(IAnsiConsole console, SimpleRangeEvent sre)
+        {
+            console.Markup("[green]Range Trip Added[/]");
+            console.WriteLine();
+            console.Write("  ");
+            console.MarkupLineInterpolated($"[white]Id[/] [italic]{sre.Id}[/], [white]RowId[/] [italic]{sre.RowId}[/]");
+
+            console.Markup("  [white]Date:[/] ");
+            console.Write(sre.EventDate.ToString("yyyy-MMM-dd"));
+            console.Write(". ");
+
+            console.WriteLine();
+            console.Markup($"  [white]Firearm:[/] {sre.FirearmName}");
+            console.Write(". ");
+
+            if (sre.RoundsFired > 0)
+            {
+                console.Write(sre.RoundsFired.ToString());
+                console.Write(" rounds. ");
+            }
+
+            if (!string.IsNullOrWhiteSpace(sre.AmmoDescription))
+            {
+                console.WriteLine();
+                console.Markup("  [white]Ammo[/] ");
+                console.Write(sre.AmmoDescription);
+            }
+
+            if (!string.IsNullOrWhiteSpace(sre.Notes))
+            {
+                console.WriteLine();
+                console.Markup("[white]Notes[/]");
+                console.WriteLine();
+                console.Write("    ");
+                console.Write(sre.Notes);
+            }
+
+            console.WriteLine();
+        }
+
+        async Task<string> PromptForTripNotes(IAnsiConsole console,
             string notes,
             CancellationToken cancellationToken)
         {
@@ -106,6 +151,7 @@ namespace MyLittleRangeBook.CLI
             string ammo,
             CancellationToken cancellationToken)
         {
+            /*
             const string AMMO_SQL =
                 "SELECT DISTINCT AmmoDescription FROM SimpleRangeEvents WHERE FirearmName=@firearmname ORDER BY AmmoDescription;";
             if (!string.IsNullOrWhiteSpace(ammo))
@@ -129,6 +175,10 @@ namespace MyLittleRangeBook.CLI
                     .EnableSearch()
                     .AddChoices(GetChoices(cmd));
             }
+            */
+
+            TextPrompt<string> prompt = new TextPrompt<string>("Enter [green]ammunition[/] (optional).")
+                .AllowEmpty();
 
             ammo = await console.PromptAsync(prompt, cancellationToken);
 
@@ -208,7 +258,7 @@ namespace MyLittleRangeBook.CLI
             return (firearm, rounds);
         }
 
-        async Task SaveToDatabase(string firearm,
+        async Task<SimpleRangeEvent?> SaveToDatabase(string firearm,
             int rounds,
             string range,
             string ammo,
@@ -228,6 +278,10 @@ namespace MyLittleRangeBook.CLI
 
             // TODO [TO20260416] Data validation.
             Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken);
+
+            sre.RowId = result.Value ?? -1;
+
+            return sre;
         }
     }
 }
