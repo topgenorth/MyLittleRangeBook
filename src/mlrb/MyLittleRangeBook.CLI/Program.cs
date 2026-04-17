@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using ConsoleAppFramework;
+﻿using ConsoleAppFramework;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;

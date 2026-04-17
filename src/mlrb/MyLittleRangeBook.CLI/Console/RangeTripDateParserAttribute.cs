@@ -10,6 +10,7 @@ namespace MyLittleRangeBook.CLI.Console
             if (s.IsEmpty)
             {
                 result = DateOnly.FromDateTime(DateTime.Now);
+
                 return true;
             }
 

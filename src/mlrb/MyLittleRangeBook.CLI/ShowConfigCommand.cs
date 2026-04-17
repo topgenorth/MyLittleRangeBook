@@ -1,4 +1,5 @@
 ﻿using ConsoleAppFramework;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.CLI.Console;
 using Spectre.Console;
@@ -8,9 +9,9 @@ namespace MyLittleRangeBook.CLI
     [RegisterCommands("config")]
     public class ShowConfigCommand
     {
-        ICliDisplay _cliDisplay;
+        readonly ICliDisplay _cliDisplay;
+        readonly IConfiguration _configuration;
         ILogger _logger;
-        IConfiguration _configuration;
 
         public ShowConfigCommand(ICliDisplay cliDisplay, ILogger logger, IConfiguration configuration)
         {
@@ -20,6 +21,7 @@ namespace MyLittleRangeBook.CLI
         }
 
         [Command("show")]
+        [UsedImplicitly]
         public async Task<int> ShowConfigAsync(CancellationToken cancellationToken = default)
         {
             _cliDisplay.WriteHeader("Show Configuration");

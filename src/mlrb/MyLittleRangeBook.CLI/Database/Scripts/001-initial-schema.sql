@@ -4,12 +4,12 @@ CREATE TABLE IF NOT EXISTS SimpleRangeEvents
     Id              TEXT                              NOT NULL, --NanoID unique key.
     EventDate       TEXT                              NOT NULL, -- The date of the event.
     FirearmName     TEXT                              NOT NULL, -- The name of the firearm. Should match the Firearms table
-    RangeName       TEXT, -- The name of the range.
+    RangeName       TEXT,                                       -- The name of the range.
     RoundsFired     INTEGER DEFAULT 0                 NOT NULL, -- How many rounds were fired.
     AmmoDescription TEXT,
     Notes           TEXT,
-    Created  TEXT default CURRENT_TIMESTAMP          not null, -- The date the record was created.
-    Modified TEXT default CURRENT_TIMESTAMP          not null, -- The date the file was last modified.
+    Created         TEXT    default CURRENT_TIMESTAMP not null, -- The date the record was created.
+    Modified        TEXT    default CURRENT_TIMESTAMP not null, -- The date the file was last modified.
     CONSTRAINT SimpleRangeEvents_Id UNIQUE (ID)
 );
 CREATE UNIQUE INDEX SimpleRangeEvents_Id_IDX
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS Firearms
     Name     TEXT                           NOT NULL, -- The name of the firearm.
     Notes    TEXT,
     Created  TEXT default CURRENT_TIMESTAMP not null, -- The date the record was created.
-    Modified TEXT default CURRENT_TIMESTAMP not null,  -- The date the file was last modified.
+    Modified TEXT default CURRENT_TIMESTAMP not null, -- The date the file was last modified.
     CONSTRAINT Firearms_Id UNIQUE (ID)
 );
 CREATE UNIQUE INDEX Firearms_Id_IDX
