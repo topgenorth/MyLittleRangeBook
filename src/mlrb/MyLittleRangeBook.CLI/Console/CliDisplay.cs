@@ -5,15 +5,21 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public sealed class CliDisplay : ICliDisplay
     {
-        const string AppName = "MyLittleRangebook";
+        const string AppName = "MyLittleRangeBook CLI";
+
+        public const string WarningGlyph = "⚠";
+        public const string SuccessGlyph = "✔";
+        public const string ErrorGlyph = "❌";
         readonly string _appName;
         readonly string _version;
 
+
         public CliDisplay(IAnsiConsole console)
         {
-            Assembly assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
             _appName = AppName;
-            _version = assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+            _version = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion ?? "Unknown";
             Console = console;
         }
 
@@ -47,7 +53,7 @@ namespace MyLittleRangeBook.CLI.Console
                 .LeftJustified();
 
             Console.Write(rule);
-            Console.MarkupLine($"[green]{Markup.Escape(message)}[/]");
+            Console.MarkupLine($"[green]{SuccessGlyph} {Markup.Escape(message)}[/]");
             Console.WriteLine();
         }
 
@@ -60,7 +66,7 @@ namespace MyLittleRangeBook.CLI.Console
                 .LeftJustified();
 
             Console.Write(rule);
-            Console.MarkupLine($"[red]{Markup.Escape(message)}[/]");
+            Console.MarkupLine($"[red]{ErrorGlyph} {Markup.Escape(message)}[/]");
             Console.WriteLine();
         }
 
