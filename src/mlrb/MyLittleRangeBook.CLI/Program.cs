@@ -1,4 +1,5 @@
-﻿using ConsoleAppFramework;
+﻿using System.Reflection;
+using ConsoleAppFramework;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -17,7 +18,6 @@ await appSettings.EnsureAppSettingsExistsAsync();
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.Sources.Clear();
-
 
 if (EnvironmentHelper.IsProduction)
 {

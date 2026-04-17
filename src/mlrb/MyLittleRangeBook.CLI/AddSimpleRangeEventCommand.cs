@@ -59,6 +59,8 @@ namespace MyLittleRangeBook.CLI
             [RangeTripDateParser] DateOnly date = default,
             CancellationToken cancellationToken = default)
         {
+            _cliDisplay.WriteHeader("Add Range Trip");
+
             IAnsiConsole console = _cliDisplay.Console;
 
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
