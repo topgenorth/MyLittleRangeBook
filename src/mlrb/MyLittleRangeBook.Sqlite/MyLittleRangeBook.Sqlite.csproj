@@ -22,4 +22,10 @@
     <ItemGroup>
       <ProjectReference Include="..\MyLittleRangeBook\MyLittleRangeBook.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Scripts\001-initial-schema.sql" />
+      <None Remove="Scripts\002-create-modified-index-on-simplerangeevents.sql" />
+      <EmbeddedResource Include="Scripts\002-create-modified-index-on-simplerangeevents.sql" />
+    </ItemGroup>
 </Project>

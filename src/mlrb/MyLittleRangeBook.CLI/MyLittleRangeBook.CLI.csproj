@@ -52,10 +52,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Database\Scripts\001-initial-schema.sql"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\MyLittleRangeBook.FIT\MyLittleRangeBook.FIT.csproj"/>
         <ProjectReference Include="..\MyLittleRangeBook.PgSQL\MyLittleRangeBook.PgSQL.csproj"/>
         <ProjectReference Include="..\MyLittleRangeBook.Sqlite\MyLittleRangeBook.Sqlite.csproj"/>

@@ -35,15 +35,8 @@ namespace MyLittleRangeBook.Database.Sqlite
         {
             SetSqlite3ProviderAndInit();
 
-            string? connectionString = configuration.GetConnectionString("SqliteConnection");
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new InvalidOperationException(
-                    "SQLite connection string 'SqliteConnection' is not configured.");
-            }
-
-            services.TryAddSingleton<ISqliteHelper>(new SqliteHelper(connectionString));
-
+            services.TryAddSingleton<IConfiguration>(configuration);
+            services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
             services.TryAddKeyedSingleton<ISimpleRangeLogService, SqliteSimpleRangeEventService>(SQLITE_KEY);
             services.TryAddKeyedSingleton<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(SQLITE_KEY);
 

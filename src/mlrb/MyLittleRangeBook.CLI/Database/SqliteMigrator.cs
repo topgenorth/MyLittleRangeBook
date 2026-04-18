@@ -1,6 +1,5 @@
 ﻿using ConsoleAppFramework;
-using DbUp;
-using DbUp.Engine;
+using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.CLI.Console;
@@ -27,7 +26,8 @@ namespace MyLittleRangeBook.CLI.Database
         [UsedImplicitly]
         public async Task<int> MigrationVersionAsync(string file, CancellationToken cancellationToken)
         {
-            cliDisplay.WriteHeader("Migration Version");
+            // TODO [TO20260418] Improve the CLI output.
+            cliDisplay.WriteHeader("Show migration versions");
             if (!File.Exists(file))
             {
                 logger.Warning("File {file} not found.", file);
@@ -141,65 +141,34 @@ namespace MyLittleRangeBook.CLI.Database
         }
 
         /// <summary>
-        ///     Ensures that all database schema migrations are applied to the specified SQLite database file.
+        ///     Ensures that all database schema migrations.
         /// </summary>
-        /// <param name="file">The full path to the SQLite database file.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("migrate")]
         [UsedImplicitly]
-        public async Task<int> MigrateSchemaAsync(string file, CancellationToken cancellationToken)
+        public async Task<int> MigrateSchemaAsync(CancellationToken cancellationToken = default)
         {
+
+            // TODO [TO20260418] Improve the CLI output.
             cliDisplay.WriteHeader("Applying Migrations");
-            if (!File.Exists(file))
+            if (!File.Exists(sqliteHelper.DatabaseFile))
             {
-                logger.Warning("File {file} not found.", file);
+                logger.Warning("SQLite database {file} not found.", sqliteHelper.DatabaseFile);
                 cliDisplay.Console.MarkupLineInterpolated(
-                    $"[bold yellow]✗ Could not find '{file}'; database will be created.[/]");
+                    $"[bold warn]✗ Could not find '{sqliteHelper.DatabaseFile}'; database will be created.[/]");
+
+                return DATABASE_FILE_NOT_FOUND;
             }
 
-            int result = await cliDisplay.RunStatusAsync($"Applying migrations to {file}\n",
-                _ =>
-                {
-                    try
-                    {
-                        try
-                        {
-                            string connectionString = new SqliteConnectionStringBuilder(file).ConnectionString;
-                            UpgradeEngine? upgrader = DeployChanges.To
-                                .SqliteDatabase(connectionString)
-                                .WithScriptsEmbeddedInAssembly(typeof(SqliteMigrator).Assembly)
-                                .LogToConsole()
-                                .Build();
+            Result<bool> migrationResult =await sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
+            if (migrationResult.IsSuccess)
+            {
+                return SUCCESS;
+            }
 
-
-                            DatabaseUpgradeResult? result = upgrader.PerformUpgrade();
-                            if (!result.Successful)
-                            {
-                                cliDisplay.WriteFailure("Failed to apply migrations.");
-
-                                return Task.FromResult(FAILED_TO_APPLY_MIGRATIONS);
-                            }
-
-                            cliDisplay.WriteSuccess("Migrations applied.");
-
-                            return Task.FromResult(SUCCESS);
-                        }
-                        catch (Exception e)
-                        {
-                            logger.Error(e, "Failed to apply migrations");
-                            cliDisplay.WriteFailure($"Failed to apply migrations '{e.Message}'.[/]");
-
-                            return Task.FromResult(FAILED_TO_APPLY_MIGRATIONS);
-                        }
-                    }
-                    catch (Exception exception)
-                    {
-                        return Task.FromException<int>(exception);
-                    }
-                }, cancellationToken);
-
-            return result;
+            cliDisplay.WriteFailure("Failed to apply migrations.");
+            return FAILED_TO_APPLY_MIGRATIONS;
         }
     }
 }
