@@ -7,7 +7,7 @@ using MyLittleRangeBook.Database.Sqlite;
 using Spectre.Console;
 using static MyLittleRangeBook.CLI.ReturnCodes;
 
-namespace MyLittleRangeBook.CLI.Database
+namespace MyLittleRangeBook.CLI.Database.Sqlite
 {
     /// <summary>
     ///     This class provides functionality for managing SQLite database migrations.
@@ -20,25 +20,16 @@ namespace MyLittleRangeBook.CLI.Database
         /// <summary>
         ///     Will return all the migrations that have been applied to the database.
         /// </summary>
-        /// <param name="file"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("versions")]
         [UsedImplicitly]
-        public async Task<int> DisplayMigrationVersionsToConsoleAsync(string file, CancellationToken cancellationToken)
+        public async Task<int> DisplayMigrationVersionsToConsoleAsync(CancellationToken cancellationToken = default)
         {
-
             Result<bool> migrations = await sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
 
             // TODO [TO20260418] Improve the CLI output.
             cliDisplay.WriteHeader("Show migration versions");
-            if (!File.Exists(file))
-            {
-                logger.Warning("File {file} not found.", file);
-                cliDisplay.WriteFailure($"Could not find the database '{file}'.");
-
-                return DATABASE_FILE_NOT_FOUND;
-            }
 
             try
             {
@@ -47,8 +38,7 @@ namespace MyLittleRangeBook.CLI.Database
                     async ct =>
                     {
                         await using SqliteConnection connection = await sqliteHelper.GetDatabaseConnectionAsync(ct);
-                        await using var cmd =
-                            new SqliteCommand(MigrationsSql, connection);
+                        await using var cmd = new SqliteCommand(MigrationsSql, connection);
                         await using SqliteDataReader rdr = await cmd.ExecuteReaderAsync(ct);
 
                         var table = new Table();
@@ -85,24 +75,15 @@ namespace MyLittleRangeBook.CLI.Database
         /// <summary>
         ///     Run the SQL statements to insert data into the database. The SQL file is not recorded as a migration.
         /// </summary>
-        /// <param name="file">The database file.</param>
         /// <param name="sqlfile">The SQL file to use.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("runsql")]
         [UsedImplicitly]
         // ReSharper disable once IdentifierTypo
-        public async Task<int> RunSqlOnDatabase(string file, string sqlfile, CancellationToken cancellationToken)
+        public async Task<int> RunSqlOnDatabase(string sqlfile, CancellationToken cancellationToken)
         {
             cliDisplay.WriteHeader("Apply SQL to Database.");
-
-            if (!File.Exists(file))
-            {
-                logger.Warning("File {file} not found.", file);
-                cliDisplay.WriteFailure($"Could not find the database '{file}'.");
-
-                return DATABASE_FILE_NOT_FOUND;
-            }
 
             if (!File.Exists(sqlfile))
             {
