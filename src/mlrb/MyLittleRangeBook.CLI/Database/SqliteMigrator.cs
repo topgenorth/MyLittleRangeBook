@@ -12,19 +12,20 @@ namespace MyLittleRangeBook.CLI.Database
     /// <summary>
     ///     This class provides functionality for managing SQLite database migrations.
     /// </summary>
-    [RegisterCommands("schema")]
+    [RegisterCommands("db")]
     [UsedImplicitly]
     public class SqliteMigrator(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper)
     {
+        const string MigrationsSql = "SELECT * FROM SchemaVersions ORDER BY Applied DESC";
         /// <summary>
         ///     Will return all the migrations that have been applied to the database.
         /// </summary>
         /// <param name="file"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("version")]
+        [Command("versions")]
         [UsedImplicitly]
-        public async Task<int> MigrationVersionAsync(string file, CancellationToken cancellationToken)
+        public async Task<int> DisplayMigrationVersionsToConsoleAsync(string file, CancellationToken cancellationToken)
         {
             // TODO [TO20260418] Improve the CLI output.
             cliDisplay.WriteHeader("Show migration versions");
@@ -36,36 +37,46 @@ namespace MyLittleRangeBook.CLI.Database
                 return DATABASE_FILE_NOT_FOUND;
             }
 
-            int result = await cliDisplay.RunStatusAsync(
-                "Importing FIT data...",
-                async ct =>
-                {
-                    await using SqliteConnection connection = await sqliteHelper.GetDatabaseConnectionAsync(ct);
-                    await using var cmd =
-                        new SqliteCommand("SELECT * FROM SchemaVersions ORDER BY Applied", connection);
-                    await using SqliteDataReader rdr = await cmd.ExecuteReaderAsync(ct);
-
-                    var table = new Table();
-                    table.AddColumn("ID");
-                    table.AddColumn("Script Name");
-                    table.AddColumn("Date Applied");
-
-                    while (await rdr.ReadAsync(ct))
+            try
+            {
+                int result = await cliDisplay.RunStatusAsync(
+                    "Retrieving migration versions...",
+                    async ct =>
                     {
-                        string? schemaVersionId = rdr.IsDBNull(0) ? string.Empty : rdr.GetValue(0).ToString();
-                        string scriptName = rdr.IsDBNull(1) ? string.Empty : rdr.GetString(1);
-                        string applied = rdr.IsDBNull(2) ? string.Empty : rdr.GetValue(2).ToString() ?? string.Empty;
-                        table.AddRow(schemaVersionId!, scriptName, applied);
-                    }
+                        await using SqliteConnection connection = await sqliteHelper.GetDatabaseConnectionAsync(ct);
+                        await using var cmd =
+                            new SqliteCommand(MigrationsSql, connection);
+                        await using SqliteDataReader rdr = await cmd.ExecuteReaderAsync(ct);
 
-                    cliDisplay.Console.Write(table);
-                    cliDisplay.WriteSuccess("Migration Versions listed.");
+                        var table = new Table();
+                        table.AddColumn("Migration ID");
+                        table.AddColumn("Script Name");
+                        table.AddColumn("Date Applied");
 
-                    return SUCCESS;
-                },
-                cancellationToken);
+                        while (await rdr.ReadAsync(ct))
+                        {
+                            string? schemaVersionId = rdr.IsDBNull(0) ? string.Empty : rdr.GetValue(0).ToString();
+                            string scriptName = rdr.IsDBNull(1) ? string.Empty : rdr.GetString(1);
+                            string applied = rdr.IsDBNull(2) ? string.Empty : rdr.GetValue(2).ToString() ?? string.Empty;
+                            table.AddRow(schemaVersionId!, scriptName, applied);
+                        }
 
-            return result;
+                        cliDisplay.Console.Write(table);
+                        cliDisplay.WriteSuccess("Migration Versions listed.");
+
+                        return SUCCESS;
+                    },
+                    cancellationToken);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                cliDisplay.Console.WriteException(e);
+
+                return FAILED_TO_APPLY_MIGRATIONS;
+            }
+
         }
 
         /// <summary>
@@ -141,7 +152,7 @@ namespace MyLittleRangeBook.CLI.Database
         }
 
         /// <summary>
-        ///     Ensures that all database schema migrations.
+        ///     Ensures that all database schema migrations have been applied.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -149,9 +160,9 @@ namespace MyLittleRangeBook.CLI.Database
         [UsedImplicitly]
         public async Task<int> MigrateSchemaAsync(CancellationToken cancellationToken = default)
         {
-
             // TODO [TO20260418] Improve the CLI output.
             cliDisplay.WriteHeader("Applying Migrations");
+
             if (!File.Exists(sqliteHelper.DatabaseFile))
             {
                 logger.Warning("SQLite database {file} not found.", sqliteHelper.DatabaseFile);
@@ -164,6 +175,7 @@ namespace MyLittleRangeBook.CLI.Database
             Result<bool> migrationResult =await sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
             if (migrationResult.IsSuccess)
             {
+                cliDisplay.WriteSuccess("Migrations applied.");
                 return SUCCESS;
             }
 
