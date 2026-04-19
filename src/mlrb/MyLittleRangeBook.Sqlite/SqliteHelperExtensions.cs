@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Services;
+using NanoidDotNet;
 using SQLitePCL;
 
 namespace MyLittleRangeBook.Database.Sqlite
@@ -10,10 +11,11 @@ namespace MyLittleRangeBook.Database.Sqlite
     ///     Extension methods for setting up SQLite and registering <see cref="ISqliteHelper" /> in the dependency injection
     ///     container.
     /// </summary>
-    public static class SqliteHelperExtensions
+    public  static class SqliteHelperExtensions
     {
         // ReSharper disable once MemberCanBePrivate.Global
         public const string SQLITE_KEY = "sqlite";
+
         /// <summary>
         ///     Sets the SQLite3 provider and initializes the SQLite environment.
         ///     This should be called at application startup before any database operations.
@@ -23,6 +25,19 @@ namespace MyLittleRangeBook.Database.Sqlite
         {
             raw.SetProvider(new SQLite3Provider_e_sqlite3());
             Batteries.Init();
+        }
+
+        /// <summary>
+        /// Add some custom functions to the SQLite connection.
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <returns></returns>
+        public static SqliteConnection AddFunctions(this SqliteConnection connection)
+        {
+            connection.CreateFunction("nanoid", () => Nanoid.Generate());
+            connection.CreateFunction("utcnow", () => DateTimeOffset.UtcNow.ToString("O"));
+
+            return connection;
         }
 
         /// <summary>

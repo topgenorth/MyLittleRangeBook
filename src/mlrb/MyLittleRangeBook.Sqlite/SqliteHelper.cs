@@ -1,9 +1,9 @@
 using System.Data;
+using System.Text.Json.Nodes;
 using DbUp;
 using DbUp.Engine;
 using FluentResults;
 using Microsoft.Extensions.Configuration;
-using NanoidDotNet;
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
@@ -56,9 +56,7 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <returns>The opened connection.</returns>
         public async Task<SqliteConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
         {
-            var connection = new SqliteConnection(_connectionString);
-            connection.CreateFunction("nanoid", () => Nanoid.Generate());
-            connection.CreateFunction("utcnow", () => DateTimeOffset.UtcNow.ToString("O"));
+            SqliteConnection connection = new SqliteConnection(_connectionString).AddFunctions();
             await connection.OpenAsync(cancellationToken);
 
             return connection;
@@ -82,8 +80,10 @@ namespace MyLittleRangeBook.Database.Sqlite
             return Result.Ok(true);
         }
 
+        // ReSharper disable once AsyncMethodWithoutAwait
         public async Task<Result<bool>> ApplyDbupMigrationsAsync(CancellationToken cancellationToken = default)
         {
+            Result<bool> result;
             try
             {
                 UpgradeEngine? upgrader = DeployChanges.To
@@ -95,15 +95,14 @@ namespace MyLittleRangeBook.Database.Sqlite
                 DatabaseUpgradeResult? migrationResult = upgrader.PerformUpgrade();
                 if (migrationResult.Successful)
                 {
-                    return Result.Ok(true);
+                    result = new Result<bool>().WithValue(true);
                 }
 
                 Error? err = new Error("Could not apply database migrations.")
                         .WithMetadata("Errors", migrationResult.Error)
-                        .WithMetadata("Database", _connectionString)
-                    ;
+                        .WithMetadata("Database", _connectionString);
 
-                return Result.Fail<bool>(err).WithValue(false);
+                result = new Result<bool>().WithValue(false).WithError(err);
             }
             catch (Exception e)
             {
@@ -114,8 +113,10 @@ namespace MyLittleRangeBook.Database.Sqlite
                         .WithMetadata("Database", _connectionString)
                     ;
 
-                return Result.Fail<bool>(err).WithValue(false);
+                result = new Result<bool>().WithValue(false).WithError(err);
             }
+
+            return result;
         }
 
         public async Task<Result<bool>> RunSqlOnDatabaseAsync(string sql, CancellationToken cancellationToken = default)
@@ -143,6 +144,59 @@ namespace MyLittleRangeBook.Database.Sqlite
 
                 return Result.Fail<bool>(err).WithValue(false);
             }
+        }
+
+        public async Task<Result<bool>> UpdateSqliteDatabaseAsync(string sqliteDatabaseName,
+            string? appSettingsFile = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(sqliteDatabaseName))
+            {
+                var err = new Error("SQLite database name is empty.");
+                return Result.Fail<bool>(err).WithValue(false);
+            }
+
+            if (string.IsNullOrWhiteSpace(appSettingsFile))
+            {
+                appSettingsFile = DatabaseFile;
+            }
+
+            var appSettings = new FileInfo(appSettingsFile);
+            if (!appSettings.Exists)
+            {
+                var err = new Error($"Could not find appsettings.json at {appSettingsFile}.");
+
+                return Result.Fail<bool>(err).WithValue(false);
+            }
+
+            using StreamReader reader = appSettings.OpenText();
+            string jsonBody = await reader.ReadToEndAsync(cancellationToken);
+
+
+            var node = JsonNode.Parse(jsonBody);
+            if (node is null)
+            {
+                Error? err = new Error($"Could not parse appsettings.json at {appSettingsFile}.")
+                    .WithMetadata("Json", jsonBody)
+                    .WithMetadata("File", appSettingsFile);
+
+                return Result.Fail<bool>(err).WithValue(false);
+            }
+
+            var b = new SqliteConnectionStringBuilder
+            {
+                DataSource = sqliteDatabaseName,
+                Mode = SqliteOpenMode.ReadWriteCreate
+            };
+
+            // [TO20260414] Just wondering if the Mode should be set to ReadWriteCreate?
+            node["ConnectionStrings"]!["SqliteConnection"] = b.ConnectionString;
+
+            var success = new Success("Updated appsettings.json with SQLite database connection string.");
+            success.Metadata.Add("File", appSettingsFile);
+            success.Metadata.Add("ConnectionString", b.ConnectionString);
+
+            return Result.Ok(true).WithSuccess(success);
         }
 
         public override string ToString()

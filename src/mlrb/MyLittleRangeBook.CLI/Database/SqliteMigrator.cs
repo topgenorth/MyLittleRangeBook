@@ -27,6 +27,9 @@ namespace MyLittleRangeBook.CLI.Database
         [UsedImplicitly]
         public async Task<int> DisplayMigrationVersionsToConsoleAsync(string file, CancellationToken cancellationToken)
         {
+
+            Result<bool> migrations = await sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
+
             // TODO [TO20260418] Improve the CLI output.
             cliDisplay.WriteHeader("Show migration versions");
             if (!File.Exists(file))
@@ -108,6 +111,8 @@ namespace MyLittleRangeBook.CLI.Database
 
                 return SQL_FILE_NOT_FOUND;
             }
+
+            Task<Result<bool>> migrations = sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
 
 
             int result = await cliDisplay.RunStatusAsync("Loading SQL file...",

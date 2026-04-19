@@ -66,6 +66,8 @@ namespace MyLittleRangeBook.CLI
             [RangeTripDateParser] DateOnly date = default,
             CancellationToken cancellationToken = default)
         {
+            Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
+
             IAnsiConsole console = _cliDisplay.Console;
 
             IEnumerable<string> firearmChoices = [];

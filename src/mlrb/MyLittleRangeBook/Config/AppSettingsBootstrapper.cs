@@ -20,6 +20,9 @@ namespace MyLittleRangeBook.Config
                                               }
                                               """;
 
+
+
+
         /// <summary>
         ///     Ensures that the appsettings.json file exists in the user's settings directory. If it
         ///     does not, then it is created with default values.
@@ -57,6 +60,7 @@ namespace MyLittleRangeBook.Config
 
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 await File.WriteAllTextAsync(appSettingsFile, node.ToJsonString(options), cancellationToken);
+
             }
             else
             {
@@ -65,5 +69,7 @@ namespace MyLittleRangeBook.Config
 
             return appSettingsFile;
         }
+
+
     }
 }

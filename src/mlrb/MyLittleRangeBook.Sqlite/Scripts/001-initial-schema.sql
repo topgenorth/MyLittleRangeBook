@@ -12,13 +12,13 @@ CREATE TABLE IF NOT EXISTS SimpleRangeEvents
     Modified        TEXT    default CURRENT_TIMESTAMP not null, -- The date the file was last modified.
     CONSTRAINT SimpleRangeEvents_Id UNIQUE (ID)
 );
-CREATE UNIQUE INDEX SimpleRangeEvents_Id_IDX
+CREATE UNIQUE INDEX IF NOT EXISTS SimpleRangeEvents_Id_IDX
     ON SimpleRangeEvents (Id);
-CREATE INDEX SimpleRangeEvents_EventDate_FirearmName_RangeName_IDX
+CREATE INDEX IF NOT EXISTS SimpleRangeEvents_EventDate_FirearmName_RangeName_IDX
     ON SimpleRangeEvents (EventDate, FirearmName, RangeName);
-CREATE INDEX SimpleRangeEvents_Firearm_Date_IDX
+CREATE INDEX IF NOT EXISTS SimpleRangeEvents_Firearm_Date_IDX
     ON SimpleRangeEvents (FirearmName, EventDate);
-CREATE INDEX SimpleRangeEvents_Range_Date_IDX
+CREATE INDEX IF NOT EXISTS SimpleRangeEvents_Range_Date_IDX
     ON SimpleRangeEvents (RangeName, EventDate);
 
 CREATE TABLE IF NOT EXISTS FitFiles
@@ -32,9 +32,9 @@ CREATE TABLE IF NOT EXISTS FitFiles
     Modified TEXT default CURRENT_TIMESTAMP          not null, -- The date the file was last modified.
     CONSTRAINT FileFiles_Id UNIQUE (ID)
 );
-CREATE UNIQUE INDEX FitFiles_Id_IDX
+CREATE UNIQUE INDEX IF NOT EXISTS FitFiles_Id_IDX
     ON FitFiles (Id);
-CREATE INDEX FitFiles_FileName_IDX
+CREATE INDEX IF NOT EXISTS FitFiles_FileName_IDX
     ON FitFiles (FileName);
 
 CREATE TABLE IF NOT EXISTS Firearms
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS Firearms
     Modified TEXT default CURRENT_TIMESTAMP not null, -- The date the file was last modified.
     CONSTRAINT Firearms_Id UNIQUE (ID)
 );
-CREATE UNIQUE INDEX Firearms_Id_IDX
+CREATE UNIQUE INDEX IF NOT EXISTS Firearms_Id_IDX
     ON Firearms (Id);
-CREATE INDEX Firearms_Name_IDX
+CREATE INDEX IF NOT EXISTS Firearms_Name_IDX
     ON Firearms (Name);

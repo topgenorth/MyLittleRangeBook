@@ -27,6 +27,21 @@ namespace MyLittleRangeBook.Database.Sqlite
 
         Task<Result<bool>> ApplyDbupMigrationsAsync(CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Runs a SQL script on the database.
+        /// </summary>
+        /// <param name="sqlFile"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         Task<Result<bool>> RunSqlOnDatabaseAsync(string sqlFile, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Updates appsettings.json with a new database.
+        /// </summary>
+        /// <param name="sqliteDatabaseName"></param>
+        /// <param name="appSettingsFile">Optional. If missing, then the default database name will be used.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        Task<Result<bool>> UpdateSqliteDatabaseAsync(string sqliteDatabaseName, string? appSettingsFile = null, CancellationToken cancellationToken = default);
     }
 }

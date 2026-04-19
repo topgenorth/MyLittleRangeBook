@@ -1,2 +1,1 @@
-﻿create index SimpleRangeEvents_Modified_IDX
-    on SimpleRangeEvents (Modified);
+﻿CREATE INDEX IF NOT EXISTS SimpleRangeEvents_Modified_IDX ON SimpleRangeEvents (Modified);

@@ -12,23 +12,26 @@ using MyLittleRangeBook.PgSQL;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
-IAppSettingsBootstrapper appSettings = new AppSettingsBootstrapper();
-await appSettings.EnsureAppSettingsExistsAsync();
+IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsBootstrapper();
+await appSettingsBootstrapper.EnsureAppSettingsExistsAsync();
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.Sources.Clear();
 
 if (EnvironmentHelper.IsProduction)
 {
-    builder.Configuration.AddJsonFile(DefaultAppSettingsFile.FullName, false, true);
+    builder.Configuration
+        .AddJsonFile(DefaultAppSettingsFile.FullName, false, true);
 }
 else
 {
-    builder.Configuration.AddJsonFile("appsettings.json", true, true)
+    builder.Configuration
+        .AddJsonFile("appsettings.json", true, true)
         .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
         .AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
     builder.Services.AddPostgresHelper(builder.Configuration);
 }
+builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();

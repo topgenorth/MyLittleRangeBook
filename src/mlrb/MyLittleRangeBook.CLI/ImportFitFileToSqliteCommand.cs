@@ -48,6 +48,8 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         {
             _cliDisplay.WriteHeader("Importing FIT File");
 
+            Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
+
             Result<int> result = await _cliDisplay.RunStatusAsync<Result<int>>("Importing FIT File",
                 async ct => await DoWorkAsync(fitFile, ct), cancellationToken);
 

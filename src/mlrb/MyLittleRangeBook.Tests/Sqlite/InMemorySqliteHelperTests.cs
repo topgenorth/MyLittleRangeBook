@@ -21,7 +21,6 @@ namespace MyLittleRangeBook.Tests.Sqlite
 
             await helper.ApplyDbupMigrationsAsync();
 
-
         }
     }
 }
