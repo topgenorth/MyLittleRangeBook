@@ -30,7 +30,6 @@ namespace MyLittleRangeBook.Database.Sqlite
             var builder = new SqliteConnectionStringBuilder(connectionString) { Mode = SqliteOpenMode.ReadWriteCreate };
             _connectionString = builder.ConnectionString;
             DatabaseFile = builder.DataSource;
-
         }
 
         public SqliteHelper(ILogger logger, IConfiguration configuration) : this(logger,
@@ -38,13 +37,13 @@ namespace MyLittleRangeBook.Database.Sqlite
         {
         }
 
-
-        public string DatabaseFile { get; }
-
         async Task<IDbConnection> IDatabaseHelper.GetDatabaseConnectionAsync(CancellationToken cancellationToken)
         {
             return await GetDatabaseConnectionAsync(cancellationToken);
         }
+
+
+        public string DatabaseFile { get; }
 
         /// <summary>
         ///     Creates a new <see cref="SqliteConnection" /> and opens it for usage.
@@ -89,7 +88,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             {
                 UpgradeEngine? upgrader = DeployChanges.To
                     .SqliteDatabase(_connectionString)
-                    .WithScriptsEmbeddedInAssembly(this.GetType().Assembly)
+                    .WithScriptsEmbeddedInAssembly(GetType().Assembly)
                     .LogToConsole()
                     .Build();
 
@@ -114,6 +113,33 @@ namespace MyLittleRangeBook.Database.Sqlite
                         .WithMetadata("Exception", e)
                         .WithMetadata("Database", _connectionString)
                     ;
+
+                return Result.Fail<bool>(err).WithValue(false);
+            }
+        }
+
+        public async Task<Result<bool>> RunSqlOnDatabaseAsync(string sql, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(sql))
+            {
+                _logger.Information("There is no SQL - nothing to do.");
+
+                return Result.Ok(true);
+            }
+
+            try
+            {
+                await using SqliteConnection connection = await GetDatabaseConnectionAsync(cancellationToken);
+                await using var cmd = new SqliteCommand(sql, connection);
+                await cmd.ExecuteNonQueryAsync(cancellationToken);
+
+                return Result.Ok(true);
+            }
+            catch (Exception e)
+            {
+                Error? err = new Error("Failed to run SQL.").CausedBy(e);
+                err.Metadata.Add("SQL", sql);
+                err.Metadata.Add("Connection", _connectionString);
 
                 return Result.Fail<bool>(err).WithValue(false);
             }

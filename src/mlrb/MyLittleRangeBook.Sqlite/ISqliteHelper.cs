@@ -26,5 +26,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             CancellationToken cancellationToken = default);
 
         Task<Result<bool>> ApplyDbupMigrationsAsync(CancellationToken cancellationToken = default);
+
+        Task<Result<bool>> RunSqlOnDatabaseAsync(string sqlFile, CancellationToken cancellationToken = default);
     }
 }

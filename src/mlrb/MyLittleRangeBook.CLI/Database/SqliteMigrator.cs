@@ -123,21 +123,15 @@ namespace MyLittleRangeBook.CLI.Database
                         cliDisplay.Console.MarkupLineInterpolated($"[green]✓ Loading SQL file {sqlfile}.[/]");
                         string sql = await File.ReadAllTextAsync(sqlfile, ct);
 
-                        if (string.IsNullOrWhiteSpace(sql))
+                        Result<bool> result= await sqliteHelper.RunSqlOnDatabaseAsync(sql, ct);
+                        if (result.IsSuccess)
                         {
-                            logger.Information("SQL File {sqlFile} is empty - nothing done.", sqlfile);
                             WriteSuccess();
-
                             return SUCCESS;
                         }
 
+                        return FAILED_TO_RUN_SQL;
 
-                        await using SqliteConnection connection = await sqliteHelper.GetDatabaseConnectionAsync(ct);
-                        await using var cmd = new SqliteCommand(sql, connection);
-                        await cmd.ExecuteNonQueryAsync(ct);
-                        WriteSuccess();
-
-                        return SUCCESS;
                     }
                     catch (Exception e)
                     {
