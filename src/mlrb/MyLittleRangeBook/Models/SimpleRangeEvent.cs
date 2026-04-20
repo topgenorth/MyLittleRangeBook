@@ -51,5 +51,20 @@
         ///     The time (UTC) that the record was last modified.
         /// </summary>
         public DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
+
+        public static SimpleRangeEvent New(string firearm, int rounds, string range, string ammo, string notes, DateOnly date = default)
+        {
+            var sre = new SimpleRangeEvent
+            {
+                FirearmName = firearm,
+                RoundsFired = rounds,
+                RangeName = range,
+                AmmoDescription = ammo,
+                Notes = notes,
+                EventDate = date == default ? DateTime.Now.Date : date.ToDateTime(TimeOnly.MinValue).Date
+            };
+
+            return sre;
+        }
     }
 }

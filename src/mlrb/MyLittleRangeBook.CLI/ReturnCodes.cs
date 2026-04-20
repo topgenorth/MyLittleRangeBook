@@ -12,5 +12,6 @@
         public const int FIT_FILE_NOT_FOUND = 7;
         public const int FAILED_TO_WRITE_TO_DATABASE = 8;
         public const int FAILED_TO_CREATE_RANGE_EVENT = 9;
+        public const int FAILED_TO_CREATE_RANGE_EVENT_TASK_CANCELLED = 10;
     }
 }
