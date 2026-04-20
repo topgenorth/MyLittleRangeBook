@@ -1,11 +1,15 @@
 param(
     [Parameter(Mandatory=$true)]
-    [string]$CsvPath
+    [string]$CsvPath,
+
+    [Parameter(Mandatory=$false)]
+    [ValidateSet("Production", "Development", "Staging")]
+    [string]$DotNetEnv = "Production"
 )
 
 # Bulk import CSV into mlrb rangetrip add
 # CSV header: Date,Firearm,Rounds,Range,Ammo,Notes.
-# Skips header row.
+# Sets DOTNET_ENVIRONMENT before each mlrb call.
 
 if (-not (Test-Path $CsvPath)) {
     Write-Error "CSV file not found: $CsvPath"
@@ -34,7 +38,9 @@ foreach ($row in $data) {
         $args += @("--date", $date)
     }
 
-    Write-Host "Importing: $date - $firearm - $rounds rounds"
+    Write-Host "Importing: $date - $firearm - $rounds rounds (Env: $DotNetEnv)"
+    
+    $env:DOTNET_ENVIRONMENT = $DotNetEnv
     & mlrb @args
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "Failed to import row: $date"
