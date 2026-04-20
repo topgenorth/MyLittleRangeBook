@@ -12,9 +12,6 @@ using MyLittleRangeBook.PgSQL;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
-IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsBootstrapper();
-await appSettingsBootstrapper.EnsureAppSettingsExistsAsync();
-
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.Sources.Clear();
 
@@ -56,9 +53,11 @@ builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration)
         }
     });
 
-
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
+
+IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsBootstrapper();
+await appSettingsBootstrapper.EnsureAppSettingsExistsAsync();
 
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();

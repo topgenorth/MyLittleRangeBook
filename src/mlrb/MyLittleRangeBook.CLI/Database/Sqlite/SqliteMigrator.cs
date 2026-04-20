@@ -95,7 +95,6 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
 
             Task<Result<bool>> migrations = sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
 
-
             int result = await cliDisplay.RunStatusAsync("Loading SQL file...",
                 async ct =>
                 {
@@ -147,9 +146,8 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             {
                 logger.Warning("SQLite database {file} not found.", sqliteHelper.DatabaseFile);
                 cliDisplay.Console.MarkupLineInterpolated(
-                    $"[bold warn]✗ Could not find '{sqliteHelper.DatabaseFile}'; database will be created.[/]");
+                    $"[bold red]✗ Could not find '{sqliteHelper.DatabaseFile}'; database will be created.[/]");
 
-                return DATABASE_FILE_NOT_FOUND;
             }
 
             Result<bool> migrationResult =await sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);

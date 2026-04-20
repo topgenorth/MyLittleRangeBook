@@ -20,16 +20,19 @@ namespace MyLittleRangeBook.Database.Sqlite
         {
             _logger = logger;
 
-            if (string.IsNullOrEmpty(_connectionString))
+            if (string.IsNullOrEmpty(connectionString))
             {
                 _logger.Warning("SQLite connection string is empty!");
                 DatabaseFile = string.Empty;
                 _connectionString = string.Empty;
             }
-
-            var builder = new SqliteConnectionStringBuilder(connectionString) { Mode = SqliteOpenMode.ReadWriteCreate };
-            _connectionString = builder.ConnectionString;
-            DatabaseFile = builder.DataSource;
+            else
+            {
+                var builder =
+                    new SqliteConnectionStringBuilder(connectionString) { Mode = SqliteOpenMode.ReadWriteCreate };
+                _connectionString = builder.ConnectionString;
+                DatabaseFile = builder.DataSource;
+            }
         }
 
         public SqliteHelper(ILogger logger, IConfiguration configuration) : this(logger,
@@ -95,14 +98,18 @@ namespace MyLittleRangeBook.Database.Sqlite
                 DatabaseUpgradeResult? migrationResult = upgrader.PerformUpgrade();
                 if (migrationResult.Successful)
                 {
-                    result = new Result<bool>().WithValue(true);
+                    // TODO [TO20260419] Include a reason.
+                    result = new Result<bool>()
+                        .WithValue(true);
                 }
-
-                Error? err = new Error("Could not apply database migrations.")
+                else
+                {
+                    Error? err = new Error("Could not apply database migrations.")
                         .WithMetadata("Errors", migrationResult.Error)
                         .WithMetadata("Database", _connectionString);
 
-                result = new Result<bool>().WithValue(false).WithError(err);
+                    result = new Result<bool>().WithValue(false).WithError(err);
+                }
             }
             catch (Exception e)
             {
