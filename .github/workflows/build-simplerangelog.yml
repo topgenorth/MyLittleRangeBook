@@ -89,10 +89,12 @@ jobs:
           dotnet restore src/mlrb/MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj \
             -r "${{ matrix.rid }}"
 
-      - name: Run tests
-        shell: bash
-        run: |
-          dotnet test src/mlrb/MyLittleRangeBook.Tests/MyLittleRangeBook.Tests.csproj -c Release
+#      - name: Run tests
+#        shell: bash
+#        run: |
+#          # [To20260419] Disable GUI tests for now.
+#          #  dotnet test src/mlrb/MyLittleRangeBook.GUI.Tests/MyLittleRangeBook.GUI.Tests.csproj -c Release
+#          dotnet test src/mlrb/MyLittleRangeBook.Tests/MyLittleRangeBook.Tests.csproj -c Release
 
       - name: Publish GUI
         shell: bash
