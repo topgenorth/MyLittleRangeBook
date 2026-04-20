@@ -5,7 +5,7 @@ namespace MyLittleRangeBook.Tests
 {
     public class AppSettingsBootstrapperTests : IDisposable
     {
-        readonly string _oldEnvironment;
+        readonly string _oldEnvironment = null!;
 
         public AppSettingsBootstrapperTests()
         {

@@ -19,7 +19,7 @@ namespace MyLittleRangeBook.CLI
     /// </summary>
     [RegisterCommands("rangetrip")]
     [UsedImplicitly]
-    public class AddSimpleRangeEventCommand
+    public class AddSimpleRangeEventToSqliteCommand
     {
         const string RangeSql = "SELECT DISTINCT RangeName FROM SimpleRangeEvents ORDER BY Modified DESC,  RangeName;";
 
@@ -34,7 +34,7 @@ namespace MyLittleRangeBook.CLI
         readonly ISimpleRangeEventRepository _repo;
         readonly ISqliteHelper _sqliteHelper;
 
-        public AddSimpleRangeEventCommand(ICliDisplay cliDisplay,
+        public AddSimpleRangeEventToSqliteCommand(ICliDisplay cliDisplay,
             ILogger logger,
             [FromKeyedServices(SQLITE_KEY)] ISimpleRangeEventRepository repo,
             ISqliteHelper sqliteHelper)
@@ -70,16 +70,13 @@ namespace MyLittleRangeBook.CLI
 
             IAnsiConsole console = _cliDisplay.Console;
 
-            IEnumerable<string> firearmChoices = [];
-            IEnumerable<string> rangeChoices = [];
             IEnumerable<string> ammoChoices = [];
-
 
             try
             {
                 await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-                firearmChoices = GetChoices(conn, FirearmSql);
-                rangeChoices = GetChoices(conn, RangeSql);
+                IEnumerable<string> firearmChoices = GetChoices(conn, FirearmSql);
+                IEnumerable<string> rangeChoices = GetChoices(conn, RangeSql);
 
                 (firearm, rounds) =
                     await PromptForFirearmAndRounds(console, firearm, firearmChoices, rounds, cancellationToken);
@@ -95,7 +92,7 @@ namespace MyLittleRangeBook.CLI
                 notes = await PromptForTripNotes(console, notes, cancellationToken);
 
                 SimpleRangeEvent sre =
-                    await SaveToDatabase(firearm, rounds, range, ammo, notes, date, cancellationToken);
+                    await SaveToDatabaseAsync(firearm, rounds, range, ammo, notes, date, cancellationToken);
 
                 DisplayToConsole(console, sre);
 
@@ -282,7 +279,7 @@ namespace MyLittleRangeBook.CLI
             return (firearm, rounds);
         }
 
-        async Task<SimpleRangeEvent> SaveToDatabase(string firearm,
+        async Task<SimpleRangeEvent> SaveToDatabaseAsync(string firearm,
             int rounds,
             string range,
             string ammo,

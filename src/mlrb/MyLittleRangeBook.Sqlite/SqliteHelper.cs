@@ -65,9 +65,16 @@ namespace MyLittleRangeBook.Database.Sqlite
             return connection;
         }
 
+        /// <summary>
+        /// Creates the SQlite database (and apply any migrations) if it does not exist.
+        /// </summary>
+        /// <param name="sqliteDatabaseFile"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task<Result<bool>> CreateSqliteDatabaseAsync(string sqliteDatabaseFile,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken =default)
         {
+
             if (File.Exists(sqliteDatabaseFile))
             {
                 // TODO [TO20260418] Add a reason that the database exists.
@@ -78,9 +85,9 @@ namespace MyLittleRangeBook.Database.Sqlite
             await using SqliteConnection conn = await GetDatabaseConnectionAsync(cancellationToken);
             await conn.CloseAsync();
 
-            await ApplyDbupMigrationsAsync(cancellationToken);
+            Result<bool> result = await ApplyDbupMigrationsAsync(cancellationToken);
 
-            return Result.Ok(true);
+            return result.IsSuccess ? Result.Ok(true) : result;
         }
 
         // ReSharper disable once AsyncMethodWithoutAwait
