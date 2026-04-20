@@ -48,12 +48,16 @@ namespace MyLittleRangeBook.CLI
         /// <summary>
         ///     Add a new range trip.
         /// </summary>
-        /// <param name="firearm"></param>
-        /// <param name="rounds"></param>
-        /// <param name="range"></param>
-        /// <param name="ammo"></param>
-        /// <param name="notes"></param>
+        /// <param name="firearm">
+        ///     The name of the firearm. If this is omitted, then the CLI will promot for values based on what is
+        ///     in the database already.
+        /// </param>
+        /// <param name="rounds">How many rounds were used. Required. Must be zero or greater.</param>
+        /// <param name="range">The name of the shooting range.</param>
+        /// <param name="ammo">A description of the ammo used. The recommended format is PROJECTILE[,|;]POWDER[</param>
+        /// <param name="notes">Any notes or comments.  Optional</param>
         /// <param name="date">The date of the range trip in YYYY-MM-DD format. Default to today if omitted</param>
+        /// <param name="quiet">If this parameter is provided, then the command will display minimal output the the console.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("add")]
@@ -64,10 +68,10 @@ namespace MyLittleRangeBook.CLI
             string ammo = "",
             string notes = "",
             [RangeTripDateParser] DateOnly date = default,
+            bool quiet = false,
             CancellationToken cancellationToken = default)
         {
-            Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
-
+            // [TO20260420] Do not call the migrations
             IAnsiConsole console = _cliDisplay.Console;
 
             IEnumerable<string> ammoChoices = [];
@@ -94,51 +98,65 @@ namespace MyLittleRangeBook.CLI
                 SimpleRangeEvent sre =
                     await SaveToDatabaseAsync(firearm, rounds, range, ammo, notes, date, cancellationToken);
 
-                DisplayToConsole(console, sre);
+                DisplayToConsole(console, sre, quiet);
 
                 return SUCCESS;
             }
+            catch (TaskCanceledException tce)
+            {
+                _logger.Warning(tce, "AddSimpleRangeEventAsync was cancelled.s");
+                _cliDisplay.WriteFailure("AddSimpleRangeEventAsync was cancelled.");
+
+                return FAILED_TO_CREATE_RANGE_EVENT_TASK_CANCELLED;
+            }
             catch (Exception e)
             {
-                _logger.Error(e, "Failed to add SimpleRangeEvent");
-                _cliDisplay.WriteFailure($"Failed to add SimpleRangeEvent: {e.Message}");
+                _logger.Error(e, "Unexpected error trying to add SimpleRangeEvent");
+                _cliDisplay.WriteFailure($"Unexpected error trying to add SimpleRangeEvent: {e.Message}");
 
                 return FAILED_TO_CREATE_RANGE_EVENT;
             }
         }
 
-        void DisplayToConsole(IAnsiConsole console, SimpleRangeEvent sre)
+        void DisplayToConsole(IAnsiConsole console, SimpleRangeEvent sre, bool quiet)
         {
-            Grid bodyGrid = new Grid().AddColumns(2);
-            bodyGrid.AddRow("", "[green]Range Trip Added[/]");
-
-            bodyGrid.AddRow("  [white]RowId:[/]", sre.RowId.ToString() ?? string.Empty);
-            bodyGrid.AddRow("  [white]Id:[/]", sre.Id);
-            bodyGrid.AddRow("  [white]Date:[/]", sre.EventDate.ToString("yyyy-MMM-dd"));
-            bodyGrid.AddRow("  [white]Firearm:[/]", sre.FirearmName);
-            bodyGrid.AddRow("  [white]Range:[/] ", sre.RangeName);
-
-            if (sre.RoundsFired > 0)
+            if (quiet)
             {
-                bodyGrid.AddRow("  [white]Rounds:[/] ", sre.RoundsFired.ToString());
+                console.MarkupLineInterpolated($"[green]Range Trip added: RowId {sre.RowId}, Id {sre.Id}.[/]");
             }
-
-            if (!string.IsNullOrWhiteSpace(sre.AmmoDescription))
+            else
             {
-                bodyGrid.AddRow("  [white]Ammo:[/] ", sre.AmmoDescription);
-            }
+                Grid bodyGrid = new Grid().AddColumns(2);
+                bodyGrid.AddRow("", "[green]Range Trip Added[/]");
 
-            if (!string.IsNullOrWhiteSpace(sre.Notes))
-            {
-                bodyGrid.AddRow("  [white]Notes:[/] ", sre.Notes);
-            }
+                bodyGrid.AddRow("  [white]RowId:[/]", sre.RowId.ToString() ?? string.Empty);
+                bodyGrid.AddRow("  [white]Id:[/]", sre.Id);
+                bodyGrid.AddRow("  [white]Date:[/]", sre.EventDate.ToString("yyyy-MMM-dd"));
+                bodyGrid.AddRow("  [white]Firearm:[/]", sre.FirearmName);
+                bodyGrid.AddRow("  [white]Range:[/] ", sre.RangeName);
 
-            Layout layout = new Layout("root")
-                .SplitRows(new Layout("header"), new Layout("body"));
-            Grid headerGrid = CreateHeaderGrid();
-            layout["header"].Update(headerGrid);
-            layout["body"].Update(bodyGrid);
-            console.Write(layout);
+                if (sre.RoundsFired > 0)
+                {
+                    bodyGrid.AddRow("  [white]Rounds:[/] ", sre.RoundsFired.ToString());
+                }
+
+                if (!string.IsNullOrWhiteSpace(sre.AmmoDescription))
+                {
+                    bodyGrid.AddRow("  [white]Ammo:[/] ", sre.AmmoDescription);
+                }
+
+                if (!string.IsNullOrWhiteSpace(sre.Notes))
+                {
+                    bodyGrid.AddRow("  [white]Notes:[/] ", sre.Notes);
+                }
+
+                Layout layout = new Layout("root")
+                    .SplitRows(new Layout("header"), new Layout("body"));
+                Grid headerGrid = CreateHeaderGrid();
+                layout["header"].Update(headerGrid);
+                layout["body"].Update(bodyGrid);
+                console.Write(layout);
+            }
         }
 
         Grid CreateHeaderGrid()
@@ -147,6 +165,7 @@ namespace MyLittleRangeBook.CLI
             headerGrid.AddColumn();
             headerGrid.AddRow($"[bold]{Markup.Escape(CliDisplay.AppName)}[/]");
             headerGrid.AddRow($"[grey]Version:[/] [green]{Markup.Escape(_cliDisplay.AppVersion)}[/]");
+
             return headerGrid;
         }
 
@@ -287,15 +306,14 @@ namespace MyLittleRangeBook.CLI
             DateOnly date,
             CancellationToken cancellationToken)
         {
-            var sre = new SimpleRangeEvent
-            {
-                FirearmName = firearm,
-                RoundsFired = rounds,
-                RangeName = range,
-                AmmoDescription = ammo,
-                Notes = notes,
-                EventDate = date == default ? DateTime.Now.Date : date.ToDateTime(TimeOnly.MinValue).Date
-            };
+            var sre = SimpleRangeEvent.New(
+                RemoveDoubleQuotes(firearm),
+                rounds,
+                RemoveDoubleQuotes(range),
+                RemoveDoubleQuotes(ammo),
+                RemoveDoubleQuotes(notes),
+                date);
+
 
             // TODO [TO20260416] Data validation.
             Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken);
@@ -303,6 +321,13 @@ namespace MyLittleRangeBook.CLI
             sre.RowId = result.Value ?? -1;
 
             return sre;
+        }
+
+        static string RemoveDoubleQuotes(string value)
+        {
+            return value.Length >= 2 && value.StartsWith('"') && value.EndsWith('"')
+                ? value[1..^1]
+                : value;
         }
     }
 }
