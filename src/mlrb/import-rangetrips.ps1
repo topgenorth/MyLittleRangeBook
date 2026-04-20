@@ -32,16 +32,17 @@ foreach ($row in $data) {
         "--rounds", $rounds,
         "--range", "`"$range`"",
         "--ammo", "`"$ammo`"",
-        "--notes", "`"$notes`""
+        "--notes", "`"$notes`"",
+        "--quiet"
     )
     if ($date) {
         $args += @("--date", $date)
     }
 
-    Write-Host "Importing: $date - $firearm - $rounds rounds (Env: $DotNetEnv)"
+    Write-Host "Importing event on $date. $firearm at $range. $rounds rounds (Env: $DotNetEnv)"
     
     $env:DOTNET_ENVIRONMENT = $DotNetEnv
-    & mlrb @args
+    mlrb.exe @args
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "Failed to import row: $date"
     }

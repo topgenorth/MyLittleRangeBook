@@ -71,8 +71,7 @@ namespace MyLittleRangeBook.CLI
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
-            Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
-
+            // [TO20260420] Do not call the migrations
             IAnsiConsole console = _cliDisplay.Console;
 
             IEnumerable<string> ammoChoices = [];
@@ -103,10 +102,17 @@ namespace MyLittleRangeBook.CLI
 
                 return SUCCESS;
             }
+            catch (TaskCanceledException tce)
+            {
+                _logger.Warning(tce, "AddSimpleRangeEventAsync was cancelled.s");
+                _cliDisplay.WriteFailure("AddSimpleRangeEventAsync was cancelled.");
+
+                return FAILED_TO_CREATE_RANGE_EVENT_TASK_CANCELLED;
+            }
             catch (Exception e)
             {
-                _logger.Error(e, "Failed to add SimpleRangeEvent");
-                _cliDisplay.WriteFailure($"Failed to add SimpleRangeEvent: {e.Message}");
+                _logger.Error(e, "Unexpected error trying to add SimpleRangeEvent");
+                _cliDisplay.WriteFailure($"Unexpected error trying to add SimpleRangeEvent: {e.Message}");
 
                 return FAILED_TO_CREATE_RANGE_EVENT;
             }
@@ -116,7 +122,7 @@ namespace MyLittleRangeBook.CLI
         {
             if (quiet)
             {
-                console.MarkupLineInterpolated($"  [green]Range Trip: RowId {sre.RowId}, Id {sre.Id}.[/]");
+                console.MarkupLineInterpolated($"[green]Range Trip added: RowId {sre.RowId}, Id {sre.Id}.[/]");
             }
             else
             {
