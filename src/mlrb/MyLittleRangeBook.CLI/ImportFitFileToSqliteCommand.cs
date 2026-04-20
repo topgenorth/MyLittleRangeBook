@@ -16,7 +16,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
     public class ImportFitFileToSqliteCommand
     {
         const string InsertFitFileSql =
-            @"INSERT INTO fitfiles (id, filename, filecontents) VALUES (@id, @filename, @filecontents)";
+            @"INSERT INTO fitfiles (id, filename, contents) VALUES (@id, @filename, @filecontents)";
 
         readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
@@ -46,6 +46,8 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         public async Task<int> AddFitFileToDatabaseAsync(string fitFile,
             CancellationToken cancellationToken = default)
         {
+
+            // TODO [TO20260419] IMprove console output.
             _cliDisplay.WriteHeader("Importing FIT File");
 
             Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
@@ -62,7 +64,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 _cliDisplay.WriteFailure($"Failed to import FIT {fitFile}");
             }
 
-            return result.Value;
+            return result.IsSuccess ? result.Value : ReturnCodes.FAILED_TO_LOAD;
         }
 
 
@@ -107,6 +109,8 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             byte[] bytesToSave = fileContents.Value.ToArray();
 
             long rowId;
+            Result<bool> migrationResult = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
+
             try
             {
                 await using SqliteConnection connection =
@@ -118,8 +122,9 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 _logger.Error(e, "Failed to save {bytes} bytes from FIT {fitFile} to database {database}.",
                     bytesToSave.Length, fitFile, fitFile);
                 Error? err = new FailedToWriteFitFileToDatabaseError(fitFile, bytesToSave.Length).CausedBy(e);
+                Result<int>? r = new Result<int>().WithValue(ReturnCodes.FAILED_TO_WRITE_TO_DATABASE).WithError(err);
 
-                return Result.Fail(err).ToResult(ReturnCodes.FAILED_TO_WRITE_TO_DATABASE);
+                return r;
             }
 
             Success? success = new WroteFitFileToDatabaseSuccess(fitFile, bytesToSave.Length)
