@@ -54,7 +54,7 @@ namespace MyLittleRangeBook.CLI
         /// </param>
         /// <param name="rounds">How many rounds were used. Required. Must be zero or greater.</param>
         /// <param name="range">The name of the shooting range.</param>
-        /// <param name="ammo">A description of the ammo used. Recommended format is [PROJECTILE];[POWDER];</param>
+        /// <param name="ammo">A description of the ammo used. The recommended format is PROJECTILE[,|;]POWDER[</param>
         /// <param name="notes">Any notes or comments.  Optional</param>
         /// <param name="date">The date of the range trip in YYYY-MM-DD format. Default to today if omitted</param>
         /// <param name="quiet">If this parameter is provided, then the command will display minimal output the the console.</param>
