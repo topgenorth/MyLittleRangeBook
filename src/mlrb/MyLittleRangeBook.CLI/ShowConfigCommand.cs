@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.CLI.Console;
 using Spectre.Console;
+using System.Linq;
 
 namespace MyLittleRangeBook.CLI
 {
@@ -30,7 +31,7 @@ namespace MyLittleRangeBook.CLI
             table.AddColumn("Key");
             table.AddColumn("Value");
 
-            foreach (KeyValuePair<string, string?> pair in _configuration.AsEnumerable())
+            foreach (KeyValuePair<string, string?> pair in _configuration.AsEnumerable().OrderBy(pair => pair.Key))
             {
                 table.AddRow(
                     Markup.Escape(pair.Key),
