@@ -13,7 +13,7 @@ namespace MyLittleRangeBook.PgSQL
             _connectionString = connectionString;
         }
 
-        async Task<IDbConnection> IDatabaseHelper.GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
+        async Task<IDbConnection> IDatabaseHelper.GetDatabaseConnectionAsync(CancellationToken cancellationToken)
         {
             return await GetDatabaseConnectionAsync(cancellationToken);
         }

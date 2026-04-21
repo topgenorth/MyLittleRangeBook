@@ -130,7 +130,7 @@ namespace MyLittleRangeBook.CLI
                 bodyGrid.AddRow("", "[green]Range Trip Added[/]");
 
                 bodyGrid.AddRow("  [white]RowId:[/]", sre.RowId.ToString() ?? string.Empty);
-                bodyGrid.AddRow("  [white]Id:[/]", sre.Id);
+                bodyGrid.AddRow("  [white]Id:[/]", sre.Id!);
                 bodyGrid.AddRow("  [white]Date:[/]", sre.EventDate.ToString("yyyy-MMM-dd"));
                 bodyGrid.AddRow("  [white]Firearm:[/]", sre.FirearmName);
                 bodyGrid.AddRow("  [white]Range:[/] ", sre.RangeName);

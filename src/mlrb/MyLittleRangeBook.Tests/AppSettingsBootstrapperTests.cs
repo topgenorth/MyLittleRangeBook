@@ -9,7 +9,7 @@ namespace MyLittleRangeBook.Tests
 
         public AppSettingsBootstrapperTests()
         {
-            _oldEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+            _oldEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
             Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
         }
 
