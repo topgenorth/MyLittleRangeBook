@@ -3,7 +3,6 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.CLI.Console;
 using Spectre.Console;
-using System.Linq;
 
 namespace MyLittleRangeBook.CLI
 {
@@ -12,12 +11,10 @@ namespace MyLittleRangeBook.CLI
     {
         readonly ICliDisplay _cliDisplay;
         readonly IConfiguration _configuration;
-        ILogger _logger;
 
-        public ShowConfigCommand(ICliDisplay cliDisplay, ILogger logger, IConfiguration configuration)
+        public ShowConfigCommand(ICliDisplay cliDisplay, IConfiguration configuration)
         {
             _cliDisplay = cliDisplay;
-            _logger = logger;
             _configuration = configuration;
         }
 
@@ -40,7 +37,7 @@ namespace MyLittleRangeBook.CLI
 
             _cliDisplay.Console.Write(table);
 
-            return 0;
+            return ReturnCodes.SUCCESS;
         }
     }
 }
