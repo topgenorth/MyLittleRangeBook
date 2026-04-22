@@ -44,6 +44,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
         ///     success).
         /// </returns>
         [Command("pgsql")]
+        [Hidden]
         [UsedImplicitly]
         public async Task<int> ImportFileAsync(string fitFile, CancellationToken cancellationToken = default)
         {

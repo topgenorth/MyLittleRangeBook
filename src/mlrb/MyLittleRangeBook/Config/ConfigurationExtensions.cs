@@ -8,8 +8,11 @@
         internal static readonly string SqliteDatabaseName = "mlrb.db";
         internal static readonly string AppSettingsFileName = "appsettings.json";
 
+        /// <summary>
+        /// Default name of this application's local application data folder.'
+        /// </summary>
         internal static readonly string DefaultLocalAppDataFolder =
-            OperatingSystem.IsWindows() ? "MyLittleRangeBook" : ".mylittlerangebook";
+            OperatingSystem.IsWindows() ? "MyLittleRangeBook" : "mylittlerangebook";
 
         /// <summary>
         ///     Gets the user settings directory path for this application.

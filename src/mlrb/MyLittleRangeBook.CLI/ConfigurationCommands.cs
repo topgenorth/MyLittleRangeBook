@@ -7,12 +7,12 @@ using Spectre.Console;
 namespace MyLittleRangeBook.CLI
 {
     [RegisterCommands("config")]
-    public class ShowConfigCommand
+    public class ConfigurationCommands
     {
         readonly ICliDisplay _cliDisplay;
         readonly IConfiguration _configuration;
 
-        public ShowConfigCommand(ICliDisplay cliDisplay, IConfiguration configuration)
+        public ConfigurationCommands(ICliDisplay cliDisplay, IConfiguration configuration)
         {
             _cliDisplay = cliDisplay;
             _configuration = configuration;
