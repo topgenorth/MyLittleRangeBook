@@ -21,11 +21,57 @@ namespace MyLittleRangeBook.FIT
 
         public static DateTimeOffset FitEpoch = new(1989, 12, 31, 0, 0, 0, TimeSpan.Zero);
 
-        internal static string ToShotSessionId(this uint serialNumber)
+
+        public static DateTimeOffset GetTimestampUtc(this ChronoShotSessionMesg msg)
         {
-            return serialNumber == 0 ? Nanoid.Generate() : $"{serialNumber.ToString()}-0";
+            return msg.GetTimestamp().GetDateTime().ToUniversalTime();
+        }
+        public static DateTimeOffset GetTimestampUtc(this ChronoShotDataMesg msg)
+        {
+            return msg.GetTimestamp().GetDateTime().ToUniversalTime();
+        }
+        public static DateTimeOffset GetTimeCreatedUtc(this FileIdMesg msg)
+        {
+            return msg.GetTimeCreated().GetDateTime().ToUniversalTime();
+
+        }
+        public static DateTimeOffset GetTimestampUtc(this DeviceInfoMesg msg)
+        {
+            return msg.GetTimestamp().GetDateTime().ToUniversalTime();
+        }
+        /// <summary>
+        ///     Converts a FIT DateTime to a .NET DateTimeOffset. Returns null if the input is null.
+        /// </summary>
+        /// <param name="fitDateTime"></param>
+        /// <returns></returns>
+        public static DateTimeOffset? ToDateTimeOffset(this DateTime? fitDateTime)
+        {
+            if (fitDateTime == null)
+            {
+                return null;
+            }
+
+            return new DateTimeOffset(fitDateTime.GetDateTime().ToUniversalTime(), TimeSpan.Zero);
         }
 
+        /// <summary>
+        ///     Generate a unique ID for a shot session based on the Xero serial number and a random Nanoid. If the serial number
+        ///     is less than 1, only the Nanoid will be used as the ID.
+        /// </summary>
+        /// <remarks>The Nanoid is enclosed in square brackets to distinguish it as a child of the serial number.</remarks>
+        /// <param name="serialNumber"></param>
+        /// <returns>A unique string.</returns>
+        internal static string ToShotSessionId(this uint serialNumber)
+        {
+            string? id = Nanoid.Generate();
+
+            return serialNumber < 1 ? id : $"{serialNumber.ToString()}[{id}]";
+        }
+
+        internal static string ToShotSessionId(this uint? serialNumber)
+        {
+            return serialNumber is null ? Nanoid.Generate() : serialNumber.Value.ToShotSessionId();
+        }
 
         public static async Task<Result<ReadOnlyMemory<byte>>> LoadFitFileBytesAsync(this string filename,
             CancellationToken ct)

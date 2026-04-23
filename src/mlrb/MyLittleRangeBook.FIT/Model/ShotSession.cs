@@ -13,12 +13,13 @@ namespace MyLittleRangeBook.FIT.Model
 
         public ShotSession() : this($"{Nanoid.Generate()}-0")
         {
+            _xeroSerialNumber = 0;
         }
 
-        public ShotSession(uint xeroSerialNumber)
+        public ShotSession(uint? xeroSerialNumber)
         {
             Id = xeroSerialNumber.ToShotSessionId();
-            _xeroSerialNumber = xeroSerialNumber;
+            _xeroSerialNumber = xeroSerialNumber ?? 0;
             FileName = string.Empty;
             ProjectileType = "Rifle";
             Notes = string.Empty;
@@ -26,6 +27,10 @@ namespace MyLittleRangeBook.FIT.Model
             VelocityUnits = "m/s";
         }
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="id">Must be unique value to identify the shot session.</param>
         public ShotSession(string id)
         {
             Id = id;
@@ -56,6 +61,12 @@ namespace MyLittleRangeBook.FIT.Model
         public ShotCollection Shots { get; } = [];
 
         public uint SerialNumber { get; set; }
+
+        public ushort? Manufacturer { get; set; }
+        public ushort? Product { get; set;  }
+        public byte? Type { get; set; }
+        public string SoftwareVersion { get; set; }
+        public DateTimeOffset TimeCreated { get; set; }
 
         public string Notes { get; set; }
         public string ProjectileUnits { get; set; }

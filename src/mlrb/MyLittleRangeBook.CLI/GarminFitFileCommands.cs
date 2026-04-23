@@ -24,10 +24,23 @@ namespace MyLittleRangeBook.CLI
             _xeroParser = xeroParser;
         }
 
+        /// <summary>
+        /// Used to explore the FIT file.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [Command("explore")]
         public async Task<int> ExploreAsync(string file, CancellationToken cancellationToken)
         {
             _cliDisplay.WriteAppInfo();
+            _cliDisplay.Console.MarkupLine($"Exploring the FIT file {file}");
+
+            Result<ShotSession> result = await ((XeroShotSessionParser) _xeroParser).ExploreFITFileAsync(file, cancellationToken);
+            if (result.IsFailed)
+            {
+                _cliDisplay.Console.MarkupLine($"[red]Failed to explore FIT file {file}.[/]");
+            }
             return SUCCESS;
         }
 
@@ -47,7 +60,7 @@ namespace MyLittleRangeBook.CLI
                 _logger.Warning("File {file} not found.", file);
                 _cliDisplay.WriteFailure($"Could not find '{file}'.");
 
-                return DATABASE_FILE_NOT_FOUND;
+                return FIT_FILE_NOT_FOUND;
             }
 
             Result<ShotSession>? result = await _cliDisplay.RunStatusAsync("Loading FIT file...",
