@@ -4,6 +4,7 @@
         <Project Path="SharedControlsTests/SharedControlsTests.csproj" />
     </Folder>
     <Folder Name="/SolutionItems/">
+        <File Path="../../AGENTS.md" />
         <File Path=".editorconfig" />
         <File Path=".gitignore" />
         <File Path="README.md" />
