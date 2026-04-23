@@ -10,13 +10,13 @@ using static MyLittleRangeBook.CLI.ReturnCodes;
 namespace MyLittleRangeBook.CLI
 {
     [RegisterCommands("fit")]
-    public class DisplayXeroFitToConsoleCommand
+    public class GarminFitFileCommands
     {
         readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
         readonly IXeroShotSessionParser _xeroParser;
 
-        public DisplayXeroFitToConsoleCommand(ILogger logger, ICliDisplay cliDisplay, IXeroShotSessionParser xeroParser)
+        public GarminFitFileCommands(ILogger logger, ICliDisplay cliDisplay, IXeroShotSessionParser xeroParser)
         {
             _logger = logger;
             _xeroParser = xeroParser;
@@ -24,6 +24,12 @@ namespace MyLittleRangeBook.CLI
             _xeroParser = xeroParser;
         }
 
+        [Command("explore")]
+        public async Task<int> ExploreAsync(string file, CancellationToken cancellationToken)
+        {
+            _cliDisplay.WriteAppInfo();
+            return SUCCESS;
+        }
 
         /// <summary>
         ///     Displays the FIT file to the console.
