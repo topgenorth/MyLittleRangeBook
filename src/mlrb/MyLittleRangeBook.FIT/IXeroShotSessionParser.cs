@@ -20,5 +20,13 @@ namespace MyLittleRangeBook.FIT
         /// <param name="input"></param>
         /// <returns></returns>
         Result<ShotSession> Decode(Stream input);
+
+        /// <summary>
+        /// Decodes a FIT byte stream into a ShotSession, with logging to a custom logger.
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        Result<ShotSession> Decode(Stream input, ILogger? logger);
     }
 }
