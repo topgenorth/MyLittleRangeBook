@@ -38,14 +38,15 @@ namespace MyLittleRangeBook.Database.Sqlite
                 _logger.Verbose("SimpleRangeEvent {Id} saved RowId: {RowId}", simpleRangeEvent.Id,
                     result.Value);
 
-                Result<long> firearmIdResult = await RetrieveFirearmRowIdAsync(conn, simpleRangeEvent, cancellationToken);
-                if (firearmIdResult is { IsSuccess: true, Value: > 0 })
+                if (result is { IsSuccess: true, Value: > 0 })
                 {
-                    // [TO20260421] No need to add the firearm
+                    var firearmRowIdResult = await UpsertFirearmAsync(conn, simpleRangeEvent, cancellationToken);
+
+
                 }
                 else
                 {
-                    Result<long> firearmsResult = await AppendToFirearmsTableAsync(conn, simpleRangeEvent, cancellationToken);
+                    Result<long> firearmsResult = await UpsertFirearmAsync(conn, simpleRangeEvent, cancellationToken);
                     // [TO20260421] For now, this isn't a big deal.
                     _logger.Verbose(
                         firearmsResult.IsFailed
@@ -67,19 +68,25 @@ namespace MyLittleRangeBook.Database.Sqlite
             return result;
         }
 
-        async Task<Result<long>> AppendToFirearmsTableAsync(SqliteConnection conn, SimpleRangeEvent simpleRangeEvent,
+        async Task<Result<long>> UpsertFirearmAsync(SqliteConnection conn,
+            SimpleRangeEvent simpleRangeEvent,
             CancellationToken cancellationToken)
         {
-
             // [TO20260421] Need to create a new one.
             Result<long> result;
-            Error? couldntSaveFirearmError = new Error("Could not save Firearm").WithMetadata("FirearmName", simpleRangeEvent.FirearmName);
+            Error? couldntSaveFirearmError = new Error("Could not save Firearm")
+                .WithMetadata("FirearmName", simpleRangeEvent.FirearmName);
 
             try
             {
                 await using SqliteCommand insertCmd = conn.CreateCommand();
                 insertCmd.CommandText =
-                    "INSERT INTO Firearms (Id, Name) VALUES (nanoid(), @firearm_name) RETURNING RowId";
+                    """
+                    INSERT INTO Firearms (Id, Name) 
+                    VALUES (nanoid(), @firearm_name)
+                    ON CONFLICT (Name) DO UPDATE SET Name = @firearm_name , Modified = utcnow()
+                    RETURNING RowId;
+                    """;
                 insertCmd.Parameters.AddWithValue("@firearm_name", simpleRangeEvent.FirearmName);
 
                 object? x2 = await insertCmd.ExecuteScalarAsync(cancellationToken);
@@ -101,27 +108,6 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
 
             return result;
-        }
-
-        async Task<Result<long>> RetrieveFirearmRowIdAsync(SqliteConnection conn,
-            SimpleRangeEvent simpleRangeEvent,
-            CancellationToken cancellationToken)
-        {
-            await using SqliteCommand cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT RowId FROM Firearms WHERE Name = @firearm_name";
-            cmd.Parameters.AddWithValue("@firearm_name", simpleRangeEvent.FirearmName);
-            object? x = await cmd.ExecuteScalarAsync(cancellationToken);
-
-            if (long.TryParse(x?.ToString() ?? "", out long rowId))
-            {
-                // [TO20260421] Already exists.
-                Result<long> r = new Result<long>()
-                    .WithValue(rowId);
-
-                return r;
-            }
-
-            return Result.Fail<long>(new Error("Firearm not found")).WithValue(-1);
         }
 
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(

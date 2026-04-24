@@ -24,7 +24,7 @@ namespace MyLittleRangeBook.CLI
         const string RangeSql = "SELECT DISTINCT RangeName FROM SimpleRangeEvents ORDER BY Modified DESC,  RangeName;";
 
         const string FirearmSql =
-            "SELECT DISTINCT FirearmName FROM SimpleRangeEvents ORDER BY Modified DESC,  FirearmName;";
+            "SELECT DISTINCT FirearmName FROM SimpleRangeEvents WHERE IsActive=1 ORDER BY FirearmName;";
 
         const string AmmoSql =
             "SELECT DISTINCT AmmoDescription FROM SimpleRangeEvents WHERE FirearmName=@firearmname ORDER BY Modified DESC, AmmoDescription;";
@@ -71,7 +71,11 @@ namespace MyLittleRangeBook.CLI
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
-            // [TO20260420] Do not call the migrations
+            // [TO20260424] Don't run the migrations if all the command line parameters are present.
+            if (!quiet)
+            {
+                Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
+            }
             IAnsiConsole console = _cliDisplay.Console;
 
             IEnumerable<string> ammoChoices = [];
@@ -84,11 +88,17 @@ namespace MyLittleRangeBook.CLI
 
                 (firearm, rounds) =
                     await PromptForFirearmAndRounds(console, firearm, firearmChoices, rounds, cancellationToken);
-                if (!string.IsNullOrWhiteSpace(firearm))
+
+                bool getAmmo = string.IsNullOrWhiteSpace(ammo) && !string.IsNullOrWhiteSpace(firearm);
+                if (getAmmo)
                 {
                     var cmd = new SqliteCommand(AmmoSql, conn);
                     cmd.Parameters.AddWithValue("@firearmname", firearm);
                     ammoChoices = GetChoices(cmd);
+                }
+                else
+                {
+                    ammoChoices = [ammo];
                 }
 
                 range = await PromptForRangeSelection(console, range, rangeChoices, cancellationToken);
