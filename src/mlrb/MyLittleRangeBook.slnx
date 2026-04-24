@@ -5,6 +5,7 @@
     </Folder>
     <Folder Name="/SolutionItems/">
         <File Path="../../AGENTS.md" />
+        <File Path="../../update-from-artifacts.ps1" />
         <File Path=".editorconfig" />
         <File Path=".gitignore" />
         <File Path="README.md" />

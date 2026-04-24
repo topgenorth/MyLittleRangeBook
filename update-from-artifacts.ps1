@@ -1,10 +1,5 @@
 #!/usr/bin/env pwsh
 
-[CmdletBinding()]
-param(
-    [string]$CliBinaryBaseName = "MyLittleRangeBook-CLI"
-)
-
 $ErrorActionPreference = "Stop"
 
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
@@ -20,29 +15,29 @@ Set-Location $repoRoot
 
 if ($IsWindows) {
     $artifactPattern = "mlrb-*-windows-executables"
-    $destinationDir = "C:\Temp"
-    $executableName = "$CliBinaryBaseName.exe"
+    $destinationDir = Join-Path ([Environment]::GetFolderPath("UserProfile")) ".bin"
+    $executableName = "mlrb.exe"
 }
 elseif ($IsLinux) {
     $destinationDir = Join-Path ([Environment]::GetFolderPath("UserProfile")) ".local/bin"
     $artifactPattern = "*-linux-executables"
-    $executableName = $CliBinaryBaseName
+    $executableName = "mlrb"
 }
 else {
     throw "Unsupported platform. This script supports Windows and Linux only."
 }
 
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "mlrb-cli-install"
+if (Test-Path $tempRoot) {
+    Remove-Item $tempRoot -Recurse -Force
+}
 $downloadDir = Join-Path $tempRoot "download"
-
 if (Test-Path $downloadDir) {
     Remove-Item $downloadDir -Recurse -Force
 }
-
 New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
-New-Item -ItemType Directory -Path $destinationDir -Force | Out-Null
-
 Write-Host "Downloading latest artifact matching: $artifactPattern to $downloadDir"
+
 gh run download --pattern $artifactPattern --dir $downloadDir
 
 $executable = Get-ChildItem -Path $downloadDir -Recurse -File |
@@ -51,9 +46,10 @@ $executable = Get-ChildItem -Path $downloadDir -Recurse -File |
 
 if (-not $executable) {
     $files = Get-ChildItem -Path $downloadDir -Recurse -File | ForEach-Object { $_.FullName }
-    throw "Could not find $executableName in downloaded artifact.`nFiles found:`n$($files -join "`n")"
+    throw "Could not find " + $executableName + " in downloaded artifact.`nFiles found:`n$($files -join "`n")"
 }
 
+New-Item -ItemType Directory -Path $destinationDir -Force | Out-Null
 $destinationPath = Join-Path $destinationDir $executableName
 Copy-Item -Path $executable.FullName -Destination $destinationPath -Force
 
@@ -61,4 +57,4 @@ if ($IsLinux) {
     & chmod +x $destinationPath
 }
 
-Write-Host "Installed: $destinationPath"
+Write-Host "Installed $executable.FullName to : $destinationPath"
