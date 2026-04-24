@@ -36,9 +36,18 @@ if (Test-Path $downloadDir) {
     Remove-Item $downloadDir -Recurse -Force
 }
 New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
-Write-Host "Downloading latest artifact matching: $artifactPattern to $downloadDir"
+Write-Host "Getting latest workflow run ID..."
 
-gh run download --pattern $artifactPattern --dir $downloadDir
+$latestRunId = gh run list --limit 1 --json databaseId -q ".[0].databaseId"
+if (-not $latestRunId) {
+    throw "Could not retrieve latest workflow run ID."
+}
+
+Write-Host "Downloading artifacts from run $latestRunId matching: $artifactPattern to $downloadDir"
+gh run download $latestRunId --pattern $artifactPattern --dir $downloadDir
+
+Write-Host "Contents of download directory:"
+Get-ChildItem -Path $downloadDir -Recurse | ForEach-Object { Write-Host "  $_" }
 
 $executable = Get-ChildItem -Path $downloadDir -Recurse -File |
     Where-Object { $_.Name -eq $executableName } |
