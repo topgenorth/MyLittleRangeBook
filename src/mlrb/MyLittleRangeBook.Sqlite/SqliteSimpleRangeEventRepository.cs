@@ -38,22 +38,18 @@ namespace MyLittleRangeBook.Database.Sqlite
                 _logger.Verbose("SimpleRangeEvent {Id} saved RowId: {RowId}", simpleRangeEvent.Id,
                     result.Value);
 
-                if (result is { IsSuccess: true, Value: > 0 })
+                if (result is not { IsSuccess: true, Value: > 0 })
                 {
-                    var firearmRowIdResult = await UpsertFirearmAsync(conn, simpleRangeEvent, cancellationToken);
-
-
+                    return result;
                 }
-                else
-                {
-                    Result<long> firearmsResult = await UpsertFirearmAsync(conn, simpleRangeEvent, cancellationToken);
-                    // [TO20260421] For now, this isn't a big deal.
-                    _logger.Verbose(
-                        firearmsResult.IsFailed
-                            ? "Firearm {FirearmName} could not be saved for SimpleRangeEvent {Id}"
-                            : "Firearm {FirearmName} saved for SimpleRangeEvent {Id}",
-                        simpleRangeEvent.FirearmName, simpleRangeEvent.Id);
-                }
+
+                Result<long> firearmRowIdResult = await UpsertFirearmAsync(conn, simpleRangeEvent, cancellationToken);
+                // [TO20260421] For now, this isn't a big deal.
+                _logger.Verbose(
+                    firearmRowIdResult.IsFailed
+                        ? "Firearm {FirearmName} could not be saved for SimpleRangeEvent {Id}"
+                        : "Firearm {FirearmName} saved for SimpleRangeEvent {Id}",
+                    simpleRangeEvent.FirearmName, simpleRangeEvent.Id);
             }
             else
             {
@@ -82,9 +78,9 @@ namespace MyLittleRangeBook.Database.Sqlite
                 await using SqliteCommand insertCmd = conn.CreateCommand();
                 insertCmd.CommandText =
                     """
-                    INSERT INTO Firearms (Id, Name) 
-                    VALUES (nanoid(), @firearm_name)
-                    ON CONFLICT (Name) DO UPDATE SET Name = @firearm_name , Modified = utcnow()
+                    INSERT INTO Firearms (Id, Name, Created, Modified) 
+                    VALUES (nanoid(), @firearm_name, utcnow(), utcnow())
+                    ON CONFLICT (Name) DO UPDATE SET Modified = utcnow()
                     RETURNING RowId;
                     """;
                 insertCmd.Parameters.AddWithValue("@firearm_name", simpleRangeEvent.FirearmName);
