@@ -9,10 +9,10 @@ namespace MyLittleRangeBook.FIT
         ///     Decodes a FIT file into a ShotSession.
         /// </summary>
         /// <param name="filePath"></param>
-        /// <param name="ct"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         // ReSharper disable once InconsistentNaming
-        Task<Result<ShotSession>> DecodeFITFileAsync(string filePath, CancellationToken ct);
+        Task<Result<ShotSession>> DecodeFITFileAsync(string filePath, CancellationToken cancellationToken);
 
         /// <summary>
         /// Decodes a FIT byte stream into a ShotSession.
@@ -20,5 +20,13 @@ namespace MyLittleRangeBook.FIT
         /// <param name="input"></param>
         /// <returns></returns>
         Result<ShotSession> Decode(Stream input);
+
+        /// <summary>
+        /// Decodes a FIT byte stream into a ShotSession, with logging to a custom logger.
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        Result<ShotSession> Decode(Stream input, ILogger? logger);
     }
 }

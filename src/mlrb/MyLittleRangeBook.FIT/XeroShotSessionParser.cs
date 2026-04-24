@@ -2,7 +2,9 @@ using CommunityToolkit.HighPerformance;
 using Dynastream.Fit;
 using FluentResults;
 using MyLittleRangeBook.FIT.Model;
+using DynastreamFile = Dynastream.Fit.File;
 using File = System.IO.File;
+using DynamstreamDateTime = Dynastream.Fit.DateTime;
 
 namespace MyLittleRangeBook.FIT
 {
@@ -11,12 +13,10 @@ namespace MyLittleRangeBook.FIT
     /// </summary>
     public class XeroShotSessionParser : IXeroShotSessionParser
     {
-        internal const int ExpectedFileType = 54; // TODO [TO20260414] Change the name to a FITMessageType
+        internal const int EXPECTED_FILE_TYPE = 54; // TODO [TO20260414] Change the name to a FITMessageType
         readonly FitListener _fitListener = new();
 
         readonly ILogger _logger;
-        readonly HashSet<string> _recordDeveloperFieldNames = [];
-        readonly HashSet<string> _recordFieldNames = [];
 #pragma warning disable CS0414 // Field is assigned but its value is never used
         FitMessages? _fitMessages = null;
 #pragma warning restore CS0414 // Field is assigned but its value is never used
@@ -31,24 +31,18 @@ namespace MyLittleRangeBook.FIT
         ///     Decodes a FIT file into a ShotSession.
         /// </summary>
         /// <param name="filePath"></param>
-        /// <param name="ct"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<Result<ShotSession>> DecodeFITFileAsync(string filePath, CancellationToken ct)
+        public async Task<Result<ShotSession>> DecodeFITFileAsync(string filePath, CancellationToken cancellationToken)
         {
-            if (!File.Exists(filePath))
-            {
-                return Result.Fail(new FitFileNotFoundError(filePath));
-            }
-
             Result<ShotSession> result;
             try
             {
-                result = (await filePath.LoadFitFileBytesAsync(ct))
+                result = (await filePath.LoadFitFileBytesAsync(cancellationToken))
                     .Bind(bytesFromFitFile =>
                     {
-                        using var
-                            stream = bytesFromFitFile
-                                .AsStream(); // TODO [TO20260405] Refactor this to get rid of the dependency on CommunityToolkit.HighPerformance
+                        // TODO [TO20260405] Refactor this to get rid of the dependency on CommunityToolkit.HighPerformance
+                        using Stream stream = bytesFromFitFile.AsStream();
                         _logger.Verbose("Loaded {bytes} bytes.", bytesFromFitFile.Length);
 
                         return Decode(stream);
@@ -65,29 +59,39 @@ namespace MyLittleRangeBook.FIT
 
         public Result<ShotSession> Decode(Stream input)
         {
-            _shotSession = new ShotSession();
+            return Decode(input, null);
+        }
 
+        public Result<ShotSession> Decode(Stream input, ILogger? logger)
+        {
             Decode decoder = new();
             // Check that this is a FIT file
             if (!decoder.IsFIT(input))
             {
-                return Result.Fail(new UnsupportedFitFileTypeError(ExpectedFileType));
+                return Result.Fail(new UnsupportedFitFileTypeError(EXPECTED_FILE_TYPE));
             }
 
             MesgBroadcaster msgBroadcaster = new();
-            decoder.MesgEvent += msgBroadcaster.OnMesg;
-            msgBroadcaster.DeviceInfoMesgEvent += OnDeviceInfoMsg;
+
             msgBroadcaster.FileIdMesgEvent += OnFileIdMsg;
+
+            msgBroadcaster.DeviceInfoMesgEvent += OnDeviceInfoMsg;
+            decoder.MesgEvent += msgBroadcaster.OnMesg;
+
             msgBroadcaster.RecordMesgEvent += OnRecordMsg;
             msgBroadcaster.ChronoShotDataMesgEvent += OnChronoShotMsg;
             msgBroadcaster.ChronoShotSessionMesgEvent += OnChronoShotSessionMsg;
             decoder.MesgEvent += _fitListener.OnMesg;
 
+            LogContentsOfMessages(msgBroadcaster, logger);
+
             try
             {
                 if (decoder.Read(input))
                 {
-                    return _shotSession;
+                    return _shotSession is null
+                        ? Result.Fail(new FailedToParseFitFileError())
+                        : Result.Ok(_shotSession);
                 }
             }
             catch (Exception e)
@@ -100,20 +104,138 @@ namespace MyLittleRangeBook.FIT
             return Result.Fail("Could not parse the file");
         }
 
-        void OnDeviceInfoMsg(object sender, MesgEventArgs e)
+        void LogContentsOfMessages(MesgBroadcaster msgBroadcaster, ILogger? logger)
         {
-            var msg = (DeviceInfoMesg)e.mesg;
-            var serialNumber = msg?.GetSerialNumber() ?? 0;
-            _shotSession!.SerialNumber = serialNumber;
-            _shotSession!.Id = serialNumber.ToShotSessionId();
+            if (logger is null)
+            {
+                // [TO20260423] No custom logging required.
+                return;
+            }
+
+            msgBroadcaster.DeviceInfoMesgEvent += (_, e) =>
+            {
+                var msg = (DeviceInfoMesg)e.mesg;
+                _logger.Verbose("OnDeviceInfoMsg: {deviceInfo}", msg);
+                foreach (Field? field in msg.Fields)
+                {
+                    _logger.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
+                }
+            };
+
+            msgBroadcaster.FileIdMesgEvent += (_, e) =>
+            {
+                var msg = (FileIdMesg)e.mesg;
+                logger.Verbose("OnFileIdMsg: {fileIdMsg}", msg);
+                foreach (Field? field in msg.Fields)
+                {
+                    logger.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
+                }
+            };
+
+            msgBroadcaster.ChronoShotDataMesgEvent += (_, e) =>
+            {
+                var msg = (ChronoShotDataMesg)e.mesg;
+                _logger.Verbose("OnChronoShotMsg: {chronoShotMsg}", msg);
+                foreach (Field? field in msg.Fields)
+                {
+                    _logger.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
+                }
+            };
+
+            msgBroadcaster.ChronoShotSessionMesgEvent += (_, e) =>
+            {
+                var msg = (ChronoShotSessionMesg)e.mesg;
+                logger?.Verbose("OnChronoShotSessionMsg: {shotSessionMsg}", msg);
+                foreach (Field? field in msg.Fields)
+                {
+                    logger?.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
+                }
+            };
+
+            msgBroadcaster.ActivityMesgEvent += (_, e) =>
+            {
+                var msg = (ActivityMesg)e.mesg;
+                logger?.Verbose("OnActivityMsg: {activityMsg}", msg);
+                foreach (Field? field in msg.Fields)
+                {
+                    logger?.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
+                }
+            };
+            msgBroadcaster.DeveloperDataIdMesgEvent += (_, e) =>
+            {
+                var msg = (DeveloperDataIdMesg)e.mesg;
+                logger?.Verbose("OnDeveloperDataIdMsg: {developerDataIdMsg}", msg);
+                foreach (Field? field in msg.Fields)
+                {
+                    logger?.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
+                }
+            };
+
+            msgBroadcaster.ConnectivityMesgEvent += (_, e) =>
+            {
+                var msg = (ConnectivityMesg)e.mesg;
+                logger?.Verbose("OnConnectivityMsg: {connectivityMsg}", msg);
+                foreach (Field? field in msg.Fields)
+                {
+                    logger?.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
+                }
+            };
         }
+
+
+        ILogger CreateFileLogger(string fitFile)
+        {
+            string logFilePath = Path.ChangeExtension(fitFile, ".txt");
+
+            if (File.Exists(logFilePath))
+            {
+                File.Delete(logFilePath);
+            }
+
+            return new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.File(logFilePath)
+                .CreateLogger();
+        }
+
+
+        /// <summary>
+        ///     Will log the contents of the FIT file to text.
+        /// </summary>
+        /// <param name="fitFile"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<Result<ShotSession>> ExploreFITFileAsync(string fitFile, CancellationToken cancellationToken)
+        {
+            ILogger logger = CreateFileLogger(fitFile);
+            Result<ShotSession> result;
+            try
+            {
+                result = (await fitFile.LoadFitFileBytesAsync(cancellationToken))
+                    .Bind(bytesFromFitFile =>
+                    {
+                        // TODO [TO20260405] Refactor this to get rid of the dependency on CommunityToolkit.HighPerformance
+                        using Stream stream = bytesFromFitFile.AsStream();
+                        _logger.Verbose("Loaded {bytes} bytes.", bytesFromFitFile.Length);
+
+                        return Decode(stream, logger);
+                    });
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Failed to parse FIT file at {filePath}", fitFile);
+                result = Result.Fail(new FailedToParseFitFileError().CausedBy(e));
+            }
+
+            return result;
+        }
+
 
         void OnChronoShotSessionMsg(object sender, MesgEventArgs e)
         {
             var msg = (ChronoShotSessionMesg)e.mesg;
 
-            var dt = msg.GetTimestamp().GetDateTime();
-            _shotSession!.DateTimeUtc = dt;
+            _shotSession!.DateTimeUtc = msg.GetTimestampUtc();
 
             _shotSession!.ProjectileWeight = Convert.ToInt32(msg.GetGrainWeight() ?? 0f);
             _shotSession!.ProjectileType = msg.GetProjectileType().ToString() ?? "Unknown";
@@ -131,7 +253,7 @@ namespace MyLittleRangeBook.FIT
             Shot shot = new()
             {
                 ShotNumber = (int)msg.GetShotNum()!,
-                DateTimeUtc = msg.GetTimestamp().GetDateTime(),
+                DateTimeUtc = msg.GetTimestampUtc(),
                 Speed = new ShotSpeed(msg.GetShotSpeed() ?? 0f)
             };
             _shotSession!.AddShot(shot);
@@ -139,7 +261,14 @@ namespace MyLittleRangeBook.FIT
 
         void OnRecordMsg(object sender, MesgEventArgs e)
         {
-            foreach (var field in e.mesg.Fields)
+            var msg = (RecordMesg)e.mesg;
+            _logger.Verbose("OnRecordMsg: {onRecordMsg}", msg);
+            foreach (Field? field in msg.Fields)
+            {
+                _logger.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
+            }
+
+            foreach (Field? field in e.mesg.Fields)
             {
                 if (field.Name.ToLower() != "unknown")
                 {
@@ -147,7 +276,7 @@ namespace MyLittleRangeBook.FIT
                 }
             }
 
-            foreach (var devField in e.mesg.DeveloperFields)
+            foreach (DeveloperField? devField in e.mesg.DeveloperFields)
             {
                 _recordDeveloperFieldNames.Add(devField.Name);
             }
@@ -155,13 +284,46 @@ namespace MyLittleRangeBook.FIT
 
         void OnFileIdMsg(object sender, MesgEventArgs e)
         {
-            var f = (FileIdMesg)e.mesg;
-            var t = f.GetType();
+            var fileIdMsg = (FileIdMesg)e.mesg;
+            DynastreamFile? fitType = fileIdMsg.GetType();
 
-            if (ExpectedFileType != (int)t!)
+            if (EXPECTED_FILE_TYPE != (int)fitType!)
             {
-                throw new Exception($"Expected FIT File type {ExpectedFileType}, received {t}.");
+                throw new Exception($"Expected FIT File type {EXPECTED_FILE_TYPE}, received {fitType}.");
             }
+
+            uint? sn = fileIdMsg.GetSerialNumber();
+
+            _shotSession ??= new ShotSession(sn);
+            _shotSession.SerialNumber = sn!.Value;
+            _shotSession.TimeCreated = fileIdMsg.GetTimeCreatedUtc();
+            _shotSession.Manufacturer = fileIdMsg.GetManufacturer();
+            _shotSession.Product = fileIdMsg.GetProduct();
+            _shotSession.Type = (byte)fitType;
         }
+
+        void OnDeviceInfoMsg(object sender, MesgEventArgs e)
+        {
+            var msg = (DeviceInfoMesg)e.mesg;
+
+            if (_shotSession == null)
+            {
+                uint? sn = msg.GetSerialNumber();
+                _shotSession = new ShotSession(sn)
+                {
+                    TimeCreated = msg.GetTimestampUtc(),
+                    Manufacturer = msg.GetManufacturer(),
+                    Product = msg.GetProduct()
+                };
+            }
+
+            _shotSession.SoftwareVersion = msg.GetSoftwareVersion().ToString() ?? "Unknown";
+        }
+
+        // ReSharper disable CollectionNeverQueried.Local
+        readonly HashSet<string> _recordDeveloperFieldNames = [];
+
+        readonly HashSet<string> _recordFieldNames = [];
+        // ReSharper restore CollectionNeverQueried.Local
     }
 }
