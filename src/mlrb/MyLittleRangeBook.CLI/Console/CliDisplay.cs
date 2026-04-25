@@ -10,13 +10,11 @@ namespace MyLittleRangeBook.CLI.Console
         public const string WarningGlyph = "⚠";
         public const string SuccessGlyph = "✔";
         public const string ErrorGlyph = "❌";
-        readonly string _appName;
         public string AppVersion { get; }
 
 
         public CliDisplay(IAnsiConsole console)
         {
-            _appName = AppName;
             AppVersion = Assembly.GetExecutingAssembly()
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 ?.InformationalVersion ?? "Unknown";
@@ -27,47 +25,23 @@ namespace MyLittleRangeBook.CLI.Console
 
         public void WriteHeader(string action)
         {
-            var grid = new Grid();
-            grid.AddColumn();
-
-            grid.AddRow($"[bold]{Markup.Escape(_appName)}[/]");
-            grid.AddRow($"[grey]Version:[/] [green]{Markup.Escape(AppVersion)}[/]");
-            grid.AddRow($"[grey]Action:[/] [yellow]{Markup.Escape(action)}[/]");
-
-            Panel panel = new Panel(grid).Expand()
-                .Header("[bold blue]Starting[/]")
-                .Border(BoxBorder.Rounded)
-                .BorderStyle(new Style(Color.SteelBlue1))
-                .Padding(1, 0, 1, 0);
-
-            Console.Write(panel);
-            Console.WriteLine();
+            // OriginalAppHeaderPrinter x = new OriginalAppHeaderPrinter()
+            //     .SetAction(action)
+            //     .SetAppVersion(AppVersion);
+            SimpleAppHeader x = new SimpleAppHeader()
+                .SetAction(action)
+                .SetAppVersion(AppVersion);
+            x.Print(Console);
         }
 
         public void WriteSuccess(string message)
         {
-            Console.WriteLine();
-
-            Rule rule = new Rule("[green]Completed[/]")
-                .RuleStyle("green")
-                .LeftJustified();
-
-            Console.Write(rule);
-            Console.MarkupLine($"[green]{SuccessGlyph} {Markup.Escape(message)}[/]");
-            Console.WriteLine();
+            Console.WriteSuccess(message);
         }
 
         public void WriteFailure(string message)
         {
-            Console.WriteLine();
-
-            Rule rule = new Rule("[red]Failed[/]")
-                .RuleStyle("red")
-                .LeftJustified();
-
-            Console.Write(rule);
-            Console.MarkupLine($"[red]{ErrorGlyph} {Markup.Escape(message)}[/]");
-            Console.WriteLine();
+            Console.WriteProblem(message);
         }
 
         public async Task RunStatusAsync(

@@ -23,8 +23,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     env:
-      VERSION_MAJOR: 1
-      VERSION_MINOR: 0
+      VERSION_MAJOR: 0
+      VERSION_MINOR: 9
       VERSION_REVISION: 0
 
     steps:
@@ -39,11 +39,11 @@ jobs:
       - name: Compute version metadata
         shell: bash
         run: |
-          SHORT_SHA="${GITHUB_SHA::7}"
-          VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${GITHUB_RUN_NUMBER}"
-          ASSEMBLY_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REVISION}.${GITHUB_RUN_NUMBER}"
-          FILE_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REVISION}.${GITHUB_RUN_NUMBER}"
-          INFORMATIONAL_VERSION="${VERSION}+${SHORT_SHA}"
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REVISION}"
+          ASSEMBLY_VERSION="${VERSION}.${GITHUB_RUN_NUMBER}"
+          FILE_VERSION="${VERSION}.${GITHUB_RUN_NUMBER}"
+          INFORMATIONAL_VERSION="${FILE_VERSION}+${SHORT_SHA}"
 
           {
             echo "SHORT_SHA=$SHORT_SHA"

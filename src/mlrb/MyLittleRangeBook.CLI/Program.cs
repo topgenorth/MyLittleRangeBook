@@ -12,6 +12,10 @@ using MyLittleRangeBook.PgSQL;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
+// [TO20260425] This has to run first and will create a default appsettings.json file if one does not exist.
+IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsBootstrapper();
+await appSettingsBootstrapper.EnsureAppSettingsExistsAsync();
+
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.Sources.Clear();
 
@@ -28,7 +32,9 @@ else
         .AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
     builder.Services.AddPostgresHelper(builder.Configuration);
 }
-builder.Configuration.AddEnvironmentVariables();
+
+// [TO20260425] Leave out the environment variables for now.
+// builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
@@ -55,9 +61,6 @@ builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration)
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
-
-IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsBootstrapper();
-await appSettingsBootstrapper.EnsureAppSettingsExistsAsync();
 
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();

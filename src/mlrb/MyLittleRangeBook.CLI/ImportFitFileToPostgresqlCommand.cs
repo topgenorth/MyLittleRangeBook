@@ -87,7 +87,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
             {
                 _logger.Error("Failed to load FIT file {fitFile}.", sourceFile);
 
-                return Result.Fail(new FailedToLoadFitFileError(sourceFile)).ToResult(ReturnCodes.FAILED_TO_LOAD);
+                return Result.Fail(new FailedToLoadFitFileError(sourceFile)).ToResult(ReturnCodes.FIT_FILE_READ_FAILURE);
             }
 
             byte[] bytesToSave = fileContents.Value.ToArray();
