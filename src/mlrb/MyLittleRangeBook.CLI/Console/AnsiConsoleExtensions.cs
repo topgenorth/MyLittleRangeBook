@@ -26,7 +26,7 @@ namespace MyLittleRangeBook.CLI.Console
         }
         public static IAnsiConsole WriteSuccess(this IAnsiConsole console, string message)
         {
-            console.MarkupLine("[green]✓ " + message +"[/]");
+            console.MarkupLine("[bold green]✓ " + message +"[/]");
             return console;
         }
         public static IAnsiConsole WriteAppInfo(this IAnsiConsole console)
@@ -37,7 +37,7 @@ namespace MyLittleRangeBook.CLI.Console
                 ?.InformationalVersion ?? "Unknown";
 
 
-            console.MarkupLine($"[bold]{a.GetName().Name}[/] v{appVersion}");
+            console.MarkupLine($"[bold white]{a.GetName().Name} v{appVersion}[/]");
 
             return console;
         }

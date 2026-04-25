@@ -11,6 +11,6 @@ namespace MyLittleRangeBook.CLI.Database
             Metadata.Add("Size", size);
         }
 
-        public int ResultCode => ReturnCodes.FAILED_TO_WRITE_TO_DATABASE;
+        public int ResultCode => ReturnCodes.SQL_FAILED_TO_WRITE_TO_DATABASE;
     }
 }

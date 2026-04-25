@@ -67,7 +67,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             {
                 cliDisplay.Console.WriteException(e);
 
-                return FAILED_TO_APPLY_MIGRATIONS;
+                return SQL_FAILED_TO_APPLY_MIGRATIONS;
             }
 
         }
@@ -115,7 +115,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                             return SUCCESS;
                         }
 
-                        return FAILED_TO_RUN_SQL;
+                        return SQL_FAILED_TO_RUN_SCRIPT;
 
                     }
                     catch (Exception e)
@@ -123,7 +123,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                         logger.Error(e, "Failed to run SQL.");
                         cliDisplay.WriteFailure($"Failed to run SQL '{e.Message}'.");
 
-                        return FAILED_TO_RUN_SQL;
+                        return SQL_FAILED_TO_RUN_SCRIPT;
                     }
                 }, cancellationToken);
 
@@ -158,7 +158,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             }
 
             cliDisplay.WriteFailure("Failed to apply migrations.");
-            return FAILED_TO_APPLY_MIGRATIONS;
+            return SQL_FAILED_TO_APPLY_MIGRATIONS;
         }
     }
 }

@@ -16,7 +16,7 @@ namespace MyLittleRangeBook.CLI
 
             var e = new SqliteDatabaseNotFoundError(databaseFile);
 
-            return Result.Fail<int>(e).WithValue(ReturnCodes.DATABASE_FILE_NOT_FOUND);
+            return Result.Fail<int>(e).WithValue(ReturnCodes.SQL_SQLITE_DATABASE_FILE_NOT_FOUND);
         }
     }
 }

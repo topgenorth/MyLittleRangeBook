@@ -64,7 +64,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 _cliDisplay.WriteFailure($"Failed to import FIT {fitFile}");
             }
 
-            return result.IsSuccess ? result.Value : ReturnCodes.FAILED_TO_LOAD;
+            return result.IsSuccess ? result.Value : ReturnCodes.FIT_FILE_READ_FAILURE;
         }
 
 
@@ -122,7 +122,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 _logger.Error(e, "Failed to save {bytes} bytes from FIT {fitFile} to database {database}.",
                     bytesToSave.Length, fitFile, fitFile);
                 Error? err = new FailedToWriteFitFileToDatabaseError(fitFile, bytesToSave.Length).CausedBy(e);
-                Result<int>? r = new Result<int>().WithValue(ReturnCodes.FAILED_TO_WRITE_TO_DATABASE).WithError(err);
+                Result<int>? r = new Result<int>().WithValue(ReturnCodes.SQL_FAILED_TO_WRITE_TO_DATABASE).WithError(err);
 
                 return r;
             }
