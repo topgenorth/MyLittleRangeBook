@@ -27,20 +27,10 @@ namespace MyLittleRangeBook.CLI.Console
 
         public void WriteHeader(string action)
         {
-            var grid = new Grid();
-            grid.AddColumn();
-
-            grid.AddRow($"[bold]{Markup.Escape(_appName)}[/]");
-            grid.AddRow($"[grey]Version:[/] [green]{Markup.Escape(AppVersion)}[/]");
-            grid.AddRow($"[grey]Action:[/] [yellow]{Markup.Escape(action)}[/]");
-
-            Panel panel = new Panel(grid).Expand()
-                .Header("[bold blue]Starting[/]")
-                .Border(BoxBorder.Rounded)
-                .BorderStyle(new Style(Color.SteelBlue1))
-                .Padding(1, 0, 1, 0);
-
-            Console.Write(panel);
+            OriginalAppHeaderPrinter x = new OriginalAppHeaderPrinter()
+                .SetAction(action)
+                .SetAppVersion(AppVersion);
+            x.Print(Console);
             Console.WriteLine();
         }
 

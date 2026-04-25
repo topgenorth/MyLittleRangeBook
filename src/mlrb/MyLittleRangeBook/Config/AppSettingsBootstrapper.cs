@@ -4,6 +4,9 @@ using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.Config
 {
+    /// <summary>
+    /// Ensures that the appsettings.json file exists in the user's settings directory.'
+    /// </summary>
     public class AppSettingsBootstrapper : IAppSettingsBootstrapper
     {
         const string DefaultAppSettingsJson = """
@@ -69,7 +72,5 @@ namespace MyLittleRangeBook.Config
 
             return appSettingsFile;
         }
-
-
     }
 }
