@@ -12,17 +12,55 @@ namespace MyLittleRangeBook.CLI.Console
 
         public SimpleAppHeader()
         {
-            _appVersion = SimplAssemblyVersionInformation();
+            _appVersion = SimpleAssemblyVersionInformation();
+        }
+
+        public void Print(IAnsiConsole console)
+        {
+            console.Write(BuildRenderable());
+        }
+
+        public IRenderable BuildRenderable()
+        {
+            var grid = new Grid();
+            grid.AddColumn();
+            grid.AddRow($"[bold white]{Markup.Escape(AppName)} {_appVersion}[/]");
+
+            Panel panel = new Panel(grid)
+                .Expand()
+                .Padding(0, 1, 0, 0)
+                .Border(BoxBorder.None);
+
+            return panel;
         }
 
 
-        internal string SimplAssemblyVersionInformation()
+        internal string SimpleAssemblyVersionInformation()
         {
             string v = Assembly.GetExecutingAssembly()
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 ?.InformationalVersion ?? "Unknown";
 
-            return v;
+            if (v.Contains('+'))
+            {
+                string[] versionParts= v.Split('+');
+                string version = versionParts[0];
+                string afterPlus = versionParts[1];
+
+                string[] shaParts = afterPlus.Split('.');
+
+                if (shaParts.Length >= 2)
+                {
+                    return version + "+" + shaParts[0];
+                }
+
+                return version;
+
+            }
+            else
+            {
+                return v;
+            }
         }
 
         public SimpleAppHeader SetAction(string action)
@@ -38,23 +76,16 @@ namespace MyLittleRangeBook.CLI.Console
 
             return this;
         }
-        public void Print(IAnsiConsole console)
+
+
+        static string GetInformationalVersion()
         {
-            console.Write(BuildRenderable());
-        }
+            string v = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion ?? "Unknown";
 
-        public IRenderable BuildRenderable()
-        {
-            Grid grid = new Grid();
-            grid.AddColumn();
-            grid.AddRow($"[bold white]{Markup.Escape(AppName)} {_appVersion}[/]");
-
-            Panel panel = new Panel(grid)
-                .Expand()
-                .Padding(0, 1,0,0)
-                .Border(BoxBorder.None);
-
-            return panel;
+            // 0.9.0+0e971a3.0e971a30e99d9114d2f90ca38b6feab611685ac0
+            return v;
         }
     }
 }

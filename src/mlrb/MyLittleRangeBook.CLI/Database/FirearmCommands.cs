@@ -38,7 +38,7 @@ namespace MyLittleRangeBook.CLI.Database
                 .AddColumn("Id", col => col.Alignment(Justify.Center).Width(21))
                 .AddColumn("Row Id", col => col.Alignment(Justify.Center).Width(6));
 
-            foreach (var firearm in _firearms)
+            foreach (Firearm firearm in _firearms)
             {
                 table.AddRow(firearm.Name, firearm.Notes ?? string.Empty, firearm.Id!, firearm.RowId!.ToString() ?? "");
             }
@@ -84,7 +84,6 @@ namespace MyLittleRangeBook.CLI.Database
                 AnsiConsole.Console.WriteWarning("No firearms found.");
                 return ReturnCodes.SUCCESS;
             }
-
 
             _printer.SetFirearms(firearms.Value).Print(AnsiConsole.Console);
             AnsiConsole.Console.WriteSuccess("Firearms retrieved.");
