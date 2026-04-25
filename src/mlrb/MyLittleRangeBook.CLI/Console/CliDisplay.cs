@@ -27,11 +27,13 @@ namespace MyLittleRangeBook.CLI.Console
 
         public void WriteHeader(string action)
         {
-            OriginalAppHeaderPrinter x = new OriginalAppHeaderPrinter()
+            // OriginalAppHeaderPrinter x = new OriginalAppHeaderPrinter()
+            //     .SetAction(action)
+            //     .SetAppVersion(AppVersion);
+            SimpleAppHeader x = new SimpleAppHeader()
                 .SetAction(action)
                 .SetAppVersion(AppVersion);
             x.Print(Console);
-            Console.WriteLine();
         }
 
         public void WriteSuccess(string message)
