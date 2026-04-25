@@ -10,13 +10,11 @@ namespace MyLittleRangeBook.CLI.Console
         public const string WarningGlyph = "⚠";
         public const string SuccessGlyph = "✔";
         public const string ErrorGlyph = "❌";
-        readonly string _appName;
         public string AppVersion { get; }
 
 
         public CliDisplay(IAnsiConsole console)
         {
-            _appName = AppName;
             AppVersion = Assembly.GetExecutingAssembly()
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 ?.InformationalVersion ?? "Unknown";

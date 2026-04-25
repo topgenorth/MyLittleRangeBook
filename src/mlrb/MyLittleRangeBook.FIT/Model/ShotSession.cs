@@ -40,6 +40,7 @@ namespace MyLittleRangeBook.FIT.Model
             Notes = string.Empty;
             ProjectileUnits = "grains";
             VelocityUnits = "m/s";
+            SoftwareVersion = "Unknown";
         }
 
 
