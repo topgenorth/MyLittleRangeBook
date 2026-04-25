@@ -5,7 +5,9 @@
         /// <summary>
         ///     The name of the default database.
         /// </summary>
+        // TODO [TO20260425] Move this to the SQLite Assembly
         internal static readonly string SqliteDatabaseName = "mlrb.db";
+
         internal static readonly string AppSettingsFileName = "appsettings.json";
 
         /// <summary>
@@ -38,6 +40,7 @@
         /// <returns>The full path to the SQLite database file.</returns>
         public static string DefaultSqliteDatabaseName(bool inferFromEnvironment = true)
         {
+            // TODO [TO20260425] Move this to the SQLite Assembly
             string fullPath = Path.Combine(DefaultUserSettingsDirectory.FullName, SqliteDatabaseName);
             if (inferFromEnvironment)
             {

@@ -38,28 +38,12 @@ namespace MyLittleRangeBook.CLI.Console
 
         public void WriteSuccess(string message)
         {
-            Console.WriteLine();
-
-            Rule rule = new Rule("[green]Completed[/]")
-                .RuleStyle("green")
-                .LeftJustified();
-
-            Console.Write(rule);
-            Console.MarkupLine($"[green]{SuccessGlyph} {Markup.Escape(message)}[/]");
-            Console.WriteLine();
+            Console.WriteSuccess(message);
         }
 
         public void WriteFailure(string message)
         {
-            Console.WriteLine();
-
-            Rule rule = new Rule("[red]Failed[/]")
-                .RuleStyle("red")
-                .LeftJustified();
-
-            Console.Write(rule);
-            Console.MarkupLine($"[red]{ErrorGlyph} {Markup.Escape(message)}[/]");
-            Console.WriteLine();
+            Console.WriteProblem(message);
         }
 
         public async Task RunStatusAsync(

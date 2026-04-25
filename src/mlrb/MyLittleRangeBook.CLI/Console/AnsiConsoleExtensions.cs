@@ -7,8 +7,27 @@ namespace MyLittleRangeBook.CLI.Console
     {
         public static ICliDisplay WriteAppInfo(this ICliDisplay cliDisplay)
         {
+
             cliDisplay.Console.WriteAppInfo();
             return cliDisplay;
+        }
+
+        public static IAnsiConsole WriteWarning(this IAnsiConsole console, string message)
+        {
+            console.MarkupLineInterpolated($"[bold yellow]⚠ {message}[/]");
+
+            return console;
+        }
+        public static IAnsiConsole WriteProblem(this IAnsiConsole console, string message)
+        {
+            console.MarkupLineInterpolated($"[bold red]✗ {message}[/]");
+
+            return console;
+        }
+        public static IAnsiConsole WriteSuccess(this IAnsiConsole console, string message)
+        {
+            console.MarkupLine("[green]✓ " + message +"[/]");
+            return console;
         }
         public static IAnsiConsole WriteAppInfo(this IAnsiConsole console)
         {
