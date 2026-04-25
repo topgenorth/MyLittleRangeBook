@@ -14,6 +14,7 @@ namespace MyLittleRangeBook.FIT.Model
         public ShotSession() : this($"{Nanoid.Generate()}-0")
         {
             _xeroSerialNumber = 0;
+            SoftwareVersion = "Unknown";
         }
 
         public ShotSession(uint? xeroSerialNumber)
@@ -25,6 +26,7 @@ namespace MyLittleRangeBook.FIT.Model
             Notes = string.Empty;
             ProjectileUnits = "grains";
             VelocityUnits = "m/s";
+            SoftwareVersion = "Unknown";
         }
 
         /// <summary>
