@@ -1,0 +1,47 @@
+{
+  "original_notes": "6x45mm. 75gr Hornady VLD.  27.2gr BL-C(2). 2745fps;SD18;ES81. 2.25COAL. 2.10CBTO. At 300M: +4MOA;1866fps;SD21;ES76;1.79MOA group;Mean Radius 0.56MOA",
+  "cartridge": "6x45mm",
+  "projectile": {
+    "brand": "Hornady",
+    "weight_grains": 75,
+    "model": "VLD"
+  },
+  "velocity": [
+    {
+      "distance_metres": 0,
+      "average_fps": 2745,
+      "es_fps": 81,
+      "sd_fps": 18,
+      "shots": 10
+    },
+    {
+      "distance_metres": 300,
+      "average_fps": 1866,
+      "es_fps": 76,
+      "sd_fps": 21,
+      "shots": 10
+    }
+  ],
+  "powder": {
+    "name": "BL-C(2)",
+    "charge_grains": 27.2
+  },
+  "dimensions": {
+    "coal_inches": 2.25,
+    "cbto_inches": 2.1
+  },
+  "case": {
+    "brass": "Lapua",
+    "primer": "CCI 450"
+  },
+  "scope_adjustment": {
+    "elevation": "0.3 mil up",
+    "windage": "0.1 mil left",
+    "distance_metres": 100
+  },
+  "other_notes": "This load was tested at a range of 100 yards. The group size was approximately 0.5 inches.",
+  "mean_radius_inches": 0.54,
+  "group_size_inches": 2.0,
+  "confidence": 0.93,
+  "warnings": []
+}
