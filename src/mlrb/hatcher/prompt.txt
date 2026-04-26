@@ -1,0 +1,23 @@
+I have a bunch of notes about my shooting sessions that describe load data, velocity results,  scope adjustments, etc. 
+
+Load data is typically the projectile (brand and weight), the powder charge (gunpowder and weight), Cartridge Overall Length (COAL) in inches, Cartridge Base to Ogive in inches, the brass, and sometimes the primer.
+
+If weight is written as 140gr, normalize to 140 grains.
+
+If charge is 41.5 H4350, infer charge_grains=41.5 and powder=H4350 only when that pattern is explicit in the note.
+
+If COAL or CBTO appears without units, assume inches only if your notes consistently use inches; otherwise flag ambiguity.
+
+Distinguish scope adjustments from group corrections, for example +0.2 mil up versus needs more elevation. Include the range for the scope adjustment. If there is no range, then assume the distance is 100m. If there is only one adjustment value listed, then assume it is elevation. If there are two, then elevation is the first one and windage is the second one. 
+
+Do not infer primer or brass from previous sessions unless the note explicitly says same load as prior entry.
+
+Samples  
+
+6x45mm. 75gr Hornady.  27.2gr BL-C(2). 2745fps;SD18;ES81. At 300M: +4MOA;1866fps;SD21;ES76;1.79MOA group;Mean Radius 0.56MOA
+45ACP. 230gr Campro, 4.2gr Bullseye	689fps; SD37;ES161.  Seem pretty accurate at 45feet.
+284 Winchester. 162gr Hornady Moly;56.16gr H4831;2.588CBTO;Lapua	2910fps; SD17; ES60. At 300m: +3.125MOA; 2282fps;SD14;ES53.1.01MOA;Mean Radius 0.31MOA
+6x45mm. 80gr Barnes TTSX, 23.0gr IMR-8208 XBR, 2.263" COAL.	Velocity 2472, SD18.7,ES 70fps. Rifle was zeroed for the 75gr.  Use the first subtension in the Strike Eagle
+284 Winchester. 162gr Hornady HPBT Moly; 49.7gr RL-19; 2.587" CBTO; WWW-Super 	Shot a 70/75.  Groups were loose.  +4MOA @ the 300.
+22LR. S&B Canadian Match	Velocity 1144fps, SD 15fps, ES 82fps
+6x45mm. 62gr Varmint Grenade, 26.75gr IMR XBR-8208	Velocity 2888.1fps, SD 28 fps, ES 93.8fps
