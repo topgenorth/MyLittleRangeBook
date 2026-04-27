@@ -54,10 +54,13 @@ if (-not $runId -or $runId -eq "null") {
 Write-Host "Downloading latest artifact from run $runId matching: $artifactPattern to $downloadDir"
 
 # Query for artifacts and get the newest one matching the pattern using GitHub API
-$patternRegex = $artifactPattern -replace '\*', '.*'
-$newestArtifact = gh api "repos/{owner}/{repo}/actions/runs/$runId/artifacts" --jq ".artifacts | sort_by(.created_at) | reverse | .[0].name | select(test(\"$patternRegex\"))" 2>$null
+$artifacts = gh api "repos/{owner}/{repo}/actions/runs/$runId/artifacts" --jq ".artifacts | sort_by(.created_at) | reverse | map(.name) | .[]"
 
-if (-not $newestArtifact -or $newestArtifact -eq "null") {
+# Filter artifacts matching the pattern (convert glob to regex)
+$patternRegex = "^" + ($artifactPattern -replace '\*', '.*') + "$"
+$newestArtifact = $artifacts | Where-Object { $_ -match $patternRegex } | Select-Object -First 1
+
+if (-not $newestArtifact) {
     throw "Could not find any artifacts matching pattern '$artifactPattern' in run $runId."
 }
 
