@@ -333,6 +333,11 @@ namespace MyLittleRangeBook.CLI
             return sre;
         }
 
+        /// <summary>
+        /// Will strip the double quotes from the start and end of to the string.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         static string RemoveDoubleQuotes(string value)
         {
             return value.Length >= 2 && value.StartsWith('"') && value.EndsWith('"')

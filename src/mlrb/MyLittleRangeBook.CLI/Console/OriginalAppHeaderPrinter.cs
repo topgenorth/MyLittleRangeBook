@@ -1,4 +1,5 @@
-﻿using Spectre.Console;
+﻿using Microsoft.IdentityModel.Tokens;
+using Spectre.Console;
 using Spectre.Console.Rendering;
 
 namespace MyLittleRangeBook.CLI.Console
@@ -11,7 +12,7 @@ namespace MyLittleRangeBook.CLI.Console
         const string AppName = "MyLittleRangeBook CLI";
 
         string _action = string.Empty;
-        string _appVersion = string.Empty;
+        string _appVersion = FileExtensions.SimpleAssemblyVersionInformation();
 
 
         public void Print(IAnsiConsole console)
@@ -28,7 +29,10 @@ namespace MyLittleRangeBook.CLI.Console
 
             grid.AddRow($"[bold]{Markup.Escape(AppName)}[/]");
             grid.AddRow($"[grey]Version:[/] [green]{Markup.Escape(_appVersion)}[/]");
-            grid.AddRow($"[grey]Action:[/] [yellow]{Markup.Escape(_action)}[/]");
+            if (!_action.IsNullOrEmpty())
+            {
+                grid.AddRow($"[grey]Action:[/] [yellow]{Markup.Escape(_action)}[/]");
+            }
 
             Panel panel = new Panel(grid).Expand()
                 .Header("[bold blue]Starting[/]")

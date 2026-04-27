@@ -4,7 +4,11 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public interface ICliDisplay
     {
-        void WriteHeader(string action);
+        /// <summary>
+        /// This is a simple one line header that is printed on the console when a command starts.
+        /// </summary>
+        /// <param name="action"></param>
+        void WriteAppHeader(string action);
         void WriteSuccess(string message);
         void WriteFailure(string message);
 

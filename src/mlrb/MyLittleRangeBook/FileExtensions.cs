@@ -1,37 +1,40 @@
-﻿namespace MyLittleRangeBook
+﻿using System.Reflection;
+
+namespace MyLittleRangeBook
 {
     public static class FileExtensions
     {
         /// <summary>
-        ///     Will inject the environment into the file name if the environment is not production.
+        /// Will retrieve the app info version from the executing assembly.
         /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <returns>
-        ///     A new FileInfo object with the environment injected (if relevant) or the original FileInfo object if it is
-        ///     not.
-        /// </returns>
-        public static FileInfo InjectEnvironmentIntoFileName(this FileInfo fileInfo)
+        /// <remarks>Will clean up information versions that include the full SHA, they look like 0.9.0+0e971a3.0e971a30e99d9114d2f90ca38b6feab611685ac0</remarks>
+        /// <returns></returns>
+        public static  string SimpleAssemblyVersionInformation()
         {
-            if (EnvironmentHelper.IsProduction)
+            string v = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion ?? "Unknown";
+
+            if (v.Contains('+'))
             {
-                return fileInfo;
-            }
+                string[] versionParts= v.Split('+');
+                string version = versionParts[0];
+                string afterPlus = versionParts[1];
 
-            string env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(env))
+                string[] shaParts = afterPlus.Split('.');
+
+                if (shaParts.Length >= 2)
+                {
+                    return version + "+" + shaParts[0];
+                }
+
+                return version;
+
+            }
+            else
             {
-                return fileInfo;
+                return v;
             }
-
-            string path = fileInfo.DirectoryName! ?? string.Empty;
-            string name = Path.GetFileNameWithoutExtension(fileInfo.FullName);
-            string ext = fileInfo.Extension;
-
-            var newName = $"{name}-{env}{ext}";
-
-            string s = Path.Combine(path, newName);
-
-            return new FileInfo(s);
         }
     }
 }

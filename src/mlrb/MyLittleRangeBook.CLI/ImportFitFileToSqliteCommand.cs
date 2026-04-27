@@ -48,7 +48,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         {
 
             // TODO [TO20260419] IMprove console output.
-            _cliDisplay.WriteHeader("Importing FIT File");
+            _cliDisplay.WriteAppHeader("Importing FIT File");
 
             Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
 

@@ -7,7 +7,6 @@ namespace MyLittleRangeBook.CLI.Console
     {
         public static ICliDisplay WriteAppInfo(this ICliDisplay cliDisplay)
         {
-
             cliDisplay.Console.WriteAppInfo();
             return cliDisplay;
         }
@@ -33,9 +32,7 @@ namespace MyLittleRangeBook.CLI.Console
         {
             var a = Assembly.GetExecutingAssembly();
 
-            string appVersion = a.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion ?? "Unknown";
-
+            string appVersion = FileExtensions.SimpleAssemblyVersionInformation();
 
             console.MarkupLine($"[bold white]{a.GetName().Name} v{appVersion}[/]");
 

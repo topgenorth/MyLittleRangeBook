@@ -15,15 +15,14 @@ namespace MyLittleRangeBook.CLI.Console
 
         public CliDisplay(IAnsiConsole console)
         {
-            AppVersion = Assembly.GetExecutingAssembly()
-                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion ?? "Unknown";
+            AppVersion = FileExtensions.SimpleAssemblyVersionInformation();
             Console = console;
         }
 
         public IAnsiConsole Console { get; }
 
-        public void WriteHeader(string action)
+
+        public void WriteAppHeader(string action)
         {
             // OriginalAppHeaderPrinter x = new OriginalAppHeaderPrinter()
             //     .SetAction(action)

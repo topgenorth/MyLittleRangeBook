@@ -1,0 +1,18 @@
+6x45mm. 75gr Hornady.  27.2gr BL-C(2). 2745fps;SD18;ES81. At 300M: +4MOA;1866fps;SD21;ES76;1.79MOA group;Mean Radius 0.56MOA
+45ACP. 230gr Campro, 4.2gr Bullseye	689fps; SD37;ES161.  Seem pretty accurate at 45feet.
+284 Winchester. 162gr Hornady Moly;56.16gr H4831;2.588CBTO;Lapua	2910fps; SD17; ES60. At 300m: +3.125MOA; 2282fps;SD14;ES53.1.01MOA;Mean Radius 0.31MOA
+6x45mm. 80gr Barnes TTSX, 23.0gr IMR-8208 XBR, 2.263" COAL.	Velocity 2472, SD18.7,ES 70fps. Rifle was zeroed for the 75gr.  Use the first subtension in the Strike Eagle
+284 Winchester. 162gr Hornady HPBT Moly; 49.7gr RL-19; 2.587" CBTO; WWW-Super 	Shot a 70/75.  Groups were loose.  +4MOA @ the 300.
+22LR. S&B Canadian Match	Velocity 1144fps, SD 15fps, ES 82fps
+6x45mm. 62gr Varmint Grenade, 26.75gr IMR XBR-8208	Velocity 2888.1fps, SD 28 fps, ES 93.8fps
+Stevens 284Win B#2	16	SPFGA	162gr Hornady Moly;56.16gr H4831;2.588CBTO;Lapua	2910fps; SD17; ES60. At 300m: +3.125MOA; 2282fps;SD14;ES53.1.01MOA;Mean Radius 0.31MOA
+
+2023-05-28	Stevens 284Win	48	CHAS	180gr Hornady ELDM;55.4gr H-4831	CHAS F-class. 825m.  Started on 18.25 MOA elevation. Settled on +19.25MOA for elevation.  Wind was a good 3 ~ 5 MOA.  Second & third matches were horrible. Elevation was everywhere.  Need to troubleshoot. 1826fps @ 825m.
+
+2023-08-02	Stevens 284Win	26	SPFGA	162gr Hornady ELDM; 55.6gr H4831;2.558" CBTO	15 rounds @ 300m.  Score: 69.1.  +1.5MOA / -1.25MOA. Used a +1MOA elevation offset on the target.
+
+7.92x57mm. 150gr Sierra SP, 47gr IMR-4895, S&B brass	Velocity 2524, SD 25, ES 87, +14. Poor groups, I'm guessing > 4MOA.
+
+Grey Birch. 10/22 22 long rifle	Aguila Copper.	Velocity 1247, SD 13.6, ES 60.4, +31C
+
+MRA Renegade. 6x45. Hornady.  27.2gr BL-C(2)	Velocity 2798, SD29.7, ES131.  Loaded on Dillon 550.  Did the 50-200 zero

@@ -8,11 +8,11 @@ namespace MyLittleRangeBook.CLI.Console
     {
         const string AppName = "MyLittleRangeBook CLI";
 
-        readonly string _appVersion = string.Empty;
+        string _appVersion = FileExtensions.SimpleAssemblyVersionInformation();
 
         public SimpleAppHeader()
         {
-            _appVersion = SimpleAssemblyVersionInformation();
+
         }
 
         public void Print(IAnsiConsole console)
@@ -35,34 +35,6 @@ namespace MyLittleRangeBook.CLI.Console
         }
 
 
-        internal string SimpleAssemblyVersionInformation()
-        {
-            string v = Assembly.GetExecutingAssembly()
-                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion ?? "Unknown";
-
-            if (v.Contains('+'))
-            {
-                string[] versionParts= v.Split('+');
-                string version = versionParts[0];
-                string afterPlus = versionParts[1];
-
-                string[] shaParts = afterPlus.Split('.');
-
-                if (shaParts.Length >= 2)
-                {
-                    return version + "+" + shaParts[0];
-                }
-
-                return version;
-
-            }
-            else
-            {
-                return v;
-            }
-        }
-
         public SimpleAppHeader SetAction(string action)
         {
             // [TO20260425] NOOP
@@ -72,7 +44,7 @@ namespace MyLittleRangeBook.CLI.Console
 
         public SimpleAppHeader SetAppVersion(string appVersion)
         {
-            // [TO20260425] NOOP
+            _appVersion = appVersion;
 
             return this;
         }
@@ -84,7 +56,7 @@ namespace MyLittleRangeBook.CLI.Console
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 ?.InformationalVersion ?? "Unknown";
 
-            // 0.9.0+0e971a3.0e971a30e99d9114d2f90ca38b6feab611685ac0
+
             return v;
         }
     }

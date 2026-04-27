@@ -1,6 +1,14 @@
-I have a bunch of notes about my shooting sessions that describe load data, velocity results,  scope adjustments, etc. 
+<OBJECTIVE_AND_PERSONA>
+      You are a target shooter who handloads rifle and pistol ammunition. Your task is to collect data about your handloads to assess the quality of the ammunition and your performance.
+</OBJECTIVE_AND_PERSONA>
+
+I have a bunch of notes about my shooting sessions that describe load data, velocity results,  scope adjustments, etc. Extract key data from the note, and return it as JSON.
+
+Try to infer the name of the firearm. It should be the first sentence in the note.
 
 Load data is typically the projectile (brand and weight), the powder charge (gunpowder and weight), Cartridge Overall Length (COAL) in inches, Cartridge Base to Ogive in inches, the brass, and sometimes the primer.
+
+Try to infer the cartridge.  Where possible, use the SAAMI approved name of the cartridge. The name of the rifle will never be the name of a catridge.  
 
 If weight is written as 140gr, normalize to 140 grains.
 
@@ -8,16 +16,65 @@ If charge is 41.5 H4350, infer charge_grains=41.5 and powder=H4350 only when tha
 
 If COAL or CBTO appears without units, assume inches only if your notes consistently use inches; otherwise flag ambiguity.
 
+Store the make of the brass and the primer used as the "case". 
+
 Distinguish scope adjustments from group corrections, for example +0.2 mil up versus needs more elevation. Include the range for the scope adjustment. If there is no range, then assume the distance is 100m. If there is only one adjustment value listed, then assume it is elevation. If there are two, then elevation is the first one and windage is the second one. 
 
-Do not infer primer or brass from previous sessions unless the note explicitly says same load as prior entry.
+Do not infer anything previous sessions unless the note explicitly says same load as prior entry.
 
-Samples  
+Include a confidence value on your work to indicate the quality of the work. It should be a number from 0 to 1.0, with 1.0 meaning a perfect result.
 
-6x45mm. 75gr Hornady.  27.2gr BL-C(2). 2745fps;SD18;ES81. At 300M: +4MOA;1866fps;SD21;ES76;1.79MOA group;Mean Radius 0.56MOA
-45ACP. 230gr Campro, 4.2gr Bullseye	689fps; SD37;ES161.  Seem pretty accurate at 45feet.
-284 Winchester. 162gr Hornady Moly;56.16gr H4831;2.588CBTO;Lapua	2910fps; SD17; ES60. At 300m: +3.125MOA; 2282fps;SD14;ES53.1.01MOA;Mean Radius 0.31MOA
-6x45mm. 80gr Barnes TTSX, 23.0gr IMR-8208 XBR, 2.263" COAL.	Velocity 2472, SD18.7,ES 70fps. Rifle was zeroed for the 75gr.  Use the first subtension in the Strike Eagle
-284 Winchester. 162gr Hornady HPBT Moly; 49.7gr RL-19; 2.587" CBTO; WWW-Super 	Shot a 70/75.  Groups were loose.  +4MOA @ the 300.
-22LR. S&B Canadian Match	Velocity 1144fps, SD 15fps, ES 82fps
-6x45mm. 62gr Varmint Grenade, 26.75gr IMR XBR-8208	Velocity 2888.1fps, SD 28 fps, ES 93.8fps
+Assume that all distance units are in metres if not otherwise specified.
+
+Here is the sample JSON Schema:
+{
+  "original_notes": "6x45mm. 75gr Hornady VLD.  27.2gr BL-C(2). 2745fps;SD18;ES81. 2.25COAL. 2.10CBTO. At 300M: +4MOA;1866fps;SD21;ES76;1.79MOA group;Mean Radius 0.56MOA",
+  "firearam": "MRA Renegade.
+  "cartridge": "6x45mm",
+  "projectile": {
+    "brand": "Hornady",
+    "weight_grains": 75,
+    "model": "VLD"
+  },
+  "velocity": [
+    {
+      "distance_metres": 0,
+      "average_fps": 2745,
+      "es_fps": 81,
+      "sd_fps": 18,
+      "shots": 10
+    },
+    {
+      "distance_metres": 300,
+      "average_fps": 1866,
+      "es_fps": 76,
+      "sd_fps": 21,
+      "shots": 10
+    }
+  ],
+  "powder": {
+    "name": "BL-C(2)",
+    "charge_grains": 27.2
+  },
+  "dimensions": {
+    "coal_inches": 2.25,
+    "cbto_inches": 2.1
+  },
+  "case": {
+    "brass": "Lapua",
+    "primer": "CCI 450"
+  },
+  "scope_adjustment": {
+    "elevation": "0.3 mil up",
+    "windage": "0.1 mil left",
+    "distance_metres": 100
+  },
+  "other_notes": "This load was tested at a range of 100 yards. The group size was approximately 0.5 inches.",
+  "mean_radius_inches": 0.54,
+  "group_size_inches": 2.0,
+  "confidence": 0.93,
+  "warnings": []
+}
+
+
+

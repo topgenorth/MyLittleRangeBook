@@ -23,7 +23,7 @@ namespace MyLittleRangeBook.CLI
         // ReSharper disable once AsyncMethodWithoutAwait
         public async Task<int> ShowConfigAsync(CancellationToken cancellationToken = default)
         {
-            _cliDisplay.WriteHeader("Show Configuration");
+            _cliDisplay.WriteAppHeader("Show Configuration");
 
             Table table = new Table().BorderColor(Color.White);
             table.AddColumn("Key");
