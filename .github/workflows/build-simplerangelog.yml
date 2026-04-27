@@ -39,12 +39,11 @@ jobs:
       - name: Compute version metadata
         shell: bash
         run: |
-          SHORT_SHA="${GITHUB_SHA:0:7}"
           VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REVISION}"
           ASSEMBLY_VERSION="${VERSION}.${GITHUB_RUN_NUMBER}"
           FILE_VERSION="${VERSION}.${GITHUB_RUN_NUMBER}"
+          SHORT_SHA="${GITHUB_SHA:0:7}"
           INFORMATIONAL_VERSION="${ASSEMBLY_VERSION}+${SHORT_SHA}"
-
           {
             echo "SHORT_SHA=$SHORT_SHA"
             echo "VERSION=$VERSION"
