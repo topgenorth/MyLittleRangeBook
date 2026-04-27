@@ -87,4 +87,4 @@ if ($IsLinux) {
     & chmod +x $destinationPath
 }
 
-Write-Host "Installed $executable.FullName to : $destinationPath"
+Write-Host "Installed $executable to : $destinationPath"
