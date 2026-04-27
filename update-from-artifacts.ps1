@@ -51,8 +51,18 @@ if (-not $runId -or $runId -eq "null") {
     throw "Could not find a successful run for workflow '$WorkflowName'."
 }
 
-Write-Host "Downloading artifacts from run $latestRunId matching: $artifactPattern to $downloadDir"
-gh run download $latestRunId --pattern $artifactPattern --dir $downloadDir
+Write-Host "Downloading latest artifact from run $runId matching: $artifactPattern to $downloadDir"
+
+# Query for artifacts and get the newest one matching the pattern using GitHub API
+$patternRegex = $artifactPattern -replace '\*', '.*'
+$newestArtifact = gh api "repos/{owner}/{repo}/actions/runs/$runId/artifacts" --jq ".artifacts | sort_by(.created_at) | reverse | .[0].name | select(test(\"$patternRegex\"))" 2>$null
+
+if (-not $newestArtifact -or $newestArtifact -eq "null") {
+    throw "Could not find any artifacts matching pattern '$artifactPattern' in run $runId."
+}
+
+Write-Host "Found newest artifact: $newestArtifact"
+gh run download $runId --name "$newestArtifact" --dir $downloadDir
 
 Write-Host "Contents of download directory:"
 Get-ChildItem -Path $downloadDir -Recurse | ForEach-Object { Write-Host "  $_" }

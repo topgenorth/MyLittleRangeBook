@@ -90,7 +90,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 logger.Warning("SQL File {sqlFile} not found.", sqlfile);
                 cliDisplay.WriteFailure($"Could not find the SQL file '{sqlfile}'.");
 
-                return SQL_FILE_NOT_FOUND;
+                return SQL_SCRIPT_FILE_NOT_FOUND;
             }
 
             Task<Result<bool>> migrations = sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
