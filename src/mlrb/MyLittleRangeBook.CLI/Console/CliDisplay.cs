@@ -5,24 +5,20 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public sealed class CliDisplay : ICliDisplay
     {
-        public const string AppName = "MyLittleRangeBook CLI";
 
-        public const string WarningGlyph = "⚠";
-        public const string SuccessGlyph = "✔";
-        public const string ErrorGlyph = "❌";
         public string AppVersion { get; }
 
 
         public CliDisplay(IAnsiConsole console)
         {
-            AppVersion = FileExtensions.SimpleAssemblyVersionInformation();
+            AppVersion = GetType().Assembly.GetAssemblyVersionInformation();
             Console = console;
         }
 
         public IAnsiConsole Console { get; }
 
 
-        public void WriteAppHeader(string action)
+        public void WriteAppInfo(string action)
         {
             // OriginalAppHeaderPrinter x = new OriginalAppHeaderPrinter()
             //     .SetAction(action)

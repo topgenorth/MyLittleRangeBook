@@ -1,9 +1,23 @@
-﻿namespace MyLittleRangeBook.Tests
+﻿using Shouldly;
+
+namespace MyLittleRangeBook.Tests
 {
     public class FileExtensionsTests
     {
         const string TestFileName = "test.txt";
         readonly string _testDirectory = Path.GetTempPath();
+
+
+        [Theory]
+        [InlineData("0.9.0.101+0e971a3.0e971a30e99d9114d2f90ca38b6feab611685ac0", "0.9.0.101+0e971a3")]
+        [InlineData("0.9.0.101+0e971a3", "0.9.0.101+0e971a3")]
+        [InlineData("0.9.0.101", "0.9.0.101")]
+        public void CleanAssemblyVersionTest(string assemblyVersion, string expectedVersion)
+        {
+            string result = FileExtensions.RemoveFullGitShaFromInformationalVersion(assemblyVersion);
+
+            result.ShouldBe(expectedVersion);
+        }
 
         [Fact]
         public void InjectEnvironmentIntoFileName_ShouldReturnOriginalFileInfo_WhenEnvironmentIsProduction()

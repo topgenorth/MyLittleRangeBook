@@ -8,11 +8,11 @@ namespace MyLittleRangeBook.CLI.Console
     {
         const string AppName = "MyLittleRangeBook CLI";
 
-        string _appVersion = FileExtensions.SimpleAssemblyVersionInformation();
+        string _appVersion = string.Empty;
 
         public SimpleAppHeader()
         {
-
+            _appVersion = GetType().Assembly.GetAssemblyVersionInformation();
         }
 
         public void Print(IAnsiConsole console)

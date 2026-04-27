@@ -11,6 +11,7 @@ using MyLittleRangeBook.Services;
 using Spectre.Console;
 using static MyLittleRangeBook.CLI.ReturnCodes;
 using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
+using AnsiConsoleExtensions = Spectre.Console.AnsiConsoleExtensions;
 
 namespace MyLittleRangeBook.CLI
 {
@@ -173,7 +174,6 @@ namespace MyLittleRangeBook.CLI
         {
             var headerGrid = new Grid();
             headerGrid.AddColumn();
-            headerGrid.AddRow($"[bold]{Markup.Escape(CliDisplay.AppName)}[/]");
             headerGrid.AddRow($"[grey]Version:[/] [green]{Markup.Escape(_cliDisplay.AppVersion)}[/]");
 
             return headerGrid;

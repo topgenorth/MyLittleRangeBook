@@ -54,7 +54,7 @@ namespace MyLittleRangeBook.CLI
         [UsedImplicitly]
         public async Task<int> ToConsoleAsync(string file, CancellationToken cancellationToken)
         {
-            _cliDisplay.WriteAppHeader("Displaying FIT File");
+            _cliDisplay.WriteAppInfo("Displaying FIT File");
             if (!File.Exists(file))
             {
                 _logger.Warning("File {file} not found.", file);

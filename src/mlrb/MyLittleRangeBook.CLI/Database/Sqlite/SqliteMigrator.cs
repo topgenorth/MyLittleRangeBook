@@ -29,7 +29,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             Result<bool> migrations = await sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
 
             // TODO [TO20260418] Improve the CLI output.
-            cliDisplay.WriteAppHeader("Show migration versions");
+            cliDisplay.WriteAppInfo("Show migration versions");
 
             try
             {
@@ -83,7 +83,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         // ReSharper disable once IdentifierTypo
         public async Task<int> RunSqlOnDatabase(string sqlfile, CancellationToken cancellationToken)
         {
-            cliDisplay.WriteAppHeader("Apply SQL to Database.");
+            cliDisplay.WriteAppInfo("Apply SQL to Database.");
 
             if (!File.Exists(sqlfile))
             {
@@ -140,7 +140,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         public async Task<int> MigrateSchemaAsync(CancellationToken cancellationToken = default)
         {
             // TODO [TO20260418] Improve the CLI output.
-            cliDisplay.WriteAppHeader("Applying Migrations");
+            cliDisplay.WriteAppInfo("Applying Migrations");
 
             if (!File.Exists(sqliteHelper.DatabaseFile))
             {
