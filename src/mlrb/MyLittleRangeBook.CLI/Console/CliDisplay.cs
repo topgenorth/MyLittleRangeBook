@@ -27,9 +27,7 @@ namespace MyLittleRangeBook.CLI.Console
             // OriginalAppHeaderPrinter x = new OriginalAppHeaderPrinter()
             //     .SetAction(action)
             //     .SetAppVersion(AppVersion);
-            SimpleAppHeader x = new SimpleAppHeader()
-                .SetAction(action)
-                .SetAppVersion(AppVersion);
+            SimpleAppHeader x = new SimpleAppHeader();
             x.Print(Console);
         }
 

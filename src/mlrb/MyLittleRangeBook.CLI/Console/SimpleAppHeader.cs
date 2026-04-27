@@ -4,7 +4,7 @@ using Spectre.Console.Rendering;
 
 namespace MyLittleRangeBook.CLI.Console
 {
-    class SimpleAppHeader : IConsolePrinter
+    class SimpleAppHeader :  IConsolePrinter
     {
         const string AppName = "MyLittleRangeBook CLI";
 
@@ -44,20 +44,10 @@ namespace MyLittleRangeBook.CLI.Console
 
         public SimpleAppHeader SetAppVersion(string appVersion)
         {
-            _appVersion = appVersion;
+            // [TO20260427] NOOP
 
             return this;
         }
 
-
-        static string GetInformationalVersion()
-        {
-            string v = Assembly.GetExecutingAssembly()
-                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion ?? "Unknown";
-
-
-            return v;
-        }
     }
 }

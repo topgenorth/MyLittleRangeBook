@@ -2,6 +2,8 @@
 
 $ErrorActionPreference = "Stop"
 
+$WorkflowName = "Build MyLittleRangeBook"
+
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
     throw "GitHub CLI (gh) is required but was not found in PATH."
 }
@@ -12,6 +14,7 @@ if (-not $repoRoot) {
 }
 
 Set-Location $repoRoot
+
 
 if ($IsWindows) {
     $artifactPattern = "mlrb-*-windows-executables"
@@ -36,11 +39,17 @@ if (Test-Path $downloadDir) {
     Remove-Item $downloadDir -Recurse -Force
 }
 New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
-Write-Host "Getting latest workflow run ID..."
 
-$latestRunId = gh run list --limit 1 --json databaseId -q ".[0].databaseId"
-if (-not $latestRunId) {
-    throw "Could not retrieve latest workflow run ID."
+Write-Host "Finding latest successful run for workflow '$WorkflowName'..."
+$runId = gh run list `
+    --workflow $WorkflowName `
+    --status success `
+    --limit 1 `
+    --json databaseId `
+    --jq '.[0].databaseId'
+
+if (-not $runId -or $runId -eq "null") {
+    throw "Could not find a successful run for workflow '$WorkflowName'."
 }
 
 Write-Host "Downloading artifacts from run $latestRunId matching: $artifactPattern to $downloadDir"
