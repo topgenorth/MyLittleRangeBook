@@ -43,7 +43,6 @@ New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
 Write-Host "Finding latest successful run for workflow '$WorkflowName'..."
 $runId = gh run list `
     --workflow $WorkflowName `
-    --status success `
     --limit 1 `
     --json databaseId `
     --jq '.[0].databaseId'
