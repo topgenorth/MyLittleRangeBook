@@ -54,11 +54,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
 
         public ManageSimpleRangeEventsViewModel(ILogger logger,
-            IDialogService dialogService,
+            Func<IDialogParticipant, IDialogService> dialogServiceFactory,
             ISimpleRangeEventRepository repo)
         {
             _repo = repo;
-            _dialogService = dialogService;
+            _dialogService = dialogServiceFactory(this);
             _logger = logger;
 
             // Register for message notifications from other ViewModels

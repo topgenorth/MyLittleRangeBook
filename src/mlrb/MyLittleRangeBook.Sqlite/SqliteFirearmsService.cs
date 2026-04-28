@@ -22,25 +22,6 @@ namespace MyLittleRangeBook.Database.Sqlite
                                  SET Name = @Name, Notes = @Note, Modified = @Modified 
                                  WHERE Id = @Id
                                  """;
-
-        static SqliteFirearmsService()
-        {
-            SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
-        }
-
-        private class DateTimeOffsetHandler : SqlMapper.TypeHandler<DateTimeOffset>
-        {
-            public override void SetValue(IDbDataParameter parameter, DateTimeOffset value)
-            {
-                parameter.Value = value.ToString("O");
-            }
-
-            public override DateTimeOffset Parse(object value)
-            {
-                return DateTimeOffset.Parse((string)value);
-            }
-        }
-
         public async Task<Result<bool>> DeleteAsync(IDbConnection connection,
             Firearm firearm,
             CancellationToken cancellationToken = default)

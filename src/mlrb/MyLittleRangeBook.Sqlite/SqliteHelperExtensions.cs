@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Services;
@@ -49,6 +50,10 @@ namespace MyLittleRangeBook.Database.Sqlite
         public static IServiceCollection AddMyLittleRangeBookSqlite(this IServiceCollection services, IConfiguration configuration)
         {
             SetSqlite3ProviderAndInit();
+
+            SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
+            SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
+
 
             services.TryAddSingleton<IConfiguration>(configuration);
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();

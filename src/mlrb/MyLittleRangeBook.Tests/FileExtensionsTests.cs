@@ -1,6 +1,6 @@
 ﻿using Shouldly;
 
-namespace MyLittleRangeBook.Tests
+namespace MyLittleRangeBook
 {
     public class FileExtensionsTests
     {

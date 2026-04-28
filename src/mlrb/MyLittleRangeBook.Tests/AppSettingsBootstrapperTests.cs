@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using MyLittleRangeBook.Config;
 
-namespace MyLittleRangeBook.Tests
+namespace MyLittleRangeBook
 {
     public class AppSettingsBootstrapperTests : IDisposable
     {

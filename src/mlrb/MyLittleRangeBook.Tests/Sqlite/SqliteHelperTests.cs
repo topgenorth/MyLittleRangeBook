@@ -2,9 +2,8 @@
 using MyLittleRangeBook.Database.Sqlite;
 using Serilog;
 using Shouldly;
-using SQLitePCL;
 
-namespace MyLittleRangeBook.Tests.Sqlite
+namespace MyLittleRangeBook.Sqlite
 {
     public class SqliteHelperTests
     {

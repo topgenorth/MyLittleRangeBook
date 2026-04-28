@@ -1,19 +1,19 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.GUI.Helper;
+using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Models;
 using NanoidDotNet;
 
-namespace MyLittleRangeBook.GUI.Tests
+namespace MyLittleRangeBook.Sqlite
 {
-    public class DatabaseTypeHandlerTests : TestBase
+    public class DatabaseTypeHandlerTests
     {
         [Fact]
         public async Task Should_Query_DateTimeOffset_From_Sqlite()
         {
             // Explicitly register handlers as they are registered in Program.Main which might not run for tests
-            SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SQLiteDateTimeOffsetHandler());
-            SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SQLiteDateTimeOffsetHandler());
+            SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
+            SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
 
             await using var connection = new SqliteConnection("Data Source=:memory:");
             await connection.OpenAsync();

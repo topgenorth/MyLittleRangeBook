@@ -41,13 +41,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly ISqliteHelper _sqliteHelper;
 
         public ManageFirearmsViewModel(IFirearmsService firearmsService,
-            IDialogService dialogService,
+            Func<IDialogParticipant, IDialogService> dialogServiceFactory,
             ISqliteHelper sqliteHelper,
             ILogger logger)
         {
             _sqliteHelper = sqliteHelper;
             _firearmsService = firearmsService;
-            _dialogService = dialogService;
+            _dialogService = dialogServiceFactory(this);
             _logger = logger;
             WeakReferenceMessenger.Default.Register(this);
 
