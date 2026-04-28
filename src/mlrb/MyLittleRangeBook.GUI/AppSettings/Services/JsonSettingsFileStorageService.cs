@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using MyLittleRangeBook.Config;
 
 namespace MyLittleRangeBook.GUI.Services
 {
@@ -10,34 +11,7 @@ namespace MyLittleRangeBook.GUI.Services
     /// </summary>
     public class JsonSettingsFileStorageService : ISettingsStorageService
     {
-        /// <summary>
-        ///     Gets the settings directory path for storing user configuration.
-        ///     Uses OS-specific local application data directory.
-        ///     Creates a dedicated folder for this application to avoid conflicts.
-        /// </summary>
-        internal static string SettingsDirectory
-        {
-            get
-            {
-                var settingsDirectory = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "SimpleRangeLog");
-
-                if (!OperatingSystem.IsWindows())
-                {
-                    settingsDirectory = settingsDirectory.ToLowerInvariant();
-                }
-
-                return settingsDirectory;
-            }
-        }
-
-        /// <summary>
-        ///     Gets the full path to the settings file.
-        ///     Combines settings directory with JSON filename for configuration storage.
-        /// </summary>
-        static string SettingsFile => Path.Combine(SettingsDirectory, "Settings.json");
-
+        string SettingsFile => ConfigurationExtensions.DefaultAppSettingsFile.FullName;
         /// <inheritdoc />
         public async Task<string?> ReadAsync()
         {
@@ -49,13 +23,7 @@ namespace MyLittleRangeBook.GUI.Services
                     return null;
                 }
 
-                // Return null if a settings file doesn't exist yet
-                if (!File.Exists(SettingsFile))
-                {
-                    return null;
-                }
 
-                // Read and return JSON content from a settings file
                 return await File.ReadAllTextAsync(SettingsFile);
             }
             catch
@@ -76,11 +44,6 @@ namespace MyLittleRangeBook.GUI.Services
                     return;
                 }
 
-                // Create directory for this App if it doesn't exist
-                if (!Directory.Exists(SettingsDirectory))
-                {
-                    Directory.CreateDirectory(SettingsDirectory);
-                }
 
                 // Save the provided data into our settings file
                 await File.WriteAllTextAsync(SettingsFile, json);

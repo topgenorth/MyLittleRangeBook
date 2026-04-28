@@ -13,6 +13,7 @@ using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
 using MyLittleRangeBook.Services;
 using SharedControls.Services;
+using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.GUI
 {
@@ -45,8 +46,8 @@ namespace MyLittleRangeBook.GUI
 
             services.AddSerilog(lc =>
             {
-                string logDir = Path.Combine(JsonSettingsFileStorageService.SettingsDirectory, "logs");
-                Directory.CreateDirectory(logDir);
+                ConfigurationExtensions.DefaultLogFileDirectory.Create();
+                string logDir = ConfigurationExtensions.DefaultLogFileDirectory.FullName;
                 // Define log filename pattern (Serilog will append date for rolling)
                 string logPath = Path.Combine(logDir, "app-.log");
 

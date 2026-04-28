@@ -21,9 +21,11 @@
         ///     Uses OS-specific local application data directory.
         ///     Creates a dedicated folder for this application to avoid conflicts.
         /// </summary>
-        internal static DirectoryInfo DefaultUserSettingsDirectory => new(Path.Combine(
+        public  static DirectoryInfo DefaultUserSettingsDirectory => new(Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             DefaultLocalAppDataFolder));
+
+        public static DirectoryInfo DefaultLogFileDirectory => new(Path.Combine(DefaultUserSettingsDirectory.FullName, "Logs"));
 
         public static FileInfo DefaultAppSettingsFile =>
             new FileInfo(Path.Combine(DefaultUserSettingsDirectory.FullName, AppSettingsFileName))
