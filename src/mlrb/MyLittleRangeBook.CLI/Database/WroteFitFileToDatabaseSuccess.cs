@@ -9,6 +9,7 @@ namespace MyLittleRangeBook.CLI.Database
         {
             Metadata.Add("Filename", file);
             Metadata.Add("Size", size);
+            Metadata.Add("ReturnCode", ReturnCodes.SUCCESS);
         }
 
         public int ResultCode => ReturnCodes.SUCCESS;

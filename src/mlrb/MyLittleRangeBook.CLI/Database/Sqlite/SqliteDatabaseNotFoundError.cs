@@ -7,6 +7,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         public SqliteDatabaseNotFoundError(string file) : base($"Could not find the SQLite database '{file}'")
         {
             Metadata.Add("DatabaseFile", file);
+            Metadata.Add("ReturnCode", ReturnCodes.SQL_SQLITE_DATABASE_FILE_NOT_FOUND);
         }
     }
 }

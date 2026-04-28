@@ -1,5 +1,6 @@
 ﻿using ConsoleAppFramework;
 using FluentResults;
+using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.CLI.Console;
@@ -7,47 +8,9 @@ using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 using Spectre.Console;
-using Spectre.Console.Rendering;
 
-namespace MyLittleRangeBook.CLI.Database
+namespace MyLittleRangeBook.CLI
 {
-
-    class FirearmsTablePrinter : IConsolePrinter
-    {
-        IEnumerable<Firearm> _firearms = [];
-
-        public FirearmsTablePrinter SetFirearms(IEnumerable<Firearm> firearms)
-        {
-            _firearms = firearms;
-
-            return this;
-        }
-        public void Print(IAnsiConsole console)
-        {
-            console.Write(BuildRenderable());
-        }
-
-        public IRenderable BuildRenderable()
-        {
-            Table table = new Table()
-                .Border(TableBorder.Rounded)
-                .Expand()
-                .BorderColor(Color.White)
-                .AddColumn("Name", col => col.Alignment(Justify.Left))
-                .AddColumn("Notes", col => col.Alignment(Justify.Left))
-                .AddColumn("Id", col => col.Alignment(Justify.Center).Width(21))
-                .AddColumn("Row Id", col => col.Alignment(Justify.Center).Width(6));
-
-            foreach (Firearm firearm in _firearms)
-            {
-                table.AddRow(firearm.Name, firearm.Notes ?? string.Empty, firearm.Id!, firearm.RowId!.ToString() ?? "");
-            }
-
-            Panel p = new Panel(table).Expand().Border(BoxBorder.None);
-
-            return p;
-        }
-    }
     [RegisterCommands("firearm")]
     public class FirearmCommands
     {
@@ -65,7 +28,8 @@ namespace MyLittleRangeBook.CLI.Database
         }
 
 
-        [Command("all")]
+        [Command("list")]
+        [UsedImplicitly]
         public async Task<int> PrintFirearmsToConsole(CancellationToken cancellationToken = default)
          {
             AnsiConsole.Console.WriteAppInfo();

@@ -7,6 +7,7 @@ namespace MyLittleRangeBook.CLI.Console
     /// <summary>
     ///The original app header.
     /// </summary>
+    [Obsolete("This is the original app header. It is not used anymore. Use SimpleAppHeader instead.", true)]
     class OriginalAppHeaderPrinter : IConsolePrinter
     {
         const string AppName = "MyLittleRangeBook CLI";

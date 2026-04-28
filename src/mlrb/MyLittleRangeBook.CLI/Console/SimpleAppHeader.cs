@@ -6,7 +6,7 @@ namespace MyLittleRangeBook.CLI.Console
 {
     class SimpleAppHeader :  IConsolePrinter
     {
-        const string AppName = "MyLittleRangeBook CLI";
+
 
         string _appVersion = string.Empty;
 
@@ -24,7 +24,7 @@ namespace MyLittleRangeBook.CLI.Console
         {
             var grid = new Grid();
             grid.AddColumn();
-            grid.AddRow($"[bold white]{Markup.Escape(AppName)} {_appVersion}[/]");
+            grid.AddRow($"[bold white]{Markup.Escape(AnsiConsoleExtensions.AppName)} {_appVersion}[/]");
 
             Panel panel = new Panel(grid)
                 .Expand()
