@@ -5,9 +5,9 @@ namespace MyLittleRangeBook.CLI
     /// <summary>
     /// Base class for FluentResult errors that will return a specific return code for errors within the app.
     /// </summary>
-    public abstract class MyLittleRangeBookCliError: Error
+    public abstract class MlrbBaseError: Error
     {
-        protected MyLittleRangeBookCliError(string message, int returnCode = ReturnCodes.FAILURE) : base(message)
+        protected MlrbBaseError(string message, int returnCode = ReturnCodes.FAILURE) : base(message)
         {
             ReturnCode = returnCode;
             Metadata.Add("ReturnCode", ReturnCode);

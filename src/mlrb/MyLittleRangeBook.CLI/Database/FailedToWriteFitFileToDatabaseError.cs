@@ -1,6 +1,6 @@
 ﻿namespace MyLittleRangeBook.CLI.Database
 {
-    public class FailedToWriteFitFileToDatabaseError : MyLittleRangeBookCliError
+    public class FailedToWriteFitFileToDatabaseError : MlrbBaseError
     {
         /// <summary>
         ///

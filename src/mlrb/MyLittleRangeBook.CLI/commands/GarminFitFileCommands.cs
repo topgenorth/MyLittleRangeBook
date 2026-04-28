@@ -87,7 +87,7 @@ namespace MyLittleRangeBook.CLI
             {
                 _cliDisplay.WriteFailure("Failed to parse FIT file.");
 
-                return result.HasError<UnsupportedFitFileTypeError>() ? FIT_FILE_PARSE_FAILURE : FIT_FILE_PARSE_FAILURE;
+                return result.HasError<UnsupportedFitFileTypeError>() ? FIT_FILE_PARSE_FAILURE : FAILURE;
             }
 
             ShotSession? session = result.Value;

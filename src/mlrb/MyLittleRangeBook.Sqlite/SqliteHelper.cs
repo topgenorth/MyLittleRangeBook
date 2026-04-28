@@ -1,12 +1,14 @@
 using System.Data;
 using System.Text.Json.Nodes;
 using DbUp;
+using DbUp.Builder;
 using DbUp.Engine;
 using FluentResults;
 using Microsoft.Extensions.Configuration;
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
+
     /// <summary>
     ///     A helper class for managing SQLite database connections, initialization, and configuration.
     ///     Provides methods for setting up the database environment, getting connections, and generating connection strings.
@@ -96,11 +98,15 @@ namespace MyLittleRangeBook.Database.Sqlite
             Result<bool> result;
             try
             {
-                UpgradeEngine? upgrader = DeployChanges.To
+                UpgradeEngineBuilder? ueb = DeployChanges.To
                     .SqliteDatabase(_connectionString)
-                    .WithScriptsEmbeddedInAssembly(GetType().Assembly)
-                    .LogToConsole()
-                    .Build();
+                    .WithScriptsEmbeddedInAssembly(GetType().Assembly);
+                if (!EnvironmentHelper.IsProduction)
+                {
+                    ueb.LogToConsole();
+                    ueb.LogScriptOutput();
+                }
+                UpgradeEngine? upgrader = ueb.Build();
 
                 DatabaseUpgradeResult? migrationResult = upgrader.PerformUpgrade();
                 if (migrationResult.Successful)

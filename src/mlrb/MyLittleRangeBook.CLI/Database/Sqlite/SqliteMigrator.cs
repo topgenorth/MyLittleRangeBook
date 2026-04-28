@@ -41,8 +41,9 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                         await using var cmd = new SqliteCommand(MigrationsSql, connection);
                         await using SqliteDataReader rdr = await cmd.ExecuteReaderAsync(ct);
 
-                        var table = new Table();
-                        table.AddColumn("Migration ID");
+                        Table table = new Table().Expand().BorderColor(Color.White);
+
+                        table.AddColumn("Row ID", col => col.Width(6).Centered());
                         table.AddColumn("Script Name");
                         table.AddColumn("Date Applied");
 
@@ -145,9 +146,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             if (!File.Exists(sqliteHelper.DatabaseFile))
             {
                 logger.Warning("SQLite database {file} not found.", sqliteHelper.DatabaseFile);
-                cliDisplay.Console.MarkupLineInterpolated(
-                    $"[bold red]✗ Could not find '{sqliteHelper.DatabaseFile}'; database will be created.[/]");
-
+                cliDisplay.WriteFailure($"Could not find the SQLite database '{sqliteHelper.DatabaseFile}'.");
             }
 
             Result<bool> migrationResult =await sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);

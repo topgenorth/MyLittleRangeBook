@@ -15,6 +15,12 @@ using AnsiConsoleExtensions = Spectre.Console.AnsiConsoleExtensions;
 
 namespace MyLittleRangeBook.CLI
 {
+    public class FailedToAddSimpleRangeEventError : MlrbBaseError
+    {
+        public FailedToAddSimpleRangeEventError() : base("Unexpected error trying to add SimpleRangeEvent.", RANGE_EVENT_FAILED_TO_CREATE)
+        {
+        }
+    }
     /// <summary>
     ///     Allows us to create a new Range Event from the CLI.
     /// </summary>
@@ -122,6 +128,7 @@ namespace MyLittleRangeBook.CLI
             }
             catch (Exception e)
             {
+
                 _logger.Error(e, "Unexpected error trying to add SimpleRangeEvent");
                 _cliDisplay.WriteFailure($"Unexpected error trying to add SimpleRangeEvent: {e.Message}");
 
