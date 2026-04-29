@@ -69,6 +69,7 @@ namespace MyLittleRangeBook.Sqlite
         public void SqliteExtensions_EnsureSqliteConnectionString(string? json, string expected)
         {
             var n = JsonNode.Parse(json ??"{}");
+            n.ShouldNotBeNull();
 
             n.EnsureDefaultSqliteConnectionString().ShouldBeTrue();
             n["ConnectionStrings"].ShouldNotBeNull();

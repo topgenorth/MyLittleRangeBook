@@ -11,10 +11,11 @@ using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.PgSQL;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
+using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
 // [TO20260425] This has to run first and will create a default appsettings.json file if one does not exist.
 IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsJsonFileBootstrapper();
-await appSettingsBootstrapper.EnsureAppSettingsExistsAsync();
+await appSettingsBootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.Sources.Clear();

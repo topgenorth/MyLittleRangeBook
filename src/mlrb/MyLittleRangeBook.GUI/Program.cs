@@ -29,7 +29,7 @@ namespace MyLittleRangeBook.GUI
         {
             // [TO20260425] This has to run first and will create a default appsettings.json file if one does not exist.
             IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsJsonFileBootstrapper();
-            await appSettingsBootstrapper.EnsureAppSettingsExistsAsync();
+            await appSettingsBootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
             await SqliteHelperExtensions.EnsureSqliteDatabaseIsInAppSettings(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
 
             ConfigureLogging();

@@ -1,6 +1,5 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
-using static MyLittleRangeBook.Config.ConfigurationExtensions;
+﻿using System.Text.Json.Nodes;
+using FluentResults;
 
 namespace MyLittleRangeBook.Config
 {
@@ -9,20 +8,53 @@ namespace MyLittleRangeBook.Config
     /// </summary>
     public class AppSettingsJsonFileBootstrapper : IAppSettingsBootstrapper
     {
+        public static readonly List<Func<JsonNode?, Result>?> DefaultBootStrappers = new List<Func<JsonNode?, Result>?>()
+        {
+            LoggingSectionBootstrapper
+        };
+
+        List<Func<JsonNode?, Result>?> _bootstrappers = new List<Func<JsonNode?, Result>?>();
+
+        /// <summary>
+        /// Check to see if there is a Logging section in the appsettings.json file. If not, create one.
+        /// </summary>
+        public static readonly Func<JsonNode?, Result> LoggingSectionBootstrapper = (JsonNode? rootNode) =>
+        {
+            if (rootNode is not JsonObject rootObject)
+            {
+                return Result.Fail("Root appsettings JSON must be a JSON object.");
+            }
+
+            if (rootObject["Logging"] is null)
+            {
+                rootObject["Logging"] = JsonNode.Parse(LoggingSectionJson);
+            }
+
+            return Result.Ok();
+        };
+
+        const string LoggingSectionJson = """
+                                          {
+                                            "LogLevel": {
+                                              "Default": "Error",
+                                              "Microsoft.Hosting.Lifetime": "Error"
+                                            }
+                                          }
+                                          """;
+
         const string DefaultAppSettingsJson = """
                                               {
                                                 "ConnectionStrings": {
                                                   "SqliteConnection": "Data Source=mlrb.db"
                                                 },
-                                                "Logging": {
-                                                  "LogLevel": {
-                                                    "Default": "Error",
-                                                    "Microsoft.Hosting.Lifetime": "Error"
-                                                  }
-                                                }
+
                                               }
                                               """;
 
+
+        public AppSettingsJsonFileBootstrapper()
+        {
+        }
 
         /// <summary>
         ///     Ensures that the appsettings.json file exists in the user's settings directory. If it
@@ -32,45 +64,99 @@ namespace MyLittleRangeBook.Config
         ///     In the case of a staging or development environment, the filename will have the
         ///     environment name appended to it.
         /// </remarks>
+        /// <param name="appSettingsJsonFile"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns>The name of the appsettings.json file.</returns>
-        public async Task<string> EnsureAppSettingsExistsAsync(CancellationToken cancellationToken = default)
+        /// <returns>The full path of the appsettings.json file.</returns>
+        public async Task<Result> EnsureAppSettingsExistsAsync(string appSettingsJsonFile,
+            CancellationToken cancellationToken = default)
         {
-            DefaultUserSettingsDirectory.Create();
-            if (DefaultAppSettingsFile.Exists)
+            Result r1 = await CreateAppSettingsFile(appSettingsJsonFile);
+            if (r1.IsFailed)
             {
-                return DefaultAppSettingsFile.FullName;
+                return r1;
             }
 
-            string appSettingsFile = DefaultAppSettingsFile.FullName;
+            string originalAppSettingsJson;
 
-            string defaultLogLevel = EnvironmentHelper.IsProduction
-                ? "Error"
-                : EnvironmentHelper.IsStaging
-                    ? "Debug"
-                    : "Verbose";
-
-            var node = JsonNode.Parse(DefaultAppSettingsJson);
-            if (node != null)
+            try
             {
-                // [TO20260414] Just wondering if the Mode should be set to ReadWriteCreate?
-                // node["ConnectionStrings"]!["SqliteConnection"] = $"Data Source={DefaultSqliteDatabaseName()}";
-
-
-                JsonNode logLevelNode = node["Logging"]!["LogLevel"]!;
-                logLevelNode["Default"] = defaultLogLevel;
-                logLevelNode["Microsoft.Hosting.Lifetime"] =
-                    EnvironmentHelper.IsProduction ? "Error" : "Warning";
-
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                await File.WriteAllTextAsync(appSettingsFile, node.ToJsonString(options), cancellationToken);
+                originalAppSettingsJson = await File.ReadAllTextAsync(appSettingsJsonFile, cancellationToken);
             }
-            else
+            catch (Exception ex)
             {
-                await File.WriteAllTextAsync(appSettingsFile, DefaultAppSettingsJson, cancellationToken);
+                return new AppSettingsJsonCreationError(appSettingsJsonFile, ex);
             }
 
-            return appSettingsFile;
+            JsonNode? appSettingsRoot;
+            try
+            {
+                appSettingsRoot = JsonNode.Parse(originalAppSettingsJson);
+            }
+            catch (Exception ex)
+            {
+                return new AppSettingsJsonCreationError(appSettingsJsonFile, ex);
+            }
+
+            appSettingsRoot ??= JsonNode.Parse("{}")!;
+
+            foreach (Result? r2 in _bootstrappers.Select(validator => validator!(appSettingsRoot)).Where(r2 => r2.IsFailed))
+            {
+                return r2;
+            }
+
+            try
+            {
+                await File.WriteAllTextAsync(appSettingsJsonFile, appSettingsRoot!.ToString(), cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                return new AppSettingsJsonCreationError(appSettingsJsonFile, ex);
+            }
+
+            return Result.Ok();
+
+
+        }
+
+        public IAppSettingsBootstrapper AddBootStrapper(Func<JsonNode?, Result> bootstrapper)
+        {
+            if (bootstrapper is null)
+            {
+                throw new ArgumentNullException(nameof(bootstrapper));
+            }
+
+            if (_bootstrappers.Contains(bootstrapper))
+            {
+                return this;
+            }
+            _bootstrappers.Add(bootstrapper);
+            return this;
+        }
+
+        internal async Task<Result> CreateAppSettingsFile(string pathToFile)
+        {
+            var file = new FileInfo(pathToFile);
+            DirectoryInfo? parentDirectory = file.Directory;
+            if (parentDirectory is not null && !parentDirectory.Exists)
+            {
+                parentDirectory.Create();
+            }
+
+            if (file.Exists)
+            {
+                return Result.Ok();
+            }
+
+            try
+            {
+                await File.WriteAllTextAsync(file.FullName, "{}");
+            }
+            catch (Exception ex)
+            {
+                return new AppSettingsJsonCreationError(file.FullName, ex);
+            }
+
+            return Result.Ok();
         }
     }
 }

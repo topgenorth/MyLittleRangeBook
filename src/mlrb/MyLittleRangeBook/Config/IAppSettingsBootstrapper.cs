@@ -1,4 +1,7 @@
-﻿namespace MyLittleRangeBook.Config
+﻿using System.Text.Json.Nodes;
+using FluentResults;
+
+namespace MyLittleRangeBook.Config
 {
     public interface IAppSettingsBootstrapper
     {
@@ -10,8 +13,11 @@
         ///     In the case of a staging or development environment, the filename will have the
         ///     environment name appended to it.
         /// </remarks>
+        /// <param name="appSettingsJsonFile">The path to the appsettings.json file</param>
         /// <param name="cancellationToken"></param>
-        /// <returns>The name of the appsettings.json file.</returns>
-        Task<string> EnsureAppSettingsExistsAsync(CancellationToken cancellationToken = default);
+        /// <returns></returns>
+        Task<Result> EnsureAppSettingsExistsAsync(string appSettingsJsonFile, CancellationToken cancellationToken = default);
+
+        IAppSettingsBootstrapper AddBootStrapper(Func<JsonNode?, Result> bootstrapper);
     }
 }

@@ -1,102 +1,51 @@
-﻿using System.Text.Json;
+﻿using System.Text.Json.Nodes;
+using FluentResults;
 using MyLittleRangeBook.Config;
-using MyLittleRangeBook.Database.Sqlite;
+using Shouldly;
 
 namespace MyLittleRangeBook
 {
     public class AppSettingsJsonFileBootstrapperTests : IDisposable
     {
-        readonly string _oldEnvironment = null!;
+        readonly string _appSettingsFile;
+        readonly JsonNode _appSettingsJson;
+        readonly string _tempDirectory = Path.Combine(Path.GetTempPath(), $"mlrb-tests-{Guid.NewGuid():N}");
 
         public AppSettingsJsonFileBootstrapperTests()
         {
-            _oldEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
-            Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
+            _appSettingsFile = Path.Combine(_tempDirectory, "appsettings-test.json");
+            IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
+                    .AddBootStrapper(AppSettingsJsonFileBootstrapper.LoggingSectionBootstrapper)
+                ;
+            Result result = bootstrapper.EnsureAppSettingsExistsAsync(_appSettingsFile).Result;
+            result.IsSuccess.ShouldBeTrue();
+
+            string content = File.ReadAllText(_appSettingsFile);
+            _appSettingsJson = JsonNode.Parse(content)!;
         }
 
         public void Dispose()
         {
-            Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", _oldEnvironment);
-        }
-
-        [Fact]
-        public async Task EnsureAppSettingsExistsAsync_ShouldCreateFile_WithCorrectContent()
-        {
-            var bootstrapper = new AppSettingsJsonFileBootstrapper();
-            string filePath = await bootstrapper.EnsureAppSettingsExistsAsync();
-
-            try
+            if (Directory.Exists(_tempDirectory))
             {
-                Assert.True(File.Exists(filePath));
-                Assert.Contains("appsettings-Development.json", filePath);
-
-                string content = await File.ReadAllTextAsync(filePath);
-                var json = JsonDocument.Parse(content);
-                string? connectionString = json.RootElement
-                    .GetProperty("ConnectionStrings")
-                    .GetProperty("SqliteConnection")
-                    .GetString();
-
-                string expectedDbPath = SqliteHelperExtensions.DefaultSqliteDatabaseName();
-                Assert.Equal($"Data Source={expectedDbPath}", connectionString);
-
-                Assert.True(json.RootElement.TryGetProperty("Logging", out _));
-            }
-            finally
-            {
-                if (File.Exists(filePath))
-                {
-                    File.Delete(filePath);
-                }
+                Directory.Delete(_tempDirectory, true);
             }
         }
 
         [Fact]
-        public async Task EnsureAppSettingsExistsAsync_ShouldNotOverwrite_IfFileExists()
+        public void EnsureAppSettingsExistsAsync_ShouldCreateFile()
         {
-            var bootstrapper = new AppSettingsJsonFileBootstrapper();
-            string filePath = await bootstrapper.EnsureAppSettingsExistsAsync();
-
-            try
-            {
-                var originalContent = "{\"Preserve\": true}";
-                await File.WriteAllTextAsync(filePath, originalContent);
-
-                string returnedPath = await bootstrapper.EnsureAppSettingsExistsAsync();
-
-                Assert.Equal(filePath, returnedPath);
-                string currentContent = await File.ReadAllTextAsync(filePath);
-                Assert.Equal(originalContent, currentContent);
-            }
-            finally
-            {
-                if (File.Exists(filePath))
-                {
-                    File.Delete(filePath);
-                }
-            }
+            File.Exists(_appSettingsFile).ShouldBeTrue();
         }
 
-        [Fact]
-        public async Task EnsureAppSettingsExistsAsync_ShouldRespectProductionEnvironment()
-        {
-            Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Production");
-            var bootstrapper = new AppSettingsJsonFileBootstrapper();
-            string filePath = await bootstrapper.EnsureAppSettingsExistsAsync();
 
-            try
-            {
-                Assert.True(File.Exists(filePath));
-                Assert.EndsWith("appsettings.json", filePath);
-                Assert.DoesNotContain("Production", filePath);
-            }
-            finally
-            {
-                if (File.Exists(filePath))
-                {
-                    File.Delete(filePath);
-                }
-            }
+        [Fact]
+        public void EnsureAppSettingsExistsAsync_Should_Have_LoggingSection()
+        {
+            _appSettingsJson.ShouldNotBeNull();
+            _appSettingsJson["Logging"].ShouldNotBeNull();
+            _appSettingsJson["Logging"]!["LogLevel"].ShouldNotBeNull();
+            _appSettingsJson["Logging"]!["LogLevel"]!["Default"]!.GetValue<string>().ShouldBe("Error");
         }
     }
 }
