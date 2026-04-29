@@ -13,7 +13,7 @@ using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
 // [TO20260425] This has to run first and will create a default appsettings.json file if one does not exist.
-IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsBootstrapper();
+IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsJsonFileBootstrapper();
 await appSettingsBootstrapper.EnsureAppSettingsExistsAsync();
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();

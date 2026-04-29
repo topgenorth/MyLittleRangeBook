@@ -7,7 +7,7 @@ namespace MyLittleRangeBook.Config
     /// <summary>
     ///     Ensures that the appsettings.json file exists in the user's settings directory.'
     /// </summary>
-    public class AppSettingsBootstrapper : IAppSettingsBootstrapper
+    public class AppSettingsJsonFileBootstrapper : IAppSettingsBootstrapper
     {
         const string DefaultAppSettingsJson = """
                                               {

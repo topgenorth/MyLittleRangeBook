@@ -4,11 +4,11 @@ using MyLittleRangeBook.Database.Sqlite;
 
 namespace MyLittleRangeBook
 {
-    public class AppSettingsBootstrapperTests : IDisposable
+    public class AppSettingsJsonFileBootstrapperTests : IDisposable
     {
         readonly string _oldEnvironment = null!;
 
-        public AppSettingsBootstrapperTests()
+        public AppSettingsJsonFileBootstrapperTests()
         {
             _oldEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
             Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
@@ -22,7 +22,7 @@ namespace MyLittleRangeBook
         [Fact]
         public async Task EnsureAppSettingsExistsAsync_ShouldCreateFile_WithCorrectContent()
         {
-            var bootstrapper = new AppSettingsBootstrapper();
+            var bootstrapper = new AppSettingsJsonFileBootstrapper();
             string filePath = await bootstrapper.EnsureAppSettingsExistsAsync();
 
             try
@@ -54,7 +54,7 @@ namespace MyLittleRangeBook
         [Fact]
         public async Task EnsureAppSettingsExistsAsync_ShouldNotOverwrite_IfFileExists()
         {
-            var bootstrapper = new AppSettingsBootstrapper();
+            var bootstrapper = new AppSettingsJsonFileBootstrapper();
             string filePath = await bootstrapper.EnsureAppSettingsExistsAsync();
 
             try
@@ -81,7 +81,7 @@ namespace MyLittleRangeBook
         public async Task EnsureAppSettingsExistsAsync_ShouldRespectProductionEnvironment()
         {
             Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Production");
-            var bootstrapper = new AppSettingsBootstrapper();
+            var bootstrapper = new AppSettingsJsonFileBootstrapper();
             string filePath = await bootstrapper.EnsureAppSettingsExistsAsync();
 
             try
