@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using MyLittleRangeBook.Config;
+using MyLittleRangeBook.Database.Sqlite;
 
 namespace MyLittleRangeBook
 {
@@ -36,7 +37,7 @@ namespace MyLittleRangeBook
                     .GetProperty("SqliteConnection")
                     .GetString();
 
-                string expectedDbPath = ConfigurationExtensions.DefaultSqliteDatabaseName();
+                string expectedDbPath = SqliteHelperExtensions.DefaultSqliteDatabaseName();
                 Assert.Equal($"Data Source={expectedDbPath}", connectionString);
 
                 Assert.True(json.RootElement.TryGetProperty("Logging", out _));

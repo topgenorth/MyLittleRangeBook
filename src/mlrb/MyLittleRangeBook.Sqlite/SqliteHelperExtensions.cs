@@ -1,10 +1,12 @@
-﻿using Dapper;
+﻿using System.Text.Json.Nodes;
+using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Services;
 using NanoidDotNet;
 using SQLitePCL;
+using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
@@ -12,10 +14,16 @@ namespace MyLittleRangeBook.Database.Sqlite
     ///     Extension methods for setting up SQLite and registering <see cref="ISqliteHelper" /> in the dependency injection
     ///     container.
     /// </summary>
-    public  static class SqliteHelperExtensions
+    public static class SqliteHelperExtensions
     {
         // ReSharper disable once MemberCanBePrivate.Global
-        public const string SQLITE_KEY = "sqlite";
+        public const string DI_KEYS_SQLITE = "sqlite";
+
+        /// <summary>
+        ///     The name of the default database.
+        /// </summary>
+        public const string SQLITE_DATABASE_NAME = "mlrb.db";
+
 
         /// <summary>
         ///     Sets the SQLite3 provider and initializes the SQLite environment.
@@ -29,7 +37,35 @@ namespace MyLittleRangeBook.Database.Sqlite
         }
 
         /// <summary>
-        /// Add some custom functions to the SQLite connection.
+        ///     Determines the full file path for the SQLite database based on the current environment.
+        ///     Suffixes the database name with the environment name (e.g., Development) if not in Production.
+        /// </summary>
+        /// <param name="inferFromEnvironment">
+        ///     If set to true, then the database name will be suffixed with the current environment
+        ///     name (e.g., Development). Defaults to true.
+        /// </param>
+        /// <returns>The full path to the SQLite database file.</returns>
+        public static string DefaultSqliteDatabaseName(bool inferFromEnvironment = true)
+        {
+            // TODO [TO20260425] Move this to the SQLite Assembly
+            string fullPath = Path.Combine(ConfigurationExtensions.DefaultUserSettingsDirectory.FullName,
+                SQLITE_DATABASE_NAME);
+            if (inferFromEnvironment)
+            {
+                fullPath = new FileInfo(fullPath).InjectEnvironmentIntoFileName().FullName;
+            }
+
+            if (!OperatingSystem.IsWindows())
+            {
+                fullPath = fullPath.ToLowerInvariant();
+            }
+
+            return fullPath;
+        }
+
+
+        /// <summary>
+        ///     Add some custom functions to the SQLite connection.
         /// </summary>
         /// <param name="connection"></param>
         /// <returns></returns>
@@ -47,22 +83,63 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <param name="services">The <see cref="IServiceCollection" /> to add the service to.</param>
         /// <param name="configuration"></param>
         /// <returns>The original <see cref="IServiceCollection" /> for chaining.</returns>
-        public static IServiceCollection AddMyLittleRangeBookSqlite(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddMyLittleRangeBookSqlite(this IServiceCollection services,
+            IConfiguration configuration)
         {
             SetSqlite3ProviderAndInit();
 
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
 
-
-            services.TryAddSingleton<IConfiguration>(configuration);
+            services.TryAddSingleton(configuration);
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
-            services.TryAddKeyedSingleton<ISimpleRangeLogService, SqliteSimpleRangeEventService>(SQLITE_KEY);
-            services.TryAddKeyedSingleton<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(SQLITE_KEY);
 
-            services.TryAddKeyedSingleton<IFirearmsService, SqliteFirearmsService>(SQLITE_KEY);
+            services.TryAddKeyedSingleton<ISimpleRangeLogService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
+            services.TryAddKeyedSingleton<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
+
+            services.TryAddKeyedSingleton<IFirearmsService, SqliteFirearmsService>(DI_KEYS_SQLITE);
 
             return services;
+        }
+
+        public static async Task EnsureSqliteDatabaseIsInAppSettings(string appSettingsFileName)
+        {
+            string appSettingsJson = await File.ReadAllTextAsync(appSettingsFileName);
+            var jsonRoot = JsonNode.Parse(appSettingsJson);
+            if (jsonRoot.EnsureDefaultSqliteConnectionString())
+            {
+                if (jsonRoot is not null)
+                {
+                    await File.WriteAllTextAsync(appSettingsFileName, jsonRoot.ToString());
+                }
+            }
+
+        }
+        public static bool EnsureDefaultSqliteConnectionString(this JsonNode? rootNode)
+        {
+            bool wasUpdated = false;
+            rootNode ??= new JsonObject();
+
+            JsonNode? n1 = rootNode["ConnectionStrings"];
+            if (n1 == null)
+            {
+                rootNode["ConnectionStrings"] = new JsonObject();
+                n1 = rootNode["ConnectionStrings"];
+            }
+
+            JsonNode? n2 = n1!["SqliteConnection"];
+            if (n2 is null)
+            {
+                SqliteConnectionStringBuilder builder = new SqliteConnectionStringBuilder
+                {
+                    DataSource = DefaultSqliteDatabaseName(), Mode = SqliteOpenMode.ReadWriteCreate
+                };
+
+                n1["SqliteConnection"] = $"{builder.ConnectionString}";
+                wasUpdated = true;
+            }
+
+            return wasUpdated;
         }
     }
 }

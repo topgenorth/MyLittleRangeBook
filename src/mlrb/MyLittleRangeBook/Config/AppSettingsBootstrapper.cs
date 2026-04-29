@@ -5,7 +5,7 @@ using static MyLittleRangeBook.Config.ConfigurationExtensions;
 namespace MyLittleRangeBook.Config
 {
     /// <summary>
-    /// Ensures that the appsettings.json file exists in the user's settings directory.'
+    ///     Ensures that the appsettings.json file exists in the user's settings directory.'
     /// </summary>
     public class AppSettingsBootstrapper : IAppSettingsBootstrapper
     {
@@ -24,8 +24,6 @@ namespace MyLittleRangeBook.Config
                                               """;
 
 
-
-
         /// <summary>
         ///     Ensures that the appsettings.json file exists in the user's settings directory. If it
         ///     does not, then it is created with default values.
@@ -36,8 +34,7 @@ namespace MyLittleRangeBook.Config
         /// </remarks>
         /// <param name="cancellationToken"></param>
         /// <returns>The name of the appsettings.json file.</returns>
-        public async Task<string> EnsureAppSettingsExistsAsync(
-            CancellationToken cancellationToken = default)
+        public async Task<string> EnsureAppSettingsExistsAsync(CancellationToken cancellationToken = default)
         {
             DefaultUserSettingsDirectory.Create();
             if (DefaultAppSettingsFile.Exists)
@@ -47,14 +44,18 @@ namespace MyLittleRangeBook.Config
 
             string appSettingsFile = DefaultAppSettingsFile.FullName;
 
-            string defaultLogLevel = EnvironmentHelper.IsProduction ? "Error" :
-                EnvironmentHelper.IsStaging ? "Debug" : "Verbose";
+            string defaultLogLevel = EnvironmentHelper.IsProduction
+                ? "Error"
+                : EnvironmentHelper.IsStaging
+                    ? "Debug"
+                    : "Verbose";
 
             var node = JsonNode.Parse(DefaultAppSettingsJson);
             if (node != null)
             {
                 // [TO20260414] Just wondering if the Mode should be set to ReadWriteCreate?
-                node["ConnectionStrings"]!["SqliteConnection"] = $"Data Source={DefaultSqliteDatabaseName()}";
+                // node["ConnectionStrings"]!["SqliteConnection"] = $"Data Source={DefaultSqliteDatabaseName()}";
+
 
                 JsonNode logLevelNode = node["Logging"]!["LogLevel"]!;
                 logLevelNode["Default"] = defaultLogLevel;
@@ -63,7 +64,6 @@ namespace MyLittleRangeBook.Config
 
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 await File.WriteAllTextAsync(appSettingsFile, node.ToJsonString(options), cancellationToken);
-
             }
             else
             {

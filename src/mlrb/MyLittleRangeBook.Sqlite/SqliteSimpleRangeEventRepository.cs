@@ -13,7 +13,7 @@ namespace MyLittleRangeBook.Database.Sqlite
         readonly ISqliteHelper _sqliteHelper;
 
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
-            [FromKeyedServices(SQLITE_KEY)] ISimpleRangeLogService simpleRangeLogService,
+            [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeLogService simpleRangeLogService,
             ILogger logger)
         {
             _sqliteHelper = sqliteHelper;
