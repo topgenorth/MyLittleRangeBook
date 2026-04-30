@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace MyLittleRangeBook.GUI.Services
 {
@@ -9,7 +10,7 @@ namespace MyLittleRangeBook.GUI.Services
         ///     Returns the JSON string containing settings data, or null if no settings exist.
         /// </summary>
         /// <returns>Settings JSON string or null if unavailable/unreadable</returns>
-        Task<string?> ReadAsync();
+        Task<string?> ReadAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Asynchronously writes application settings to persistent storage.

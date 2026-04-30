@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Avalonia;
 using JetBrains.Annotations;
@@ -28,10 +27,11 @@ namespace MyLittleRangeBook.GUI
         public static async Task Main(string[] args)
         {
             // [TO20260425] This has to run first and will create a default appsettings.json file if one does not exist.
-            IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsJsonFileBootstrapper();
-            await appSettingsBootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
-            await SqliteHelperExtensions.EnsureSqliteDatabaseIsInAppSettings(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
-
+            IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
+                .AddBootStrapper(AppSettingsJsonFileBootstrapper.DefaultBootStrappers)
+                .AddBootStrapper(AppSettingsFileStorageService.GuiAppSettingsBootstrapper)
+                .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
+            await bootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
             ConfigureLogging();
 
             string env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
@@ -85,7 +85,7 @@ namespace MyLittleRangeBook.GUI
             services.TryAddTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();
             services.TryAddTransient<IFirearmsService, SqliteFirearmsService>();
 
-            services.TryAddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
+            services.TryAddSingleton<ISettingsStorageService, AppSettingsFileStorageService>();
 
             // Register the DialogService factory for creating dialog services with specific participants
             services.AddSingleton<Func<IDialogParticipant, IDialogService>>(provider =>

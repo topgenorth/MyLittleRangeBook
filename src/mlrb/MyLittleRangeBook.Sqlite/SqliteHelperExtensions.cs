@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using Dapper;
+using FluentResults;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -16,6 +17,34 @@ namespace MyLittleRangeBook.Database.Sqlite
     /// </summary>
     public static class SqliteHelperExtensions
     {
+        public static readonly Func<JsonNode?, Result> SqliteConnectionStringBootStrapper = (JsonNode? rootNode) =>
+        {
+            if (rootNode is not JsonObject rootObject)
+            {
+                return Result.Fail("Root appsettings JSON must be a JSON object.");
+            }
+
+            JsonNode? n1 = rootObject["ConnectionStrings"];
+            if (n1 == null)
+            {
+                rootObject["ConnectionStrings"] = new JsonObject();
+                n1 = rootObject["ConnectionStrings"];
+            }
+
+            JsonNode? n2 = n1!["SqliteConnection"];
+            if (n2 is null)
+            {
+                SqliteConnectionStringBuilder builder = new SqliteConnectionStringBuilder
+                {
+                    DataSource = DefaultSqliteDatabaseName(), Mode = SqliteOpenMode.ReadWriteCreate
+                };
+
+                n1["SqliteConnection"] = $"{builder.ConnectionString}";
+            }
+
+            return Result.Ok();
+        };
+
         // ReSharper disable once MemberCanBePrivate.Global
         public const string DI_KEYS_SQLITE = "sqlite";
 

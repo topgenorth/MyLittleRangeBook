@@ -1,5 +1,8 @@
 ﻿using System.IO;
+using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
+using FluentResults;
 using MyLittleRangeBook.Config;
 
 namespace MyLittleRangeBook.GUI.Services
@@ -11,27 +14,8 @@ namespace MyLittleRangeBook.GUI.Services
     /// </summary>
     public class JsonSettingsFileStorageService : ISettingsStorageService
     {
+
         string SettingsFile => ConfigurationExtensions.DefaultAppSettingsFile.FullName;
-        /// <inheritdoc />
-        public async Task<string?> ReadAsync()
-        {
-            try
-            {
-                // Browser has no access to the file system due to sandbox restrictions
-                if (OperatingSystem.IsBrowser())
-                {
-                    return null;
-                }
-
-
-                return await File.ReadAllTextAsync(SettingsFile);
-            }
-            catch
-            {
-                // In production, consider logging any exceptions for debugging
-                return null;
-            }
-        }
 
         /// <inheritdoc />
         public async Task WriteAsync(string json)
@@ -52,6 +36,27 @@ namespace MyLittleRangeBook.GUI.Services
             {
                 // For this sample, we ignore exceptions
                 // In production, consider logging exceptions for debugging
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<string?> ReadAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // Browser has no access to the file system due to sandbox restrictions
+                if (OperatingSystem.IsBrowser())
+                {
+                    return null;
+                }
+
+
+                return await File.ReadAllTextAsync(SettingsFile);
+            }
+            catch
+            {
+                // In production, consider logging any exceptions for debugging
+                return null;
             }
         }
     }

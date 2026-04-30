@@ -16,8 +16,21 @@ namespace MyLittleRangeBook.Config
         /// <param name="appSettingsJsonFile">The path to the appsettings.json file</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<Result> EnsureAppSettingsExistsAsync(string appSettingsJsonFile, CancellationToken cancellationToken = default);
+        Task<Result> EnsureAppSettingsExistsAsync(string appSettingsJsonFile,
+            CancellationToken cancellationToken = default);
 
+        /// <summary>
+        ///     Add a Func that will do some work on the appsettings JSON when it is created.
+        /// </summary>
+        /// <param name="bootstrapper"></param>
+        /// <returns></returns>
         IAppSettingsBootstrapper AddBootStrapper(Func<JsonNode?, Result> bootstrapper);
+
+        /// <summary>
+        ///     Add a collection Funcs at once.
+        /// </summary>
+        /// <param name="bootstrappers"></param>
+        /// <returns></returns>
+        IAppSettingsBootstrapper AddBootStrapper(IEnumerable<Func<JsonNode?, Result>?> bootstrappers);
     }
 }

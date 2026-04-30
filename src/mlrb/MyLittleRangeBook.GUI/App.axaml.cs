@@ -65,7 +65,7 @@ namespace MyLittleRangeBook.GUI
             if (Design.IsDesignMode)
             {
                 var serviceCollection = new ServiceCollection();
-                serviceCollection.TryAddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
+                serviceCollection.TryAddSingleton<ISettingsStorageService>(new AppSettingsFileStorageService());
                 RegisterAppServices(serviceCollection);
             }
 

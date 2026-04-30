@@ -20,6 +20,15 @@ namespace MyLittleRangeBook.Config
         /// </summary>
         public static readonly Func<JsonNode?, Result> LoggingSectionBootstrapper = (JsonNode? rootNode) =>
         {
+            const string LOGGING_SECTION_JSON = """
+                                              {
+                                                "LogLevel": {
+                                                  "Default": "Error",
+                                                  "Microsoft.Hosting.Lifetime": "Error"
+                                                }
+                                              }
+                                              """;
+
             if (rootNode is not JsonObject rootObject)
             {
                 return Result.Fail("Root appsettings JSON must be a JSON object.");
@@ -27,34 +36,11 @@ namespace MyLittleRangeBook.Config
 
             if (rootObject["Logging"] is null)
             {
-                rootObject["Logging"] = JsonNode.Parse(LoggingSectionJson);
+                rootObject["Logging"] = JsonNode.Parse(LOGGING_SECTION_JSON);
             }
 
             return Result.Ok();
         };
-
-        const string LoggingSectionJson = """
-                                          {
-                                            "LogLevel": {
-                                              "Default": "Error",
-                                              "Microsoft.Hosting.Lifetime": "Error"
-                                            }
-                                          }
-                                          """;
-
-        const string DefaultAppSettingsJson = """
-                                              {
-                                                "ConnectionStrings": {
-                                                  "SqliteConnection": "Data Source=mlrb.db"
-                                                },
-
-                                              }
-                                              """;
-
-
-        public AppSettingsJsonFileBootstrapper()
-        {
-        }
 
         /// <summary>
         ///     Ensures that the appsettings.json file exists in the user's settings directory. If it
@@ -120,10 +106,7 @@ namespace MyLittleRangeBook.Config
 
         public IAppSettingsBootstrapper AddBootStrapper(Func<JsonNode?, Result> bootstrapper)
         {
-            if (bootstrapper is null)
-            {
-                throw new ArgumentNullException(nameof(bootstrapper));
-            }
+            ArgumentNullException.ThrowIfNull(bootstrapper);
 
             if (_bootstrappers.Contains(bootstrapper))
             {
@@ -157,6 +140,16 @@ namespace MyLittleRangeBook.Config
             }
 
             return Result.Ok();
+        }
+
+        public IAppSettingsBootstrapper AddBootStrapper(IEnumerable<Func<JsonNode?, Result>?> bootstrappers)
+        {
+            foreach (Func<JsonNode?, Result>? b in bootstrappers.OfType<Func<JsonNode?, Result>>())
+            {
+                AddBootStrapper(b);
+            }
+
+            return this;
         }
     }
 }
