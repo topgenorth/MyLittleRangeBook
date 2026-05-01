@@ -31,8 +31,6 @@ namespace MyLittleRangeBook.GUI
                 .AddBootStrapper(AppSettingsFileStorageService.GuiAppSettingsBootstrapper)
                 .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
             await bootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
-            ConfigureLogging();
-
 
             var services = new ServiceCollection();
 
@@ -42,11 +40,11 @@ namespace MyLittleRangeBook.GUI
             {
                 ConfigurationExtensions.DefaultLogDirectory.Create();
 
-                if (EnvironmentHelper.IsProduction)
+                if (EnvironmentExtensions.IsProduction)
                 {
                     lc.MinimumLevel.Information();
                 }
-                else if (EnvironmentHelper.IsStaging)
+                else if (EnvironmentExtensions.IsStaging)
                 {
                     lc.MinimumLevel.Debug();
                 }
@@ -55,9 +53,29 @@ namespace MyLittleRangeBook.GUI
                     lc.MinimumLevel.Verbose();
                 }
 
-                lc.WriteTo.Debug()
-                    .WriteTo.MlrbLogFiles();
+                lc.WriteTo.Debug().WriteTo.MlrbLogFiles();
             });
+            // Route Avalonia's internal Trace output through Serilog for unified logs
+            Trace.Listeners.Add(new SerilogTraceListener.SerilogTraceListener());
+
+            // Add global exception handlers to ensure uncaught errors are logged
+            try
+            {
+                AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+                    Log.Fatal(e.ExceptionObject as Exception, "[FATAL] Unhandled exception in AppDomain");
+
+                TaskScheduler.UnobservedTaskException += (_, e) =>
+                {
+                    Log.Error(e.Exception, "[ERROR] Unobserved task exception");
+                    e.SetObserved(); // Prevents finalizer from re-raising the exception
+                };
+            }
+            catch
+            {
+                // Last resort: silently fail to avoid crashing the app if logging setup fails (e.g., under AOT)
+            }
+
+
             services.AddMyLittleRangeBookSqlite(configuration);
             services.TryAddTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();
             services.TryAddTransient<IFirearmsService, SqliteFirearmsService>();
@@ -104,29 +122,6 @@ namespace MyLittleRangeBook.GUI
                 .UsePlatformDetect()
                 .WithInterFont()
                 .LogToTrace();
-        }
-
-        static void ConfigureLogging()
-        {
-            try
-            {
-                // Route Avalonia's internal Trace output through Serilog for unified logs
-                Trace.Listeners.Add(new SerilogTraceListener.SerilogTraceListener());
-
-                // Add global exception handlers to ensure uncaught errors are logged
-                AppDomain.CurrentDomain.UnhandledException += (_, e) =>
-                    Log.Fatal(e.ExceptionObject as Exception, "[FATAL] Unhandled exception in AppDomain");
-
-                TaskScheduler.UnobservedTaskException += (_, e) =>
-                {
-                    Log.Error(e.Exception, "[ERROR] Unobserved task exception");
-                    e.SetObserved(); // Prevents finalizer from re-raising the exception
-                };
-            }
-            catch
-            {
-                // Last resort: silently fail to avoid crashing the app if logging setup fails (e.g., under AOT)
-            }
         }
     }
 }

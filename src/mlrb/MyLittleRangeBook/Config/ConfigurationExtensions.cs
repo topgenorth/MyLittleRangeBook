@@ -74,7 +74,7 @@ namespace MyLittleRangeBook.Config
         {
             builder.Configuration.Sources.Clear();
 
-            if (EnvironmentHelper.IsProduction)
+            if (EnvironmentExtensions.IsProduction)
             {
                 builder.Configuration
                     .AddJsonFile(DefaultAppSettingsFile.FullName, false, true);
@@ -100,7 +100,7 @@ namespace MyLittleRangeBook.Config
             IConfigurationBuilder cb = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory());
 
-            if (EnvironmentHelper.IsProduction)
+            if (EnvironmentExtensions.IsProduction)
             {
                 cb.AddJsonFile(DefaultAppSettingsFile.FullName, false, true);
             }

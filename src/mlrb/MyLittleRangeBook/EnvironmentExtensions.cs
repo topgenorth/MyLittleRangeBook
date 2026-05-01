@@ -1,6 +1,6 @@
 namespace MyLittleRangeBook
 {
-    public static class EnvironmentHelper
+    public static class EnvironmentExtensions
     {
         public static bool IsDevelopment => "Development".Equals(
             Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"),
@@ -29,7 +29,7 @@ namespace MyLittleRangeBook
         /// </returns>
         public static FileInfo InjectEnvironmentIntoFileName(this FileInfo fileInfo)
         {
-            if (EnvironmentHelper.IsProduction)
+            if (EnvironmentExtensions.IsProduction)
             {
                 return fileInfo;
             }

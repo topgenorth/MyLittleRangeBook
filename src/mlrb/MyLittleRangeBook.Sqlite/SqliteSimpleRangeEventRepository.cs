@@ -110,6 +110,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             CancellationToken cancellationToken = default)
         {
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+            Serilog.Log.Verbose("SqliteConnectionString: " + conn.ConnectionString);
 
             return await _simpleRangeLogService.GetSimpleRangeEventsAsync(conn, cancellationToken);
         }
