@@ -1,4 +1,9 @@
-﻿namespace MyLittleRangeBook.Config
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+
+namespace MyLittleRangeBook.Config
 {
     public static class ConfigurationExtensions
     {
@@ -11,7 +16,7 @@
         internal static readonly string AppSettingsFileName = "appsettings.json";
 
         /// <summary>
-        /// Default name of this application's local application data folder.'
+        ///     Default name of this application's local application data folder.'
         /// </summary>
         internal static readonly string DefaultLocalAppDataFolder =
             OperatingSystem.IsWindows() ? "MyLittleRangeBook" : "mylittlerangebook";
@@ -21,11 +26,12 @@
         ///     Uses OS-specific local application data directory.
         ///     Creates a dedicated folder for this application to avoid conflicts.
         /// </summary>
-        public  static DirectoryInfo DefaultUserSettingsDirectory => new(Path.Combine(
+        public static DirectoryInfo DefaultUserSettingsDirectory => new(Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             DefaultLocalAppDataFolder));
 
-        public static DirectoryInfo DefaultLogFileDirectory => new(Path.Combine(DefaultUserSettingsDirectory.FullName, "Logs"));
+        public static DirectoryInfo DefaultLogFileDirectory =>
+            new(Path.Combine(DefaultUserSettingsDirectory.FullName, "Logs"));
 
         public static FileInfo DefaultAppSettingsFile =>
             new FileInfo(Path.Combine(DefaultUserSettingsDirectory.FullName, AppSettingsFileName))
@@ -57,6 +63,53 @@
             return fullPath;
         }
 
+        public static IHostApplicationBuilder AddMyLittleRangeBookJsonFiles(this IHostApplicationBuilder builder)
+        {
+            builder.Configuration.Sources.Clear();
 
+            if (EnvironmentHelper.IsProduction)
+            {
+                builder.Configuration
+                    .AddJsonFile(DefaultAppSettingsFile.FullName, false, true);
+            }
+            else
+            {
+                string env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+
+                builder.Configuration
+                    .AddJsonFile("appsettings.json", true, true)
+                    .AddJsonFile($"appsettings.{env}.json", true, true);
+                // builder.Configuration.AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
+                // builder.Services.AddPostgresHelper(builder.Configuration);
+            }
+
+            // [TO20260425] Leave out the environment variables for now.
+            // builder.Configuration.AddEnvironmentVariables();
+            return builder;
+        }
+
+        public static IConfigurationRoot AddMyLittleRangeBookJsonFiles(this IServiceCollection services)
+        {
+            IConfigurationBuilder cb = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory());
+
+            if (EnvironmentHelper.IsProduction)
+            {
+                cb.AddJsonFile(DefaultAppSettingsFile.FullName, false, true);
+            }
+            else
+            {
+                string env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
+                cb.AddJsonFile("appsettings.json", true, true)
+                    .AddJsonFile($"appsettings.{env}.json", true, true);
+                // builder.Configuration.AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
+                // builder.Services.AddPostgresHelper(builder.Configuration);
+            }
+
+            IConfigurationRoot config = cb.Build();
+            services.TryAddSingleton(config);
+
+            return config;
+        }
     }
 }

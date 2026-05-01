@@ -34,16 +34,10 @@ namespace MyLittleRangeBook.GUI
             await bootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
             ConfigureLogging();
 
-            string env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
 
             var services = new ServiceCollection();
 
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", true, true)
-                .AddJsonFile($"appsettings.{env}.json", true, true)
-                .AddEnvironmentVariables()
-                .Build();
+            IConfigurationRoot configuration = services.AddMyLittleRangeBookJsonFiles();
 
             services.AddSerilog(lc =>
             {
@@ -79,8 +73,6 @@ namespace MyLittleRangeBook.GUI
                         "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
                     ;
             });
-            services.AddSingleton<IConfiguration>(configuration);
-
             services.AddMyLittleRangeBookSqlite(configuration);
             services.TryAddTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();
             services.TryAddTransient<IFirearmsService, SqliteFirearmsService>();

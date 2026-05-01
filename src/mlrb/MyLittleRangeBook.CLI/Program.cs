@@ -18,28 +18,13 @@ IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
 await bootstrapper.EnsureAppSettingsExistsAsync(DefaultAppSettingsFile.FullName);
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
-builder.Configuration.Sources.Clear();
-
-if (EnvironmentHelper.IsProduction)
-{
-    builder.Configuration
-        .AddJsonFile(DefaultAppSettingsFile.FullName, false, true);
-}
-else
-{
-    builder.Configuration
-        .AddJsonFile("appsettings.json", true, true)
-        .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
-        .AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
-    builder.Services.AddPostgresHelper(builder.Configuration);
-}
-
-// [TO20260425] Leave out the environment variables for now.
-// builder.Configuration.AddEnvironmentVariables();
+builder.AddMyLittleRangeBookJsonFiles();
 
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
+
 builder.Services.TryAddSingleton<IXeroShotSessionParser, XeroShotSessionParser>();
+
 builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration)
     .AddSerilog(lc =>
     {
