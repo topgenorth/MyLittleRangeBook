@@ -9,16 +9,12 @@ namespace MyLittleRangeBook.Config
     /// </summary>
     public class AppSettingsJsonFileBootstrapper : IAppSettingsBootstrapper
     {
-        public static readonly List<Func<JsonNode?, Result>?> DefaultBootStrappers = new()
-        {
-            LoggingSectionBootstrapper
-        };
-
         /// <summary>
         ///     Check to see if there is a Logging section in the appsettings.json file. If not, create one.
         /// </summary>
         public static readonly Func<JsonNode?, Result> LoggingSectionBootstrapper = rootNode =>
         {
+            ArgumentNullException.ThrowIfNull(rootNode);
             const string LOGGING_SECTION_JSON = """
                                                 {
                                                   "LogLevel": {
@@ -28,15 +24,12 @@ namespace MyLittleRangeBook.Config
                                                 }
                                                 """;
 
-            if (rootNode is not JsonObject rootObject)
+            if (rootNode["Logging"] is not null)
             {
-                return Result.Fail("Root appsettings JSON must be a JSON object.");
+                Log.Debug("Logging configuration already exists in appsettings.json. Skipping Logging bootstrapper.");
+                return Result.Ok();
             }
-
-            if (rootObject["Logging"] is null)
-            {
-                rootObject["Logging"] = JsonNode.Parse(LOGGING_SECTION_JSON);
-            }
+            rootNode["Logging"] ??= JsonNode.Parse(LOGGING_SECTION_JSON);
 
             return Result.Ok();
         };
@@ -96,7 +89,7 @@ namespace MyLittleRangeBook.Config
                 catch (Exception e)
                 {
                     // TODO [TO20260501] Accumulate all errors in the result.
-                    Log.Warning(e, "Bootstrapper {Bootstrapper} threw an exception.", bootstrapper?.Method.Name);
+                    Log.Warning(e, "EnsureSerilogSection {EnsureSerilogSection} threw an exception.", bootstrapper?.Method.Name);
                     error.CausedBy(e);
                 }
             }

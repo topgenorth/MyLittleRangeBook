@@ -32,13 +32,14 @@ namespace MyLittleRangeBook.GUI
                 .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
             await bootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
 
+            ConfigurationExtensions.DefaultLogDirectory.Create();
+
             var services = new ServiceCollection();
 
             IConfigurationRoot configuration = services.AddMyLittleRangeBookJsonFiles();
 
             services.AddSerilog(lc =>
             {
-                ConfigurationExtensions.DefaultLogDirectory.Create();
 
                 if (EnvironmentExtensions.IsProduction)
                 {
@@ -111,7 +112,7 @@ namespace MyLittleRangeBook.GUI
             finally
             {
                 await Log.CloseAndFlushAsync();
-                Log.Debug("Application is shutting down");
+                Log.Verbose("Application is shutting down");
             }
         }
 

@@ -16,7 +16,7 @@ namespace MyLittleRangeBook
         {
             _appSettingsFile = Path.Combine(_tempDirectory, "appsettings-test.json");
             IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
-                    .AddBootStrapper(AppSettingsJsonFileBootstrapper.DefaultBootStrappers)
+                    .AddBootStrapper(AppSettingsJsonFileBootstrapper.LoggingSectionBootstrapper)
                     .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper)
                 ;
             Result result = bootstrapper.EnsureAppSettingsExistsAsync(_appSettingsFile).Result;
@@ -65,7 +65,7 @@ namespace MyLittleRangeBook
         {
             string file = Path.GetTempFileName();
             IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
-                .AddBootStrapper(AppSettingsJsonFileBootstrapper.DefaultBootStrappers)
+                .AddBootStrapper(AppSettingsJsonFileBootstrapper.LoggingSectionBootstrapper)
                 .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
             await bootstrapper.EnsureAppSettingsExistsAsync(file);
         }

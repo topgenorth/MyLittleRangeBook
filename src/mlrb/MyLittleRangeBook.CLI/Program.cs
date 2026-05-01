@@ -13,41 +13,24 @@ using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
 IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
-    .AddBootStrapper(AppSettingsJsonFileBootstrapper.DefaultBootStrappers)
+    .AddBootStrapper(SerilogAppSettingsJsonFileBootstrapp.EnsureSerilogSection)
     .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
 await bootstrapper.EnsureAppSettingsExistsAsync(DefaultAppSettingsFile.FullName);
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.AddMyLittleRangeBookJsonFiles();
+builder.Services.AddSerilog((services, loggerConfiguration) =>
+{
+    loggerConfiguration
+        .ReadFrom.Configuration(builder.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+});
 
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
-
+builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration);
 builder.Services.TryAddSingleton<IXeroShotSessionParser, XeroShotSessionParser>();
-
-builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration)
-    .AddSerilog(lc =>
-    {
-
-        // TODO [TO20260501] Move all of this into the appsettings.json.
-        lc.WriteTo.Debug()
-            .WriteTo.MlrbLogFiles();
-
-        if (builder.Environment.IsProduction())
-        {
-            lc.MinimumLevel.Warning();
-        }
-        else if (builder.Environment.IsStaging())
-        {
-            lc.MinimumLevel.Information();
-            lc.WriteTo.Console();
-        }
-        else
-        {
-            lc.MinimumLevel.Verbose();
-            lc.WriteTo.Console();
-        }
-    });
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
