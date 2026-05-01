@@ -28,8 +28,10 @@ builder.Services.TryAddSingleton<IXeroShotSessionParser, XeroShotSessionParser>(
 builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration)
     .AddSerilog(lc =>
     {
-        lc.WriteTo.Console();
-        lc.WriteTo.Debug();
+
+        // TODO [TO20260501] Move all of this into the appsettings.json.
+        lc.WriteTo.Debug()
+            .WriteTo.MlrbLogFiles();
 
         if (builder.Environment.IsProduction())
         {
@@ -38,10 +40,12 @@ builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration)
         else if (builder.Environment.IsStaging())
         {
             lc.MinimumLevel.Information();
+            lc.WriteTo.Console();
         }
         else
         {
             lc.MinimumLevel.Verbose();
+            lc.WriteTo.Console();
         }
     });
 

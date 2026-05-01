@@ -2,11 +2,16 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Serilog;
+using Serilog.Configuration;
 
 namespace MyLittleRangeBook.Config
 {
     public static class ConfigurationExtensions
     {
+        const string LogFileTemplate =
+            "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
+
         /// <summary>
         ///     The name of the default database.
         /// </summary>
@@ -30,8 +35,10 @@ namespace MyLittleRangeBook.Config
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             DefaultLocalAppDataFolder));
 
-        public static DirectoryInfo DefaultLogFileDirectory =>
+        public static DirectoryInfo DefaultLogDirectory =>
             new(Path.Combine(DefaultUserSettingsDirectory.FullName, "Logs"));
+
+        public static string DefaultLogFile => Path.Combine(DefaultLogDirectory.FullName, "mlrb-.log");
 
         public static FileInfo DefaultAppSettingsFile =>
             new FileInfo(Path.Combine(DefaultUserSettingsDirectory.FullName, AppSettingsFileName))
@@ -110,6 +117,28 @@ namespace MyLittleRangeBook.Config
             services.TryAddSingleton(config);
 
             return config;
+        }
+
+        /// <summary>
+        ///     Configure Serilog to log to files.
+        /// </summary>
+        /// <param name="sinkConfiguration"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static LoggerConfiguration MlrbLogFiles(this LoggerSinkConfiguration sinkConfiguration)
+        {
+            ArgumentNullException.ThrowIfNull(sinkConfiguration);
+
+            return sinkConfiguration.File(
+                    DefaultLogFile,
+                    rollingInterval: RollingInterval.Day, // Create new log file each day
+                    retainedFileCountLimit: 7, // Keep only 7 days of logs
+                    shared: true, // Allow multiple instances to write
+                    flushToDiskInterval: TimeSpan.FromSeconds(1), // Periodically flush to disk
+                    buffered: false, // Write directly for reliability
+                    outputTemplate:
+                    LogFileTemplate)
+                ;
         }
     }
 }

@@ -18,7 +18,7 @@ namespace MyLittleRangeBook.GUI.Services
         const string SectionName = "GuiApp";
 
         const string DefaultSectionJson = """
-                                          "GuiApp": {
+                                          {
                                             "AccentColor": "#FF3578E5",
                                             "AppTheme": "Light"
                                           }
@@ -46,7 +46,6 @@ namespace MyLittleRangeBook.GUI.Services
             JsonNode node = rootObject[SectionName]!;
             node["AccentColor"] ??= AccentColor;
             node["AppTheme"] ??= AppTheme;
-
 
             return Result.Ok();
         };

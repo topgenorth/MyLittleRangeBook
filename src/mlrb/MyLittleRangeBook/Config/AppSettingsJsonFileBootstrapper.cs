@@ -85,9 +85,19 @@ namespace MyLittleRangeBook.Config
 
             appSettingsRoot ??= JsonNode.Parse("{}")!;
 
-            foreach (Result? r2 in _bootstrappers.Select(validator => validator!(appSettingsRoot)).Where(r2 => r2.IsFailed))
+            var error = new Error("Failed to bootstrap appsettings.json file.");
+            foreach (Func<JsonNode?, Result>? bootstrapper in _bootstrappers)
             {
-                return r2;
+                try
+                {
+                    bootstrapper!(appSettingsRoot);
+                }
+                catch (Exception e)
+                {
+                    error.CausedBy(e);
+                    Console.WriteLine("Oh NO!");
+                    return Result.Fail(error);
+                }
             }
 
             try

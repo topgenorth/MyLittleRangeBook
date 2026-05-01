@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Avalonia;
@@ -41,10 +40,7 @@ namespace MyLittleRangeBook.GUI
 
             services.AddSerilog(lc =>
             {
-                ConfigurationExtensions.DefaultLogFileDirectory.Create();
-                string logDir = ConfigurationExtensions.DefaultLogFileDirectory.FullName;
-                // Define log filename pattern (Serilog will append date for rolling)
-                string logPath = Path.Combine(logDir, "app-.log");
+                ConfigurationExtensions.DefaultLogDirectory.Create();
 
                 if (EnvironmentHelper.IsProduction)
                 {
@@ -59,19 +55,8 @@ namespace MyLittleRangeBook.GUI
                     lc.MinimumLevel.Verbose();
                 }
 
-                lc.WriteTo.Debug();
-
-                // Write logs to files with daily rotation
-                lc.WriteTo.File(
-                        logPath,
-                        rollingInterval: RollingInterval.Day, // Create new log file each day
-                        retainedFileCountLimit: 7, // Keep only 7 days of logs
-                        shared: true, // Allow multiple instances to write
-                        flushToDiskInterval: TimeSpan.FromSeconds(1), // Periodically flush to disk
-                        buffered: false, // Write directly for reliability
-                        outputTemplate:
-                        "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
-                    ;
+                lc.WriteTo.Debug()
+                    .WriteTo.MlrbLogFiles();
             });
             services.AddMyLittleRangeBookSqlite(configuration);
             services.TryAddTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();

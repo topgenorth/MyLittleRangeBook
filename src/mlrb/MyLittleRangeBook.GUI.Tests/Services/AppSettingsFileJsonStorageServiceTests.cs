@@ -80,5 +80,17 @@ namespace MyLittleRangeBook.GUI.Tests.Services
                 File.Delete(file);
             }
         }
+
+        [Fact]
+        public void GuiAppSettingsBootstrapper_Should_add_default_section_when_missing()
+        {
+            var rootNode = JsonNode.Parse("{}")!;
+
+            var result = AppSettingsFileStorageService.GuiAppSettingsBootstrapper(rootNode);
+
+            result.IsSuccess.ShouldBeTrue();
+            rootNode["GuiApp"]!["AccentColor"]!.ToString().ShouldBe("#FF3578E5");
+            rootNode["GuiApp"]!["AppTheme"]!.ToString().ShouldBe("Light");
+        }
     }
 }
