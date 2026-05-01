@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using FluentResults;
+using Serilog;
 
 namespace MyLittleRangeBook.Config
 {
@@ -8,26 +9,24 @@ namespace MyLittleRangeBook.Config
     /// </summary>
     public class AppSettingsJsonFileBootstrapper : IAppSettingsBootstrapper
     {
-        public static readonly List<Func<JsonNode?, Result>?> DefaultBootStrappers = new List<Func<JsonNode?, Result>?>()
+        public static readonly List<Func<JsonNode?, Result>?> DefaultBootStrappers = new()
         {
             LoggingSectionBootstrapper
         };
 
-        List<Func<JsonNode?, Result>?> _bootstrappers = new List<Func<JsonNode?, Result>?>();
-
         /// <summary>
-        /// Check to see if there is a Logging section in the appsettings.json file. If not, create one.
+        ///     Check to see if there is a Logging section in the appsettings.json file. If not, create one.
         /// </summary>
-        public static readonly Func<JsonNode?, Result> LoggingSectionBootstrapper = (JsonNode? rootNode) =>
+        public static readonly Func<JsonNode?, Result> LoggingSectionBootstrapper = rootNode =>
         {
             const string LOGGING_SECTION_JSON = """
-                                              {
-                                                "LogLevel": {
-                                                  "Default": "Error",
-                                                  "Microsoft.Hosting.Lifetime": "Error"
+                                                {
+                                                  "LogLevel": {
+                                                    "Default": "Error",
+                                                    "Microsoft.Hosting.Lifetime": "Error"
+                                                  }
                                                 }
-                                              }
-                                              """;
+                                                """;
 
             if (rootNode is not JsonObject rootObject)
             {
@@ -41,6 +40,8 @@ namespace MyLittleRangeBook.Config
 
             return Result.Ok();
         };
+
+        readonly List<Func<JsonNode?, Result>?> _bootstrappers = new();
 
         /// <summary>
         ///     Ensures that the appsettings.json file exists in the user's settings directory. If it
@@ -94,9 +95,9 @@ namespace MyLittleRangeBook.Config
                 }
                 catch (Exception e)
                 {
+                    // TODO [TO20260501] Accumulate all errors in the result.
+                    Log.Warning(e, "Bootstrapper {Bootstrapper} threw an exception.", bootstrapper?.Method.Name);
                     error.CausedBy(e);
-                    Console.WriteLine("Oh NO!");
-                    return Result.Fail(error);
                 }
             }
 
@@ -110,8 +111,6 @@ namespace MyLittleRangeBook.Config
             }
 
             return Result.Ok();
-
-
         }
 
         public IAppSettingsBootstrapper AddBootStrapper(Func<JsonNode?, Result> bootstrapper)
@@ -122,7 +121,19 @@ namespace MyLittleRangeBook.Config
             {
                 return this;
             }
+
             _bootstrappers.Add(bootstrapper);
+
+            return this;
+        }
+
+        public IAppSettingsBootstrapper AddBootStrapper(IEnumerable<Func<JsonNode?, Result>?> bootstrappers)
+        {
+            foreach (Func<JsonNode?, Result>? b in bootstrappers.OfType<Func<JsonNode?, Result>>())
+            {
+                AddBootStrapper(b);
+            }
+
             return this;
         }
 
@@ -150,16 +161,6 @@ namespace MyLittleRangeBook.Config
             }
 
             return Result.Ok();
-        }
-
-        public IAppSettingsBootstrapper AddBootStrapper(IEnumerable<Func<JsonNode?, Result>?> bootstrappers)
-        {
-            foreach (Func<JsonNode?, Result>? b in bootstrappers.OfType<Func<JsonNode?, Result>>())
-            {
-                AddBootStrapper(b);
-            }
-
-            return this;
         }
     }
 }
