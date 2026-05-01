@@ -102,6 +102,7 @@ namespace MyLittleRangeBook.Database.Sqlite
         {
             var conn = (SqliteConnection)connection;
 
+
             try
             {
                 var rangeEvents = await conn.QueryAsync<SimpleRangeEvent>(SelectSql, cancellationToken);

@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Avalonia;
@@ -13,6 +12,7 @@ using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
 using MyLittleRangeBook.Services;
 using SharedControls.Services;
+using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.GUI
 {
@@ -26,35 +26,25 @@ namespace MyLittleRangeBook.GUI
         public static async Task Main(string[] args)
         {
             // [TO20260425] This has to run first and will create a default appsettings.json file if one does not exist.
-            IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsBootstrapper();
-            await appSettingsBootstrapper.EnsureAppSettingsExistsAsync();
-
-
-            ConfigureLogging();
-
-            string env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+            IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
+                .AddBootStrapper(AppSettingsJsonFileBootstrapper.LoggingSectionBootstrapper)
+                .AddBootStrapper(AppSettingsFileStorageService.GuiAppSettingsBootstrapper)
+                .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
+            await bootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
 
             var services = new ServiceCollection();
 
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", true, true)
-                .AddJsonFile($"appsettings.{env}.json", true, true)
-                .AddEnvironmentVariables()
-                .Build();
+            IConfigurationRoot configuration = services.AddMyLittleRangeBookJsonFiles();
 
             services.AddSerilog(lc =>
             {
-                string logDir = Path.Combine(JsonSettingsFileStorageService.SettingsDirectory, "logs");
-                Directory.CreateDirectory(logDir);
-                // Define log filename pattern (Serilog will append date for rolling)
-                string logPath = Path.Combine(logDir, "app-.log");
+                ConfigurationExtensions.DefaultLogDirectory.Create();
 
-                if (EnvironmentHelper.IsProduction)
+                if (EnvironmentExtensions.IsProduction)
                 {
                     lc.MinimumLevel.Information();
                 }
-                else if (EnvironmentHelper.IsStaging)
+                else if (EnvironmentExtensions.IsStaging)
                 {
                     lc.MinimumLevel.Debug();
                 }
@@ -63,27 +53,34 @@ namespace MyLittleRangeBook.GUI
                     lc.MinimumLevel.Verbose();
                 }
 
-                lc.WriteTo.Debug();
-
-                // Write logs to files with daily rotation
-                lc.WriteTo.File(
-                        logPath,
-                        rollingInterval: RollingInterval.Day, // Create new log file each day
-                        retainedFileCountLimit: 7, // Keep only 7 days of logs
-                        shared: true, // Allow multiple instances to write
-                        flushToDiskInterval: TimeSpan.FromSeconds(1), // Periodically flush to disk
-                        buffered: false, // Write directly for reliability
-                        outputTemplate:
-                        "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
-                    ;
+                lc.WriteTo.Debug().WriteTo.MlrbLogFiles();
             });
-            services.AddSingleton<IConfiguration>(configuration);
+            // Route Avalonia's internal Trace output through Serilog for unified logs
+            Trace.Listeners.Add(new SerilogTraceListener.SerilogTraceListener());
+
+            // Add global exception handlers to ensure uncaught errors are logged
+            try
+            {
+                AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+                    Log.Fatal(e.ExceptionObject as Exception, "[FATAL] Unhandled exception in AppDomain");
+
+                TaskScheduler.UnobservedTaskException += (_, e) =>
+                {
+                    Log.Error(e.Exception, "[ERROR] Unobserved task exception");
+                    e.SetObserved(); // Prevents finalizer from re-raising the exception
+                };
+            }
+            catch
+            {
+                // Last resort: silently fail to avoid crashing the app if logging setup fails (e.g., under AOT)
+            }
+
 
             services.AddMyLittleRangeBookSqlite(configuration);
             services.TryAddTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();
             services.TryAddTransient<IFirearmsService, SqliteFirearmsService>();
 
-            services.TryAddSingleton<ISettingsStorageService>(new JsonSettingsFileStorageService());
+            services.TryAddSingleton<ISettingsStorageService, AppSettingsFileStorageService>();
 
             // Register the DialogService factory for creating dialog services with specific participants
             services.AddSingleton<Func<IDialogParticipant, IDialogService>>(provider =>
@@ -125,29 +122,6 @@ namespace MyLittleRangeBook.GUI
                 .UsePlatformDetect()
                 .WithInterFont()
                 .LogToTrace();
-        }
-
-        static void ConfigureLogging()
-        {
-            try
-            {
-                // Route Avalonia's internal Trace output through Serilog for unified logs
-                Trace.Listeners.Add(new SerilogTraceListener.SerilogTraceListener());
-
-                // Add global exception handlers to ensure uncaught errors are logged
-                AppDomain.CurrentDomain.UnhandledException += (_, e) =>
-                    Log.Fatal(e.ExceptionObject as Exception, "[FATAL] Unhandled exception in AppDomain");
-
-                TaskScheduler.UnobservedTaskException += (_, e) =>
-                {
-                    Log.Error(e.Exception, "[ERROR] Unobserved task exception");
-                    e.SetObserved(); // Prevents finalizer from re-raising the exception
-                };
-            }
-            catch
-            {
-                // Last resort: silently fail to avoid crashing the app if logging setup fails (e.g., under AOT)
-            }
         }
     }
 }

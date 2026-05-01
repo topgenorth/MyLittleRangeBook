@@ -13,7 +13,7 @@ namespace MyLittleRangeBook.Database.Sqlite
         readonly ISqliteHelper _sqliteHelper;
 
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
-            [FromKeyedServices(SQLITE_KEY)] ISimpleRangeLogService simpleRangeLogService,
+            [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeLogService simpleRangeLogService,
             ILogger logger)
         {
             _sqliteHelper = sqliteHelper;
@@ -110,6 +110,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             CancellationToken cancellationToken = default)
         {
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+            Serilog.Log.Verbose("SqliteConnectionString: " + conn.ConnectionString);
 
             return await _simpleRangeLogService.GetSimpleRangeEventsAsync(conn, cancellationToken);
         }

@@ -12,38 +12,26 @@ using MyLittleRangeBook.PgSQL;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
-// [TO20260425] This has to run first and will create a default appsettings.json file if one does not exist.
-IAppSettingsBootstrapper appSettingsBootstrapper = new AppSettingsBootstrapper();
-await appSettingsBootstrapper.EnsureAppSettingsExistsAsync();
+IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
+    .AddBootStrapper(AppSettingsJsonFileBootstrapper.DefaultBootStrappers)
+    .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
+await bootstrapper.EnsureAppSettingsExistsAsync(DefaultAppSettingsFile.FullName);
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
-builder.Configuration.Sources.Clear();
-
-if (EnvironmentHelper.IsProduction)
-{
-    builder.Configuration
-        .AddJsonFile(DefaultAppSettingsFile.FullName, false, true);
-}
-else
-{
-    builder.Configuration
-        .AddJsonFile("appsettings.json", true, true)
-        .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
-        .AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
-    builder.Services.AddPostgresHelper(builder.Configuration);
-}
-
-// [TO20260425] Leave out the environment variables for now.
-// builder.Configuration.AddEnvironmentVariables();
+builder.AddMyLittleRangeBookJsonFiles();
 
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
+
 builder.Services.TryAddSingleton<IXeroShotSessionParser, XeroShotSessionParser>();
+
 builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration)
     .AddSerilog(lc =>
     {
-        lc.WriteTo.Console();
-        lc.WriteTo.Debug();
+
+        // TODO [TO20260501] Move all of this into the appsettings.json.
+        lc.WriteTo.Debug()
+            .WriteTo.MlrbLogFiles();
 
         if (builder.Environment.IsProduction())
         {
@@ -52,10 +40,12 @@ builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration)
         else if (builder.Environment.IsStaging())
         {
             lc.MinimumLevel.Information();
+            lc.WriteTo.Console();
         }
         else
         {
             lc.MinimumLevel.Verbose();
+            lc.WriteTo.Console();
         }
     });
 

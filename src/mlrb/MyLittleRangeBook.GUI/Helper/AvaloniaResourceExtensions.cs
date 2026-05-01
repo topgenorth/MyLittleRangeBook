@@ -8,7 +8,7 @@ namespace MyLittleRangeBook.GUI.Helper
     ///     Provides a centralized method for retrieving resources from Application.Current.
     ///     Used to access styles, templates, colors, and other application-wide resources.
     /// </summary>
-    static class ResourcesHelper
+    static class AvaloniaResourceExtensions
     {
         /// <summary>
         ///     Looks up a resource from the application's resource dictionary.

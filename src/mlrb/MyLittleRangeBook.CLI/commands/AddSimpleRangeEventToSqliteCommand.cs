@@ -43,7 +43,7 @@ namespace MyLittleRangeBook.CLI
 
         public AddSimpleRangeEventToSqliteCommand(ICliDisplay cliDisplay,
             ILogger logger,
-            [FromKeyedServices(SQLITE_KEY)] ISimpleRangeEventRepository repo,
+            [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
             ISqliteHelper sqliteHelper)
         {
             _cliDisplay = cliDisplay;

@@ -1,10 +1,8 @@
-﻿using System.IO;
-using System.Reflection;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 
-namespace MyLittleRangeBook.GUI.Helper
+namespace MyLittleRangeBook
 {
-    public static class AssemblyHelper
+    public static class AssemblyExtensions
     {
         public static async Task<string> ReadEmbeddedTextFileAsync(this Assembly assembly, string fullResourceName)
         {

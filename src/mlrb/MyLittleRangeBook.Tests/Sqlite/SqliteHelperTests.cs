@@ -1,4 +1,6 @@
-﻿using FluentResults;
+﻿using System.Runtime.InteropServices;
+using System.Text.Json.Nodes;
+using FluentResults;
 using MyLittleRangeBook.Database.Sqlite;
 using Serilog;
 using Shouldly;
@@ -9,6 +11,29 @@ namespace MyLittleRangeBook.Sqlite
     {
         const string InMemoryConnectionString = "Data Source=:memory:";
         readonly ILogger _logger;
+        const string AppSettingsWithConnectionString = """
+                                              {
+                                                "ConnectionStrings": {
+                                                  "SqliteConnection": "Data Source=mlrb.db"
+                                                },
+                                                "Logging": {
+                                                  "LogLevel": {
+                                                    "Default": "Error",
+                                                    "Microsoft.Hosting.Lifetime": "Error"
+                                                  }
+                                                }
+                                              }
+                                              """;
+        const string AppSettingsWithOutConnectionString = """
+                                                       {
+                                                         "Logging": {
+                                                           "LogLevel": {
+                                                             "Default": "Error",
+                                                             "Microsoft.Hosting.Lifetime": "Error"
+                                                           }
+                                                         }
+                                                       }
+                                                       """;
 
         public SqliteHelperTests()
         {
@@ -35,6 +60,21 @@ namespace MyLittleRangeBook.Sqlite
             Result<bool> result = await helper.ApplyDbupMigrationsAsync();
 
             result.IsSuccess.ShouldBeTrue();
+        }
+
+        [Theory]
+        [InlineData("{}", "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb-Development.db;Mode=ReadWriteCreate")]
+        [InlineData(AppSettingsWithConnectionString, "Data Source=mlrb.db")]
+        [InlineData(AppSettingsWithOutConnectionString, "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb-Development.db;Mode=ReadWriteCreate")]
+        public void SqliteExtensions_EnsureSqliteConnectionString(string? json, string expected)
+        {
+            var n = JsonNode.Parse(json ??"{}");
+            n.ShouldNotBeNull();
+
+            n.EnsureDefaultSqliteConnectionString().ShouldBeTrue();
+            n["ConnectionStrings"].ShouldNotBeNull();
+            n["ConnectionStrings"]!["SqliteConnection"].ShouldNotBeNull();
+            n["ConnectionStrings"]!["SqliteConnection"]!.GetValue<string>().ShouldBe(expected);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace MyLittleRangeBook.CLI
         readonly IFirearmsService _firearmsService;
         readonly FirearmsTablePrinter _printer;
 
-        public FirearmCommands([FromKeyedServices(SqliteHelperExtensions.SQLITE_KEY)]IFirearmsService firearmsService, ISqliteHelper sqliteHelper, ILogger logger)
+        public FirearmCommands([FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)]IFirearmsService firearmsService, ISqliteHelper sqliteHelper, ILogger logger)
         {
             _firearmsService = firearmsService;
             _sqliteHelper = sqliteHelper;

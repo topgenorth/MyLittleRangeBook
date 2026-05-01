@@ -101,7 +101,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                 UpgradeEngineBuilder? ueb = DeployChanges.To
                     .SqliteDatabase(_connectionString)
                     .WithScriptsEmbeddedInAssembly(GetType().Assembly);
-                if (!EnvironmentHelper.IsProduction)
+                if (!EnvironmentExtensions.IsProduction)
                 {
                     ueb.LogToConsole();
                     ueb.LogScriptOutput();
