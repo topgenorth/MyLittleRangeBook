@@ -2,20 +2,20 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Serilog;
-using Serilog.Configuration;
 
 namespace MyLittleRangeBook.Config
 {
     public static class ConfigurationExtensions
     {
-
         /// <summary>
         ///     The name of the default database.
         /// </summary>
         // TODO [TO20260425] Move this to the SQLite Assembly
         internal static readonly string SqliteDatabaseName = "mlrb.db";
 
+        /// <summary>
+        ///     Name of the JSON file that holds application settings.
+        /// </summary>
         internal static readonly string AppSettingsFileName = "appsettings.json";
 
         /// <summary>
@@ -33,6 +33,10 @@ namespace MyLittleRangeBook.Config
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             DefaultLocalAppDataFolder));
 
+        /// <summary>
+        ///     Gets the default log directory path for this application. It is a "Logs" subdirectory within the user settings
+        ///     directory. This keeps logs organized and separate from other application data.
+        /// </summary>
         public static DirectoryInfo DefaultLogDirectory =>
             new(Path.Combine(DefaultUserSettingsDirectory.FullName, "Logs"));
 
@@ -67,18 +71,38 @@ namespace MyLittleRangeBook.Config
 
             return fullPath;
         }
+
+        /// <summary>
+        ///     Reads the default Serilog configuration section from an embedded JSON file. This provides a fallback configuration
+        ///     for Serilog if no configuration is found in the appsettings.json file. The embedded JSON file should contain a
+        ///     valid Serilog configuration section that can be merged with the application's configuration at runtime.
+        /// </summary>
+        /// <returns></returns>
         public static async Task<string> DefaultSerilogSectionJson()
         {
             return await typeof(ConfigurationExtensions)
                 .Assembly.ReadEmbeddedTextFileAsync("MyLittleRangeBook.Config.AppSettings.SerilogSection.json");
         }
+
+        /// <summary>
+        /// </summary>
+        /// <returns></returns>
         public static async Task<string> DefaultLoggingSectionJson()
         {
             return await typeof(ConfigurationExtensions)
                 .Assembly.ReadEmbeddedTextFileAsync("MyLittleRangeBook.Config.AppSettings.LoggingSection.json");
         }
 
-        public static IHostApplicationBuilder AddMyLittleRangeBookJsonFiles(this IHostApplicationBuilder builder)
+        /// <summary>
+        ///     Configures the application's configuration sources based on the current environment. In production, it loads only
+        ///     the default appsettings.json file from the user settings directory. In development and staging environments, it
+        ///     loads appsettings.json and appsettings.{Environment}.json from the current directory, as well as the default
+        ///     appsettings.json from the user settings directory. Environment variables are not included in this configuration for
+        ///     now.
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IHostApplicationBuilder AddMyLittleRangeBookConfig(this IHostApplicationBuilder builder)
         {
             builder.Configuration.Sources.Clear();
 
@@ -103,7 +127,12 @@ namespace MyLittleRangeBook.Config
             return builder;
         }
 
-        public static IConfigurationRoot AddMyLittleRangeBookJsonFiles(this IServiceCollection services)
+        /// <summary>
+        ///    Configures the application's configuration sources based on the current environment.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        public static IConfigurationRoot AddMyLittleRangeBookConfig(this IServiceCollection services)
         {
             IConfigurationBuilder cb = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory());
@@ -117,7 +146,7 @@ namespace MyLittleRangeBook.Config
                 string env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? string.Empty;
                 cb.AddJsonFile("appsettings.json", true, true)
                     .AddJsonFile($"appsettings.{env}.json", true, true);
-                // builder.Configuration.AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
+                cb.AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
                 // builder.Services.AddPostgresHelper(builder.Configuration);
             }
 
@@ -125,29 +154,6 @@ namespace MyLittleRangeBook.Config
             services.TryAddSingleton(config);
 
             return config;
-        }
-
-        /// <summary>
-        ///     Configure Serilog to log to files.
-        /// </summary>
-        /// <param name="sinkConfiguration"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        [Obsolete("Serilog config should be in appsettings.json")]
-        public static LoggerConfiguration MlrbLogFiles(this LoggerSinkConfiguration sinkConfiguration)
-        {
-            ArgumentNullException.ThrowIfNull(sinkConfiguration);
-
-            return sinkConfiguration.File(
-                    DefaultLogFile,
-                    rollingInterval: RollingInterval.Day, // Create new log file each day
-                    retainedFileCountLimit: 7, // Keep only 7 days of logs
-                    shared: true, // Allow multiple instances to write
-                    flushToDiskInterval: TimeSpan.FromSeconds(1), // Periodically flush to disk
-                    buffered: false, // Write directly for reliability
-                    outputTemplate:
-                    SerilogAppSettingsJsonFileBootstrap.OUTPUT_TEMPLATE)
-                ;
         }
     }
 }

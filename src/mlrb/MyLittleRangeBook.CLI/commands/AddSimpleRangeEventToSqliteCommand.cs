@@ -124,7 +124,7 @@ namespace MyLittleRangeBook.CLI
                 _logger.Warning(tce, "AddSimpleRangeEventAsync was cancelled.s");
                 _cliDisplay.WriteFailure("AddSimpleRangeEventAsync was cancelled.");
 
-                return RANGE_EVENT_FAILED_TO_CREATE_RANGE_EVENT_TASK_CANCELLED;
+                return COMMAND_CANCELLED;
             }
             catch (Exception e)
             {

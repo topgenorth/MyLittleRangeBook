@@ -1,5 +1,8 @@
 ﻿namespace MyLittleRangeBook.CLI
 {
+    /// <summary>
+    ///     This class holds all of the return codes for this application.
+    /// </summary>
     public static class ReturnCodes
     {
         /// <summary>
@@ -13,7 +16,7 @@
         public const int FAILURE = 1;
 
         /// <summary>
-        ///     The command was running, but was cancelled by the user.
+        ///     The command was running, but was canceled by the user.
         /// </summary>
         public const int COMMAND_CANCELLED = 2;
 
@@ -26,9 +29,13 @@
         #endregion
 
 
+        #region Range event return codes.
+        /// <summary>
+        ///     Could not create the range event for some reason. This is a general catch-all error code for any failure that
+        ///     occurs during the creation of a range event, such as validation errors, database errors, etc.
+        /// </summary>
         public const int RANGE_EVENT_FAILED_TO_CREATE = 401;
-        public const int RANGE_EVENT_FAILED_TO_CREATE_RANGE_EVENT_TASK_CANCELLED = 402;
-
+        #endregion
 
         #region General SQL return codes.
         /// <summary>
@@ -47,7 +54,7 @@
         public const int SQL_FAILED_TO_APPLY_MIGRATIONS = 103;
 
         /// <summary>
-        /// Could not find the SQL script file.
+        ///     Could not find the SQL script file.
         /// </summary>
         public const int SQL_SCRIPT_FILE_NOT_FOUND = 104;
         #endregion
@@ -68,7 +75,5 @@
         /// </summary>
         public const int FIT_FILE_PARSE_FAILURE = 203;
         #endregion;
-
-
     }
 }

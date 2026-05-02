@@ -16,7 +16,7 @@ await bootstrapper.EnsureAppSettingsExistsAsync(DefaultAppSettingsFile.FullName)
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
-builder.AddMyLittleRangeBookJsonFiles();
+builder.AddMyLittleRangeBookConfig();
 builder.Services.AddSerilog((services, loggerConfiguration) =>
 {
     loggerConfiguration

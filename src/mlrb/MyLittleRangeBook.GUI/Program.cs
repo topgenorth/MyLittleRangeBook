@@ -37,7 +37,7 @@ namespace MyLittleRangeBook.GUI
 
             var services = new ServiceCollection();
 
-            IConfigurationRoot configuration = services.AddMyLittleRangeBookJsonFiles();
+            IConfigurationRoot configuration = services.AddMyLittleRangeBookConfig();
 
             // Add global exception handlers to ensure uncaught errors are logged
             try
