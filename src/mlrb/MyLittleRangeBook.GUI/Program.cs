@@ -39,27 +39,6 @@ namespace MyLittleRangeBook.GUI
 
             IConfigurationRoot configuration = services.AddMyLittleRangeBookJsonFiles();
 
-            services.AddSerilog(lc =>
-            {
-
-                if (EnvironmentExtensions.IsProduction)
-                {
-                    lc.MinimumLevel.Information();
-                }
-                else if (EnvironmentExtensions.IsStaging)
-                {
-                    lc.MinimumLevel.Debug();
-                }
-                else
-                {
-                    lc.MinimumLevel.Verbose();
-                }
-
-                lc.WriteTo.Debug().WriteTo.MlrbLogFiles();
-            });
-            // Route Avalonia's internal Trace output through Serilog for unified logs
-            Trace.Listeners.Add(new SerilogTraceListener.SerilogTraceListener());
-
             // Add global exception handlers to ensure uncaught errors are logged
             try
             {
@@ -77,16 +56,22 @@ namespace MyLittleRangeBook.GUI
                 // Last resort: silently fail to avoid crashing the app if logging setup fails (e.g., under AOT)
             }
 
-
             services.AddMyLittleRangeBookSqlite(configuration);
             services.TryAddTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();
             services.TryAddTransient<IFirearmsService, SqliteFirearmsService>();
-
             services.TryAddSingleton<ISettingsStorageService, AppSettingsFileStorageService>();
-
             // Register the DialogService factory for creating dialog services with specific participants
             services.AddSingleton<Func<IDialogParticipant, IDialogService>>(provider =>
                 participant => new DialogService(participant));
+            services.AddSerilog((serviceProvider, loggerConfiguration) =>
+            {
+                loggerConfiguration
+                    .ReadFrom.Configuration(configuration)
+                    .ReadFrom.Services(serviceProvider)
+                    .Enrich.FromLogContext();
+            });
+            // Route Avalonia's internal Trace output through Serilog for unified logs
+            Trace.Listeners.Add(new SerilogTraceListener.SerilogTraceListener());
 
             services.AddTransient<MainViewModel>();
             services.AddTransient<ManageSimpleRangeEventsViewModel>();
@@ -94,6 +79,7 @@ namespace MyLittleRangeBook.GUI
             services.AddTransient<SettingsViewModel>();
 
             App.RegisterAppServices(services);
+
 
             try
             {
