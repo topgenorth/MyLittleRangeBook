@@ -26,11 +26,5 @@ namespace MyLittleRangeBook.Config
         /// <returns></returns>
         IAppSettingsBootstrapper AddBootStrapper(Func<JsonNode?, Result> bootstrapper);
 
-        /// <summary>
-        ///     Add a collection Funcs at once.
-        /// </summary>
-        /// <param name="bootstrappers"></param>
-        /// <returns></returns>
-        IAppSettingsBootstrapper AddBootStrapper(IEnumerable<Func<JsonNode?, Result>?> bootstrappers);
     }
 }

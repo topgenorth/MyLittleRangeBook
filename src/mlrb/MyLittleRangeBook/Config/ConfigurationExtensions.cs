@@ -67,6 +67,16 @@ namespace MyLittleRangeBook.Config
 
             return fullPath;
         }
+        public static async Task<string> DefaultSerilogSectionJson()
+        {
+            return await typeof(ConfigurationExtensions)
+                .Assembly.ReadEmbeddedTextFileAsync("MyLittleRangeBook.Config.AppSettings.SerilogSection.json");
+        }
+        public static async Task<string> DefaultLoggingSectionJson()
+        {
+            return await typeof(ConfigurationExtensions)
+                .Assembly.ReadEmbeddedTextFileAsync("MyLittleRangeBook.Config.AppSettings.LoggingSection.json");
+        }
 
         public static IHostApplicationBuilder AddMyLittleRangeBookJsonFiles(this IHostApplicationBuilder builder)
         {
@@ -84,7 +94,7 @@ namespace MyLittleRangeBook.Config
                 builder.Configuration
                     .AddJsonFile("appsettings.json", true, true)
                     .AddJsonFile($"appsettings.{env}.json", true, true);
-                // builder.Configuration.AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
+                builder.Configuration.AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
                 // builder.Services.AddPostgresHelper(builder.Configuration);
             }
 
@@ -136,7 +146,7 @@ namespace MyLittleRangeBook.Config
                     flushToDiskInterval: TimeSpan.FromSeconds(1), // Periodically flush to disk
                     buffered: false, // Write directly for reliability
                     outputTemplate:
-                    SerilogAppSettingsJsonFileBootstrapp.OutputTemplate)
+                    SerilogAppSettingsJsonFileBootstrap.OUTPUT_TEMPLATE)
                 ;
         }
     }

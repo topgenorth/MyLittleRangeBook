@@ -1,23 +1,21 @@
 ﻿using ConsoleAppFramework;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using MyLittleRangeBook;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
-using MyLittleRangeBook.PgSQL;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
 IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
-    .AddBootStrapper(SerilogAppSettingsJsonFileBootstrapp.EnsureSerilogSection)
+    .AddBootStrapper(SerilogAppSettingsJsonFileBootstrap.SerilogSection)
     .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
 await bootstrapper.EnsureAppSettingsExistsAsync(DefaultAppSettingsFile.FullName);
 
-HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+
 builder.AddMyLittleRangeBookJsonFiles();
 builder.Services.AddSerilog((services, loggerConfiguration) =>
 {

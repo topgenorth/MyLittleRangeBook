@@ -9,32 +9,7 @@ namespace MyLittleRangeBook.Config
     /// </summary>
     public class AppSettingsJsonFileBootstrapper : IAppSettingsBootstrapper
     {
-        /// <summary>
-        ///     Check to see if there is a Logging section in the appsettings.json file. If not, create one.
-        /// </summary>
-        public static readonly Func<JsonNode?, Result> LoggingSectionBootstrapper = rootNode =>
-        {
-            ArgumentNullException.ThrowIfNull(rootNode);
-            const string LOGGING_SECTION_JSON = """
-                                                {
-                                                  "LogLevel": {
-                                                    "Default": "Error",
-                                                    "Microsoft.Hosting.Lifetime": "Error"
-                                                  }
-                                                }
-                                                """;
-
-            if (rootNode["Logging"] is not null)
-            {
-                Log.Debug("Logging configuration already exists in appsettings.json. Skipping Logging bootstrapper.");
-                return Result.Ok();
-            }
-            rootNode["Logging"] ??= JsonNode.Parse(LOGGING_SECTION_JSON);
-
-            return Result.Ok();
-        };
-
-        readonly List<Func<JsonNode?, Result>?> _bootstrappers = new();
+        readonly List<Func<JsonNode?, Result>?> _bootstrappers = [];
 
         /// <summary>
         ///     Ensures that the appsettings.json file exists in the user's settings directory. If it
@@ -89,7 +64,7 @@ namespace MyLittleRangeBook.Config
                 catch (Exception e)
                 {
                     // TODO [TO20260501] Accumulate all errors in the result.
-                    Log.Warning(e, "EnsureSerilogSection {EnsureSerilogSection} threw an exception.", bootstrapper?.Method.Name);
+                    Log.Warning(e, "SerilogSection {SerilogSection} threw an exception.", bootstrapper?.Method.Name);
                     error.CausedBy(e);
                 }
             }
@@ -120,17 +95,7 @@ namespace MyLittleRangeBook.Config
             return this;
         }
 
-        public IAppSettingsBootstrapper AddBootStrapper(IEnumerable<Func<JsonNode?, Result>?> bootstrappers)
-        {
-            foreach (Func<JsonNode?, Result>? b in bootstrappers.OfType<Func<JsonNode?, Result>>())
-            {
-                AddBootStrapper(b);
-            }
-
-            return this;
-        }
-
-        internal async Task<Result> CreateAppSettingsFile(string pathToFile)
+        internal async Task<Result> CreateAppSettingsFile(string pathToFile, string contents = "{}")
         {
             var file = new FileInfo(pathToFile);
             DirectoryInfo? parentDirectory = file.Directory;
@@ -146,7 +111,7 @@ namespace MyLittleRangeBook.Config
 
             try
             {
-                await File.WriteAllTextAsync(file.FullName, "{}");
+                await File.WriteAllTextAsync(file.FullName, contents);
             }
             catch (Exception ex)
             {

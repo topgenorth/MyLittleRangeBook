@@ -63,15 +63,15 @@ namespace MyLittleRangeBook.Sqlite
         }
 
         [Theory]
-        [InlineData("{}", "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb-Development.db;Mode=ReadWriteCreate")]
-        [InlineData(AppSettingsWithConnectionString, "Data Source=mlrb.db")]
-        [InlineData(AppSettingsWithOutConnectionString, "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb-Development.db;Mode=ReadWriteCreate")]
-        public void SqliteExtensions_EnsureSqliteConnectionString(string? json, string expected)
+        [InlineData("{}", "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.db;Mode=ReadWriteCreate", true)]
+        [InlineData(AppSettingsWithConnectionString, "Data Source=mlrb.db", false)]
+        [InlineData(AppSettingsWithOutConnectionString, "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.db;Mode=ReadWriteCreate", true)]
+        public void SqliteExtensions_EnsureSqliteConnectionString(string? json, string expected, bool wasUpdated)
         {
             var n = JsonNode.Parse(json ??"{}");
             n.ShouldNotBeNull();
 
-            n.EnsureDefaultSqliteConnectionString().ShouldBeTrue();
+            n.EnsureDefaultSqliteConnectionString().ShouldBe(wasUpdated);
             n["ConnectionStrings"].ShouldNotBeNull();
             n["ConnectionStrings"]!["SqliteConnection"].ShouldNotBeNull();
             n["ConnectionStrings"]!["SqliteConnection"]!.GetValue<string>().ShouldBe(expected);

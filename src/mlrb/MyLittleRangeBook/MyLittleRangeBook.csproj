@@ -21,4 +21,8 @@
 
     </ItemGroup>
 
+    <ItemGroup>
+      <EmbeddedResource Include="Config\AppSettings\*.json" />
+    </ItemGroup>
+
 </Project>
