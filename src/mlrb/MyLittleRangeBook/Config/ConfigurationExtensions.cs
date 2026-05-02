@@ -9,8 +9,6 @@ namespace MyLittleRangeBook.Config
 {
     public static class ConfigurationExtensions
     {
-        const string LogFileTemplate =
-            "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
 
         /// <summary>
         ///     The name of the default database.
@@ -69,6 +67,16 @@ namespace MyLittleRangeBook.Config
 
             return fullPath;
         }
+        public static async Task<string> DefaultSerilogSectionJson()
+        {
+            return await typeof(ConfigurationExtensions)
+                .Assembly.ReadEmbeddedTextFileAsync("MyLittleRangeBook.Config.AppSettings.SerilogSection.json");
+        }
+        public static async Task<string> DefaultLoggingSectionJson()
+        {
+            return await typeof(ConfigurationExtensions)
+                .Assembly.ReadEmbeddedTextFileAsync("MyLittleRangeBook.Config.AppSettings.LoggingSection.json");
+        }
 
         public static IHostApplicationBuilder AddMyLittleRangeBookJsonFiles(this IHostApplicationBuilder builder)
         {
@@ -86,7 +94,7 @@ namespace MyLittleRangeBook.Config
                 builder.Configuration
                     .AddJsonFile("appsettings.json", true, true)
                     .AddJsonFile($"appsettings.{env}.json", true, true);
-                // builder.Configuration.AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
+                builder.Configuration.AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
                 // builder.Services.AddPostgresHelper(builder.Configuration);
             }
 
@@ -125,6 +133,7 @@ namespace MyLittleRangeBook.Config
         /// <param name="sinkConfiguration"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
+        [Obsolete("Serilog config should be in appsettings.json")]
         public static LoggerConfiguration MlrbLogFiles(this LoggerSinkConfiguration sinkConfiguration)
         {
             ArgumentNullException.ThrowIfNull(sinkConfiguration);
@@ -137,7 +146,7 @@ namespace MyLittleRangeBook.Config
                     flushToDiskInterval: TimeSpan.FromSeconds(1), // Periodically flush to disk
                     buffered: false, // Write directly for reliability
                     outputTemplate:
-                    LogFileTemplate)
+                    SerilogAppSettingsJsonFileBootstrap.OUTPUT_TEMPLATE)
                 ;
         }
     }

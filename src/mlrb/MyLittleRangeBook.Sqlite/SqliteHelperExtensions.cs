@@ -17,7 +17,15 @@ namespace MyLittleRangeBook.Database.Sqlite
     /// </summary>
     public static class SqliteHelperExtensions
     {
-        public static readonly Func<JsonNode?, Result> SqliteConnectionStringBootStrapper = (JsonNode? rootNode) =>
+        // ReSharper disable once MemberCanBePrivate.Global
+        public const string DI_KEYS_SQLITE = "sqlite";
+
+        /// <summary>
+        ///     The name of the default database.
+        /// </summary>
+        public const string SQLITE_DATABASE_NAME = "mlrb.db";
+
+        public static readonly Func<JsonNode?, Result> SqliteConnectionStringBootStrapper = rootNode =>
         {
             if (rootNode is not JsonObject rootObject)
             {
@@ -34,7 +42,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             JsonNode? n2 = n1!["SqliteConnection"];
             if (n2 is null)
             {
-                SqliteConnectionStringBuilder builder = new SqliteConnectionStringBuilder
+                var builder = new SqliteConnectionStringBuilder
                 {
                     DataSource = DefaultSqliteDatabaseName(), Mode = SqliteOpenMode.ReadWriteCreate
                 };
@@ -44,14 +52,6 @@ namespace MyLittleRangeBook.Database.Sqlite
 
             return Result.Ok();
         };
-
-        // ReSharper disable once MemberCanBePrivate.Global
-        public const string DI_KEYS_SQLITE = "sqlite";
-
-        /// <summary>
-        ///     The name of the default database.
-        /// </summary>
-        public const string SQLITE_DATABASE_NAME = "mlrb.db";
 
 
         /// <summary>
@@ -124,7 +124,8 @@ namespace MyLittleRangeBook.Database.Sqlite
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
 
             services.TryAddKeyedSingleton<ISimpleRangeLogService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
-            services.TryAddKeyedSingleton<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
+            services
+                .TryAddKeyedSingleton<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
 
             services.TryAddKeyedSingleton<IFirearmsService, SqliteFirearmsService>(DI_KEYS_SQLITE);
 
@@ -142,11 +143,21 @@ namespace MyLittleRangeBook.Database.Sqlite
                     await File.WriteAllTextAsync(appSettingsFileName, jsonRoot.ToString());
                 }
             }
-
         }
+
+        /// <summary>
+        ///     Ensures that the given JSON node contains a default SQLite connection string in the "ConnectionStrings" section. If
+        ///     the "ConnectionStrings" section or the "SqliteConnection" entry does not exist, they will be created with a default
+        ///     connection string that points to a SQLite database file in the user's local application data folder. The method
+        ///     returns true if the JSON node was modified (i.e., if the connection string was added), and false if it already
+        ///     contained a SQLite connection string. This is useful for bootstrapping an appsettings.json file with a default
+        ///     SQLite connection string if one does not already exist.
+        /// </summary>
+        /// <param name="rootNode"></param>
+        /// <returns></returns>
         public static bool EnsureDefaultSqliteConnectionString(this JsonNode? rootNode)
         {
-            bool wasUpdated = false;
+            var wasUpdated = false;
             rootNode ??= new JsonObject();
 
             JsonNode? n1 = rootNode["ConnectionStrings"];
@@ -157,16 +168,18 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
 
             JsonNode? n2 = n1!["SqliteConnection"];
-            if (n2 is null)
+            if (n2 is not null)
             {
-                SqliteConnectionStringBuilder builder = new SqliteConnectionStringBuilder
-                {
-                    DataSource = DefaultSqliteDatabaseName(), Mode = SqliteOpenMode.ReadWriteCreate
-                };
-
-                n1["SqliteConnection"] = $"{builder.ConnectionString}";
-                wasUpdated = true;
+                return wasUpdated;
             }
+
+            var builder = new SqliteConnectionStringBuilder
+            {
+                DataSource = DefaultSqliteDatabaseName(), Mode = SqliteOpenMode.ReadWriteCreate
+            };
+
+            n1["SqliteConnection"] = $"{builder.ConnectionString}";
+            wasUpdated = true;
 
             return wasUpdated;
         }

@@ -27,10 +27,13 @@ namespace MyLittleRangeBook.GUI
         {
             // [TO20260425] This has to run first and will create a default appsettings.json file if one does not exist.
             IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
-                .AddBootStrapper(AppSettingsJsonFileBootstrapper.LoggingSectionBootstrapper)
+                .AddBootStrapper(BootstrapFuncs.LoggingSectionBootstrapper)
+                .AddBootStrapper(SerilogAppSettingsJsonFileBootstrap.SerilogSection)
                 .AddBootStrapper(AppSettingsFileStorageService.GuiAppSettingsBootstrapper)
                 .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
             await bootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
+
+            ConfigurationExtensions.DefaultLogDirectory.Create();
 
             var services = new ServiceCollection();
 
@@ -38,7 +41,6 @@ namespace MyLittleRangeBook.GUI
 
             services.AddSerilog(lc =>
             {
-                ConfigurationExtensions.DefaultLogDirectory.Create();
 
                 if (EnvironmentExtensions.IsProduction)
                 {
@@ -111,7 +113,7 @@ namespace MyLittleRangeBook.GUI
             finally
             {
                 await Log.CloseAndFlushAsync();
-                Log.Debug("Application is shutting down");
+                Log.Verbose("Application is shutting down");
             }
         }
 

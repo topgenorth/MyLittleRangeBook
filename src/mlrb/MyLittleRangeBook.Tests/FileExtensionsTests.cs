@@ -14,7 +14,7 @@ namespace MyLittleRangeBook
         [InlineData("0.9.0.101", "0.9.0.101")]
         public void CleanAssemblyVersionTest(string assemblyVersion, string expectedVersion)
         {
-            string result = FileExtensions.RemoveFullGitShaFromInformationalVersion(assemblyVersion);
+            string result = AssemblyExtensions.RemoveFullGitShaFromInformationalVersion(assemblyVersion);
 
             result.ShouldBe(expectedVersion);
         }
@@ -68,7 +68,7 @@ namespace MyLittleRangeBook
             const string env = "Development";
             Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", env);
             var fileInfo = new FileInfo(Path.Combine(_testDirectory, TestFileName));
-            var expectedName = $"test-{env}.txt";
+            var expectedName = $"test.{env}.txt";
 
             // Act
             FileInfo result = fileInfo.InjectEnvironmentIntoFileName();
@@ -85,7 +85,7 @@ namespace MyLittleRangeBook
             const string ENV = "Staging";
             Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", ENV);
             var fileInfo = new FileInfo(Path.Combine(_testDirectory, TestFileName));
-            var expectedName = $"test-{ENV}.txt";
+            var expectedName = $"test.{ENV}.txt";
 
             // Act
             FileInfo result = fileInfo.InjectEnvironmentIntoFileName();
