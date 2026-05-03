@@ -1,26 +1,16 @@
-﻿using System.Data;
-using ConsoleAppFramework;
+﻿using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.CLI.Console;
-using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 using Spectre.Console;
 using static MyLittleRangeBook.CLI.ReturnCodes;
 using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
-using AnsiConsoleExtensions = Spectre.Console.AnsiConsoleExtensions;
 
 namespace MyLittleRangeBook.CLI
 {
-    public class FailedToAddSimpleRangeEventError : MlrbBaseError
-    {
-        public FailedToAddSimpleRangeEventError() : base("Unexpected error trying to add SimpleRangeEvent.", RANGE_EVENT_FAILED_TO_CREATE)
-        {
-        }
-    }
     /// <summary>
     ///     Allows us to create a new Range Event from the CLI.
     /// </summary>
@@ -28,28 +18,23 @@ namespace MyLittleRangeBook.CLI
     [UsedImplicitly]
     public class AddSimpleRangeEventToSqliteCommand
     {
-        const string RangeSql = "SELECT DISTINCT RangeName FROM SimpleRangeEvents ORDER BY Modified DESC,  RangeName;";
-
-        const string FirearmSql =
-            "SELECT DISTINCT FirearmName FROM SimpleRangeEvents WHERE IsActive=1 ORDER BY FirearmName;";
-
-        const string AmmoSql =
-            "SELECT DISTINCT AmmoDescription FROM SimpleRangeEvents WHERE FirearmName=@firearmname ORDER BY Modified DESC, AmmoDescription;";
-
         readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
+        readonly ISimpleRangeEventHelper _rangeEventHelper;
         readonly ISimpleRangeEventRepository _repo;
-        readonly ISqliteHelper _sqliteHelper;
+        readonly ISimpleRangeEventPrinter _simpleRangeEventPrinter;
 
         public AddSimpleRangeEventToSqliteCommand(ICliDisplay cliDisplay,
             ILogger logger,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
-            ISqliteHelper sqliteHelper)
+            [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventHelper rangeEventHelper,
+            ISimpleRangeEventPrinter simpleRangeEventPrinter)
         {
             _cliDisplay = cliDisplay;
             _logger = logger;
             _repo = repo;
-            _sqliteHelper = sqliteHelper;
+            _rangeEventHelper = rangeEventHelper;
+            _simpleRangeEventPrinter = simpleRangeEventPrinter;
         }
 
         /// <summary>
@@ -64,6 +49,7 @@ namespace MyLittleRangeBook.CLI
         /// <param name="ammo">A description of the ammo used. The recommended format is PROJECTILE[,|;]POWDER[</param>
         /// <param name="notes">Any notes or comments.  Optional</param>
         /// <param name="date">The date of the range trip in YYYY-MM-DD format. Default to today if omitted</param>
+        /// <param name="fitFile">The path to a Garmin FIT file from the Xero C1.</param>
         /// <param name="quiet">If this parameter is provided, then the command will display minimal output the the console.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -75,47 +61,41 @@ namespace MyLittleRangeBook.CLI
             string ammo = "",
             string notes = "",
             [RangeTripDateParser] DateOnly date = default,
+            string fitFile = "",
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
-            // [TO20260424] Don't run the migrations if all the command line parameters are present.
-            if (!quiet)
-            {
-                Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
-            }
+            // if (!quiet)
+            // {
+            //     Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
+            // }
+
             IAnsiConsole console = _cliDisplay.Console;
 
-            IEnumerable<string> ammoChoices = [];
+            Result<(List<string>, List<string>)> r1 =
+                await _rangeEventHelper.GetFirearmsAndRangesAsync(cancellationToken).ConfigureAwait(false);
+            if (r1.IsFailed)
+            {
+                _logger.Warning("Failed to retrieve list of firearms and/or ranges.");
+            }
+
+            List<string> firearms = r1.Value.Item1;
+            List<string> ranges = r1.Value.Item2;
 
             try
             {
-                await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-                IEnumerable<string> firearmChoices = GetChoices(conn, FirearmSql);
-                IEnumerable<string> rangeChoices = GetChoices(conn, RangeSql);
-
                 (firearm, rounds) =
-                    await PromptForFirearmAndRounds(console, firearm, firearmChoices, rounds, cancellationToken);
+                    await PromptForFirearmAndRounds(console, firearm, rounds, cancellationToken);
 
-                bool getAmmo = string.IsNullOrWhiteSpace(ammo) && !string.IsNullOrWhiteSpace(firearm);
-                if (getAmmo)
-                {
-                    var cmd = new SqliteCommand(AmmoSql, conn);
-                    cmd.Parameters.AddWithValue("@firearmname", firearm);
-                    ammoChoices = GetChoices(cmd);
-                }
-                else
-                {
-                    ammoChoices = [ammo];
-                }
 
-                range = await PromptForRangeSelection(console, range, rangeChoices, cancellationToken);
-                ammo = await PromptForAmmoNotes(console, ammo, ammoChoices, cancellationToken);
+                range = await PromptForRangeSelection(console, range, cancellationToken);
+                ammo = await PromptForAmmoNotes(console, ammo, cancellationToken);
                 notes = await PromptForTripNotes(console, notes, cancellationToken);
 
                 SimpleRangeEvent sre =
-                    await SaveToDatabaseAsync(firearm, rounds, range, ammo, notes, date, cancellationToken);
+                    await SaveToDatabaseAsync(firearm, rounds, range, ammo, notes, date, cancellationToken).ConfigureAwait(false);
 
-                DisplayToConsole(console, sre, quiet);
+                _simpleRangeEventPrinter.PrintToConsole(console, sre, quiet);
 
                 return SUCCESS;
             }
@@ -128,7 +108,6 @@ namespace MyLittleRangeBook.CLI
             }
             catch (Exception e)
             {
-
                 _logger.Error(e, "Unexpected error trying to add SimpleRangeEvent");
                 _cliDisplay.WriteFailure($"Unexpected error trying to add SimpleRangeEvent: {e.Message}");
 
@@ -136,55 +115,6 @@ namespace MyLittleRangeBook.CLI
             }
         }
 
-        void DisplayToConsole(IAnsiConsole console, SimpleRangeEvent sre, bool quiet)
-        {
-            if (quiet)
-            {
-                console.MarkupLineInterpolated($"[green]Range Trip added: RowId {sre.RowId}, Id {sre.Id}.[/]");
-            }
-            else
-            {
-                Grid bodyGrid = new Grid().AddColumns(2);
-                bodyGrid.AddRow("", "[green]Range Trip Added[/]");
-
-                bodyGrid.AddRow("  [white]RowId:[/]", sre.RowId.ToString() ?? string.Empty);
-                bodyGrid.AddRow("  [white]Id:[/]", sre.Id!);
-                bodyGrid.AddRow("  [white]Date:[/]", sre.EventDate.ToString("yyyy-MMM-dd"));
-                bodyGrid.AddRow("  [white]Firearm:[/]", sre.FirearmName);
-                bodyGrid.AddRow("  [white]Range:[/] ", sre.RangeName);
-
-                if (sre.RoundsFired > 0)
-                {
-                    bodyGrid.AddRow("  [white]Rounds:[/] ", sre.RoundsFired.ToString());
-                }
-
-                if (!string.IsNullOrWhiteSpace(sre.AmmoDescription))
-                {
-                    bodyGrid.AddRow("  [white]Ammo:[/] ", sre.AmmoDescription);
-                }
-
-                if (!string.IsNullOrWhiteSpace(sre.Notes))
-                {
-                    bodyGrid.AddRow("  [white]Notes:[/] ", sre.Notes);
-                }
-
-                Layout layout = new Layout("root")
-                    .SplitRows(new Layout("header"), new Layout("body"));
-                Grid headerGrid = CreateHeaderGrid();
-                layout["header"].Update(headerGrid);
-                layout["body"].Update(bodyGrid);
-                console.Write(layout);
-            }
-        }
-
-        Grid CreateHeaderGrid()
-        {
-            var headerGrid = new Grid();
-            headerGrid.AddColumn();
-            headerGrid.AddRow($"[grey]Version:[/] [green]{Markup.Escape(_cliDisplay.AppVersion)}[/]");
-
-            return headerGrid;
-        }
 
         async Task<string> PromptForTripNotes(IAnsiConsole console,
             string notes,
@@ -253,26 +183,9 @@ namespace MyLittleRangeBook.CLI
                 prompt = new TextPrompt<string>("Enter [green]range[/]?");
             }
 
-            return await console.PromptAsync(prompt, cancellationToken);
+            return await console.PromptAsync(prompt, cancellationToken).ConfigureAwait(true);
         }
 
-        static IEnumerable<string> GetChoices(SqliteCommand command)
-        {
-            using SqliteDataReader reader = command.ExecuteReader();
-            while (reader.Read())
-            {
-                yield return reader.GetString(0);
-            }
-        }
-
-        static IEnumerable<string> GetChoices(SqliteConnection connection, string sql)
-        {
-            using SqliteCommand command = connection.CreateCommand();
-            command.CommandText = sql;
-            command.CommandType = CommandType.Text;
-
-            return GetChoices(command);
-        }
 
         async Task<(string firearm, int rounds)> PromptForFirearmAndRounds(IAnsiConsole console,
             string firearm,
@@ -300,7 +213,7 @@ namespace MyLittleRangeBook.CLI
                 prompt = new TextPrompt<string>("Enter [green]firearm[/]?");
             }
 
-            firearm = await console.PromptAsync(prompt, cancellationToken);
+            firearm = await console.PromptAsync(prompt, cancellationToken).ConfigureAwait(true);
 
             if (rounds != 0)
             {
@@ -310,7 +223,7 @@ namespace MyLittleRangeBook.CLI
             TextPrompt<int> p = new TextPrompt<int>("      [green]Rounds[/]")
                 .DefaultValue(0)
                 .Validate(x => x > 0);
-            rounds = await console.PromptAsync(p, cancellationToken);
+            rounds = await console.PromptAsync(p, cancellationToken).ConfigureAwait(true);
 
             return (firearm, rounds);
         }
@@ -324,16 +237,16 @@ namespace MyLittleRangeBook.CLI
             CancellationToken cancellationToken)
         {
             var sre = SimpleRangeEvent.New(
-                RemoveDoubleQuotes(firearm),
+                RemoveSurroundingQuotes(firearm),
                 rounds,
-                RemoveDoubleQuotes(range),
-                RemoveDoubleQuotes(ammo),
-                RemoveDoubleQuotes(notes),
+                RemoveSurroundingQuotes(range),
+                RemoveSurroundingQuotes(ammo),
+                RemoveSurroundingQuotes(notes),
                 date);
 
 
             // TODO [TO20260416] Data validation.
-            Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken);
+            Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
 
             sre.RowId = result.Value ?? -1;
 
@@ -341,11 +254,11 @@ namespace MyLittleRangeBook.CLI
         }
 
         /// <summary>
-        /// Will strip the double quotes from the start and end of to the string.
+        ///     Will strip the double quotes from the start and end of to the string.
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        static string RemoveDoubleQuotes(string value)
+        static string RemoveSurroundingQuotes(string value)
         {
             return value.Length >= 2 && value.StartsWith('"') && value.EndsWith('"')
                 ? value[1..^1]
