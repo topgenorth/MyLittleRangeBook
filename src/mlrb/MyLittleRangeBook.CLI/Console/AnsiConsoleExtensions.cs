@@ -5,6 +5,7 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public static class AnsiConsoleExtensions
     {
+        // [TO20260503] This might be a better way than using ICliDisplay?
         public const string AppName = "MyLittleRangeBook CLI";
 
         public const string WarningGlyph = "⚠";

@@ -5,6 +5,7 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public class CliDisplay : ICliDisplay
     {
+        // [TO20260503] This might be better off as extension methods to IAnsiConsole?
         public string AppVersion { get; }
 
 
