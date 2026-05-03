@@ -2,14 +2,13 @@
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 using Spectre.Console;
 using static MyLittleRangeBook.CLI.ReturnCodes;
 using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.CLI.Console
 {
     /// <summary>
     ///     Allows us to create a new Range Event from the CLI.
@@ -65,8 +64,6 @@ namespace MyLittleRangeBook.CLI
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
-
-
             Result<(List<string>, List<string>)> r1 =
                 await _rangeEventHelper.GetFirearmsAndRangesAsync(cancellationToken).ConfigureAwait(false);
             if (r1.IsFailed)
@@ -149,7 +146,7 @@ namespace MyLittleRangeBook.CLI
             if (ammoChoices.IsFailed || ammoChoices.Value.Count == 0)
             {
                 prompt = new TextPrompt<string>("Enter [green]ammunition[/] (optional)?");
-}
+            }
             else
             {
                 prompt = new SelectionPrompt<string>()

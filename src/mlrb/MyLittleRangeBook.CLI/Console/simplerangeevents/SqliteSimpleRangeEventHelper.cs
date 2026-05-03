@@ -4,7 +4,7 @@ using FluentResults;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.CLI.Console
 {
     public class SqliteSimpleRangeEventHelper : ISimpleRangeEventHelper
     {

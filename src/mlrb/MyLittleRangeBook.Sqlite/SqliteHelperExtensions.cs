@@ -123,11 +123,10 @@ namespace MyLittleRangeBook.Database.Sqlite
             services.TryAddSingleton(configuration);
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
 
-            services.TryAddKeyedSingleton<ISimpleRangeLogService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
-            services
-                .TryAddKeyedSingleton<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
+            services.TryAddTransient<ISimpleRangeLogService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
+            services.TryAddTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
 
-            services.TryAddKeyedSingleton<IFirearmsService, SqliteFirearmsService>(DI_KEYS_SQLITE);
+            services.TryAddTransient<IFirearmsService, SqliteFirearmsService>(DI_KEYS_SQLITE);
 
             return services;
         }
