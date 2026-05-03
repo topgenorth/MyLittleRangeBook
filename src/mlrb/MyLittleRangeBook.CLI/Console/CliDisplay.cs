@@ -3,9 +3,8 @@ using Spectre.Console;
 
 namespace MyLittleRangeBook.CLI.Console
 {
-    public sealed class CliDisplay : ICliDisplay
+    public class CliDisplay : ICliDisplay
     {
-
         public string AppVersion { get; }
 
 
@@ -47,8 +46,8 @@ namespace MyLittleRangeBook.CLI.Console
                 .StartAsync(status, async _ =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    await action(cancellationToken);
-                });
+                    await action(cancellationToken).ConfigureAwait(false);
+                }).ConfigureAwait(false);
         }
 
         public async Task<T> RunStatusAsync<T>(
@@ -62,8 +61,8 @@ namespace MyLittleRangeBook.CLI.Console
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    return await action(cancellationToken);
-                });
+                    return await action(cancellationToken).ConfigureAwait(false);
+                }).ConfigureAwait(false);
         }
     }
 }
