@@ -33,6 +33,6 @@ Use this skill when asked to add or modify a CLI command in MyLittleRangeBook.
 - Prefer compilable code over pseudocode.
 
 # Examples
-- Add command: `mlrb trip add`
-- Add command: `mlrb import fit <file>`
-- Add command: `mlrb session list --date 2026-05-01`
+- Add command: `mlrb rangetrip add`
+- Add command: `mlrb fit import sqlite --fit-file "C:\Users\tom\Code\MyLittleRangeBook\src\mlrb\sample-fit\12-31-2025_12-19-19.fit"`
+- Add command: `mlrb rangetrip list`
