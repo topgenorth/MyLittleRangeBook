@@ -65,12 +65,7 @@ namespace MyLittleRangeBook.CLI
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
-            // if (!quiet)
-            // {
-            //     Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
-            // }
 
-            IAnsiConsole console = _cliDisplay.Console;
 
             Result<(List<string>, List<string>)> r1 =
                 await _rangeEventHelper.GetFirearmsAndRangesAsync(cancellationToken).ConfigureAwait(false);
@@ -90,11 +85,20 @@ namespace MyLittleRangeBook.CLI
                 ammo = await AskUserForAmmoAsync(firearm, ammo, cancellationToken).ConfigureAwait(true);
                 notes = await AskUserForNotesAsync(notes, cancellationToken).ConfigureAwait(true);
 
-                SimpleRangeEvent sre =
-                    await SaveToDatabaseAsync(firearm, rounds, range, ammo, notes, date, cancellationToken)
-                        .ConfigureAwait(false);
+                var sre = SimpleRangeEvent.New(
+                    RemoveSurroundingQuotes(firearm),
+                    rounds,
+                    RemoveSurroundingQuotes(range),
+                    RemoveSurroundingQuotes(ammo),
+                    RemoveSurroundingQuotes(notes),
+                    date);
 
-                _simpleRangeEventPrinter.PrintToConsole(console, sre, quiet);
+                // TODO [TO20260416] Data validation.
+                Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
+
+                sre.RowId = result.Value ?? -1;
+
+                _simpleRangeEventPrinter.PrintToConsole(_cliDisplay.Console, sre, quiet);
 
                 return SUCCESS;
             }
@@ -230,30 +234,6 @@ namespace MyLittleRangeBook.CLI
             return roundCount;
         }
 
-        async Task<SimpleRangeEvent> SaveToDatabaseAsync(string firearm,
-            int rounds,
-            string range,
-            string ammo,
-            string notes,
-            DateOnly date,
-            CancellationToken cancellationToken)
-        {
-            var sre = SimpleRangeEvent.New(
-                RemoveSurroundingQuotes(firearm),
-                rounds,
-                RemoveSurroundingQuotes(range),
-                RemoveSurroundingQuotes(ammo),
-                RemoveSurroundingQuotes(notes),
-                date);
-
-
-            // TODO [TO20260416] Data validation.
-            Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
-
-            sre.RowId = result.Value ?? -1;
-
-            return sre;
-        }
 
         /// <summary>
         ///     Will strip the double quotes from the start and end of to the string.
