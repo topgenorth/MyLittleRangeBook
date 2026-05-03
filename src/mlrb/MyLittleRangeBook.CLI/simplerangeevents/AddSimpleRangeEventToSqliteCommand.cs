@@ -84,16 +84,15 @@ namespace MyLittleRangeBook.CLI
 
             try
             {
-                (firearm, rounds) =
-                    await PromptForFirearmAndRounds(console, firearm, rounds, cancellationToken);
-
-
-                range = await PromptForRangeSelection(console, range, cancellationToken);
-                ammo = await PromptForAmmoNotes(console, ammo, cancellationToken);
-                notes = await PromptForTripNotes(console, notes, cancellationToken);
+                firearm = await AskUserForFirearmAsync(firearm, firearms, cancellationToken).ConfigureAwait(true);
+                rounds = await AskUserForRoundCountAsync(rounds, cancellationToken).ConfigureAwait(true);
+                range = await AskUserForRangeAsync(range, ranges, cancellationToken).ConfigureAwait(true);
+                ammo = await AskUserForAmmoAsync(firearm, ammo, cancellationToken).ConfigureAwait(true);
+                notes = await AskUserForNotesAsync(notes, cancellationToken).ConfigureAwait(true);
 
                 SimpleRangeEvent sre =
-                    await SaveToDatabaseAsync(firearm, rounds, range, ammo, notes, date, cancellationToken).ConfigureAwait(false);
+                    await SaveToDatabaseAsync(firearm, rounds, range, ammo, notes, date, cancellationToken)
+                        .ConfigureAwait(false);
 
                 _simpleRangeEventPrinter.PrintToConsole(console, sre, quiet);
 
@@ -115,10 +114,7 @@ namespace MyLittleRangeBook.CLI
             }
         }
 
-
-        async Task<string> PromptForTripNotes(IAnsiConsole console,
-            string notes,
-            CancellationToken cancellationToken)
+        async Task<string> AskUserForNotesAsync(string notes, CancellationToken cancellationToken)
         {
             if (!string.IsNullOrWhiteSpace(notes))
             {
@@ -127,40 +123,42 @@ namespace MyLittleRangeBook.CLI
 
             TextPrompt<string> p = new TextPrompt<string>("Enter any [green]notes[/] (optional)")
                 .AllowEmpty();
-            notes = await console.PromptAsync(p, cancellationToken);
+            notes = await _cliDisplay.Console.PromptAsync(p, cancellationToken).ConfigureAwait(true);
 
             return notes;
         }
 
-        async Task<string> PromptForAmmoNotes(IAnsiConsole console,
-            string ammo,
-            IEnumerable<string> ammoChoices,
-            CancellationToken cancellationToken)
+        async Task<string> AskUserForAmmoAsync(string firearm, string ammo, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrWhiteSpace(ammo))
+            // [TO20260503] We should probably only prompt for ammo if we have a firearm, and we should use the firearm to filter the ammo choices.
+            if (!string.IsNullOrWhiteSpace(ammo) || string.IsNullOrWhiteSpace(firearm))
             {
                 return ammo;
             }
 
+            Result<List<string>> ammoChoices = await _rangeEventHelper
+                .GetAmmoDescriptionsForFirearmAsync(firearm, cancellationToken)
+                .ConfigureAwait(false);
+
             IPrompt<string> prompt;
-            if (ammoChoices.Any())
+
+            if (ammoChoices.IsFailed || ammoChoices.Value.Count == 0)
+            {
+                prompt = new TextPrompt<string>("Enter [green]ammunition[/] (optional)?");
+}
+            else
             {
                 prompt = new SelectionPrompt<string>()
                     .Title("Select [green]ammunition[/]")
                     .HighlightStyle(new Style(Color.Green, Color.Black, Decoration.Bold))
                     .EnableSearch()
-                    .AddChoices(ammoChoices);
-            }
-            else
-            {
-                prompt = new TextPrompt<string>("Enter [green]ammunition[/] (optional)?");
+                    .AddChoices(ammoChoices.Value);
             }
 
-            return await console.PromptAsync(prompt, cancellationToken);
+            return await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(true);
         }
 
-        async Task<string> PromptForRangeSelection(IAnsiConsole console,
-            string range,
+        async Task<string> AskUserForRangeAsync(string range,
             IEnumerable<string> rangeChoices,
             CancellationToken cancellationToken)
         {
@@ -170,62 +168,66 @@ namespace MyLittleRangeBook.CLI
             }
 
             IPrompt<string> prompt;
-            if (rangeChoices.Any())
+            IEnumerable<string> enumerable = rangeChoices as string[] ?? rangeChoices.ToArray();
+            if (enumerable.Any())
             {
                 prompt = new SelectionPrompt<string>()
                     .Title("Select a [green]range[/]")
                     .HighlightStyle(new Style(Color.Green, Color.Black, Decoration.Bold))
                     .EnableSearch()
-                    .AddChoices(rangeChoices);
+                    .AddChoices(enumerable);
             }
             else
             {
                 prompt = new TextPrompt<string>("Enter [green]range[/]?");
             }
 
-            return await console.PromptAsync(prompt, cancellationToken).ConfigureAwait(true);
+            return await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(true);
         }
 
 
-        async Task<(string firearm, int rounds)> PromptForFirearmAndRounds(IAnsiConsole console,
-            string firearm,
-            IEnumerable<string> firearmChoices,
-            int rounds,
+        async Task<string> AskUserForFirearmAsync(string firearm,
+            IEnumerable<string> firearms,
             CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrWhiteSpace(firearm))
+            if (!string.IsNullOrEmpty(firearm))
             {
-                return (firearm, rounds);
+                return firearm;
             }
 
             IPrompt<string> prompt;
-
-            if (firearmChoices.Any())
+            IEnumerable<string> choices = firearms as string[] ?? firearms.ToArray();
+            if (choices.Any())
             {
                 prompt = new SelectionPrompt<string>()
                     .Title("Select a [green]firearm[/]")
                     .HighlightStyle(new Style(Color.Green, Color.Black, Decoration.Bold))
                     .EnableSearch()
-                    .AddChoices(firearmChoices);
+                    .AddChoices(choices);
             }
             else
             {
                 prompt = new TextPrompt<string>("Enter [green]firearm[/]?");
             }
 
-            firearm = await console.PromptAsync(prompt, cancellationToken).ConfigureAwait(true);
+            firearm = await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(true);
 
-            if (rounds != 0)
+            return firearm;
+        }
+
+        async Task<int> AskUserForRoundCountAsync(int roundCount, CancellationToken cancellationToken)
+        {
+            if (roundCount < 1)
             {
-                return (firearm, rounds);
+                return roundCount;
             }
 
             TextPrompt<int> p = new TextPrompt<int>("      [green]Rounds[/]")
                 .DefaultValue(0)
                 .Validate(x => x > 0);
-            rounds = await console.PromptAsync(p, cancellationToken).ConfigureAwait(true);
+            roundCount = await _cliDisplay.Console.PromptAsync(p, cancellationToken).ConfigureAwait(true);
 
-            return (firearm, rounds);
+            return roundCount;
         }
 
         async Task<SimpleRangeEvent> SaveToDatabaseAsync(string firearm,
