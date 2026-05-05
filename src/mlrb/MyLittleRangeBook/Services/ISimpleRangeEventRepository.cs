@@ -1,5 +1,4 @@
-﻿using System.Data;
-using FluentResults;
+﻿using FluentResults;
 using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Services
@@ -14,7 +13,7 @@ namespace MyLittleRangeBook.Services
 
 
         /// <summary>
-        /// Will create a new Range Event and associate the FIT file with it.
+        ///     Will create a new Range Event and associate the FIT file with it.
         /// </summary>
         /// <param name="simpleRangeEvent"></param>
         /// <param name="fitFileInfo"></param>
@@ -25,7 +24,7 @@ namespace MyLittleRangeBook.Services
             CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Will create a new Range Event and associate the FIT file with it.
+        ///     Will create a new Range Event and associate the FIT file with it.
         /// </summary>
         /// <param name="simpleRangeEvent"></param>
         /// <param name="fitFileContents"></param>
@@ -35,6 +34,7 @@ namespace MyLittleRangeBook.Services
             byte[] fitFileContents,
             CancellationToken cancellationToken = default);
 
-        Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(CancellationToken cancellationToken = default);
+        Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(CancellationToken cancellationToken =
+            default);
     }
 }

@@ -34,7 +34,7 @@ namespace MyLittleRangeBook.CLI
          {
             AnsiConsole.Console.WriteAppInfo();
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-            Result<IEnumerable<Firearm>> firearms = await _firearmsService.GetFirearmsAsync(conn, cancellationToken);
+            Result<IEnumerable<Firearm>> firearms = await _firearmsService.GetFirearmsAsync(conn, cancellationToken: cancellationToken);
 
             if (firearms.IsFailed)
             {

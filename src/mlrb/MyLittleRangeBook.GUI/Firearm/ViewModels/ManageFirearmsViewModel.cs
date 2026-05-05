@@ -128,7 +128,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 await using SqliteConnection connection =
                     await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
                 Result<IEnumerable<Firearm>> result =
-                    await _firearmsService.GetFirearmsAsync(connection, cancellationToken);
+                    await _firearmsService.GetFirearmsAsync(connection, cancellationToken: cancellationToken);
 
                 if (result.IsSuccess)
                 {

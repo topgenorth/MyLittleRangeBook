@@ -1,4 +1,6 @@
-﻿namespace MyLittleRangeBook.Models
+﻿using NanoidDotNet;
+
+namespace MyLittleRangeBook.Models
 {
     public record SimpleRangeEvent
     {
@@ -56,6 +58,7 @@
         {
             var sre = new SimpleRangeEvent
             {
+                Id = Nanoid.Generate(),
                 FirearmName = firearm,
                 RoundsFired = rounds,
                 RangeName = range,
