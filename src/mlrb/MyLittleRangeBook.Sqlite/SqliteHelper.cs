@@ -93,7 +93,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                 cmd.CommandType = CommandType.Text;
                 cmd.Parameters.AddWithValue("@Id", id);
                 cmd.Parameters.AddWithValue("@FileContents", fileContents);
-                cmd.Parameters.AddWithValue("@FileName", fileContents);
+                cmd.Parameters.AddWithValue("@FileName", fileName);
 
                 object? l = await cmd.ExecuteScalarAsync(cancellationToken);
                 long rowId = l is null ? -1: Convert.ToInt64(l);

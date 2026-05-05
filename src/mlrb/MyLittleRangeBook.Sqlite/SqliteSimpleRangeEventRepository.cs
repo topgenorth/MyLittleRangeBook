@@ -1,5 +1,4 @@
-﻿using System.Data;
-using FluentResults;
+﻿using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Models;
@@ -41,50 +40,50 @@ namespace MyLittleRangeBook.Database.Sqlite
                 return await UpsertAsync(simpleRangeEvent, cancellationToken).ConfigureAwait(false);
             }
 
-            Result<ReadOnlyMemory<byte>> loadResult = await fitFileInfo.LoadFileBytesAsync(cancellationToken).ConfigureAwait(false);
+            Result<ReadOnlyMemory<byte>> loadResult =
+                await fitFileInfo.LoadFileBytesAsync(cancellationToken).ConfigureAwait(false);
             if (loadResult.IsSuccess)
             {
-                return await UpsertAsync(simpleRangeEvent,loadResult.Value.ToArray(), cancellationToken).ConfigureAwait(false);
+                return await UpsertAsync(simpleRangeEvent, loadResult.Value.ToArray(), cancellationToken)
+                    .ConfigureAwait(false);
             }
 
             // TODO [TO20260504] Need to include somethign in the result that says the FIT file didn't get saved because it couldn't be loaded
             Result<long?> r = await UpsertAsync(simpleRangeEvent, cancellationToken).ConfigureAwait(false);
-            return r;
 
+            return r;
         }
 
         public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
             byte[] fitFileContents,
             CancellationToken cancellationToken = default)
         {
-            Result<long?> finalResult;
-
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-            await using SqliteTransaction t = conn.BeginTransaction(IsolationLevel.RepeatableRead);
+            Result<long?> finalResult;
             try
             {
                 Result<long?> sreResult = await _simpleRangeLogService
                     .UpsertAsync(conn, simpleRangeEvent, cancellationToken)
                     .ConfigureAwait(false);
+
+
                 // [TO20260504] Not sure how important the file name really is.
                 string syntheticFileName = simpleRangeEvent.Id + "_" +
                                            simpleRangeEvent.EventDate.ToString("yyyyMMdd") + ".fit";
-                Result<(string id, long rowId)> writeResult = await _sqliteHelper
+                Result<(string id, long rowId)> fitResult = await _sqliteHelper
                     .WriteFileToTableAsync(conn, SqliteFileTable.FitFiles, syntheticFileName, fitFileContents,
                         cancellationToken)
                     .ConfigureAwait(false);
 
                 Result<long?> firearmResult =
                     await HandleFirearmUpsertAsync(conn, simpleRangeEvent, cancellationToken).ConfigureAwait(false);
-                t.Commit();
 
-                finalResult = Result.Merge(sreResult, writeResult, firearmResult)
-                    .ToResult<long?>();
+
+                finalResult = Result.Merge(sreResult, fitResult, firearmResult).ToResult(simpleRangeEvent.RowId);
             }
             catch (Exception e)
             {
                 finalResult = Result.Fail<long?>($"Failed to upsert simple range event: {e.Message}");
-                t.Rollback();
             }
 
             return finalResult;
