@@ -1,31 +1,18 @@
-﻿using System.Runtime.InteropServices;
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 using FluentResults;
 using MyLittleRangeBook.Database.Sqlite;
-using Serilog;
-using Shouldly;
 
 namespace MyLittleRangeBook.Sqlite
 {
     public class SqliteHelperTests
     {
         const string InMemoryConnectionString = "Data Source=:memory:";
-        readonly ILogger _logger;
+
         const string AppSettingsWithConnectionString = """
-                                              {
-                                                "ConnectionStrings": {
-                                                  "SqliteConnection": "Data Source=mlrb.db"
-                                                },
-                                                "Logging": {
-                                                  "LogLevel": {
-                                                    "Default": "Error",
-                                                    "Microsoft.Hosting.Lifetime": "Error"
-                                                  }
-                                                }
-                                              }
-                                              """;
-        const string AppSettingsWithOutConnectionString = """
                                                        {
+                                                         "ConnectionStrings": {
+                                                           "SqliteConnection": "Data Source=mlrb.db"
+                                                         },
                                                          "Logging": {
                                                            "LogLevel": {
                                                              "Default": "Error",
@@ -35,9 +22,22 @@ namespace MyLittleRangeBook.Sqlite
                                                        }
                                                        """;
 
+        const string AppSettingsWithOutConnectionString = """
+                                                          {
+                                                            "Logging": {
+                                                              "LogLevel": {
+                                                                "Default": "Error",
+                                                                "Microsoft.Hosting.Lifetime": "Error"
+                                                              }
+                                                            }
+                                                          }
+                                                          """;
+
+        readonly ILogger _logger;
+
         public SqliteHelperTests()
         {
-            _logger = NSubstitute.Substitute.For<ILogger>();
+            _logger = Substitute.For<ILogger>();
         }
 
         [Fact]
@@ -56,19 +56,21 @@ namespace MyLittleRangeBook.Sqlite
         public async Task Should_Apply_DbUp_Migrations()
         {
             // [TO20260419] Not a very good test - we just assume that the migrations will run if the result is success.
-            SqliteHelper helper = new SqliteHelper(_logger, InMemoryConnectionString);
+            var helper = new SqliteHelper(_logger, InMemoryConnectionString);
             Result<bool> result = await helper.ApplyDbupMigrationsAsync();
 
             result.IsSuccess.ShouldBeTrue();
         }
 
         [Theory]
-        [InlineData("{}", "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.db;Mode=ReadWriteCreate", true)]
+        [InlineData("{}", "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.db;Mode=ReadWriteCreate",
+            true)]
         [InlineData(AppSettingsWithConnectionString, "Data Source=mlrb.db", false)]
-        [InlineData(AppSettingsWithOutConnectionString, "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.db;Mode=ReadWriteCreate", true)]
+        [InlineData(AppSettingsWithOutConnectionString,
+            "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.db;Mode=ReadWriteCreate", true)]
         public void SqliteExtensions_EnsureSqliteConnectionString(string? json, string expected, bool wasUpdated)
         {
-            var n = JsonNode.Parse(json ??"{}");
+            var n = JsonNode.Parse(json ?? "{}");
             n.ShouldNotBeNull();
 
             n.EnsureDefaultSqliteConnectionString().ShouldBe(wasUpdated);

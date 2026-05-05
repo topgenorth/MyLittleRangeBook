@@ -39,7 +39,8 @@ namespace MyLittleRangeBook.Sqlite
             upsertResult.IsSuccess.ShouldBeTrue("Failed to upsert the FIT record in the database");
 
             // Now get
-            Result<(EntityId EntityId, string FileName, ReadOnlyMemory<byte> contents)> getResult = await sut.GetFitFileAsync(conn, id);
+            Result<(EntityId EntityId, string FileName, ReadOnlyMemory<byte> contents)> getResult =
+                await sut.GetFitFileAsync(conn, id);
 
             getResult.IsSuccess.ShouldBeTrue();
             getResult.Value.EntityId.Id.ShouldBe(id);
@@ -55,7 +56,7 @@ namespace MyLittleRangeBook.Sqlite
 
             string id = await Nanoid.GenerateAsync();
             ReadOnlyMemory<byte> contents1 = new byte[] { 1, 2, 3, 4, 5 }; // Initial dummy FIT data
-            string fileName1 = "test1.fit";
+            var fileName1 = "test1.fit";
 
             // Insert first
             Result<EntityId> upsertResult1 = await sut.UpsertFitFileAsync(conn, id, contents1, fileName1);
@@ -64,14 +65,15 @@ namespace MyLittleRangeBook.Sqlite
 
             // Update with new data
             ReadOnlyMemory<byte> contents2 = new byte[] { 6, 7, 8, 9, 10 }; // Updated dummy FIT data
-            string fileName2 = "test2.fit";
+            var fileName2 = "test2.fit";
 
             Result<EntityId> upsertResult2 = await sut.UpsertFitFileAsync(conn, id, contents2, fileName2);
             upsertResult2.IsSuccess.ShouldBeTrue();
             upsertResult2.Value.RowId!.Value.ShouldBe(originalRowId); // RowId should remain the same
 
             // Get and verify updated data
-            Result<(EntityId EntityId, string FileName, ReadOnlyMemory<byte> contents)> getResult = await sut.GetFitFileAsync(conn, id);
+            Result<(EntityId EntityId, string FileName, ReadOnlyMemory<byte> contents)> getResult =
+                await sut.GetFitFileAsync(conn, id);
             getResult.IsSuccess.ShouldBeTrue();
             getResult.Value.EntityId.Id.ShouldBe(id);
             getResult.Value.EntityId.RowId.ShouldBe(originalRowId);
@@ -97,7 +99,8 @@ namespace MyLittleRangeBook.Sqlite
             deleteResult.IsSuccess.ShouldBeTrue();
 
             // Try to get, should fail
-            Result<(EntityId EntityId, string FileName, ReadOnlyMemory<byte> contents)> getResult = await sut.GetFitFileAsync(conn, id);
+            Result<(EntityId EntityId, string FileName, ReadOnlyMemory<byte> contents)> getResult =
+                await sut.GetFitFileAsync(conn, id);
             getResult.IsFailed.ShouldBeTrue();
         }
     }

@@ -11,15 +11,14 @@ namespace MyLittleRangeBook.Sqlite
     /// </summary>
     public abstract class SqliteConnectionTestBase
     {
-        readonly string _sqliteDbFileName = Path.GetTempFileName();
         readonly string _inMemory = "Data Source=:memory:";
+        readonly string _sqliteDbFileName = Path.GetTempFileName();
 
         static SqliteConnectionTestBase()
         {
             SqliteHelperExtensions.SetSqlite3ProviderAndInit();
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
-
         }
 
         protected SqliteConnectionTestBase()

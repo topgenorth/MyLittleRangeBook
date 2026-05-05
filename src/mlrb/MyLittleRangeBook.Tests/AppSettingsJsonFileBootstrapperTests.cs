@@ -2,7 +2,6 @@
 using FluentResults;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database.Sqlite;
-using Shouldly;
 
 namespace MyLittleRangeBook
 {
@@ -56,8 +55,8 @@ namespace MyLittleRangeBook
             _appSettingsJson.ShouldNotBeNull();
             _appSettingsJson["ConnectionStrings"].ShouldNotBeNull();
             _appSettingsJson["ConnectionStrings"]!["SqliteConnection"].ShouldNotBeNull();
-             string connectionString = _appSettingsJson["ConnectionStrings"]!["SqliteConnection"]!.GetValue<string>()!;
-             connectionString.ShouldNotBeEmpty();
+            string connectionString = _appSettingsJson["ConnectionStrings"]!["SqliteConnection"]!.GetValue<string>()!;
+            connectionString.ShouldNotBeEmpty();
         }
 
         [Fact]
@@ -73,7 +72,7 @@ namespace MyLittleRangeBook
         [Fact]
         public void SerilogBootstrapper_ShouldCreateSerilogSection()
         {
-            JsonNode rootNode = JsonNode.Parse("{}")!;
+            var rootNode = JsonNode.Parse("{}")!;
 
             Result result = SerilogAppSettingsJsonFileBootstrap.SerilogSection(rootNode);
 

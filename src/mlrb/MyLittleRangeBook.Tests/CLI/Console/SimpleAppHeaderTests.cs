@@ -24,7 +24,6 @@ namespace MyLittleRangeBook.CLI.Console
             header.Print(c);
             c.Output.ShouldContain(AnsiConsoleExtensions.AppName);
             c.Output.ShouldContain("1.2.3");
-
         }
     }
 }
