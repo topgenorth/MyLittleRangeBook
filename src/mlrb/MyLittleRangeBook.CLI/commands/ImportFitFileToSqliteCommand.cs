@@ -5,6 +5,9 @@ using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.IO;
+using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Services;
+using NanoidDotNet;
 
 namespace MyLittleRangeBook.CLI.Database.Sqlite
 {
@@ -14,21 +17,27 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
     [RegisterCommands("fit import")]
     public class ImportFitFileToSqliteCommand
     {
-        readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
+        readonly ICliDisplay _cliDisplay;
+        readonly IFitFilesDbService _filesDbService;
         readonly ISqliteHelper _sqliteHelper;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ImportFitFileToSqliteCommand" /> class.
         /// </summary>
         /// <param name="cliDisplay">The CLI display helper for user interaction.</param>
-        /// <param name="logger">The logger for recording operation details.</param>
         /// <param name="sqliteHelper">The helper for SQLite database operations.</param>
-        public ImportFitFileToSqliteCommand(ICliDisplay cliDisplay, ILogger logger, ISqliteHelper sqliteHelper)
+        /// <param name="filesDbService"></param>
+        /// <param name="logger"></param>
+        public ImportFitFileToSqliteCommand(ICliDisplay cliDisplay,
+            ISqliteHelper sqliteHelper,
+            IFitFilesDbService filesDbService,
+            ILogger logger)
         {
             _cliDisplay = cliDisplay;
-            _logger = logger;
             _sqliteHelper = sqliteHelper;
+            _filesDbService = filesDbService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -43,72 +52,40 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             CancellationToken cancellationToken = default)
         {
             // TODO [TO20260419] Improve console output.
+
             _cliDisplay.WriteAppInfo("Importing FIT File");
 
-            Result<int> result = await _cliDisplay.RunStatusAsync<Result<int>>("Importing FIT File",
-                async ct => await DoWorkAsync(fitFile, ct), cancellationToken);
-
-            if (result.IsSuccess)
+            Result<ReadOnlyMemory<byte>> fileResult =
+                await fitFile.LoadFileBytesAsync(cancellationToken).ConfigureAwait(false);
+            if (fileResult.IsFailed)
             {
-                _cliDisplay.WriteSuccess($"Imported FIT File {fitFile}.");
+                _logger.Error("Failed to read FIT file {fileName}.", fitFile);
+                _cliDisplay.WriteFailure($"Failed to read FIT file {fitFile}.");
+
+                return ReturnCodes.FIT_FILE_READ_FAILURE;
             }
-            else
-            {
-                _cliDisplay.WriteFailure($"Failed to import FIT {fitFile}");
-            }
-
-            return result.IsSuccess ? result.Value : ReturnCodes.FIT_FILE_READ_FAILURE;
-        }
-
-
-
-        /// <summary>
-        ///     Performs the actual work of importing the FIT sqliteFile.
-        /// </summary>
-        /// <param name="fitFile">The path to the FIT sqliteFile to be imported.</param>
-        /// <param name="cancellationToken">A token to cancel the operation.</param>
-        /// <returns>
-        ///     A task that represents the asynchronous work. The task result contains a <see cref="Result{T}" /> with the
-        ///     operation status.
-        /// </returns>
-        async Task<Result<int>> DoWorkAsync(string fitFile, CancellationToken cancellationToken)
-        {
-            Result<ReadOnlyMemory<byte>> fileContents = await
-                fitFile.LoadFileBytesAsync(cancellationToken).ConfigureAwait(false);
-            if (fileContents.IsFailed)
-            {
-                _logger.Error("Failed to load FIT  {fitFile}.", fitFile);
-                var err = new FailedToLoadFileError(fitFile);
-                var r = Result.Fail<int>(err);
-
-                return r;
-            }
-
-            byte[] bytesToSave = fileContents.Value.ToArray();
 
             await using SqliteConnection connection = await _sqliteHelper
                 .GetDatabaseConnectionAsync(cancellationToken)
                 .ConfigureAwait(false);
-            Result<(string id, long rowId)> writeResult = await _sqliteHelper
-                .WriteFileToTableAsync(connection, SqliteFileTable.FitFiles, fitFile, bytesToSave, cancellationToken)
+            string? id = await Nanoid.GenerateAsync().ConfigureAwait(false);
+            Result<EntityId> fitResult = await _filesDbService
+                .UpsertFitFileAsync(connection, id, fileResult.Value, fitFile, cancellationToken)
                 .ConfigureAwait(false);
 
-
-            if (writeResult.IsSuccess)
+            if (fitResult.IsSuccess)
             {
-                Success? success = new WroteFitFileToDatabaseSuccess(fitFile, bytesToSave.Length)
-                    .WithMetadata("RowId", writeResult.Value.rowId)
-                    .WithMetadata("Id", writeResult.Value.id);
-                _logger.Information("Saved {bytes} bytes from FIT sqliteFile {fitFile} to database.",
-                    bytesToSave.Length, fitFile);
+                Success? success = new WroteFitFileToDatabaseSuccess(fitFile, fileResult.Value.Length)
+                    .Enrich(fitResult.Value);
+                _cliDisplay.WriteSuccess($"Saved {fileResult.Value.Length} bytes from FIT file {fitFile} to database.");
 
-                return Result.Ok(ReturnCodes.SUCCESS).WithSuccess(success);
+                return ReturnCodes.SUCCESS;
             }
 
-            Error? err2 = new FailedToWriteFitFileToDatabaseError(fitFile, bytesToSave.Length);
-            Result<int>? r2 = new Result<int>().WithValue(ReturnCodes.SQL_FAILED_TO_WRITE_TO_DATABASE).WithError(err2);
+            _logger.Warning("Failed to save the {fileName} to the database.", fitFile);
+            _cliDisplay.WriteFailure($"Failed to save {fitFile} to the database.");
+            return ReturnCodes.SQL_FAILED_TO_WRITE_TO_DATABASE;
 
-            return r2;
         }
     }
 }

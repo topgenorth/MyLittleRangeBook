@@ -1,23 +1,27 @@
-﻿using FluentResults;
+﻿using System.Data;
+using FluentResults;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook.Sqlite
 {
-    public class SqliteSimpleRangeEventRepositoryTests
+    public class SqliteSimpleRangeEventRepositoryTests : SqliteConnectionTestBase
     {
-
         [Fact]
         public async Task Should_Upsert_SimpleRangeEvent_With_FitFileContents()
         {
+            IFitFilesDbService fitFilesDbService = Substitute.For<IFitFilesDbService>();
+            fitFilesDbService.UpsertFitFileAsync(Arg.Any<IDbConnection>(),
+                    Arg.Any<string>(),
+                    Arg.Any<ReadOnlyMemory<byte>>(),
+                    Arg.Any<string?>())
+                .Returns(Task.FromResult(Result.Ok().ToResult(new EntityId("x", 1)))
+                );
 
-            ILogger? logger = Substitute.For<ILogger>();
-            var helper = new SqliteHelper(logger, $"Data Source={Path.GetTempFileName()}");
-            Result<bool> migrationResult = await helper.ApplyDbupMigrationsAsync();
-            migrationResult.IsSuccess.ShouldBeTrue();
 
             var simpleRangeLogService = new SqliteSimpleRangeEventService();
-            var repo = new SqliteSimpleRangeEventRepository(helper, simpleRangeLogService);
+            var repo = new SqliteSimpleRangeEventRepository(SqliteHelper, simpleRangeLogService, fitFilesDbService);
 
             var simpleRangeEvent = SimpleRangeEvent.New("TestFirearm", 50, "TestRange", "TestAmmo", "TestNotes");
             byte[] fitFileContents = [1, 2, 3, 4, 5];
