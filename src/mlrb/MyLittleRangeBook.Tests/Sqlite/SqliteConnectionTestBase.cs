@@ -1,4 +1,5 @@
-﻿using FluentResults;
+﻿using Dapper;
+using FluentResults;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
 
@@ -11,11 +12,21 @@ namespace MyLittleRangeBook.Sqlite
     public abstract class SqliteConnectionTestBase
     {
         readonly string _sqliteDbFileName = Path.GetTempFileName();
+        readonly string _inMemory = "Data Source=:memory:";
+
+        static SqliteConnectionTestBase()
+        {
+            SqliteHelperExtensions.SetSqlite3ProviderAndInit();
+            SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
+            SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
+
+        }
 
         protected SqliteConnectionTestBase()
         {
             Logger = Substitute.For<ILogger>();
-            SqliteHelper = new SqliteHelper(Logger, $"Data Source={_sqliteDbFileName}");
+            var tempDb = $"Data Source={Path.GetTempFileName()}";
+            SqliteHelper = new SqliteHelper(Logger, tempDb);
         }
 
         /// <summary>

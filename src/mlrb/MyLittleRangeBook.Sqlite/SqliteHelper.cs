@@ -38,8 +38,10 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
             else
             {
-                var builder =
-                    new SqliteConnectionStringBuilder(connectionString) { Mode = SqliteOpenMode.ReadWriteCreate };
+                var builder = new SqliteConnectionStringBuilder(connectionString)
+                {
+                    Mode = SqliteOpenMode.ReadWriteCreate
+                };
                 _connectionString = builder.ConnectionString;
                 DatabaseFile = builder.DataSource;
             }

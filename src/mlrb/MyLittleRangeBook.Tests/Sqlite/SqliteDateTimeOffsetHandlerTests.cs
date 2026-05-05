@@ -6,36 +6,14 @@ using NanoidDotNet;
 
 namespace MyLittleRangeBook.Sqlite
 {
-    public class DatabaseTypeHandlerTests
+    public class SqliteDateTimeOffsetHandlerTests : SqliteConnectionTestBase
     {
         [Fact]
         public async Task Should_Query_DateTimeOffset_From_Sqlite()
         {
             // Explicitly register handlers as they are registered in Program.Main which might not run for tests
-            SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
-            SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
 
-            await using var connection = new SqliteConnection("Data Source=:memory:");
-            await connection.OpenAsync();
-
-            await connection.ExecuteAsync(
-                """
-                CREATE TABLE IF NOT EXISTS SimpleRangeEvents
-                (
-                    RowId           INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Id              TEXT                              NOT NULL, --NanoID unique key.
-                    EventDate       TEXT                              NOT NULL, -- The date of the event.
-                    FirearmName     TEXT                              NOT NULL, -- The name of the firearm. Should match the Firearms table
-                    RangeName       TEXT, -- The name of the range.
-                    RoundsFired     INTEGER DEFAULT 0                 NOT NULL, -- How many rounds were fired.
-                    AmmoDescription TEXT,
-                    Notes           TEXT,
-                    Created  TEXT default CURRENT_TIMESTAMP          not null, -- The date the record was created.
-                    Modified TEXT default CURRENT_TIMESTAMP          not null, -- The date the file was last modified.
-                    CONSTRAINT SimpleRangeEvents_Id UNIQUE (ID)
-                );
-                """);
-
+            await using SqliteConnection connection = await GetSqliteConnectionAsync();
 
             var rangeEvent = new SimpleRangeEvent
             {
