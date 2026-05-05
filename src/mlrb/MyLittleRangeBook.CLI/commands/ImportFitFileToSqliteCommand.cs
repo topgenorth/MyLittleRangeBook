@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
-using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
 
 namespace MyLittleRangeBook.CLI.Database.Sqlite
@@ -15,9 +14,6 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
     [RegisterCommands("fit import")]
     public class ImportFitFileToSqliteCommand
     {
-        const string InsertFitFileSql =
-            @"INSERT INTO fitfiles (id, filename, contents) VALUES (@id, @filename, @filecontents)";
-
         readonly ICliDisplay _cliDisplay;
         readonly ILogger _logger;
         readonly ISqliteHelper _sqliteHelper;

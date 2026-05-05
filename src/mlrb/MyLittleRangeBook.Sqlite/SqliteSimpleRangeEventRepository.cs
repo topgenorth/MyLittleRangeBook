@@ -1,5 +1,7 @@
-﻿using FluentResults;
+﻿using System.Data;
+using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
@@ -8,17 +10,14 @@ namespace MyLittleRangeBook.Database.Sqlite
 {
     public class SqliteSimpleRangeEventRepository : ISimpleRangeEventRepository
     {
-        readonly ILogger _logger;
         readonly ISimpleRangeLogService _simpleRangeLogService;
         readonly ISqliteHelper _sqliteHelper;
 
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
-            [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeLogService simpleRangeLogService,
-            ILogger logger)
+            [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeLogService simpleRangeLogService)
         {
             _sqliteHelper = sqliteHelper;
             _simpleRangeLogService = simpleRangeLogService;
-            _logger = logger;
         }
 
         /// <summary>
@@ -37,39 +36,55 @@ namespace MyLittleRangeBook.Database.Sqlite
             FileInfo fitFileInfo,
             CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
-        }
+            if (!fitFileInfo.Exists)
+            {
+                return await UpsertAsync(simpleRangeEvent, cancellationToken).ConfigureAwait(false);
+            }
 
-        async Task<Result<(string id, long rowId)>> HandleFitFileUpsertAsync(FileInfo fitFileInfo, CancellationToken cancellationToken, SqliteConnection conn)
-        {
-            byte[] contents = await File.ReadAllBytesAsync(fitFileInfo.FullName, cancellationToken);
-            return await _sqliteHelper
-                .WriteFileToTableAsync(conn, SqliteFileTable.FitFiles, fitFileInfo.FullName, contents, cancellationToken )
-                .ConfigureAwait(false);
+            Result<ReadOnlyMemory<byte>> loadResult = await fitFileInfo.LoadFileBytesAsync(cancellationToken).ConfigureAwait(false);
+            if (loadResult.IsSuccess)
+            {
+                return await UpsertAsync(simpleRangeEvent,loadResult.Value.ToArray(), cancellationToken).ConfigureAwait(false);
+            }
+
+            // TODO [TO20260504] Need to include somethign in the result that says the FIT file didn't get saved because it couldn't be loaded
+            Result<long?> r = await UpsertAsync(simpleRangeEvent, cancellationToken).ConfigureAwait(false);
+            return r;
+
         }
 
         public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
             byte[] fitFileContents,
             CancellationToken cancellationToken = default)
         {
-            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-
-            Result<long?> sreResult = await _simpleRangeLogService.UpsertAsync(conn, simpleRangeEvent, cancellationToken)
-                .ConfigureAwait(false);
-            Result<long?> fitFileResult = await HandleFitFileUpsertAsync(conn, simpleRangeEvent, fitFileContents, cancellationToken)
-                .ConfigureAwait(false);
-            Result<long?> firearmResult = await HandleFirearmUpsertAsync(conn, simpleRangeEvent, cancellationToken).ConfigureAwait(false);
-
             Result<long?> finalResult;
-            if (sreResult.IsSuccess)
+
+            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+            await using SqliteTransaction t = conn.BeginTransaction(IsolationLevel.RepeatableRead);
+            try
             {
-                // TODO [TO20260504] create the links from SRE -> Firearm & FIT.
-                finalResult = Result.Ok();
+                Result<long?> sreResult = await _simpleRangeLogService
+                    .UpsertAsync(conn, simpleRangeEvent, cancellationToken)
+                    .ConfigureAwait(false);
+                // [TO20260504] Not sure how important the file name really is.
+                string syntheticFileName = simpleRangeEvent.Id + "_" +
+                                           simpleRangeEvent.EventDate.ToString("yyyyMMdd") + ".fit";
+                Result<(string id, long rowId)> writeResult = await _sqliteHelper
+                    .WriteFileToTableAsync(conn, SqliteFileTable.FitFiles, syntheticFileName, fitFileContents,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+
+                Result<long?> firearmResult =
+                    await HandleFirearmUpsertAsync(conn, simpleRangeEvent, cancellationToken).ConfigureAwait(false);
+                t.Commit();
+
+                finalResult = Result.Merge(sreResult, writeResult, firearmResult)
+                    .ToResult<long?>();
             }
-            else
+            catch (Exception e)
             {
-                // [TO20260504] Nothing to do.
-                finalResult = sreResult;
+                finalResult = Result.Fail<long?>($"Failed to upsert simple range event: {e.Message}");
+                t.Rollback();
             }
 
             return finalResult;
@@ -79,6 +94,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             CancellationToken cancellationToken = default)
         {
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+
             return await _simpleRangeLogService.GetSimpleRangeEventsAsync(conn, cancellationToken);
         }
 
@@ -90,23 +106,21 @@ namespace MyLittleRangeBook.Database.Sqlite
             return await _simpleRangeLogService.DeleteAsync(conn, simpleRangeEvent, cancellationToken);
         }
 
-        async Task<Result> HandleFitFileUpsertAsync(SqliteConnection conn,
-            SimpleRangeEvent sre,
-            byte[] fitFileContents,
-            CancellationToken cancellationToken)
+        async Task<Result<(string id, long rowId)>> HandleFitFileUpsertAsync(FileInfo fitFileInfo,
+            CancellationToken cancellationToken,
+            SqliteConnection conn)
         {
-            if (fitFileContents.Length == 0)
-            {
-                await Task.Yield();
-                return Result.Ok();
-            }
+            byte[] contents = await File.ReadAllBytesAsync(fitFileInfo.FullName, cancellationToken);
 
-            return Result.Fail("Not yet implemented.");
+            return await _sqliteHelper
+                .WriteFileToTableAsync(conn, SqliteFileTable.FitFiles, fitFileInfo.FullName, contents,
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
 
-
         /// <summary>
-        /// Add a firearm using the firearmName from the SimpleRangeEvent. If the firearm exists, then just update it's modified field.
+        ///     Add a firearm using the firearmName from the SimpleRangeEvent. If the firearm exists, then just update it's
+        ///     modified field.
         /// </summary>
         /// <param name="conn"></param>
         /// <param name="simpleRangeEvent"></param>
@@ -137,19 +151,16 @@ namespace MyLittleRangeBook.Database.Sqlite
                 object? x2 = await insertCmd.ExecuteScalarAsync(cancellationToken);
                 if (x2 is null)
                 {
-                    _logger.Warning("Could not save Firearm {FirearmName}", simpleRangeEvent.FirearmName);
                     finalResult = Result.Fail<long?>(couldntSaveFirearmError);
                 }
                 else
                 {
-
                     var rowId = Convert.ToInt64(x2);
                     finalResult = new Result<long?>().WithValue(rowId);
                 }
             }
             catch (Exception e)
             {
-                _logger.Warning(e, "Could not save Firearm {FirearmName}", simpleRangeEvent.FirearmName);
                 finalResult = Result.Fail<long?>(couldntSaveFirearmError.CausedBy(e));
             }
 

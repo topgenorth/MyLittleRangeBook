@@ -17,7 +17,6 @@ namespace MyLittleRangeBook.Services
         /// Will create a new Range Event and associate the FIT file with it.
         /// </summary>
         /// <param name="simpleRangeEvent"></param>
-        /// <param name="fitFileContents"></param>
         /// <param name="fitFileInfo"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
