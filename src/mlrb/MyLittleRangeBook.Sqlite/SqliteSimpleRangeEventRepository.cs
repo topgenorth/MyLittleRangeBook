@@ -22,55 +22,104 @@ namespace MyLittleRangeBook.Database.Sqlite
         }
 
         /// <summary>
-        /// Will add or update a simple range event. If necessary, then a new Firearm record will be added.
+        ///     Will add or update a simple range event. If necessary, then a new Firearm record will be added.
         /// </summary>
         /// <param name="simpleRangeEvent"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-
         public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
             CancellationToken cancellationToken = default)
         {
+            throw new NotImplementedException();
+        }
+
+        public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
+            FileInfo fitFileInfo,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        async Task<Result<(string id, long rowId)>> HandleFitFileUpsertAsync(FileInfo fitFileInfo, CancellationToken cancellationToken, SqliteConnection conn)
+        {
+            byte[] contents = await File.ReadAllBytesAsync(fitFileInfo.FullName, cancellationToken);
+            return await _sqliteHelper
+                .WriteFileToTableAsync(conn, SqliteFileTable.FitFiles, fitFileInfo.FullName, contents, cancellationToken )
+                .ConfigureAwait(false);
+        }
+
+        public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
+            byte[] fitFileContents,
+            CancellationToken cancellationToken = default)
+        {
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-            Result<long?> result = await _simpleRangeLogService.UpsertAsync(conn, simpleRangeEvent, cancellationToken);
-            if (result.IsSuccess)
+
+            Result<long?> sreResult = await _simpleRangeLogService.UpsertAsync(conn, simpleRangeEvent, cancellationToken)
+                .ConfigureAwait(false);
+            Result<long?> fitFileResult = await HandleFitFileUpsertAsync(conn, simpleRangeEvent, fitFileContents, cancellationToken)
+                .ConfigureAwait(false);
+            Result<long?> firearmResult = await HandleFirearmUpsertAsync(conn, simpleRangeEvent, cancellationToken).ConfigureAwait(false);
+
+            Result<long?> finalResult;
+            if (sreResult.IsSuccess)
             {
-                _logger.Verbose("SimpleRangeEvent {Id} saved RowId: {RowId}", simpleRangeEvent.Id,
-                    result.Value);
-
-                if (result is not { IsSuccess: true, Value: > 0 })
-                {
-                    return result;
-                }
-
-                Result<long> firearmRowIdResult = await UpsertFirearmAsync(conn, simpleRangeEvent, cancellationToken);
-                // [TO20260421] For now, this isn't a big deal.
-                _logger.Verbose(
-                    firearmRowIdResult.IsFailed
-                        ? "Firearm {FirearmName} could not be saved for SimpleRangeEvent {Id}"
-                        : "Firearm {FirearmName} saved for SimpleRangeEvent {Id}",
-                    simpleRangeEvent.FirearmName, simpleRangeEvent.Id);
+                // TODO [TO20260504] create the links from SRE -> Firearm & FIT.
+                finalResult = Result.Ok();
             }
             else
             {
-                _logger.Warning("SimpleRangeEvent {Id} could not be saved. RowId {RowId}", simpleRangeEvent.Id,
-                    result.Value ?? -1);
-                Error? reason  = new Error("SimpleRangeEvent could not be saved")
-                    .WithMetadata("DataSource", conn.DataSource);
-                result = result.WithError(reason);
+                // [TO20260504] Nothing to do.
+                finalResult = sreResult;
             }
 
-
-            return result;
+            return finalResult;
         }
 
-        async Task<Result<long>> UpsertFirearmAsync(SqliteConnection conn,
+        public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
+            CancellationToken cancellationToken = default)
+        {
+            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+            return await _simpleRangeLogService.GetSimpleRangeEventsAsync(conn, cancellationToken);
+        }
+
+        public async Task<Result<bool>> DeleteAsync(SimpleRangeEvent simpleRangeEvent,
+            CancellationToken cancellationToken = default)
+        {
+            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+
+            return await _simpleRangeLogService.DeleteAsync(conn, simpleRangeEvent, cancellationToken);
+        }
+
+        async Task<Result> HandleFitFileUpsertAsync(SqliteConnection conn,
+            SimpleRangeEvent sre,
+            byte[] fitFileContents,
+            CancellationToken cancellationToken)
+        {
+            if (fitFileContents.Length == 0)
+            {
+                await Task.Yield();
+                return Result.Ok();
+            }
+
+            return Result.Fail("Not yet implemented.");
+        }
+
+
+        /// <summary>
+        /// Add a firearm using the firearmName from the SimpleRangeEvent. If the firearm exists, then just update it's modified field.
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <param name="simpleRangeEvent"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        async Task<Result<long?>> HandleFirearmUpsertAsync(SqliteConnection conn,
             SimpleRangeEvent simpleRangeEvent,
             CancellationToken cancellationToken)
         {
             // [TO20260421] Need to create a new one.
-            Result<long> result;
+            Result<long?> finalResult;
             Error? couldntSaveFirearmError = new Error("Could not save Firearm")
+                .WithMetadata("SimpleRangeEventId", simpleRangeEvent.Id)
                 .WithMetadata("FirearmName", simpleRangeEvent.FirearmName);
 
             try
@@ -86,41 +135,25 @@ namespace MyLittleRangeBook.Database.Sqlite
                 insertCmd.Parameters.AddWithValue("@firearm_name", simpleRangeEvent.FirearmName);
 
                 object? x2 = await insertCmd.ExecuteScalarAsync(cancellationToken);
-                if (long.TryParse(x2?.ToString() ?? "", out long rowId2))
+                if (x2 is null)
                 {
-                    result = new Result<long>().WithValue(rowId2);
+                    _logger.Warning("Could not save Firearm {FirearmName}", simpleRangeEvent.FirearmName);
+                    finalResult = Result.Fail<long?>(couldntSaveFirearmError);
                 }
                 else
                 {
-                    _logger.Warning("Could not save Firearm {FirearmName}", simpleRangeEvent.FirearmName);
-                    result = Result.Fail<long>(couldntSaveFirearmError);
-                }
 
+                    var rowId = Convert.ToInt64(x2);
+                    finalResult = new Result<long?>().WithValue(rowId);
+                }
             }
             catch (Exception e)
             {
                 _logger.Warning(e, "Could not save Firearm {FirearmName}", simpleRangeEvent.FirearmName);
-                result = Result.Fail<long>(couldntSaveFirearmError.CausedBy(e));
+                finalResult = Result.Fail<long?>(couldntSaveFirearmError.CausedBy(e));
             }
 
-            return result;
-        }
-
-        public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
-            CancellationToken cancellationToken = default)
-        {
-            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-            Serilog.Log.Verbose("SqliteConnectionString: " + conn.ConnectionString);
-
-            return await _simpleRangeLogService.GetSimpleRangeEventsAsync(conn, cancellationToken);
-        }
-
-        public async Task<Result<bool>> DeleteAsync(SimpleRangeEvent simpleRangeEvent,
-            CancellationToken cancellationToken = default)
-        {
-            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-
-            return await _simpleRangeLogService.DeleteAsync(conn, simpleRangeEvent, cancellationToken);
+            return finalResult;
         }
     }
 }

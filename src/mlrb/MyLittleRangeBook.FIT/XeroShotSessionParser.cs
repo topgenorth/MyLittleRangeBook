@@ -4,7 +4,8 @@ using FluentResults;
 using MyLittleRangeBook.FIT.Model;
 using DynastreamFile = Dynastream.Fit.File;
 using File = System.IO.File;
-using DynamstreamDateTime = Dynastream.Fit.DateTime;
+using MyLittleRangeBook;
+using MyLittleRangeBook.IO;
 
 namespace MyLittleRangeBook.FIT
 {
@@ -38,7 +39,7 @@ namespace MyLittleRangeBook.FIT
             Result<ShotSession> result;
             try
             {
-                result = (await filePath.LoadFitFileBytesAsync(cancellationToken))
+                result = (await filePath.LoadFileBytesAsync(cancellationToken))
                     .Bind(bytesFromFitFile =>
                     {
                         // TODO [TO20260405] Refactor this to get rid of the dependency on CommunityToolkit.HighPerformance
@@ -205,13 +206,13 @@ namespace MyLittleRangeBook.FIT
         /// <param name="fitFile"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<Result<ShotSession>> ExploreFITFileAsync(string fitFile, CancellationToken cancellationToken)
+        public async Task<Result<ShotSession>> ExploreFitFileAsync(string fitFile, CancellationToken cancellationToken)
         {
             ILogger logger = CreateFileLogger(fitFile);
             Result<ShotSession> result;
             try
             {
-                result = (await fitFile.LoadFitFileBytesAsync(cancellationToken))
+                result = (await fitFile.LoadFileBytesAsync(cancellationToken))
                     .Bind(bytesFromFitFile =>
                     {
                         // TODO [TO20260405] Refactor this to get rid of the dependency on CommunityToolkit.HighPerformance

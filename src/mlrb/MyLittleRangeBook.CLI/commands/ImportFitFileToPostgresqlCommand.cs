@@ -4,6 +4,7 @@ using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.FIT;
+using MyLittleRangeBook.IO;
 using MyLittleRangeBook.PgSQL;
 using NanoidDotNet;
 using Npgsql;
@@ -82,22 +83,21 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
                 return Result.Fail(new FitFileNotFoundError(sourceFile)).ToResult(ReturnCodes.FIT_FILE_NOT_FOUND);
             }
 
-            Result<ReadOnlyMemory<byte>> fileContents = await sourceFile.LoadFitFileBytesAsync(cancellationToken);
+            Result<ReadOnlyMemory<byte>> fileContents = await sourceFile.LoadFileBytesAsync(cancellationToken).ConfigureAwait(false);
             if (fileContents.IsFailed)
             {
                 _logger.Error("Failed to load FIT file {fitFile}.", sourceFile);
 
-                return Result.Fail(new FailedToLoadFitFileError(sourceFile)).ToResult(ReturnCodes.FIT_FILE_READ_FAILURE);
+                return Result.Fail(new FailedToLoadFileError(sourceFile)).ToResult(ReturnCodes.FIT_FILE_READ_FAILURE);
             }
 
             byte[] bytesToSave = fileContents.Value.ToArray();
 
 
-            long rowId;
             try
             {
-                using IDbConnection connection = await _databaseHelper.GetDatabaseConnectionAsync(cancellationToken);
-                rowId = await SaveBytesAsync((NpgsqlConnection)connection, bytesToSave, sourceFile, cancellationToken);
+                using IDbConnection connection = await _databaseHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+                long rowId = await SaveBytesAsync((NpgsqlConnection)connection, bytesToSave, sourceFile, cancellationToken).ConfigureAwait(false);
                 Success? success = new WroteFitFileToDatabaseSuccess(sourceFile, bytesToSave.Length)
                     .WithMetadata("RowId", rowId);
 

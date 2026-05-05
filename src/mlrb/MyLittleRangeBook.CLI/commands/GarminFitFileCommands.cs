@@ -36,7 +36,7 @@ namespace MyLittleRangeBook.CLI
             _cliDisplay.WriteAppInfo();
             _cliDisplay.Console.MarkupLine($"Exploring the FIT file {file}");
 
-            Result<ShotSession> result = await ((XeroShotSessionParser) _xeroParser).ExploreFITFileAsync(file, cancellationToken);
+            Result<ShotSession> result = await ((XeroShotSessionParser) _xeroParser).ExploreFitFileAsync(file, cancellationToken);
             if (result.IsFailed)
             {
                 _cliDisplay.Console.MarkupLine($"[red]Failed to explore FIT file {file}.[/]");

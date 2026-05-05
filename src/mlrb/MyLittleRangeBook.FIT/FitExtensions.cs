@@ -26,19 +26,22 @@ namespace MyLittleRangeBook.FIT
         {
             return msg.GetTimestamp().GetDateTime().ToUniversalTime();
         }
+
         public static DateTimeOffset GetTimestampUtc(this ChronoShotDataMesg msg)
         {
             return msg.GetTimestamp().GetDateTime().ToUniversalTime();
         }
+
         public static DateTimeOffset GetTimeCreatedUtc(this FileIdMesg msg)
         {
             return msg.GetTimeCreated().GetDateTime().ToUniversalTime();
-
         }
+
         public static DateTimeOffset GetTimestampUtc(this DeviceInfoMesg msg)
         {
             return msg.GetTimestamp().GetDateTime().ToUniversalTime();
         }
+
         /// <summary>
         ///     Converts a FIT DateTime to a .NET DateTimeOffset. Returns null if the input is null.
         /// </summary>
@@ -73,26 +76,8 @@ namespace MyLittleRangeBook.FIT
             return serialNumber is null ? Nanoid.Generate() : serialNumber.Value.ToShotSessionId();
         }
 
-        public static async Task<Result<ReadOnlyMemory<byte>>> LoadFitFileBytesAsync(this string filename,
-            CancellationToken ct)
-        {
-            try
-            {
-                byte[] result = await File.ReadAllBytesAsync(filename, ct).ConfigureAwait(false);
 
-                return Result.Ok<ReadOnlyMemory<byte>>(result);
-            }
-            catch (OperationCanceledException oce)
-            {
-                Error? err = new Error($"Failed to read file {filename}").CausedBy(oce);
 
-                return Result.Fail<ReadOnlyMemory<byte>>(err);
-            }
-            catch (Exception e)
-            {
-                return Result.Fail<ReadOnlyMemory<byte>>(new Error($"Failed to read file {filename}").CausedBy(e));
-            }
-        }
 
 
         public static TimeSpan? TimezoneOffset(this ActivityMesg activity)

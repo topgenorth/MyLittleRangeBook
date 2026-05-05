@@ -25,4 +25,8 @@
       <EmbeddedResource Include="Config\AppSettings\*.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\MyLittleRangeBook.IO\MyLittleRangeBook.IO.csproj" />
+    </ItemGroup>
+
 </Project>

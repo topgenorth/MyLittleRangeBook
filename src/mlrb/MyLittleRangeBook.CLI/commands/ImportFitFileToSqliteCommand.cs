@@ -5,7 +5,7 @@ using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
-using NanoidDotNet;
+using MyLittleRangeBook.IO;
 
 namespace MyLittleRangeBook.CLI.Database.Sqlite
 {
@@ -46,11 +46,8 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         public async Task<int> AddFitFileToDatabaseAsync(string fitFile,
             CancellationToken cancellationToken = default)
         {
-
-            // TODO [TO20260419] IMprove console output.
+            // TODO [TO20260419] Improve console output.
             _cliDisplay.WriteAppInfo("Importing FIT File");
-
-            Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
 
             Result<int> result = await _cliDisplay.RunStatusAsync<Result<int>>("Importing FIT File",
                 async ct => await DoWorkAsync(fitFile, ct), cancellationToken);
@@ -68,22 +65,6 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         }
 
 
-        async Task<Result<ReadOnlyMemory<byte>>> LoadFitFileBytesAsync(string fitFile,
-            CancellationToken cancellationToken)
-        {
-            if (!File.Exists(fitFile))
-            {
-                _logger.Error("FIT sqliteFile {fitFile} not found.", fitFile);
-                var err = new FitFileNotFoundError(fitFile);
-                var r = Result.Fail(err);
-
-                return r;
-            }
-
-            Result<ReadOnlyMemory<byte>> fileContents = await fitFile.LoadFitFileBytesAsync(cancellationToken);
-
-            return fileContents;
-        }
 
         /// <summary>
         ///     Performs the actual work of importing the FIT sqliteFile.
@@ -96,70 +77,42 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         /// </returns>
         async Task<Result<int>> DoWorkAsync(string fitFile, CancellationToken cancellationToken)
         {
-            Result<ReadOnlyMemory<byte>> fileContents = await LoadFitFileBytesAsync(fitFile, cancellationToken);
+            Result<ReadOnlyMemory<byte>> fileContents = await
+                fitFile.LoadFileBytesAsync(cancellationToken).ConfigureAwait(false);
             if (fileContents.IsFailed)
             {
                 _logger.Error("Failed to load FIT  {fitFile}.", fitFile);
-                var err = new FailedToLoadFitFileError(fitFile);
-                var r = Result.Fail(err);
+                var err = new FailedToLoadFileError(fitFile);
+                var r = Result.Fail<int>(err);
 
                 return r;
             }
 
             byte[] bytesToSave = fileContents.Value.ToArray();
 
-            long rowId;
-            Result<bool> migrationResult = await _sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
+            await using SqliteConnection connection = await _sqliteHelper
+                .GetDatabaseConnectionAsync(cancellationToken)
+                .ConfigureAwait(false);
+            Result<(string id, long rowId)> writeResult = await _sqliteHelper
+                .WriteFileToTableAsync(connection, SqliteFileTable.FitFiles, fitFile, bytesToSave, cancellationToken)
+                .ConfigureAwait(false);
 
-            try
+
+            if (writeResult.IsSuccess)
             {
-                await using SqliteConnection connection =
-                    await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-                rowId = await WriteBytesToDatabaseAsync(connection, bytesToSave, fitFile, cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e, "Failed to save {bytes} bytes from FIT {fitFile} to database {database}.",
-                    bytesToSave.Length, fitFile, fitFile);
-                Error? err = new FailedToWriteFitFileToDatabaseError(fitFile, bytesToSave.Length).CausedBy(e);
-                Result<int>? r = new Result<int>().WithValue(ReturnCodes.SQL_FAILED_TO_WRITE_TO_DATABASE).WithError(err);
+                Success? success = new WroteFitFileToDatabaseSuccess(fitFile, bytesToSave.Length)
+                    .WithMetadata("RowId", writeResult.Value.rowId)
+                    .WithMetadata("Id", writeResult.Value.id);
+                _logger.Information("Saved {bytes} bytes from FIT sqliteFile {fitFile} to database.",
+                    bytesToSave.Length, fitFile);
 
-                return r;
+                return Result.Ok(ReturnCodes.SUCCESS).WithSuccess(success);
             }
 
-            Success? success = new WroteFitFileToDatabaseSuccess(fitFile, bytesToSave.Length)
-                .WithMetadata("RowId", rowId);
+            Error? err2 = new FailedToWriteFitFileToDatabaseError(fitFile, bytesToSave.Length);
+            Result<int>? r2 = new Result<int>().WithValue(ReturnCodes.SQL_FAILED_TO_WRITE_TO_DATABASE).WithError(err2);
 
-            _logger.Information("Saved {bytes} bytes from FIT sqliteFile {fitFile} to database.",
-                bytesToSave.Length, fitFile);
-
-            return Result.Ok(ReturnCodes.SUCCESS).WithSuccess(success);
-        }
-
-        /// <summary>
-        ///     Saves the byte contents of a FIT file to the database.
-        /// </summary>
-        /// <param name="connection">An open SQLite connection.</param>
-        /// <param name="fileContents">The byte array containing FIT file contents.</param>
-        /// <param name="filename">The original filename of the FIT file.</param>
-        /// <param name="cancellationToken">A token to cancel the operation.</param>
-        /// <returns>
-        ///     A task that represents the asynchronous save operation. The task result contains the row ID of the inserted
-        ///     record, or -1 if the operation failed.
-        /// </returns>
-        async Task<long> WriteBytesToDatabaseAsync(SqliteConnection connection,
-            byte[] fileContents,
-            string filename,
-            CancellationToken cancellationToken = default)
-        {
-            var cmd = new SqliteCommand(InsertFitFileSql, connection);
-            cmd.Parameters.AddWithValue("@id", await Nanoid.GenerateAsync());
-            cmd.Parameters.AddWithValue("@filename", filename);
-            cmd.Parameters.AddWithValue("@filecontents", fileContents);
-
-            object? rowId = await cmd.ExecuteScalarAsync(cancellationToken);
-
-            return rowId is null ? -1 : Convert.ToInt64(rowId);
+            return r2;
         }
     }
 }

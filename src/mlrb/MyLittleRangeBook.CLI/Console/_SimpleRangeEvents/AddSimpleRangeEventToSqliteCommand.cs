@@ -2,6 +2,8 @@
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.CLI.Database.Sqlite;
+using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 using Spectre.Console;
@@ -76,24 +78,18 @@ namespace MyLittleRangeBook.CLI.Console
 
             try
             {
-                firearm = await AskUserForFirearmAsync(firearm, firearms, cancellationToken).ConfigureAwait(true);
-                rounds = await AskUserForRoundCountAsync(rounds, cancellationToken).ConfigureAwait(true);
-                range = await AskUserForRangeAsync(range, ranges, cancellationToken).ConfigureAwait(true);
-                ammo = await AskUserForAmmoAsync(firearm, ammo, cancellationToken).ConfigureAwait(true);
-                notes = await AskUserForNotesAsync(notes, cancellationToken).ConfigureAwait(true);
+                SimpleRangeEvent sre = await CreateSimpleRangeEvent(firearm, rounds, range, ammo, notes, date, cancellationToken, firearms, ranges).ConfigureAwait(true);
+                _cliDisplay.WriteSuccess("Range trip added successfully.");
+                if (!string.IsNullOrWhiteSpace(fitFile))
+                {
+                    Result fitResult = await ProcessFitFileAsync(fitFile, sre, cancellationToken)
+                        .ConfigureAwait(false);
+                    if (fitResult.IsFailed)
+                    {
+                        _cliDisplay.WriteFailure($"Failed to process FIT file: {fitFile}");
+                    }
+                }
 
-                var sre = SimpleRangeEvent.New(
-                    RemoveSurroundingQuotes(firearm),
-                    rounds,
-                    RemoveSurroundingQuotes(range),
-                    RemoveSurroundingQuotes(ammo),
-                    RemoveSurroundingQuotes(notes),
-                    date);
-
-                // TODO [TO20260416] Data validation.
-                Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
-
-                sre.RowId = result.Value ?? -1;
 
                 _simpleRangeEventPrinter.PrintToConsole(_cliDisplay.Console, sre, quiet);
 
@@ -113,6 +109,43 @@ namespace MyLittleRangeBook.CLI.Console
 
                 return RANGE_EVENT_FAILED_TO_CREATE;
             }
+        }
+
+        async Task<Result> ProcessFitFileAsync(string fitFile, SimpleRangeEvent sre, CancellationToken cancellationToken)
+        {
+            return await Task.FromResult(Result.Fail("Not yet implemented.")).ConfigureAwait(false);
+        }
+
+        async Task<SimpleRangeEvent> CreateSimpleRangeEvent(string firearm,
+            int rounds,
+            string range,
+            string ammo,
+            string notes,
+            DateOnly date,
+            CancellationToken cancellationToken,
+            List<string> firearms,
+            List<string> ranges)
+        {
+            firearm = await AskUserForFirearmAsync(firearm, firearms, cancellationToken).ConfigureAwait(true);
+            rounds = await AskUserForRoundCountAsync(rounds, cancellationToken).ConfigureAwait(true);
+            range = await AskUserForRangeAsync(range, ranges, cancellationToken).ConfigureAwait(true);
+            ammo = await AskUserForAmmoAsync(firearm, ammo, cancellationToken).ConfigureAwait(true);
+            notes = await AskUserForNotesAsync(notes, cancellationToken).ConfigureAwait(true);
+
+            var sre = SimpleRangeEvent.New(
+                RemoveSurroundingQuotes(firearm),
+                rounds,
+                RemoveSurroundingQuotes(range),
+                RemoveSurroundingQuotes(ammo),
+                RemoveSurroundingQuotes(notes),
+                date);
+
+            // TODO [TO20260416] Data validation.
+            Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
+
+            sre.RowId = result.Value ?? -1;
+
+            return sre;
         }
 
         async Task<string> AskUserForNotesAsync(string notes, CancellationToken cancellationToken)
