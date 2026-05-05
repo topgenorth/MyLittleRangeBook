@@ -76,7 +76,6 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <returns>The full path to the SQLite database file.</returns>
         public static string DefaultSqliteDatabaseName(bool inferFromEnvironment = true)
         {
-            // TODO [TO20260425] Move this to the SQLite Assembly
             string fullPath = Path.Combine(ConfigurationExtensions.DefaultUserSettingsDirectory.FullName,
                 SQLITE_DATABASE_NAME);
             if (inferFromEnvironment)
@@ -125,7 +124,8 @@ namespace MyLittleRangeBook.Database.Sqlite
 
             services.TryAddKeyedTransient<ISimpleRangeLogService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
             services.TryAddKeyedTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
-            services.TryAddKeyedTransient<IFirearmsService, SqliteFirearmsService>(DI_KEYS_SQLITE);
+            services.TryAddKeyedTransient<IFirearmsDbService, SqliteFirearmsDbService>(DI_KEYS_SQLITE);
+            services.TryAddKeyedTransient<IFitFilesDbService, SqliteFitFilesDbService>(DI_KEYS_SQLITE);
 
             return services;
         }

@@ -58,7 +58,7 @@ namespace MyLittleRangeBook.GUI
 
             services.AddMyLittleRangeBookSqlite(configuration);
             services.TryAddTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();
-            services.TryAddTransient<IFirearmsService, SqliteFirearmsService>();
+            services.TryAddTransient<IFirearmsDbService, SqliteFirearmsDbService>();
             services.TryAddSingleton<ISettingsStorageService, AppSettingsFileStorageService>();
             // Register the DialogService factory for creating dialog services with specific participants
             services.AddSingleton<Func<IDialogParticipant, IDialogService>>(provider =>

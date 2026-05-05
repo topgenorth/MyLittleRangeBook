@@ -6,7 +6,7 @@ using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
-    public class SqliteFirearmsService : IFirearmsService
+    public class SqliteFirearmsDbService : IFirearmsDbService
     {
         const string SelectSql = "SELECT * FROM Firearms ORDER BY Name;";
         const string SelectByIdSql = "SELECT * FROM Firearms WHERE Id=@Id;";

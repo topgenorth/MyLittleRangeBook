@@ -12,7 +12,7 @@ namespace MyLittleRangeBook.Sqlite
         public async Task Show_update_row()
         {
             await using SqliteConnection conn = await GetSqliteConnectionAsync();
-            var sut = new SqliteFirearmsService();
+            var sut = new SqliteFirearmsDbService();
             var f0 = new Firearm { Id = await Nanoid.GenerateAsync(), Name = "Unit test", Notes = "Inserting" };
 
             //Insert
@@ -34,7 +34,7 @@ namespace MyLittleRangeBook.Sqlite
         public async Task Should_insert_row()
         {
             await using SqliteConnection conn = await GetSqliteConnectionAsync();
-            var sut = new SqliteFirearmsService();
+            var sut = new SqliteFirearmsDbService();
 
             var f = new Firearm { Id = await Nanoid.GenerateAsync(), Name = "Unit test", Notes = "Inserting" };
 

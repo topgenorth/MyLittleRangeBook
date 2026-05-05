@@ -4,7 +4,7 @@ using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Services
 {
-    public interface IFirearmsService
+    public interface IFirearmsDbService
     {
         /// <summary>
         ///     Delete a firearm from the database.
