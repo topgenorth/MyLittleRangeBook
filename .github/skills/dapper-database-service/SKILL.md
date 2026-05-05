@@ -1,6 +1,6 @@
 ---
-name: dapper-repository-pattern
-description: Add or refactor persistence in MyLittleRangeBook using Dapper, async-first repository and service patterns, and compatibility with SQLite and PostgreSQL.
+name: dapper-database-service-pattern
+description: Add or refactor a service in MyLittleRangeBook using Dapper, async-first repository and service patterns, and compatibility with SQLite and PostgreSQL.
 ***
 
 # Purpose
@@ -15,7 +15,7 @@ Use this skill when implementing or modifying database access in MyLittleRangeBo
 
 # When to use
 Use this skill when the task involves:
-- Adding a repository.
+- A single table within the database.
 - Refactoring ad hoc SQL access into a repository or service.
 - Creating queries, inserts, updates, deletes, or upserts.
 - Supporting both SQLite and PostgreSQL behavior.
@@ -23,14 +23,15 @@ Use this skill when the task involves:
 
 Do not use this skill for UI-only tasks or command wiring unless persistence design is the main concern.
 
-# Repository workflow
+# Service workflow
 1. Inspect the existing data access conventions before adding new code.
-2. Prefer a small repository interface when abstraction already exists or clearly improves testability.
-3. Keep connection management consistent with the repository's current DI and factory patterns.
+2. Prefer a small service interface when abstraction already exists or clearly improves testability. T
+3. The interface should have Delete, Upsert, Get, and GetAll methods. The methods should be named in a way that clearly indicates their purpose, such as DeleteTrip, UpsertSession, GetFirearm, GetAllAmmo, etc.
+3. The service should accept a connection as a parameter, it should not manage its own connection lifecycle.
 4. Use async Dapper APIs when available.
 5. Keep SQL explicit and readable; prefer parameterized queries only.
 6. Separate SQL by purpose: lookup, insert, update, delete, reporting.
-7. Return domain-oriented models or focused DTOs rather than leaking raw record shapes everywhere.
+7. Return a FluentResult Result<T> object that will hold domain-oriented models, focused DTOs, or named tuples rather than leaking raw record shapes everywhere.
 8. Handle transactions explicitly for multi-step writes.
 9. Ensure SQL works for both SQLite and PostgreSQL, or isolate dialect differences cleanly.
 10. Add narrow tests around mapping, SQL behavior, or repository semantics where practical.
