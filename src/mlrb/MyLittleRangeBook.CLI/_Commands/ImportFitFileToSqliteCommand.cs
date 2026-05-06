@@ -85,8 +85,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 if (!string.IsNullOrWhiteSpace(rangeEventId))
                 {
                     Result<long?> associateResult = await _filesDbService
-                        .AssociateWithRangeEvent(conn, rangeEventId, fitResult.Value.Id, cancellationToken)
-                        .ConfigureAwait(false);
+                        .AssociateWithRangeEvent(conn, rangeEventId, fitResult.Value.Id, cancellationToken);
                     if (associateResult.IsSuccess)
                     {
                         _logger.Information("Associating FIT {fitFileName} with range event {rangeEventId}.",
