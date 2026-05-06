@@ -2,6 +2,7 @@
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.IO;
@@ -12,14 +13,14 @@ using NanoidDotNet;
 namespace MyLittleRangeBook.CLI.Database.Sqlite
 {
     /// <summary>
-    ///     Provides functionality to import FIT files into a SQLite database.
+    ///     Save the FIT file to the SQLite database and optionally associate it with a range event.
     /// </summary>
     [RegisterCommands("fit import")]
     public class ImportFitFileToSqliteCommand
     {
-        readonly ILogger _logger;
         readonly ICliDisplay _cliDisplay;
         readonly IFitFilesDbService _filesDbService;
+        readonly ILogger _logger;
         readonly ISqliteHelper _sqliteHelper;
 
         /// <summary>
@@ -31,7 +32,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         /// <param name="logger"></param>
         public ImportFitFileToSqliteCommand(ICliDisplay cliDisplay,
             ISqliteHelper sqliteHelper,
-            IFitFilesDbService filesDbService,
+            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IFitFilesDbService filesDbService,
             ILogger logger)
         {
             _cliDisplay = cliDisplay;
@@ -44,48 +45,67 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         ///     Imports a FIT file into the specified SQLite database.
         /// </summary>
         /// <param name="fitFile">The path to the FIT sqliteFile to be imported.</param>
+        /// <param name="rangeEventId">The Nanoid for a given range event.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A task that represents the asynchronous import operation. The task result contains the exit code.</returns>
         [Command("sqlite")]
         [UsedImplicitly]
         public async Task<int> AddFitFileToDatabaseAsync(string fitFile,
+            string? rangeEventId = null,
             CancellationToken cancellationToken = default)
         {
             // TODO [TO20260419] Improve console output.
-
             _cliDisplay.WriteAppInfo("Importing FIT File");
+            _logger.Information("Inserting FIT {fitFileName} into the database.", fitFile);
 
-            Result<ReadOnlyMemory<byte>> fileResult =
-                await fitFile.LoadFileBytesAsync(cancellationToken).ConfigureAwait(false);
+            Result<ReadOnlyMemory<byte>> fileResult = await fitFile
+                .LoadFileBytesAsync(cancellationToken)
+                .ConfigureAwait(false);
             if (fileResult.IsFailed)
             {
-                _logger.Error("Failed to read FIT file {fileName}.", fitFile);
-                _cliDisplay.WriteFailure($"Failed to read FIT file {fitFile}.");
+                IError? err = fileResult.Errors[0];
+                string? msg = err.Message;
+                _logger.Error(msg);
+                _cliDisplay.WriteFailure(msg);
 
                 return ReturnCodes.FIT_FILE_READ_FAILURE;
             }
 
-            await using SqliteConnection connection = await _sqliteHelper
+            await using SqliteConnection conn = await _sqliteHelper
                 .GetDatabaseConnectionAsync(cancellationToken)
                 .ConfigureAwait(false);
-            string? id = await Nanoid.GenerateAsync().ConfigureAwait(false);
+
+            string? fitFileId = await Nanoid.GenerateAsync().ConfigureAwait(false);
             Result<EntityId> fitResult = await _filesDbService
-                .UpsertFitFileAsync(connection, id, fileResult.Value, fitFile, cancellationToken)
+                .UpsertFitFileAsync(conn, fitFileId, fileResult.Value, fitFile, cancellationToken)
                 .ConfigureAwait(false);
 
             if (fitResult.IsSuccess)
             {
-                Success? success = new WroteFitFileToDatabaseSuccess(fitFile, fileResult.Value.Length)
-                    .Enrich(fitResult.Value);
+                if (!string.IsNullOrWhiteSpace(rangeEventId))
+                {
+                    Result<long?> associateResult = await _filesDbService
+                        .AssociateWithRangeEvent(conn, rangeEventId, fitResult.Value.Id, cancellationToken);
+                    if (associateResult.IsSuccess)
+                    {
+                        _logger.Information("Associating FIT {fitFileName} with range event {rangeEventId}.",
+                            fitFile,
+                            rangeEventId);
+                    }
+                    else
+                    {
+                        _logger.Warning("Failed to associate FIT {fitFileName} with range event {rangeEventId}.",
+                            fitFile,
+                            rangeEventId);
+                    }
+                }
+
                 _cliDisplay.WriteSuccess($"Saved {fileResult.Value.Length} bytes from FIT file {fitFile} to database.");
 
                 return ReturnCodes.SUCCESS;
             }
 
-            _logger.Warning("Failed to save the {fileName} to the database.", fitFile);
-            _cliDisplay.WriteFailure($"Failed to save {fitFile} to the database.");
             return ReturnCodes.SQL_FAILED_TO_WRITE_TO_DATABASE;
-
         }
     }
 }
