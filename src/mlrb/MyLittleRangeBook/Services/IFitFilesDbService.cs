@@ -37,5 +37,7 @@ namespace MyLittleRangeBook.Services
             ReadOnlyMemory<byte> contents,
             string? fileName,
             CancellationToken cancellationToken = default);
+
+        Task<Result<long?>> AssociateWithRangeEvent(IDbConnection connection, string rangeEventId, string fitFileId, CancellationToken cancellationToken = default);
     }
 }

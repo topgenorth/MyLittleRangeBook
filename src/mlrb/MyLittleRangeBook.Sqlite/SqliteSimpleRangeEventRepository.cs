@@ -1,4 +1,5 @@
-﻿using FluentResults;
+﻿using Dapper;
+using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
@@ -60,7 +61,18 @@ namespace MyLittleRangeBook.Database.Sqlite
                             new ReadOnlyMemory<byte>(fitFileContents),
                             syntheticFileName, cancellationToken)
                         .ConfigureAwait(false);
-                    finalResult = Result.Merge(sreResult, fitResult).ToResult(simpleRangeEvent.RowId);
+
+                    if (fitResult.IsSuccess)
+                    {
+                        Result<long?> joinResult = await _filesDbService
+                            .AssociateWithRangeEvent(conn, simpleRangeEvent.Id!, fitResult.Value.Id, cancellationToken)
+                            .ConfigureAwait(false);
+                        finalResult = Result.Merge(sreResult, fitResult, joinResult).ToResult(simpleRangeEvent.RowId);
+                    }
+                    else
+                    {
+                        finalResult = Result.Merge(sreResult, fitResult).ToResult(simpleRangeEvent.RowId);
+                    }
                 }
                 else
                 {

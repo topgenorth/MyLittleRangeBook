@@ -19,6 +19,9 @@ namespace MyLittleRangeBook.Database.Sqlite
 
         const string DeleteSql = "DELETE FROM FitFiles WHERE Id = @Id";
 
+        const string AssociateWithRangeEventSql =
+            "INSERT INTO SimpleRangeEvent_FitFiles (SimpleRangeEventId, FitFileId) VALUES (@RangeEventId, @FitFileId) ON CONFLICT DO NOTHING RETURNING RowId";
+
         public async Task<Result<(EntityId EntityId, string FileName, ReadOnlyMemory<byte> contents)>> GetFitFileAsync(
             IDbConnection connection,
             string id,
@@ -138,6 +141,42 @@ namespace MyLittleRangeBook.Database.Sqlite
                     .Enrich(id, null);
 
                 return Result.Fail<EntityId>(err);
+            }
+        }
+
+        public async Task<Result<long?>> AssociateWithRangeEvent(IDbConnection connection,
+            string rangeEventId,
+            string fitFileId,
+            CancellationToken cancellationToken = default)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Result.Fail("Operation cancelled by user");
+            }
+
+            if (connection is not SqliteConnection conn)
+            {
+                return Result.Fail("Connection is not a SqliteConnection");
+            }
+
+            try
+            {
+                var p = new { RangeEventId = rangeEventId, FitFileId = fitFileId };
+
+                object? l = await conn.ExecuteScalarAsync(AssociateWithRangeEventSql, p);
+                if (l is null)
+                {
+                    return Result.Fail("Could not associate the FIT file with the range event.");
+                }
+
+                return new Result<long?>().WithValue(Convert.ToInt64(l));
+            }
+            catch (Exception ex)
+            {
+                Error err = new Error("Unexpected exception trying to upsert FIT file")
+                    .CausedBy(ex);
+
+                return Result.Fail(err);
             }
         }
 
