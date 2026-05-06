@@ -10,7 +10,6 @@ Use this skill when implementing or modifying database access in MyLittleRangeBo
 - The solution targets .NET 10.
 - Persistence uses Dapper ORM.
 - Supported databases are SQLite and PostgreSQL.
-- Current hosted usage may involve Supabase for PostgreSQL.
 - Prefer async methods for all database operations where provider support exists.
 - The code should support both CLI and Avalonia application flows.
 

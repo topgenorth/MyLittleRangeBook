@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace MyLittleRangeBook
+namespace MyLittleRangeBook.IO
 {
     public static class AssemblyExtensions
     {

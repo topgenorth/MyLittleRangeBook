@@ -2,17 +2,19 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using MyLittleRangeBook.CLI;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
+using MyLittleRangeBook.IO;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
 IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
     .AddBootStrapper(SerilogAppSettingsJsonFileBootstrap.SerilogSection)
     .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
-await bootstrapper.EnsureAppSettingsExistsAsync(DefaultAppSettingsFile.FullName);
+await bootstrapper.EnsureAppSettingsExistsAsync(DefaultAppSettingsFile.FullName).ConfigureAwait(true);
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
@@ -25,10 +27,19 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
         .Enrich.FromLogContext();
 });
 
+#region Spectre.Console dependencies
 builder.Services.TryAddSingleton(AnsiConsole.Console);
-builder.Services.TryAddSingleton<ICliDisplay, CliDisplay>();
+builder.Services.AddTransient<ICliDisplay, CliDisplay>();
+builder.Services.AddTransient<ISimpleRangeEventPrinter, SimpleRangeEventPrinter>();
+#endregion
+
+builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
+
+#region SQLite dependencies
 builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration);
-builder.Services.TryAddSingleton<IXeroShotSessionParser, XeroShotSessionParser>();
+builder.Services.AddKeyedTransient<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>(SqliteHelperExtensions
+    .DI_KEYS_SQLITE);
+#endregion
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
@@ -36,6 +47,9 @@ using IServiceScope scope = host.Services.CreateScope();
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
-await app.RunAsync(args);
+var logger = host.Services.GetRequiredService <Serilog.ILogger>();
 
-await Log.CloseAndFlushAsync();
+logger.Information("MyLittleRangeBook CLI v{AppVersion} starting", typeof(ReturnCodes).Assembly.GetAssemblyVersionInformation());
+await app.RunAsync(args).ConfigureAwait(true);
+
+await Log.CloseAndFlushAsync().ConfigureAwait(true);

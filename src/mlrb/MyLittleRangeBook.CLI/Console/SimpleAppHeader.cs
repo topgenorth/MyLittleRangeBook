@@ -1,19 +1,13 @@
-﻿using System.Reflection;
+﻿using MyLittleRangeBook.IO;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
 namespace MyLittleRangeBook.CLI.Console
 {
-    class SimpleAppHeader :  IConsolePrinter
+    public class SimpleAppHeader : IConsolePrinter
     {
+        string? _appVersion;
 
-
-        string _appVersion = string.Empty;
-
-        public SimpleAppHeader()
-        {
-            _appVersion = GetType().Assembly.GetAssemblyVersionInformation();
-        }
 
         public void Print(IAnsiConsole console)
         {
@@ -22,9 +16,11 @@ namespace MyLittleRangeBook.CLI.Console
 
         public IRenderable BuildRenderable()
         {
+            string v = _appVersion ?? GetType().Assembly.GetAssemblyVersionInformation();
+
             var grid = new Grid();
             grid.AddColumn();
-            grid.AddRow($"[bold white]{Markup.Escape(AnsiConsoleExtensions.AppName)} {_appVersion}[/]");
+            grid.AddRow($"[bold white]{Markup.Escape(AnsiConsoleExtensions.AppName)} {v}[/]");
 
             Panel panel = new Panel(grid)
                 .Expand()
@@ -44,10 +40,9 @@ namespace MyLittleRangeBook.CLI.Console
 
         public SimpleAppHeader SetAppVersion(string appVersion)
         {
-            // [TO20260427] NOOP
+            _appVersion = appVersion.Trim();
 
             return this;
         }
-
     }
 }

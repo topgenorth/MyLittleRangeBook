@@ -33,20 +33,20 @@ namespace MyLittleRangeBook.GUI.ViewModels
         IRecipient<UpdateDataMessage<Firearm>>
     {
         readonly IDialogService _dialogService;
-        readonly IFirearmsService _firearmsService;
+        readonly IFirearmsDbService _firearmsDbService;
         readonly SourceCache<FirearmViewModel, long> _firearmViewModelCache = new(x => x.Id ?? -1);
 
         readonly ReadOnlyObservableCollection<FirearmViewModel> _firearmViewModels;
         readonly ILogger _logger;
         readonly ISqliteHelper _sqliteHelper;
 
-        public ManageFirearmsViewModel(IFirearmsService firearmsService,
+        public ManageFirearmsViewModel(IFirearmsDbService firearmsDbService,
             Func<IDialogParticipant, IDialogService> dialogServiceFactory,
             ISqliteHelper sqliteHelper,
             ILogger logger)
         {
             _sqliteHelper = sqliteHelper;
-            _firearmsService = firearmsService;
+            _firearmsDbService = firearmsDbService;
             _dialogService = dialogServiceFactory(this);
             _logger = logger;
             WeakReferenceMessenger.Default.Register(this);
@@ -128,7 +128,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 await using SqliteConnection connection =
                     await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
                 Result<IEnumerable<Firearm>> result =
-                    await _firearmsService.GetFirearmsAsync(connection, cancellationToken);
+                    await _firearmsDbService.GetFirearmsAsync(connection, cancellationToken: cancellationToken);
 
                 if (result.IsSuccess)
                 {
@@ -177,7 +177,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 try
                 {
                     await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-                    Result<bool> r = await _firearmsService.DeleteAsync(connection, firearm.ToFirearm(), cancellationToken);
+                    Result<bool> r = await _firearmsDbService.DeleteAsync(connection, firearm.ToFirearm(), cancellationToken);
                     if (r.IsSuccess)
                     {
                         _firearmViewModelCache.Remove(firearm);
@@ -201,7 +201,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            var vm = new EditFirearmViewModel(firearm.CloneFirearmViewModel(), _firearmsService, _dialogService, _sqliteHelper, _logger);
+            var vm = new EditFirearmViewModel(firearm.CloneFirearmViewModel(), _firearmsDbService, _dialogService, _sqliteHelper, _logger);
             FirearmViewModel? result = await this.ShowDialogWindow<FirearmViewModel>(
                 "Edit firearm", firearm);
 

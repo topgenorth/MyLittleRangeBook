@@ -1,4 +1,6 @@
-﻿namespace MyLittleRangeBook.Models
+﻿using NanoidDotNet;
+
+namespace MyLittleRangeBook.Models
 {
     public record SimpleRangeEvent
     {
@@ -52,10 +54,13 @@
         /// </summary>
         public DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
 
+        public bool IsActive { get; set; } = true;
+
         public static SimpleRangeEvent New(string firearm, int rounds, string range, string ammo, string notes, DateOnly date = default)
         {
             var sre = new SimpleRangeEvent
             {
+                Id = Nanoid.Generate(),
                 FirearmName = firearm,
                 RoundsFired = rounds,
                 RangeName = range,

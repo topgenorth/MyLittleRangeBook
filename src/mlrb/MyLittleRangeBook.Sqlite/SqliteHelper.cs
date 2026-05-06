@@ -5,9 +5,17 @@ using DbUp.Builder;
 using DbUp.Engine;
 using FluentResults;
 using Microsoft.Extensions.Configuration;
+using NanoidDotNet;
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
+    /// <summary>
+    /// </summary>
+    public enum SqliteFileTable
+    {
+        FitFiles
+    }
+
 
     /// <summary>
     ///     A helper class for managing SQLite database connections, initialization, and configuration.
@@ -30,8 +38,10 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
             else
             {
-                var builder =
-                    new SqliteConnectionStringBuilder(connectionString) { Mode = SqliteOpenMode.ReadWriteCreate };
+                var builder = new SqliteConnectionStringBuilder(connectionString)
+                {
+                    Mode = SqliteOpenMode.ReadWriteCreate
+                };
                 _connectionString = builder.ConnectionString;
                 DatabaseFile = builder.DataSource;
             }
@@ -45,6 +55,60 @@ namespace MyLittleRangeBook.Database.Sqlite
         async Task<IDbConnection> IDatabaseHelper.GetDatabaseConnectionAsync(CancellationToken cancellationToken)
         {
             return await GetDatabaseConnectionAsync(cancellationToken);
+        }
+
+        public async Task<Result<(string id, long rowId)>> WriteFileToTableAsync(SqliteConnection conn,
+            SqliteFileTable table,
+            string fileName,
+            byte[] fileContents,
+            CancellationToken cancellationToken)
+        {
+            string sql = table switch
+            {
+                SqliteFileTable.FitFiles => """
+                                            INSERT INTO FitFiles (Id, FileName, Contents)
+                                            VALUES (@Id, @FileName, @FileContents)
+                                            RETURNING rowid;
+                                            """,
+                _ => throw new ArgumentOutOfRangeException(nameof(table), $"Unsupported table: {table}")
+            };
+
+            switch (fileContents.Length)
+            {
+                case 0:
+                    return Result.Ok((string.Empty, 0L))
+                        .WithReason(
+                            new Success("File contents are empty - nothing to write.").WithMetadata("Table", table));
+                case > 100 * 1024:
+                    _logger.Warning(
+                        "File contents are larger than 100KB. This may cause performance issues when writing to the database. Table: {Table}, Size: {Size} bytes",
+                        table, fileContents.Length);
+
+                    break;
+            }
+
+            string id = await Nanoid.GenerateAsync();
+            try
+            {
+                // TODO [TO20260503] It's possible to duplicate file contents; maybe file name should be unique in the database?
+                var cmd = new SqliteCommand(sql, conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@Id", id);
+                cmd.Parameters.AddWithValue("@FileContents", fileContents);
+                cmd.Parameters.AddWithValue("@FileName", fileName);
+
+                object? l = await cmd.ExecuteScalarAsync(cancellationToken);
+                long rowId = l is null ? -1: Convert.ToInt64(l);
+                return Result.Ok((id, rowId));
+            }
+            catch (Exception e)
+            {
+                Error? err = new Error($"Failed to write file to table {table}.").CausedBy(e);
+                err.Metadata.Add("Table", table);
+                err.Metadata.Add("FileName", fileName);
+
+                return Result.Fail(err);
+            }
         }
 
 
@@ -68,24 +132,24 @@ namespace MyLittleRangeBook.Database.Sqlite
         }
 
         /// <summary>
-        /// Creates the SQlite database (and apply any migrations) if it does not exist.
+        ///     Creates the SQlite database if it does not exist. Applies migrations if necessary.
         /// </summary>
         /// <param name="sqliteDatabaseFile"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async Task<Result<bool>> CreateSqliteDatabaseAsync(string sqliteDatabaseFile,
-            CancellationToken cancellationToken =default)
+            CancellationToken cancellationToken = default)
         {
-
             if (File.Exists(sqliteDatabaseFile))
             {
-                // TODO [TO20260418] Add a reason that the database exists.
-                return Result.Ok(true);
+                _logger.Verbose("Database exists {0}", sqliteDatabaseFile);
             }
-
-            // [TO20260418]This will create the database
-            await using SqliteConnection conn = await GetDatabaseConnectionAsync(cancellationToken);
-            await conn.CloseAsync();
+            else
+            {
+                await using SqliteConnection conn = await GetDatabaseConnectionAsync(cancellationToken);
+                await conn.CloseAsync();
+                _logger.Debug("Created database {0}", sqliteDatabaseFile);
+            }
 
             Result<bool> result = await ApplyDbupMigrationsAsync(cancellationToken);
 
@@ -106,6 +170,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                     ueb.LogToConsole();
                     ueb.LogScriptOutput();
                 }
+
                 UpgradeEngine? upgrader = ueb.Build();
 
                 DatabaseUpgradeResult? migrationResult = upgrader.PerformUpgrade();
@@ -166,13 +231,14 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
         }
 
-        public async Task<Result<bool>> UpdateSqliteDatabaseAsync(string sqliteDatabaseName,
+        public async Task<Result<bool>> UpdateSqliteDatabasePathAsync(string sqliteDatabaseName,
             string? appSettingsFile = null,
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(sqliteDatabaseName))
             {
                 var err = new Error("SQLite database name is empty.");
+
                 return Result.Fail<bool>(err).WithValue(false);
             }
 
@@ -205,8 +271,7 @@ namespace MyLittleRangeBook.Database.Sqlite
 
             var b = new SqliteConnectionStringBuilder
             {
-                DataSource = sqliteDatabaseName,
-                Mode = SqliteOpenMode.ReadWriteCreate
+                DataSource = sqliteDatabaseName, Mode = SqliteOpenMode.ReadWriteCreate
             };
 
             // [TO20260414] Just wondering if the Mode should be set to ReadWriteCreate?

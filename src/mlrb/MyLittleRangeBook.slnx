@@ -14,6 +14,7 @@
     <Project Path="MyLittleRangeBook.FIT/MyLittleRangeBook.FIT.csproj" />
     <Project Path="MyLittleRangeBook.GUI.Tests/MyLittleRangeBook.GUI.Tests.csproj" />
     <Project Path="MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj" />
+    <Project Path="MyLittleRangeBook.IO/MyLittleRangeBook.IO.csproj" />
     <Project Path="MyLittleRangeBook.PgSQL/MyLittleRangeBook.PgSQL.csproj" />
     <Project Path="MyLittleRangeBook.Sqlite/MyLittleRangeBook.Sqlite.csproj" />
     <Project Path="MyLittleRangeBook.Tests/MyLittleRangeBook.Tests.csproj" />

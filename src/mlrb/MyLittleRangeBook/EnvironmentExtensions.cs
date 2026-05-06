@@ -44,7 +44,7 @@ namespace MyLittleRangeBook
             string name = Path.GetFileNameWithoutExtension(fileInfo.FullName);
             string ext = fileInfo.Extension;
 
-            var newName = $"{name}.{env}.{ext}";
+            var newName = $"{name}.{env}{ext}";
 
             string s = Path.Combine(path, newName);
 

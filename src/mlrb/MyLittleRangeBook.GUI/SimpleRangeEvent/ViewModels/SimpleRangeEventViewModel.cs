@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Models;
+using NanoidDotNet;
 
 namespace MyLittleRangeBook.GUI.ViewModels
 {
@@ -63,6 +64,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             return new SimpleRangeEvent
             {
+                Id= Nanoid.Generate(),
                 RowId = Id,
                 EventDate = EventDate,
                 FirearmName = FirearmName,

@@ -5,6 +5,7 @@ using FluentResults;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Services;
+using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 using SharedControls.Controls;
 using SharedControls.Services;
@@ -14,18 +15,18 @@ namespace MyLittleRangeBook.GUI.ViewModels
     public partial class EditFirearmViewModel : ViewModelBase, IDialogParticipant
     {
         readonly IDialogService _dialogService;
-        readonly IFirearmsService _firearmsService;
+        readonly IFirearmsDbService _firearmsDbService;
         readonly ILogger _logger;
         readonly ISqliteHelper _sqliteHelper;
 
         public EditFirearmViewModel(FirearmViewModel firearm,
-            IFirearmsService firearmsService,
+            IFirearmsDbService firearmsDbService,
             IDialogService dialogService,
             ISqliteHelper sqliteHelper,
             ILogger logger)
         {
             Item = firearm;
-            _firearmsService = firearmsService;
+            _firearmsDbService = firearmsDbService;
             _dialogService = dialogService;
             _logger = logger;
             _sqliteHelper = sqliteHelper;
@@ -50,7 +51,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             try
             {
                 SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-                Result<long?> result = await _firearmsService.UpsertAsync(connection, f, cancellationToken);
+                Result<EntityId> result = await _firearmsDbService.UpsertAsync(connection, f, cancellationToken);
                 if (result.IsSuccess)
                 {
                     _logger.Debug("Firearm {Id} saved RowId: {RowId}", f.Id, result.Value);

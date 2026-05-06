@@ -20,6 +20,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\MyLittleRangeBook.FIT\MyLittleRangeBook.FIT.csproj" />
+      <ProjectReference Include="..\MyLittleRangeBook.IO\MyLittleRangeBook.IO.csproj" />
       <ProjectReference Include="..\MyLittleRangeBook\MyLittleRangeBook.csproj" />
     </ItemGroup>
 
