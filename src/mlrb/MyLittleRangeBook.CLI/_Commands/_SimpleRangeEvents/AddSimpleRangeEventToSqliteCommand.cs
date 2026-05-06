@@ -270,7 +270,7 @@ namespace MyLittleRangeBook.CLI.Console
 
         async Task<int> AskUserForRoundCountAsync(int roundCount, CancellationToken cancellationToken)
         {
-            if (roundCount < 1)
+            if (roundCount > 0)
             {
                 return roundCount;
             }
