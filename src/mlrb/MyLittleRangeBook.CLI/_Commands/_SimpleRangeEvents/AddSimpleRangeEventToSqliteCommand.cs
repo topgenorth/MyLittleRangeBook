@@ -2,8 +2,6 @@
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.CLI.Database.Sqlite;
-using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 using Spectre.Console;
@@ -78,7 +76,10 @@ namespace MyLittleRangeBook.CLI.Console
 
             try
             {
-                SimpleRangeEvent sre = await CreateSimpleRangeEvent(firearm, rounds, range, ammo, notes, date, cancellationToken, firearms, ranges).ConfigureAwait(true);
+                SimpleRangeEvent sre =
+                    await CreateSimpleRangeEvent(firearm, rounds, range, ammo, notes, date, cancellationToken, firearms,
+                            ranges)
+                        .ConfigureAwait(true);
                 _cliDisplay.WriteSuccess("Range trip added successfully.");
                 if (!string.IsNullOrWhiteSpace(fitFile))
                 {
@@ -111,7 +112,9 @@ namespace MyLittleRangeBook.CLI.Console
             }
         }
 
-        async Task<Result> ProcessFitFileAsync(string fitFile, SimpleRangeEvent sre, CancellationToken cancellationToken)
+        async Task<Result> ProcessFitFileAsync(string fitFile,
+            SimpleRangeEvent sre,
+            CancellationToken cancellationToken)
         {
             return await Task.FromResult(Result.Fail("Not yet implemented.")).ConfigureAwait(false);
         }

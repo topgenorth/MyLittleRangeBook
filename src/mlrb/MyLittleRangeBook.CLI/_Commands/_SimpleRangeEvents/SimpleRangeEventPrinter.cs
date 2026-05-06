@@ -61,6 +61,5 @@ namespace MyLittleRangeBook.CLI.Console
 
             return headerGrid;
         }
-
     }
 }

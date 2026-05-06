@@ -6,7 +6,7 @@ namespace MyLittleRangeBook.CLI.Console
     public interface ISimpleRangeEventPrinter
     {
         /// <summary>
-        /// Will display the single SimpleRangeEvent in the console.
+        ///     Will display the single SimpleRangeEvent in the console.
         /// </summary>
         /// <param name="console"></param>
         /// <param name="sre"></param>
