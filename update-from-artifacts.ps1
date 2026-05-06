@@ -87,4 +87,7 @@ if ($IsLinux) {
     & chmod +x $destinationPath
 }
 
+mlrb db migrate
+
 Write-Host "Installed $executable to : $destinationPath"
+
