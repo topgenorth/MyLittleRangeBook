@@ -28,13 +28,12 @@
             }
             catch (OperationCanceledException oce)
             {
-                Error? err = new Error($"Failed to read file {filename}").CausedBy(oce);
-
+                Error? err = new Error($"Operation was cancelled by user; did not read  {filename}").CausedBy(oce);
                 return Result.Fail<ReadOnlyMemory<byte>>(err);
             }
             catch (Exception e)
             {
-                return Result.Fail<ReadOnlyMemory<byte>>(new Error($"Failed to read file {filename}").CausedBy(e));
+                return Result.Fail<ReadOnlyMemory<byte>>(new Error($"Failed to read file {filename}: {e.Message}").CausedBy(e));
             }
         }
     }
