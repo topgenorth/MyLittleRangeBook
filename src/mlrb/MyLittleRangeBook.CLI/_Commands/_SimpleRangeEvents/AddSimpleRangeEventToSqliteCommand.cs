@@ -2,6 +2,7 @@
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 using Spectre.Console;
@@ -18,6 +19,7 @@ namespace MyLittleRangeBook.CLI.Console
     public class AddSimpleRangeEventToSqliteCommand
     {
         readonly ICliDisplay _cliDisplay;
+        readonly IFitFilesDbService _fitFilesDbService;
         readonly ILogger _logger;
         readonly ISimpleRangeEventHelper _rangeEventHelper;
         readonly ISimpleRangeEventRepository _repo;
@@ -27,6 +29,7 @@ namespace MyLittleRangeBook.CLI.Console
             ILogger logger,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventHelper rangeEventHelper,
+            [FromKeyedServices(DI_KEYS_SQLITE)] IFitFilesDbService fitFilesDbService,
             ISimpleRangeEventPrinter simpleRangeEventPrinter)
         {
             _cliDisplay = cliDisplay;
@@ -34,6 +37,7 @@ namespace MyLittleRangeBook.CLI.Console
             _repo = repo;
             _rangeEventHelper = rangeEventHelper;
             _simpleRangeEventPrinter = simpleRangeEventPrinter;
+            _fitFilesDbService = fitFilesDbService;
         }
 
         /// <summary>
@@ -64,8 +68,10 @@ namespace MyLittleRangeBook.CLI.Console
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
-            Result<(List<string>, List<string>)> r1 =
-                await _rangeEventHelper.GetFirearmsAndRangesAsync(cancellationToken).ConfigureAwait(false);
+            _cliDisplay.WriteAppInfo();
+            Result<(List<string>, List<string>)> r1 = await _rangeEventHelper
+                .GetFirearmsAndRangesAsync(cancellationToken)
+                .ConfigureAwait(false);
             if (r1.IsFailed)
             {
                 _logger.Warning("Failed to retrieve list of firearms and/or ranges.");
@@ -76,25 +82,30 @@ namespace MyLittleRangeBook.CLI.Console
 
             try
             {
-                SimpleRangeEvent sre =
-                    await CreateSimpleRangeEvent(firearm, rounds, range, ammo, notes, date, cancellationToken, firearms,
-                            ranges)
-                        .ConfigureAwait(true);
-                _cliDisplay.WriteSuccess("Range trip added successfully.");
-                if (!string.IsNullOrWhiteSpace(fitFile))
+                SimpleRangeEvent sre = await CreateSimpleRangeEventAsync(firearm, rounds, range, ammo, notes, date,
+                        firearms, ranges, cancellationToken)
+                    .ConfigureAwait(true);
+                byte[] fitBytes = await GetBytesFromFitFileAsync(fitFile, cancellationToken).ConfigureAwait(true);
+
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    Result fitResult = await ProcessFitFileAsync(fitFile, sre, cancellationToken)
-                        .ConfigureAwait(false);
-                    if (fitResult.IsFailed)
-                    {
-                        _cliDisplay.WriteFailure($"Failed to process FIT file: {fitFile}");
-                    }
+                    _logger.Warning("Operation cancelled by user.");
+                    _cliDisplay.WriteFailure("Operation cancelled.");
+                    return COMMAND_CANCELLED;
+                }
+                Result<long?> result = await _repo.UpsertAsync(sre, fitBytes, cancellationToken).ConfigureAwait(true);
+
+                if (result.IsSuccess)
+                {
+                    _cliDisplay.WriteSuccess("Range trip added successfully.");
+                    _simpleRangeEventPrinter.PrintToConsole(_cliDisplay.Console, sre, quiet);
+
+                    return SUCCESS;
                 }
 
+                _cliDisplay.WriteFailure("Failed to add range trip.");
 
-                _simpleRangeEventPrinter.PrintToConsole(_cliDisplay.Console, sre, quiet);
-
-                return SUCCESS;
+                return RANGE_EVENT_FAILED_TO_CREATE;
             }
             catch (TaskCanceledException tce)
             {
@@ -112,29 +123,38 @@ namespace MyLittleRangeBook.CLI.Console
             }
         }
 
-        async Task<Result> ProcessFitFileAsync(string fitFile,
-            SimpleRangeEvent sre,
-            CancellationToken cancellationToken)
+        async Task<byte[]> GetBytesFromFitFileAsync(string fitFile, CancellationToken cancellationToken)
         {
-            return await Task.FromResult(Result.Fail("Not yet implemented.")).ConfigureAwait(false);
+            byte[] bytesToWrite;
+            if (string.IsNullOrWhiteSpace(fitFile))
+            {
+                bytesToWrite = [];
+            }
+            else
+            {
+                Result<ReadOnlyMemory<byte>> r = await fitFile.LoadFileBytesAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                bytesToWrite = r.IsSuccess ? r.Value.ToArray() : [];
+            }
+
+            return bytesToWrite;
         }
 
-        async Task<SimpleRangeEvent> CreateSimpleRangeEvent(string firearm,
+        async Task<SimpleRangeEvent> CreateSimpleRangeEventAsync(string firearm,
             int rounds,
             string range,
             string ammo,
             string notes,
             DateOnly date,
-            CancellationToken cancellationToken,
             List<string> firearms,
-            List<string> ranges)
+            List<string> ranges,
+            CancellationToken cancellationToken)
         {
             firearm = await AskUserForFirearmAsync(firearm, firearms, cancellationToken).ConfigureAwait(true);
             rounds = await AskUserForRoundCountAsync(rounds, cancellationToken).ConfigureAwait(true);
             range = await AskUserForRangeAsync(range, ranges, cancellationToken).ConfigureAwait(true);
             ammo = await AskUserForAmmoAsync(firearm, ammo, cancellationToken).ConfigureAwait(true);
             notes = await AskUserForNotesAsync(notes, cancellationToken).ConfigureAwait(true);
-
             var sre = SimpleRangeEvent.New(
                 RemoveSurroundingQuotes(firearm),
                 rounds,
@@ -143,13 +163,9 @@ namespace MyLittleRangeBook.CLI.Console
                 RemoveSurroundingQuotes(notes),
                 date);
 
-            // TODO [TO20260416] Data validation.
-            Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
-
-            sre.RowId = result.Value ?? -1;
-
             return sre;
         }
+
 
         async Task<string> AskUserForNotesAsync(string notes, CancellationToken cancellationToken)
         {

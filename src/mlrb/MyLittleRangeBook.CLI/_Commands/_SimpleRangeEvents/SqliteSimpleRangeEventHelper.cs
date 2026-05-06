@@ -15,7 +15,7 @@ namespace MyLittleRangeBook.CLI.Console
         ///     Retrieve all the active firearms.
         /// </summary>
         internal const string SQL_ACTIVE_FIREARMS =
-            "SELECT DISTINCT FirearmName FROM SimpleRangeEvents WHERE IsActive=1 ORDER BY FirearmName;";
+            "SELECT DISTINCT FirearmName FROM SimpleRangeEvents ORDER BY FirearmName;";
 
         /// <summary>
         ///     Retrieve all the ammo descriptions for a given firearm name. The results are ordered by the Modified date of the
@@ -111,8 +111,7 @@ namespace MyLittleRangeBook.CLI.Console
         static async IAsyncEnumerable<string> GetChoicesAsync(SqliteCommand command,
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            await using SqliteDataReader reader =
-                await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -121,15 +120,20 @@ namespace MyLittleRangeBook.CLI.Console
             }
         }
 
-        static IAsyncEnumerable<string> GetChoicesAsync(SqliteConnection connection,
+        static async IAsyncEnumerable<string> GetChoicesAsync(SqliteConnection connection,
             string sql,
-            CancellationToken cancellationToken)
+            [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            using SqliteCommand command = connection.CreateCommand();
+            await using SqliteCommand command = connection.CreateCommand();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
+            await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
-            return GetChoicesAsync(command, cancellationToken);
+                yield return reader.GetString(0);
+            }
         }
     }
 }

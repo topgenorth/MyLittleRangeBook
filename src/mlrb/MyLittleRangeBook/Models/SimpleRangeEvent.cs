@@ -54,6 +54,8 @@ namespace MyLittleRangeBook.Models
         /// </summary>
         public DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
 
+        public bool IsActive { get; set; } = true;
+
         public static SimpleRangeEvent New(string firearm, int rounds, string range, string ammo, string notes, DateOnly date = default)
         {
             var sre = new SimpleRangeEvent
