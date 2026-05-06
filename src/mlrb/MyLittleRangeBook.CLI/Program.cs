@@ -2,10 +2,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using MyLittleRangeBook.CLI;
 using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
+using MyLittleRangeBook.IO;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
@@ -45,6 +47,9 @@ using IServiceScope scope = host.Services.CreateScope();
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
+var logger = host.Services.GetRequiredService <Serilog.ILogger>();
+
+logger.Information("MyLittleRangeBook CLI v{AppVersion} starting", typeof(ReturnCodes).Assembly.GetAssemblyVersionInformation());
 await app.RunAsync(args).ConfigureAwait(true);
 
 await Log.CloseAndFlushAsync().ConfigureAwait(true);

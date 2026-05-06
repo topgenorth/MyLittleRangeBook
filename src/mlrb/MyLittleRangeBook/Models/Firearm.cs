@@ -29,6 +29,7 @@
         /// </summary>
         public DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
 
+        public bool IsActive { get; set; } = true;
 
         public override string ToString()
         {

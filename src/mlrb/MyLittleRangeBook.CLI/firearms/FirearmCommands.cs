@@ -19,7 +19,9 @@ namespace MyLittleRangeBook.CLI
         readonly IFirearmsDbService _firearmsDbService;
         readonly FirearmsTablePrinter _printer;
 
-        public FirearmCommands([FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)]IFirearmsDbService firearmsDbService, ISqliteHelper sqliteHelper, ILogger logger)
+        public FirearmCommands([FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)]IFirearmsDbService firearmsDbService,
+            ISqliteHelper sqliteHelper,
+            ILogger logger)
         {
             _firearmsDbService = firearmsDbService;
             _sqliteHelper = sqliteHelper;
@@ -28,13 +30,24 @@ namespace MyLittleRangeBook.CLI
         }
 
 
+        /// <summary>
+        /// List all the active firearms.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [Command("list")]
         [UsedImplicitly]
         public async Task<int> PrintFirearmsToConsole(CancellationToken cancellationToken = default)
          {
             AnsiConsole.Console.WriteAppInfo();
-            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-            Result<IEnumerable<Firearm>> firearms = await _firearmsDbService.GetFirearmsAsync(conn, cancellationToken: cancellationToken);
+            AnsiConsole.Console.Write("Retrieving firearms...");
+
+            await using SqliteConnection conn = await _sqliteHelper
+                .GetDatabaseConnectionAsync(cancellationToken)
+                .ConfigureAwait(false);
+            Result<IEnumerable<Firearm>> firearms = await _firearmsDbService
+                .GetFirearmsAsync(conn, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
             if (firearms.IsFailed)
             {

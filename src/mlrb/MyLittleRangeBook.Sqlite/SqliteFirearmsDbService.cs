@@ -10,7 +10,7 @@ namespace MyLittleRangeBook.Database.Sqlite
     {
         const string SelectSql = "SELECT * FROM Firearms ORDER BY Name;";
         const string SelectByIdSql = "SELECT * FROM Firearms WHERE Id=@Id;";
-        const string SelectActiveSql = "SELECT * FROM Firearms ORDER BY Name;";
+        const string SelectActiveSql = "SELECT * FROM Firearms WHERE IsActive=1 ORDER BY Name;";
         const string DeleteSql = "DELETE FROM Firearm WHERE Id = @Id";
 
         const string InsertSql = """
@@ -88,14 +88,15 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
         }
 
-        public async Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(IDbConnection connection,
+        public async Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(
+            IDbConnection connection,
             bool activeOnly = true,
             CancellationToken cancellationToken = default)
         {
             try
             {
-                IEnumerable<Firearm> firearms =
-                    await connection.QueryAsync<Firearm>(activeOnly ? SelectActiveSql : SelectSql, cancellationToken);
+                string sql = activeOnly ? SelectActiveSql : SelectSql;
+                IEnumerable<Firearm> firearms = await connection.QueryAsync<Firearm>(sql, cancellationToken);
 
                 return Result.Ok(firearms);
             }
