@@ -49,7 +49,7 @@ ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
 var logger = host.Services.GetRequiredService <Serilog.ILogger>();
 
-logger.Information("MyLittleRangeBook CLI v{AppVersion} starting", typeof(ReturnCodes).Assembly.GetAssemblyVersionInformation());
+logger.Information("MyLittleRangeBook CLI v{AppVersion}", typeof(ReturnCodes).Assembly.GetAssemblyVersionInformation());
 await app.RunAsync(args).ConfigureAwait(true);
 
 await Log.CloseAndFlushAsync().ConfigureAwait(true);
