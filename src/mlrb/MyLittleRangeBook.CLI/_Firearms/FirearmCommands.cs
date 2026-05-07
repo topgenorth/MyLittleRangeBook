@@ -63,7 +63,7 @@ namespace MyLittleRangeBook.CLI
             }
 
             _printer.SetFirearms(firearms.Value).Print(AnsiConsole.Console);
-            AnsiConsole.Console.WriteSuccess("Firearms retrieved.");
+            AnsiConsole.Console.PrintSuccess("Firearms retrieved.");
             return ReturnCodes.SUCCESS;
         }
     }

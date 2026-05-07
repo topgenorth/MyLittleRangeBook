@@ -34,7 +34,7 @@ namespace MyLittleRangeBook.CLI.Console
             return console;
         }
 
-        public static IAnsiConsole WriteSuccess(this IAnsiConsole console, string message)
+        public static IAnsiConsole PrintSuccess(this IAnsiConsole console, string message)
         {
             console.MarkupLineInterpolated($"[bold green]{SuccessGlyph} {message.Trim()}[/]");
 

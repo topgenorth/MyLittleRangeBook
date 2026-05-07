@@ -62,6 +62,10 @@ namespace MyLittleRangeBook.CLI.Console
 
             _printer.Finish();
 
+#if DEBUG
+            System.Console.ReadKey();
+#endif
+
             return SUCCESS;
         }
     }

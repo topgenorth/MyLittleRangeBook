@@ -11,12 +11,12 @@ namespace MyLittleRangeBook.CLI.Console
         Task<ISimpleRangeEventListPrinter> Start();
         Task<ISimpleRangeEventListPrinter> AddRow(SimpleRangeEvent simpleRangeEvent);
         Task<ISimpleRangeEventListPrinter> Finish();
-        Task Print(IEnumerable<SimpleRangeEvent> simpleRangeEvents, CancellationToken cancellationToken = default);
     }
 
     public class SimpleRangeEventListPrinter : ISimpleRangeEventListPrinter
     {
         readonly ICliDisplay _cliDisplay;
+        Table? _simpleRangeeventTable;
 
         public SimpleRangeEventListPrinter(ICliDisplay cliDisplay)
         {
@@ -27,26 +27,62 @@ namespace MyLittleRangeBook.CLI.Console
 
         public async Task<ISimpleRangeEventListPrinter> Start()
         {
-            Console.MarkupLine("[white]Simple Range Events[/]");
+            _simpleRangeeventTable = new Table()
+                .Border(TableBorder.DoubleEdge)
+                .ShowRowSeparators()
+                .Expand()
+                .BorderColor(Color.White)
+                .AddColumn("Id", col => col
+                    .Alignment(Justify.Center)
+                    .Width(23)
+                    .Padding(1, 0, 1, 0))
+                .AddColumn("Date", col => col.Alignment(Justify.Center))
+                .AddColumn("Firearm")
+                .AddColumn("Range")
+                .AddColumn("Rounds")
+                .AddColumns("Ammo")
+                .AddColumn("Notes");
+
 
             return this;
         }
 
         public async Task<ISimpleRangeEventListPrinter> AddRow(SimpleRangeEvent simpleRangeEvent)
         {
-            Console.MarkupLine($"{simpleRangeEvent.EventDate:yyyy-MM-dd}, {simpleRangeEvent.Id}, {simpleRangeEvent.FirearmName} ({simpleRangeEvent.RoundsFired} rounds)");
+            if (_simpleRangeeventTable is null)
+            {
+                return this;
+            }
+
+            _simpleRangeeventTable.AddRow(
+                simpleRangeEvent.Id!,
+                simpleRangeEvent.EventDate.ToString("yyyy-MM-dd"),
+                simpleRangeEvent.FirearmName,
+                simpleRangeEvent.RangeName,
+                simpleRangeEvent.RoundsFired.ToString(),
+                simpleRangeEvent.AmmoDescription ?? string.Empty,
+                simpleRangeEvent.Notes ?? string.Empty
+            );
 
             return this;
         }
 
         public async Task<ISimpleRangeEventListPrinter> Finish()
         {
-            Console.MarkupLine("[white]Finished{/]");
+            if (_simpleRangeeventTable is null)
+            {
+                Console.PrintSuccess("Nothing was started.");
+            }
+            else
+            {
+                Console.Write(_simpleRangeeventTable);
+                Console.PrintSuccess("Finished with list.");
+            }
+
+            _simpleRangeeventTable = null;
+
             return this;
         }
 
-        public async Task Print(IEnumerable<SimpleRangeEvent> simpleRangeEvents, CancellationToken cancellationToken = default)
-        {
-        }
     }
 }
