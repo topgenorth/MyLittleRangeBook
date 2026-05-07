@@ -30,10 +30,10 @@ namespace MyLittleRangeBook.CLI.Console
 
         public void WriteSuccess(string message)
         {
-            Console.WriteSuccess(message);
+            Console.PrintSuccess(message);
         }
 
-        public void WriteFailure(string message)
+        public void PrintFailure(string message)
         {
             Console.WriteProblem(message);
         }

@@ -21,7 +21,7 @@ namespace MyLittleRangeBook.CLI.Console
             var c = new TestConsole();
 
             var cliDisplay = new CliDisplay(c);
-            cliDisplay.WriteFailure("Hello World");
+            cliDisplay.PrintFailure("Hello World");
 
             c.Output.ShouldStartWith("✗ Hello World");
         }

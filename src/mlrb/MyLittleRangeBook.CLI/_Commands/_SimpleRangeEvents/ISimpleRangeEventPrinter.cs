@@ -11,6 +11,6 @@ namespace MyLittleRangeBook.CLI.Console
         /// <param name="console"></param>
         /// <param name="sre"></param>
         /// <param name="quiet"></param>
-        void PrintToConsole(IAnsiConsole console, SimpleRangeEvent sre, bool quiet);
+        void Print(IAnsiConsole console, SimpleRangeEvent sre, bool quiet);
     }
 }

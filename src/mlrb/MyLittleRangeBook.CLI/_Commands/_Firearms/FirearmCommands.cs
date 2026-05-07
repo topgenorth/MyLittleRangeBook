@@ -39,7 +39,7 @@ namespace MyLittleRangeBook.CLI
         [UsedImplicitly]
         public async Task<int> PrintFirearmsToConsole(CancellationToken cancellationToken = default)
          {
-            AnsiConsole.Console.WriteAppInfo();
+            AnsiConsole.Console.PrintAppInfo();
             AnsiConsole.Console.WriteLine("Retrieving firearms...");
 
             await using SqliteConnection conn = await _sqliteHelper
@@ -63,7 +63,7 @@ namespace MyLittleRangeBook.CLI
             }
 
             _printer.SetFirearms(firearms.Value).Print(AnsiConsole.Console);
-            AnsiConsole.Console.WriteSuccess("Firearms retrieved.");
+            AnsiConsole.Console.PrintSuccess("Firearms retrieved.");
             return ReturnCodes.SUCCESS;
         }
     }

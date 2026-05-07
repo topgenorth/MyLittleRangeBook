@@ -66,7 +66,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 IError? err = fileResult.Errors[0];
                 string? msg = err.Message;
                 _logger.Error(msg);
-                _cliDisplay.WriteFailure(msg);
+                _cliDisplay.PrintFailure(msg);
 
                 return ReturnCodes.FIT_FILE_READ_FAILURE;
             }

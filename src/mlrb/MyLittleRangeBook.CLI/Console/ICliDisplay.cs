@@ -10,7 +10,7 @@ namespace MyLittleRangeBook.CLI.Console
         /// <param name="action"></param>
         void WriteAppInfo(string action);
         void WriteSuccess(string message);
-        void WriteFailure(string message);
+        void PrintFailure(string message);
 
         Task RunStatusAsync(
             string status,

@@ -33,7 +33,7 @@ namespace MyLittleRangeBook.CLI
         [Command("explore")]
         public async Task<int> ExploreAsync(string file, CancellationToken cancellationToken)
         {
-            _cliDisplay.WriteAppInfo();
+            _cliDisplay.PrintAppInfo();
             _cliDisplay.Console.MarkupLine($"Exploring the FIT file {file}");
 
             Result<ShotSession> result = await ((XeroShotSessionParser) _xeroParser).ExploreFitFileAsync(file, cancellationToken);
@@ -58,7 +58,7 @@ namespace MyLittleRangeBook.CLI
             if (!File.Exists(file))
             {
                 _logger.Warning("File {file} not found.", file);
-                _cliDisplay.WriteFailure($"Could not find '{file}'.");
+                _cliDisplay.PrintFailure($"Could not find '{file}'.");
 
                 return FIT_FILE_NOT_FOUND;
             }
@@ -85,7 +85,7 @@ namespace MyLittleRangeBook.CLI
 
             if (result.IsFailed)
             {
-                _cliDisplay.WriteFailure("Failed to parse FIT file.");
+                _cliDisplay.PrintFailure("Failed to parse FIT file.");
 
                 return result.HasError<UnsupportedFitFileTypeError>() ? FIT_FILE_PARSE_FAILURE : FAILURE;
             }
