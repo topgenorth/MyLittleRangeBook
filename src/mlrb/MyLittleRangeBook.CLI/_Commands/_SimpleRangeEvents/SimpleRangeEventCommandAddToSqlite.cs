@@ -14,7 +14,7 @@ namespace MyLittleRangeBook.CLI.Console
     /// <summary>
     ///     Allows us to create a new Range Event from the CLI, and optionally the FIT file that goes with it.
     /// </summary>
-    [RegisterCommands("rangetrip")]
+    [RegisterCommands("rangeevent")]
     [UsedImplicitly]
     public class SimpleRangeEventCommandAddToSqlite
     {

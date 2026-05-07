@@ -10,7 +10,7 @@ using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
 
 namespace MyLittleRangeBook.CLI.Console
 {
-    [RegisterCommands("rangetrip")]
+    [RegisterCommands("rangeevent")]
     public class SimpleRangeEventCommands
     {
         readonly ICliDisplay _cliDisplay;

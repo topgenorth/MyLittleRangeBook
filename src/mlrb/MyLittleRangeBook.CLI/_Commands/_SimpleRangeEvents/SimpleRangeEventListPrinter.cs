@@ -34,14 +34,14 @@ namespace MyLittleRangeBook.CLI.Console
                 .BorderColor(Color.White)
                 .AddColumn("Id", col => col
                     .Alignment(Justify.Center)
-                    .Width(23)
-                    .Padding(1, 0, 1, 0))
+                    .Width(21)
+                )
                 .AddColumn("Date", col => col.Alignment(Justify.Center))
-                .AddColumn("Firearm")
-                .AddColumn("Range")
-                .AddColumn("Rounds")
-                .AddColumns("Ammo")
-                .AddColumn("Notes");
+                .AddColumn("Firearm", col => col.Alignment(Justify.Left))
+                .AddColumn("Range", col => col.Alignment(Justify.Center))
+                .AddColumn("Rounds", col => col.Alignment(Justify.Center))
+                .AddColumn("Ammo", col => col.Alignment(Justify.Left))
+                .AddColumn("Notes", col => col.Alignment(Justify.Left));
 
 
             return this;
@@ -83,6 +83,5 @@ namespace MyLittleRangeBook.CLI.Console
 
             return this;
         }
-
     }
 }
