@@ -31,6 +31,7 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.AddTransient<ICliDisplay, CliDisplay>();
 builder.Services.AddTransient<ISimpleRangeEventPrinter, SimpleRangeEventPrinter>();
+builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventListPrinter>();
 #endregion
 
 builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();

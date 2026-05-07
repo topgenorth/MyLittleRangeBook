@@ -12,7 +12,7 @@ namespace MyLittleRangeBook.CLI.Console
             _cliDisplay = cliDisplay;
         }
 
-        public void PrintToConsole(IAnsiConsole console, SimpleRangeEvent sre, bool quiet = false)
+        public void Print(IAnsiConsole console, SimpleRangeEvent sre, bool quiet = false)
         {
             if (quiet)
             {

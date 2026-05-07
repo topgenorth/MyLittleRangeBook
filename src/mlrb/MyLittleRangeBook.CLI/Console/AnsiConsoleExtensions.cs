@@ -13,9 +13,9 @@ namespace MyLittleRangeBook.CLI.Console
         public const string SuccessGlyph = "✓";
         public const string ErrorGlyph = "✗";
 
-        public static ICliDisplay WriteAppInfo(this ICliDisplay cliDisplay)
+        public static ICliDisplay PrintAppInfo(this ICliDisplay cliDisplay)
         {
-            cliDisplay.Console.WriteAppInfo();
+            cliDisplay.Console.PrintAppInfo();
 
             return cliDisplay;
         }
@@ -41,7 +41,7 @@ namespace MyLittleRangeBook.CLI.Console
             return console;
         }
 
-        public static IAnsiConsole WriteAppInfo(this IAnsiConsole console)
+        public static IAnsiConsole PrintAppInfo(this IAnsiConsole console)
         {
             var a = Assembly.GetExecutingAssembly();
 

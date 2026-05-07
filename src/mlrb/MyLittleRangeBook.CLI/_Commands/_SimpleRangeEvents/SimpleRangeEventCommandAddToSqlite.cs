@@ -24,8 +24,8 @@ namespace MyLittleRangeBook.CLI.Console
         readonly ISimpleRangeEventRepository _repo;
         readonly ISimpleRangeEventPrinter _simpleRangeEventPrinter;
 
-        public SimpleRangeEventCommandAddToSqlite(ICliDisplay cliDisplay,
-            ILogger logger,
+        public SimpleRangeEventCommandAddToSqlite(ILogger logger,
+            ICliDisplay cliDisplay,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventHelper rangeEventHelper,
             ISimpleRangeEventPrinter simpleRangeEventPrinter)
@@ -65,7 +65,7 @@ namespace MyLittleRangeBook.CLI.Console
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
-            _cliDisplay.WriteAppInfo();
+            _cliDisplay.PrintAppInfo();
             Result<(List<string>, List<string>)> r1 = await _rangeEventHelper
                 .GetFirearmsAndRangesAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -87,7 +87,7 @@ namespace MyLittleRangeBook.CLI.Console
                 if (cancellationToken.IsCancellationRequested)
                 {
                     _logger.Warning("Operation cancelled by user.");
-                    _cliDisplay.WriteFailure("Operation cancelled.");
+                    _cliDisplay.PrintFailure("Operation cancelled.");
                     return COMMAND_CANCELLED;
                 }
                 Result<long?> result = await _repo.UpsertAsync(sre, fitBytes, cancellationToken).ConfigureAwait(true);
@@ -95,26 +95,26 @@ namespace MyLittleRangeBook.CLI.Console
                 if (result.IsSuccess)
                 {
                     _cliDisplay.WriteSuccess("Range trip added successfully.");
-                    _simpleRangeEventPrinter.PrintToConsole(_cliDisplay.Console, sre, quiet);
+                    _simpleRangeEventPrinter.Print(_cliDisplay.Console, sre, quiet);
 
                     return SUCCESS;
                 }
 
-                _cliDisplay.WriteFailure("Failed to add range trip.");
+                _cliDisplay.PrintFailure("Failed to add range trip.");
 
                 return RANGE_EVENT_FAILED_TO_CREATE;
             }
             catch (TaskCanceledException tce)
             {
                 _logger.Warning(tce, "AddSimpleRangeEventAsync was cancelled.s");
-                _cliDisplay.WriteFailure("AddSimpleRangeEventAsync was cancelled.");
+                _cliDisplay.PrintFailure("AddSimpleRangeEventAsync was cancelled.");
 
                 return COMMAND_CANCELLED;
             }
             catch (Exception e)
             {
                 _logger.Error(e, "Unexpected error trying to add SimpleRangeEvent");
-                _cliDisplay.WriteFailure($"Unexpected error trying to add SimpleRangeEvent: {e.Message}");
+                _cliDisplay.PrintFailure($"Unexpected error trying to add SimpleRangeEvent: {e.Message}");
 
                 return RANGE_EVENT_FAILED_TO_CREATE;
             }

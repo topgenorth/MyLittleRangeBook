@@ -33,7 +33,7 @@ namespace MyLittleRangeBook.CLI.Console
             Console.WriteSuccess(message);
         }
 
-        public void WriteFailure(string message)
+        public void PrintFailure(string message)
         {
             Console.WriteProblem(message);
         }

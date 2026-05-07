@@ -59,7 +59,7 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
             }
             else
             {
-                _cliDisplay.WriteFailure($"Failed to import FIT file {fitFile} to Postgresql");
+                _cliDisplay.PrintFailure($"Failed to import FIT file {fitFile} to Postgresql");
             }
 
             return result.Value;

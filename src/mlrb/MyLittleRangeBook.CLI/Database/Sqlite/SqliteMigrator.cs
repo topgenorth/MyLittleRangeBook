@@ -89,7 +89,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             if (!File.Exists(sqlfile))
             {
                 logger.Warning("SQL File {sqlFile} not found.", sqlfile);
-                cliDisplay.WriteFailure($"Could not find the SQL file '{sqlfile}'.");
+                cliDisplay.PrintFailure($"Could not find the SQL file '{sqlfile}'.");
 
                 return SQL_SCRIPT_FILE_NOT_FOUND;
             }
@@ -122,7 +122,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                     catch (Exception e)
                     {
                         logger.Error(e, "Failed to run SQL.");
-                        cliDisplay.WriteFailure($"Failed to run SQL '{e.Message}'.");
+                        cliDisplay.PrintFailure($"Failed to run SQL '{e.Message}'.");
 
                         return SQL_FAILED_TO_RUN_SCRIPT;
                     }
@@ -146,7 +146,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             if (!File.Exists(sqliteHelper.DatabaseFile))
             {
                 logger.Warning("SQLite database {file} not found.", sqliteHelper.DatabaseFile);
-                cliDisplay.WriteFailure($"Could not find the SQLite database '{sqliteHelper.DatabaseFile}'.");
+                cliDisplay.PrintFailure($"Could not find the SQLite database '{sqliteHelper.DatabaseFile}'.");
             }
 
             Result<bool> migrationResult =await sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
@@ -156,7 +156,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 return SUCCESS;
             }
 
-            cliDisplay.WriteFailure("Failed to apply migrations.");
+            cliDisplay.PrintFailure("Failed to apply migrations.");
             return SQL_FAILED_TO_APPLY_MIGRATIONS;
         }
     }
