@@ -30,13 +30,18 @@ namespace MyLittleRangeBook.CLI.Console
         }
 
 
+        /// <summary>
+        /// List all the range events in the database.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [Command("list")]
         [UsedImplicitly]
         public async Task<int> ListRangeEvents(CancellationToken cancellationToken)
         {
             _cliDisplay.PrintAppInfo();
             Result<IEnumerable<SimpleRangeEvent>> rangeEvents = await _repo.GetSimpleRangeEventsAsync(cancellationToken)
-                .ConfigureAwait(true);
+                .ConfigureAwait(false);
             if (rangeEvents.IsFailed)
             {
                 _cliDisplay.PrintFailure("Could not retrieve the list.");
@@ -45,24 +50,25 @@ namespace MyLittleRangeBook.CLI.Console
                 return FAILURE;
             }
 
-            _printer.Start();
+            await _printer.Start().ConfigureAwait(false);
             foreach (SimpleRangeEvent sre in rangeEvents.Value)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
                     _logger.Warning("Operation cancelled by user.");
                     _cliDisplay.PrintFailure("Operation cancelled.");
-                    _printer.Finish();
+                    await _printer.Finish().ConfigureAwait(false);
 
                     return COMMAND_CANCELLED;
                 }
 
-                _printer.AddRow(sre);
+                await _printer.AddRow(sre).ConfigureAwait(false);
             }
 
-            _printer.Finish();
+            await _printer.Finish().ConfigureAwait(false);
 
 #if DEBUG
+            // [TO20260507] Need this when testing in Rider.  Without it the console window closes too fast.
             System.Console.ReadKey();
 #endif
 
