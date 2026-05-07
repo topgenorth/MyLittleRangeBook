@@ -12,24 +12,22 @@ using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
 namespace MyLittleRangeBook.CLI.Console
 {
     /// <summary>
-    ///     Allows us to create a new Range Event from the CLI.
+    ///     Allows us to create a new Range Event from the CLI, and optionally the FIT file that goes with it.
     /// </summary>
     [RegisterCommands("rangetrip")]
     [UsedImplicitly]
-    public class AddSimpleRangeEventToSqliteCommand
+    public class SimpleRangeEventCommandAddToSqlite
     {
         readonly ICliDisplay _cliDisplay;
-        readonly IFitFilesDbService _fitFilesDbService;
         readonly ILogger _logger;
         readonly ISimpleRangeEventHelper _rangeEventHelper;
         readonly ISimpleRangeEventRepository _repo;
         readonly ISimpleRangeEventPrinter _simpleRangeEventPrinter;
 
-        public AddSimpleRangeEventToSqliteCommand(ICliDisplay cliDisplay,
+        public SimpleRangeEventCommandAddToSqlite(ICliDisplay cliDisplay,
             ILogger logger,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventHelper rangeEventHelper,
-            [FromKeyedServices(DI_KEYS_SQLITE)] IFitFilesDbService fitFilesDbService,
             ISimpleRangeEventPrinter simpleRangeEventPrinter)
         {
             _cliDisplay = cliDisplay;
@@ -37,7 +35,6 @@ namespace MyLittleRangeBook.CLI.Console
             _repo = repo;
             _rangeEventHelper = rangeEventHelper;
             _simpleRangeEventPrinter = simpleRangeEventPrinter;
-            _fitFilesDbService = fitFilesDbService;
         }
 
         /// <summary>
