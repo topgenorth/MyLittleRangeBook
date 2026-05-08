@@ -6,6 +6,9 @@ using MyLittleRangeBook.IO;
 
 namespace MyLittleRangeBook.Config
 {
+    /// <summary>
+    /// Extension methods for configuration-related operations.
+    /// </summary>
     public static class ConfigurationExtensions
     {
         /// <summary>
@@ -53,7 +56,7 @@ namespace MyLittleRangeBook.Config
         /// </summary>
         /// <param name="inferFromEnvironment">
         ///     If set to true, then the database name will be suffixed with the current environment
-        ///     name (e.g., Development). Defaults to true.
+        ///     name (e.g., Development  ). Defaults to true.
         /// </param>
         /// <returns>The full path to the SQLite database file.</returns>
         public static string DefaultSqliteDatabaseName(bool inferFromEnvironment = true)

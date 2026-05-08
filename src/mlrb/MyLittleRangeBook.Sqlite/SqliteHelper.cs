@@ -5,15 +5,19 @@ using DbUp.Builder;
 using DbUp.Engine;
 using FluentResults;
 using Microsoft.Extensions.Configuration;
+using MyLittleRangeBook.Models;
 using NanoidDotNet;
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
     /// <summary>
+    ///     An enumeration that represents the types of files that can be saved in SQlite.
     /// </summary>
     public enum SqliteFileTable
     {
-        FitFiles
+        FitFiles,
+        CsvFiles,
+        ImageFiles
     }
 
 
@@ -23,6 +27,12 @@ namespace MyLittleRangeBook.Database.Sqlite
     /// </summary>
     public class SqliteHelper : ISqliteHelper, IDatabaseHelper
     {
+        /// <summary>
+        ///     Kilobytes. If a file is larger than this warning threshold, it may cause performance issues when writing to the
+        ///     database.
+        /// </summary>
+        public const int FILE_LENGTH_THRESHOLD = 100 * 1024;
+
         readonly string _connectionString;
         readonly ILogger _logger;
 
@@ -79,7 +89,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                     return Result.Ok((string.Empty, 0L))
                         .WithReason(
                             new Success("File contents are empty - nothing to write.").WithMetadata("Table", table));
-                case > 100 * 1024:
+                case > FILE_LENGTH_THRESHOLD:
                     _logger.Warning(
                         "File contents are larger than 100KB. This may cause performance issues when writing to the database. Table: {Table}, Size: {Size} bytes",
                         table, fileContents.Length);
@@ -283,6 +293,48 @@ namespace MyLittleRangeBook.Database.Sqlite
             success.Metadata.Add("ConnectionString", b.ConnectionString);
 
             return Result.Ok(true).WithSuccess(success);
+        }
+
+
+        /// <summary>
+        ///     A helper method to copy an image file to the event history directory for a specific range event. Will overwrite any
+        ///     existing files.
+        /// </summary>
+        /// <param name="imageFilePath"></param>
+        /// <param name="rangeEventId"></param>
+        /// <returns>The full path to the copied file.</returns>
+        public async Task<Result<string>> CopyImageToEventHistory(string imageFilePath, string rangeEventId)
+        {
+            #region Make sure the history directory exists
+            string dbPath = DatabaseFile;
+            string dbDir = Path.GetDirectoryName(dbPath) ?? ".";
+            string historyDir = Path.Combine(dbDir, ".history");
+            string eventHistoryDir = Path.Combine(historyDir, rangeEventId);
+            Directory.CreateDirectory(eventHistoryDir);
+            #endregion
+
+            #region Generate new filename.
+            string extension = Path.GetExtension(imageFilePath);
+            DateTime photoDate = File.GetLastWriteTime(imageFilePath);
+            var newFileName = $"{rangeEventId}-{photoDate:yyyyMMddhhmmss}{extension}";
+            #endregion
+
+            string destPath = Path.Combine(eventHistoryDir, newFileName);
+
+            try
+            {
+                File.Copy(imageFilePath, destPath, true);
+            }
+            catch (Exception ex)
+            {
+                Error? e = new Error(ex.Message).CausedBy(ex)
+                    .Enrich(rangeEventId, null);
+
+                return Result.Fail(e);
+            }
+
+
+            return Result.Ok(destPath);
         }
 
         public override string ToString()

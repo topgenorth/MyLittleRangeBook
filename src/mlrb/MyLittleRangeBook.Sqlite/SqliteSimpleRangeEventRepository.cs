@@ -2,6 +2,7 @@
 using Dapper;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 using NanoidDotNet;
@@ -118,23 +119,16 @@ namespace MyLittleRangeBook.Database.Sqlite
 
                 if (!string.IsNullOrEmpty(imageFilePath) && File.Exists(imageFilePath))
                 {
-                    string dbPath = _sqliteHelper.DatabaseFile;
-                    string dbDir = Path.GetDirectoryName(dbPath) ?? ".";
-                    string historyDir = Path.Combine(dbDir, ".history");
-                    string eventHistoryDir = Path.Combine(historyDir, simpleRangeEvent.Id!);
-                    Directory.CreateDirectory(eventHistoryDir);
+                    Result<string> copyImageResult = await _sqliteHelper.CopyImageToEventHistory(imageFilePath, simpleRangeEvent.Id!);
+                    if (copyImageResult.IsSuccess)
+                    {
+                        string extension = Path.GetExtension(copyImageResult.Value);
+                        string mimeType = FileExtensions.GetMimeType(extension);
+                        string imageId = await Nanoid.GenerateAsync();
+                        string relativePath = Path.GetRelativePath(_sqliteHelper.DatabaseFile,copyImageResult.Value);
 
-                    string extension = Path.GetExtension(imageFilePath);
-                    DateTime photoDate = File.GetLastWriteTime(imageFilePath);
-                    string newFileName = $"{simpleRangeEvent.Id}-{photoDate:yyyyMMddhhmmss}{extension}";
-                    string destPath = Path.Combine(eventHistoryDir, newFileName);
-                    File.Copy(imageFilePath, destPath, true);
-
-                    string relativePath = Path.GetRelativePath(dbDir, destPath);
-                    string mimeType = GetMimeType(extension);
-                    string imageId = await Nanoid.GenerateAsync();
-
-                    const string insertImageSql = @"
+                        #region File is copied, record this in the database.
+                        const string INSERT_IMAGE_SQL = @"
 INSERT INTO RangeEventImages (Id, FileName, MimeType)
 VALUES (@Id, @FileName, @MimeType)
 ON CONFLICT(Id) DO UPDATE SET
@@ -142,17 +136,21 @@ ON CONFLICT(Id) DO UPDATE SET
     MimeType = excluded.MimeType,
     Modified = CURRENT_TIMESTAMP;";
 
-                    await conn.ExecuteAsync(new CommandDefinition(insertImageSql,
-                        new { Id = imageId, FileName = relativePath, MimeType = mimeType },
-                        cancellationToken: cancellationToken));
+                        await conn.ExecuteAsync(new CommandDefinition(INSERT_IMAGE_SQL,
+                            new { Id = imageId, FileName = relativePath, MimeType = mimeType },
+                            cancellationToken: cancellationToken));
+                        #endregion
 
-                    const string associateSql = @"
+                        #region Associate the record for the image to the event.
+                        const string ASSOCIATE_IMAGE_TO_EVENT_SQL = @"
 INSERT OR IGNORE INTO SimpleRangeEvent_Images (SimpleRangeEventId, ImageId)
 VALUES (@SimpleRangeEventId, @ImageId);";
 
-                    await conn.ExecuteAsync(new CommandDefinition(associateSql,
-                        new { SimpleRangeEventId = simpleRangeEvent.Id, ImageId = imageId },
-                        cancellationToken: cancellationToken));
+                        await conn.ExecuteAsync(new CommandDefinition(ASSOCIATE_IMAGE_TO_EVENT_SQL,
+                            new { SimpleRangeEventId = simpleRangeEvent.Id, ImageId = imageId },
+                            cancellationToken: cancellationToken));
+                        #endregion
+                    }
                 }
 
                 finalResult = Result.Merge(results.ToArray()).ToResult(simpleRangeEvent.RowId);
@@ -184,29 +182,5 @@ VALUES (@SimpleRangeEventId, @ImageId);";
             return await _simpleRangeEventService.DeleteAsync(conn, simpleRangeEvent, cancellationToken);
         }
 
-        /// <summary>
-        ///     Add a firearm using the firearmName from the SimpleRangeEvent. If the firearm exists, then update the
-        ///     Modified field.
-        /// </summary>
-        /// <param name="conn"></param>
-        /// <param name="simpleRangeEvent"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        async Task<Result<long?>> HandleFirearmUpsertAsync(SqliteConnection conn,
-            SimpleRangeEvent simpleRangeEvent,
-            CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        static string GetMimeType(string extension) => extension.ToLowerInvariant() switch
-        {
-            ".jpg" or ".jpeg" => "image/jpeg",
-            ".png" => "image/png",
-            ".gif" => "image/gif",
-            ".bmp" => "image/bmp",
-            ".webp" => "image/webp",
-            _ => "application/octet-stream"
-        };
     }
 }
