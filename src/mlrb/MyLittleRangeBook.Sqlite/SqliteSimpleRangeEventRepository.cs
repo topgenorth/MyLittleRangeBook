@@ -1,4 +1,6 @@
 ﻿using FluentResults;
+using Dapper;
+using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
@@ -44,7 +46,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             byte[] fitFileContents,
             CancellationToken cancellationToken = default)
         {
-            return await UpsertAsync(simpleRangeEvent, fitFileContents, string.Empty, string.Empty, cancellationToken)
+            return await UpsertAsync(simpleRangeEvent, fitFileContents, string.Empty, string.Empty, string.Empty, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -52,6 +54,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             byte[] fitFileContents,
             string shotViewCsvContents,
             string shotViewFileName,
+            string imageFilePath = "",
             CancellationToken cancellationToken = default)
         {
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
@@ -113,6 +116,45 @@ namespace MyLittleRangeBook.Database.Sqlite
                     }
                 }
 
+                if (!string.IsNullOrEmpty(imageFilePath) && File.Exists(imageFilePath))
+                {
+                    string dbPath = _sqliteHelper.DatabaseFile;
+                    string dbDir = Path.GetDirectoryName(dbPath) ?? ".";
+                    string historyDir = Path.Combine(dbDir, ".history");
+                    string eventHistoryDir = Path.Combine(historyDir, simpleRangeEvent.Id!);
+                    Directory.CreateDirectory(eventHistoryDir);
+
+                    string extension = Path.GetExtension(imageFilePath);
+                    DateTime photoDate = File.GetLastWriteTime(imageFilePath);
+                    string newFileName = $"{simpleRangeEvent.Id}-{photoDate:yyyyMMddhhmmss}{extension}";
+                    string destPath = Path.Combine(eventHistoryDir, newFileName);
+                    File.Copy(imageFilePath, destPath, true);
+
+                    string relativePath = Path.GetRelativePath(dbDir, destPath);
+                    string mimeType = GetMimeType(extension);
+                    string imageId = await Nanoid.GenerateAsync();
+
+                    const string insertImageSql = @"
+INSERT INTO RangeEventImages (Id, FileName, MimeType)
+VALUES (@Id, @FileName, @MimeType)
+ON CONFLICT(Id) DO UPDATE SET
+    FileName = excluded.FileName,
+    MimeType = excluded.MimeType,
+    Modified = CURRENT_TIMESTAMP;";
+
+                    await conn.ExecuteAsync(new CommandDefinition(insertImageSql,
+                        new { Id = imageId, FileName = relativePath, MimeType = mimeType },
+                        cancellationToken: cancellationToken));
+
+                    const string associateSql = @"
+INSERT OR IGNORE INTO SimpleRangeEvent_Images (SimpleRangeEventId, ImageId)
+VALUES (@SimpleRangeEventId, @ImageId);";
+
+                    await conn.ExecuteAsync(new CommandDefinition(associateSql,
+                        new { SimpleRangeEventId = simpleRangeEvent.Id, ImageId = imageId },
+                        cancellationToken: cancellationToken));
+                }
+
                 finalResult = Result.Merge(results.ToArray()).ToResult(simpleRangeEvent.RowId);
             }
             catch (Exception e)
@@ -156,5 +198,15 @@ namespace MyLittleRangeBook.Database.Sqlite
         {
             throw new NotImplementedException();
         }
+
+        static string GetMimeType(string extension) => extension.ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".bmp" => "image/bmp",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
     }
 }
