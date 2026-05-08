@@ -14,7 +14,7 @@ using static MyLittleRangeBook.Config.ConfigurationExtensions;
 IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
     .AddBootStrapper(SerilogAppSettingsJsonFileBootstrap.SerilogSection)
     .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
-await bootstrapper.EnsureAppSettingsExistsAsync(DefaultAppSettingsFile.FullName).ConfigureAwait(true);
+await bootstrapper.EnsureAppSettingsExistsAsync(DefaultAppSettingsFile.FullName).ConfigureAwait(false);
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
@@ -51,6 +51,6 @@ ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 ILogger logger = host.Services.GetRequiredService<ILogger>();
 
 logger.Information("MyLittleRangeBook CLI v{AppVersion}", typeof(ReturnCodes).Assembly.GetAssemblyVersionInformation());
-await app.RunAsync(args).ConfigureAwait(true);
+await app.RunAsync(args).ConfigureAwait(false);
 
-await Log.CloseAndFlushAsync().ConfigureAwait(true);
+await Log.CloseAndFlushAsync().ConfigureAwait(false);
