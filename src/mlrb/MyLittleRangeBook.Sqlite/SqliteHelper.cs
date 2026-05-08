@@ -302,21 +302,24 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// </summary>
         /// <param name="imageFilePath"></param>
         /// <param name="rangeEventId"></param>
-        /// <returns>The full path to the copied file.</returns>
-        public async Task<Result<string>> CopyImageToEventHistory(string imageFilePath, string rangeEventId)
+        /// <returns>A Nanoid to reference the file, and the full path to the copied file.</returns>
+        public async Task<Result<(string id, string imagePath)>> CopyImageToEventHistory(string imageFilePath,
+            string rangeEventId)
         {
+            string id = await Nanoid.GenerateAsync();
+
             #region Make sure the history directory exists
             string dbPath = DatabaseFile;
             string dbDir = Path.GetDirectoryName(dbPath) ?? ".";
-            string historyDir = Path.Combine(dbDir, ".history");
+            string historyDir = Path.Combine(dbDir,
+                OperatingSystem.IsWindows() ? "RangeEventsAssets" : "range-event-assets");
             string eventHistoryDir = Path.Combine(historyDir, rangeEventId);
             Directory.CreateDirectory(eventHistoryDir);
             #endregion
 
             #region Generate new filename.
             string extension = Path.GetExtension(imageFilePath);
-            DateTime photoDate = File.GetLastWriteTime(imageFilePath);
-            var newFileName = $"{rangeEventId}-{photoDate:yyyyMMddhhmmss}{extension}";
+            var newFileName = $"{id}{extension}";
             #endregion
 
             string destPath = Path.Combine(eventHistoryDir, newFileName);
@@ -334,7 +337,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
 
 
-            return Result.Ok(destPath);
+            return Result.Ok((id, destPath));
         }
 
         public override string ToString()

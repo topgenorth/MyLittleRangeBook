@@ -1,6 +1,5 @@
-﻿using FluentResults;
-using Dapper;
-using System.IO;
+﻿using Dapper;
+using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Models;
@@ -47,7 +46,8 @@ namespace MyLittleRangeBook.Database.Sqlite
             byte[] fitFileContents,
             CancellationToken cancellationToken = default)
         {
-            return await UpsertAsync(simpleRangeEvent, fitFileContents, string.Empty, string.Empty, string.Empty, cancellationToken)
+            return await UpsertAsync(simpleRangeEvent, fitFileContents, string.Empty, string.Empty, string.Empty,
+                    cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -119,13 +119,15 @@ namespace MyLittleRangeBook.Database.Sqlite
 
                 if (!string.IsNullOrEmpty(imageFilePath) && File.Exists(imageFilePath))
                 {
-                    Result<string> copyImageResult = await _sqliteHelper.CopyImageToEventHistory(imageFilePath, simpleRangeEvent.Id!);
+                    Result<(string id, string imagePath)> copyImageResult =
+                        await _sqliteHelper.CopyImageToEventHistory(imageFilePath, simpleRangeEvent.Id!);
                     if (copyImageResult.IsSuccess)
                     {
-                        string extension = Path.GetExtension(copyImageResult.Value);
+                        string extension = Path.GetExtension(copyImageResult.Value.imagePath);
                         string mimeType = FileExtensions.GetMimeType(extension);
-                        string imageId = await Nanoid.GenerateAsync();
-                        string relativePath = Path.GetRelativePath(_sqliteHelper.DatabaseFile,copyImageResult.Value);
+
+                        string relativePath = Path.GetRelativePath(Path.GetDirectoryName(_sqliteHelper.DatabaseFile)!,
+                            copyImageResult.Value.imagePath);
 
                         #region File is copied, record this in the database.
                         const string INSERT_IMAGE_SQL = @"
@@ -137,7 +139,7 @@ ON CONFLICT(Id) DO UPDATE SET
     Modified = CURRENT_TIMESTAMP;";
 
                         await conn.ExecuteAsync(new CommandDefinition(INSERT_IMAGE_SQL,
-                            new { Id = imageId, FileName = relativePath, MimeType = mimeType },
+                            new { Id = copyImageResult.Value.id, FileName = relativePath, MimeType = mimeType },
                             cancellationToken: cancellationToken));
                         #endregion
 
@@ -147,7 +149,7 @@ INSERT OR IGNORE INTO SimpleRangeEvent_Images (SimpleRangeEventId, ImageId)
 VALUES (@SimpleRangeEventId, @ImageId);";
 
                         await conn.ExecuteAsync(new CommandDefinition(ASSOCIATE_IMAGE_TO_EVENT_SQL,
-                            new { SimpleRangeEventId = simpleRangeEvent.Id, ImageId = imageId },
+                            new { SimpleRangeEventId = simpleRangeEvent.Id, ImageId = copyImageResult.Value.id },
                             cancellationToken: cancellationToken));
                         #endregion
                     }
@@ -181,6 +183,5 @@ VALUES (@SimpleRangeEventId, @ImageId);";
 
             return await _simpleRangeEventService.DeleteAsync(conn, simpleRangeEvent, cancellationToken);
         }
-
     }
 }

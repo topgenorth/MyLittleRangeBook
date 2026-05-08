@@ -68,6 +68,6 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <param name="imageFilePath"></param>
         /// <param name="rangeEventId"></param>
         /// <returns></returns>
-        Task<Result<string>> CopyImageToEventHistory(string imageFilePath, string rangeEventId);
+        Task<Result<(string id, string imagePath)>> CopyImageToEventHistory(string imageFilePath, string rangeEventId);
     }
 }
