@@ -51,6 +51,7 @@ namespace MyLittleRangeBook.CLI.Console
         /// <param name="date">The date of the range trip in YYYY-MM-DD format. Default to today if omitted</param>
         /// <param name="fitFile">The path to a Garmin FIT file from the Xero C1.</param>
         /// <param name="csvFile">The path to a ShotView CSV file.</param>
+        /// <param name="imageFile">The path to an image file (JPG or PNG).</param>
         /// <param name="quiet">If this parameter is provided, then the command will display minimal output the the console.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -64,6 +65,7 @@ namespace MyLittleRangeBook.CLI.Console
             [RangeTripDateParser] DateOnly date = default,
             string fitFile = "",
             string csvFile = "",
+            string imageFile = "",
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
@@ -95,7 +97,7 @@ namespace MyLittleRangeBook.CLI.Console
                     return COMMAND_CANCELLED;
                 }
 
-                Result<long?> result = await _repo.UpsertAsync(sre, fitBytes, csvContents, Path.GetFileName(csvFile), cancellationToken).ConfigureAwait(false);
+                Result<long?> result = await _repo.UpsertAsync(sre, fitBytes, csvContents, Path.GetFileName(csvFile), imageFile, cancellationToken).ConfigureAwait(false);
 
                 if (result.IsSuccess)
                 {

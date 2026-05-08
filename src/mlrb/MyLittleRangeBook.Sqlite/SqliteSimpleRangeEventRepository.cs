@@ -1,5 +1,7 @@
-﻿using FluentResults;
+﻿using Dapper;
+using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 using NanoidDotNet;
@@ -44,7 +46,8 @@ namespace MyLittleRangeBook.Database.Sqlite
             byte[] fitFileContents,
             CancellationToken cancellationToken = default)
         {
-            return await UpsertAsync(simpleRangeEvent, fitFileContents, string.Empty, string.Empty, cancellationToken)
+            return await UpsertAsync(simpleRangeEvent, fitFileContents, string.Empty, string.Empty, string.Empty,
+                    cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -52,6 +55,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             byte[] fitFileContents,
             string shotViewCsvContents,
             string shotViewFileName,
+            string imageFilePath = "",
             CancellationToken cancellationToken = default)
         {
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
@@ -113,6 +117,44 @@ namespace MyLittleRangeBook.Database.Sqlite
                     }
                 }
 
+                if (!string.IsNullOrEmpty(imageFilePath) && File.Exists(imageFilePath))
+                {
+                    Result<(string id, string imagePath)> copyImageResult =
+                        await _sqliteHelper.CopyImageToEventHistory(imageFilePath, simpleRangeEvent.Id!);
+                    if (copyImageResult.IsSuccess)
+                    {
+                        string extension = Path.GetExtension(copyImageResult.Value.imagePath);
+                        string mimeType = FileExtensions.GetMimeType(extension);
+
+                        string relativePath = Path.GetRelativePath(Path.GetDirectoryName(_sqliteHelper.DatabaseFile)!,
+                            copyImageResult.Value.imagePath);
+
+                        #region File is copied, record this in the database.
+                        const string INSERT_IMAGE_SQL = @"
+INSERT INTO RangeEventImages (Id, FileName, MimeType)
+VALUES (@Id, @FileName, @MimeType)
+ON CONFLICT(Id) DO UPDATE SET
+    FileName = excluded.FileName,
+    MimeType = excluded.MimeType,
+    Modified = CURRENT_TIMESTAMP;";
+
+                        await conn.ExecuteAsync(new CommandDefinition(INSERT_IMAGE_SQL,
+                            new { Id = copyImageResult.Value.id, FileName = relativePath, MimeType = mimeType },
+                            cancellationToken: cancellationToken));
+                        #endregion
+
+                        #region Associate the record for the image to the event.
+                        const string ASSOCIATE_IMAGE_TO_EVENT_SQL = @"
+INSERT OR IGNORE INTO SimpleRangeEvent_Images (SimpleRangeEventId, ImageId)
+VALUES (@SimpleRangeEventId, @ImageId);";
+
+                        await conn.ExecuteAsync(new CommandDefinition(ASSOCIATE_IMAGE_TO_EVENT_SQL,
+                            new { SimpleRangeEventId = simpleRangeEvent.Id, ImageId = copyImageResult.Value.id },
+                            cancellationToken: cancellationToken));
+                        #endregion
+                    }
+                }
+
                 finalResult = Result.Merge(results.ToArray()).ToResult(simpleRangeEvent.RowId);
             }
             catch (Exception e)
@@ -140,21 +182,6 @@ namespace MyLittleRangeBook.Database.Sqlite
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
 
             return await _simpleRangeEventService.DeleteAsync(conn, simpleRangeEvent, cancellationToken);
-        }
-
-        /// <summary>
-        ///     Add a firearm using the firearmName from the SimpleRangeEvent. If the firearm exists, then update the
-        ///     Modified field.
-        /// </summary>
-        /// <param name="conn"></param>
-        /// <param name="simpleRangeEvent"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        async Task<Result<long?>> HandleFirearmUpsertAsync(SqliteConnection conn,
-            SimpleRangeEvent simpleRangeEvent,
-            CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
         }
     }
 }

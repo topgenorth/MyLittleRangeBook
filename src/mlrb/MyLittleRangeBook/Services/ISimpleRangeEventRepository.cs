@@ -27,6 +27,7 @@ namespace MyLittleRangeBook.Services
             byte[] fitFileContents,
             string shotViewCsvContents,
             string shotViewFileName,
+            string imageFilePath = "",
             CancellationToken cancellationToken = default);
 
         Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(CancellationToken cancellationToken =

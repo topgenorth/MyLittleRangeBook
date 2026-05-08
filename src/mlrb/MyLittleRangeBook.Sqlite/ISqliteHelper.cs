@@ -60,5 +60,14 @@ namespace MyLittleRangeBook.Database.Sqlite
         Task<Result<bool>> UpdateSqliteDatabasePathAsync(string sqliteDatabaseName,
             string? appSettingsFile = null,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     A helper method to copy an image file to the event history directory for a specific range event. Will overwrite any
+        ///     existing files.
+        /// </summary>
+        /// <param name="imageFilePath"></param>
+        /// <param name="rangeEventId"></param>
+        /// <returns></returns>
+        Task<Result<(string id, string imagePath)>> CopyImageToEventHistory(string imageFilePath, string rangeEventId);
     }
 }

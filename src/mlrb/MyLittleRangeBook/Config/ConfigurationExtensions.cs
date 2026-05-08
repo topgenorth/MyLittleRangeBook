@@ -6,6 +6,9 @@ using MyLittleRangeBook.IO;
 
 namespace MyLittleRangeBook.Config
 {
+    /// <summary>
+    ///     Extension methods for configuration-related operations.
+    /// </summary>
     public static class ConfigurationExtensions
     {
         /// <summary>
@@ -38,8 +41,8 @@ namespace MyLittleRangeBook.Config
         ///     Gets the default log directory path for this application. It is a "Logs" subdirectory within the user settings
         ///     directory. This keeps logs organized and separate from other application data.
         /// </summary>
-        public static DirectoryInfo DefaultLogDirectory =>
-            new(Path.Combine(DefaultUserSettingsDirectory.FullName, "Logs"));
+        public static DirectoryInfo DefaultLogDirectory => new(Path.Combine(DefaultUserSettingsDirectory.FullName,
+            OperatingSystem.IsWindows() ? "Logs" : "logs"));
 
         public static string DefaultLogFile => Path.Combine(DefaultLogDirectory.FullName, "mlrb-.log");
 
@@ -53,7 +56,7 @@ namespace MyLittleRangeBook.Config
         /// </summary>
         /// <param name="inferFromEnvironment">
         ///     If set to true, then the database name will be suffixed with the current environment
-        ///     name (e.g., Development). Defaults to true.
+        ///     name (e.g., Development  ). Defaults to true.
         /// </param>
         /// <returns>The full path to the SQLite database file.</returns>
         public static string DefaultSqliteDatabaseName(bool inferFromEnvironment = true)
@@ -129,7 +132,7 @@ namespace MyLittleRangeBook.Config
         }
 
         /// <summary>
-        ///    Configures the application's configuration sources based on the current environment.
+        ///     Configures the application's configuration sources based on the current environment.
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
