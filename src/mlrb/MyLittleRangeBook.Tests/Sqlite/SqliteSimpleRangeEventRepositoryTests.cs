@@ -36,5 +36,35 @@ namespace MyLittleRangeBook.Sqlite
             result.Value.ShouldNotBeNull();
             result.Value.Value.ShouldBeGreaterThan(0);
         }
+
+        [Fact]
+        public async Task Should_Upsert_SimpleRangeEvent_With_ShotViewCsvContents()
+        {
+            await GetSqliteConnectionAsync();
+            IFitFilesDbService fitFilesDbService = Substitute.For<IFitFilesDbService>();
+            IShotViewFilesDbService shotViewFilesDbService = Substitute.For<IShotViewFilesDbService>();
+            shotViewFilesDbService.UpsertShotViewFileAsync(Arg.Any<IDbConnection>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string?>())
+                .Returns(Task.FromResult(Result.Ok().ToResult(new EntityId("x", 1)))
+                );
+            shotViewFilesDbService.AssociateWithRangeEvent(Arg.Any<IDbConnection>(), Arg.Any<string>(), Arg.Any<string>())
+                .Returns(Task.FromResult(Result.Ok((long?)1)));
+
+
+            var simpleRangeLogService = new SqliteSimpleRangeEventService();
+            var repo = new SqliteSimpleRangeEventRepository(SqliteHelper, simpleRangeLogService, fitFilesDbService,
+                shotViewFilesDbService);
+
+            var simpleRangeEvent = SimpleRangeEvent.New("TestFirearm", 50, "TestRange", "TestAmmo", "TestNotes");
+            string csvContents = "Shot,Velocity\n1,1000";
+
+            Result<long?> result = await repo.UpsertAsync(simpleRangeEvent, [], csvContents, "test.csv");
+
+            result.IsSuccess.ShouldBeTrue();
+            result.Value.ShouldNotBeNull();
+            result.Value.Value.ShouldBeGreaterThan(0);
+        }
     }
 }

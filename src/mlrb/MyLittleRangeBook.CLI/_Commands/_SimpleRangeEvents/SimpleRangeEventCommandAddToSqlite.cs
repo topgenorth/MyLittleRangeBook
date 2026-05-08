@@ -50,6 +50,7 @@ namespace MyLittleRangeBook.CLI.Console
         /// <param name="notes">Any notes or comments.  Optional</param>
         /// <param name="date">The date of the range trip in YYYY-MM-DD format. Default to today if omitted</param>
         /// <param name="fitFile">The path to a Garmin FIT file from the Xero C1.</param>
+        /// <param name="csvFile">The path to a ShotView CSV file.</param>
         /// <param name="quiet">If this parameter is provided, then the command will display minimal output the the console.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -62,6 +63,7 @@ namespace MyLittleRangeBook.CLI.Console
             string notes = "",
             [RangeTripDateParser] DateOnly date = default,
             string fitFile = "",
+            string csvFile = "",
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
@@ -83,6 +85,7 @@ namespace MyLittleRangeBook.CLI.Console
                         firearms, ranges, cancellationToken)
                     .ConfigureAwait(false);
                 byte[] fitBytes = await GetBytesFromFitFileAsync(fitFile, cancellationToken).ConfigureAwait(false);
+                string csvContents = await GetTextFromCsvFileAsync(csvFile, cancellationToken).ConfigureAwait(false);
 
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -92,7 +95,7 @@ namespace MyLittleRangeBook.CLI.Console
                     return COMMAND_CANCELLED;
                 }
 
-                Result<long?> result = await _repo.UpsertAsync(sre, fitBytes, cancellationToken).ConfigureAwait(false);
+                Result<long?> result = await _repo.UpsertAsync(sre, fitBytes, csvContents, Path.GetFileName(csvFile), cancellationToken).ConfigureAwait(false);
 
                 if (result.IsSuccess)
                 {
@@ -137,6 +140,23 @@ namespace MyLittleRangeBook.CLI.Console
             }
 
             return bytesToWrite;
+        }
+
+        async Task<string> GetTextFromCsvFileAsync(string csvFile, CancellationToken cancellationToken)
+        {
+            string csvContents;
+            if (string.IsNullOrWhiteSpace(csvFile))
+            {
+                csvContents = string.Empty;
+            }
+            else
+            {
+                Result<string> r = await csvFile.LoadFileTextAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                csvContents = r.IsSuccess ? r.Value : string.Empty;
+            }
+
+            return csvContents;
         }
 
         async Task<SimpleRangeEvent> CreateSimpleRangeEventAsync(string firearm,

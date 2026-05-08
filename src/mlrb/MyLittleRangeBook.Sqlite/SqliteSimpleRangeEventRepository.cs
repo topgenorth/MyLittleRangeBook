@@ -44,6 +44,16 @@ namespace MyLittleRangeBook.Database.Sqlite
             byte[] fitFileContents,
             CancellationToken cancellationToken = default)
         {
+            return await UpsertAsync(simpleRangeEvent, fitFileContents, string.Empty, string.Empty, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
+            byte[] fitFileContents,
+            string shotViewCsvContents,
+            string shotViewFileName,
+            CancellationToken cancellationToken = default)
+        {
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
             Result<long?> finalResult;
             try
@@ -52,7 +62,14 @@ namespace MyLittleRangeBook.Database.Sqlite
                     .UpsertAsync(conn, simpleRangeEvent, cancellationToken)
                     .ConfigureAwait(false);
 
-                if (fitFileContents.Length > 0)
+                if (sreResult.IsFailed)
+                {
+                    return sreResult;
+                }
+
+                List<Result> results = [sreResult.ToResult()];
+
+                if (fitFileContents is { Length: > 0 })
                 {
                     // [TO20260504] Not sure how important the file name really is.
                     string syntheticFileName = simpleRangeEvent.Id + "_" +
@@ -64,46 +81,16 @@ namespace MyLittleRangeBook.Database.Sqlite
                             syntheticFileName, cancellationToken)
                         .ConfigureAwait(false);
 
+                    results.Add(fitResult.ToResult());
+
                     if (fitResult.IsSuccess)
                     {
                         Result<long?> joinResult = await _filesDbService
                             .AssociateWithRangeEvent(conn, simpleRangeEvent.Id!, fitResult.Value.Id, cancellationToken)
                             .ConfigureAwait(false);
-                        finalResult = Result.Merge(sreResult, fitResult, joinResult).ToResult(simpleRangeEvent.RowId);
-                    }
-                    else
-                    {
-                        finalResult = Result.Merge(sreResult, fitResult).ToResult(simpleRangeEvent.RowId);
+                        results.Add(joinResult.ToResult());
                     }
                 }
-                else
-                {
-                    finalResult = sreResult;
-                }
-            }
-            catch (Exception e)
-            {
-                Error? err = new Error("Failed to upsert simple range event with FIT file contents.")
-                    .Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId)
-                    .CausedBy(e);
-                finalResult = Result.Fail<long?>(err);
-            }
-
-            return finalResult;
-        }
-
-        public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
-            string shotViewCsvContents,
-            string fileName,
-            CancellationToken cancellationToken = default)
-        {
-            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-            Result<long?> finalResult;
-            try
-            {
-                Result<long?> sreResult = await _simpleRangeEventService
-                    .UpsertAsync(conn, simpleRangeEvent, cancellationToken)
-                    .ConfigureAwait(false);
 
                 if (!string.IsNullOrEmpty(shotViewCsvContents))
                 {
@@ -111,8 +98,10 @@ namespace MyLittleRangeBook.Database.Sqlite
                         .UpsertShotViewFileAsync(conn,
                             await Nanoid.GenerateAsync(),
                             shotViewCsvContents,
-                            fileName, cancellationToken)
+                            shotViewFileName, cancellationToken)
                         .ConfigureAwait(false);
+
+                    results.Add(shotViewResult.ToResult());
 
                     if (shotViewResult.IsSuccess)
                     {
@@ -120,22 +109,15 @@ namespace MyLittleRangeBook.Database.Sqlite
                             .AssociateWithRangeEvent(conn, simpleRangeEvent.Id!, shotViewResult.Value.Id,
                                 cancellationToken)
                             .ConfigureAwait(false);
-                        finalResult = Result.Merge(sreResult, shotViewResult, joinResult)
-                            .ToResult(simpleRangeEvent.RowId);
-                    }
-                    else
-                    {
-                        finalResult = Result.Merge(sreResult, shotViewResult).ToResult(simpleRangeEvent.RowId);
+                        results.Add(joinResult.ToResult());
                     }
                 }
-                else
-                {
-                    finalResult = sreResult;
-                }
+
+                finalResult = Result.Merge(results.ToArray()).ToResult(simpleRangeEvent.RowId);
             }
             catch (Exception e)
             {
-                Error? err = new Error("Failed to upsert simple range event with ShotView file contents.")
+                Error? err = new Error("Failed to upsert simple range event with file contents.")
                     .Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId)
                     .CausedBy(e);
                 finalResult = Result.Fail<long?>(err);
