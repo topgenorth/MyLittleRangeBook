@@ -4,15 +4,14 @@
     Id       TEXT                           not null, --NanoID unique key.
     FileName TEXT                           not null,
     MimeType TEXT default 'text/csv'        not null,
-    Contents TEST                           not null, -- The file contents as TEXT.
+    Contents TEXT                           not null, -- The file contents as TEXT.
     Created  TEXT default CURRENT_TIMESTAMP not null, -- The date the record was created.
     Modified TEXT default CURRENT_TIMESTAMP not null, -- The date the file was last modified.
-    CONSTRAINT UQ_FileFiles UNIQUE (ID)
+    CONSTRAINT UQ_ShotViewFiles_Id UNIQUE (ID),
+    CONSTRAINT UQ_ShotViewFiles_FileName UNIQUE (FileName)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS IX_ShotViewFiles_Id
-    ON FitFiles (Id);
-CREATE UNIQUE INDEX IF NOT EXISTS IX_ShotViewFiles_FileName
-    ON FitFiles (FileName);
+    ON ShotViewFiles (Id);
 
 CREATE TABLE IF NOT EXISTS SimpleRangeEvent_ShotViewFiles
 (
@@ -30,6 +29,6 @@ CREATE TABLE IF NOT EXISTS SimpleRangeEvent_ShotViewFiles
             REFERENCES ShotViewFiles (Id)
             ON DELETE CASCADE,
 
-    CONSTRAINT UQ_SimpleRangeEvent_FitFiles_Event_FitFile
+    CONSTRAINT UQ_SimpleRangeEvent_ShotViewFiles_Event_ShotViewFile
         UNIQUE (SimpleRangeEventId, ShotViewFileId)
 );

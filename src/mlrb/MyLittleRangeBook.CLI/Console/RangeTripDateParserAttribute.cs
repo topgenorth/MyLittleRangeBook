@@ -3,7 +3,8 @@
 namespace MyLittleRangeBook.CLI.Console
 {
     /// <summary>
-    ///     This attribute allows us to parse a date from the command line and return a <c cref="DateOnly"/>. If the user does not provide a
+    ///     This attribute allows us to parse a date from the command line and return a <c cref="DateOnly" />. If the user does
+    ///     not provide a
     ///     date, then it defaults to today. If the user provides an invalid date, then it also defaults to today.
     /// </summary>
     [AttributeUsage(AttributeTargets.Parameter)]

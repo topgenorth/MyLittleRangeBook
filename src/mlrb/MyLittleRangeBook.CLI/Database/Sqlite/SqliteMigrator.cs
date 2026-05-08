@@ -17,6 +17,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
     public class SqliteMigrator(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper)
     {
         const string MigrationsSql = "SELECT * FROM SchemaVersions ORDER BY Applied DESC";
+
         /// <summary>
         ///     Will return all the migrations that have been applied to the database.
         /// </summary>
@@ -51,7 +52,8 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                         {
                             string? schemaVersionId = rdr.IsDBNull(0) ? string.Empty : rdr.GetValue(0).ToString();
                             string scriptName = rdr.IsDBNull(1) ? string.Empty : rdr.GetString(1);
-                            string applied = rdr.IsDBNull(2) ? string.Empty : rdr.GetValue(2).ToString() ?? string.Empty;
+                            string applied =
+                                rdr.IsDBNull(2) ? string.Empty : rdr.GetValue(2).ToString() ?? string.Empty;
                             table.AddRow(schemaVersionId!, scriptName, applied);
                         }
 
@@ -70,7 +72,6 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
 
                 return SQL_FAILED_TO_APPLY_MIGRATIONS;
             }
-
         }
 
         /// <summary>
@@ -109,15 +110,15 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                         cliDisplay.Console.MarkupLineInterpolated($"[green]✓ Loading SQL file {sqlfile}.[/]");
                         string sql = await File.ReadAllTextAsync(sqlfile, ct);
 
-                        Result<bool> result= await sqliteHelper.RunSqlOnDatabaseAsync(sql, ct);
+                        Result<bool> result = await sqliteHelper.RunSqlOnDatabaseAsync(sql, ct);
                         if (result.IsSuccess)
                         {
                             WriteSuccess();
+
                             return SUCCESS;
                         }
 
                         return SQL_FAILED_TO_RUN_SCRIPT;
-
                     }
                     catch (Exception e)
                     {
@@ -149,14 +150,16 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 cliDisplay.PrintFailure($"Could not find the SQLite database '{sqliteHelper.DatabaseFile}'.");
             }
 
-            Result<bool> migrationResult =await sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
+            Result<bool> migrationResult = await sqliteHelper.ApplyDbupMigrationsAsync(cancellationToken);
             if (migrationResult.IsSuccess)
             {
                 cliDisplay.WriteSuccess("Migrations applied.");
+
                 return SUCCESS;
             }
 
             cliDisplay.PrintFailure("Failed to apply migrations.");
+
             return SQL_FAILED_TO_APPLY_MIGRATIONS;
         }
     }

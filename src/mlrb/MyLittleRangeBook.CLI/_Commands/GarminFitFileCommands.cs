@@ -25,7 +25,7 @@ namespace MyLittleRangeBook.CLI
         }
 
         /// <summary>
-        /// Used to explore the FIT file.
+        ///     Used to explore the FIT file.
         /// </summary>
         /// <param name="file"></param>
         /// <param name="cancellationToken"></param>
@@ -36,11 +36,13 @@ namespace MyLittleRangeBook.CLI
             _cliDisplay.PrintAppInfo();
             _cliDisplay.Console.MarkupLine($"Exploring the FIT file {file}");
 
-            Result<ShotSession> result = await ((XeroShotSessionParser) _xeroParser).ExploreFitFileAsync(file, cancellationToken);
+            Result<ShotSession> result =
+                await ((XeroShotSessionParser)_xeroParser).ExploreFitFileAsync(file, cancellationToken);
             if (result.IsFailed)
             {
                 _cliDisplay.Console.MarkupLine($"[red]Failed to explore FIT file {file}.[/]");
             }
+
             return SUCCESS;
         }
 

@@ -5,6 +5,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.CLI.Console;
 using Spectre.Console;
+using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.CLI
 {
@@ -35,7 +36,7 @@ namespace MyLittleRangeBook.CLI
             CancellationToken cancellationToken = default)
         {
             _cliDisplay.WriteAppInfo("Set Database Path");
-            string appSettingsJsonFile = Config.ConfigurationExtensions.DefaultAppSettingsFile.FullName;
+            string appSettingsJsonFile = ConfigurationExtensions.DefaultAppSettingsFile.FullName;
             string originalAppSettingsJson;
             try
             {
@@ -44,20 +45,21 @@ namespace MyLittleRangeBook.CLI
             catch (Exception ex)
             {
                 _logger.Error(ex, "Failed to read appsettings.json file.");
+
                 return ReturnCodes.FAILURE;
             }
 
-            var rootNode=JsonNode.Parse(originalAppSettingsJson);
+            var rootNode = JsonNode.Parse(originalAppSettingsJson);
             if (rootNode is null)
             {
                 _logger.Error("Failed to parse appsettings.json file.");
+
                 return ReturnCodes.FAILURE;
             }
 
-            var sb = new SqliteConnectionStringBuilder()
+            var sb = new SqliteConnectionStringBuilder
             {
-                DataSource = connectionString,
-                Mode = SqliteOpenMode.ReadWriteCreate
+                DataSource = connectionString, Mode = SqliteOpenMode.ReadWriteCreate
             };
 
             try
@@ -69,10 +71,12 @@ namespace MyLittleRangeBook.CLI
             catch (Exception ex)
             {
                 _logger.Error(ex, "Failed to write appsettings.json file.");
+
                 return ReturnCodes.FAILURE;
             }
 
             _cliDisplay.WriteSuccess("Updated path to SQLite database in appsettings.json file.");
+
             return ReturnCodes.SUCCESS;
         }
 

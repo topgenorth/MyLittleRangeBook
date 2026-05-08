@@ -111,7 +111,8 @@ namespace MyLittleRangeBook.CLI.Console
         static async IAsyncEnumerable<string> GetChoicesAsync(SqliteCommand command,
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            await using SqliteDataReader reader =
+                await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -127,7 +128,8 @@ namespace MyLittleRangeBook.CLI.Console
             await using SqliteCommand command = connection.CreateCommand();
             command.CommandText = sql;
             command.CommandType = CommandType.Text;
-            await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            await using SqliteDataReader reader =
+                await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
                 cancellationToken.ThrowIfCancellationRequested();

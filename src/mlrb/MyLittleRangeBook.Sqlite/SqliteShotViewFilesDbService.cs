@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Dapper;
 using FluentResults;
 using MyLittleRangeBook.Models;
@@ -6,13 +6,10 @@ using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
-    /// <summary>
-    ///     Thrown when attempting to insert a FIT file with a name that already exists in the database - this indicates that
-    ///     the FIT file was already added.
-    /// </summary>
-    public class DuplicateFitFileNameError : MlrbBaseError
+    public class DuplicateShotViewFileNameError : MlrbBaseError
     {
-        public DuplicateFitFileNameError(string fileName) : base($"The file {fileName} already exists in the FIT table")
+        public DuplicateShotViewFileNameError(string fileName) : base(
+            $"The file {fileName} already exists in the ShotView table")
         {
             FileName = fileName;
         }
@@ -20,47 +17,29 @@ namespace MyLittleRangeBook.Database.Sqlite
         public string FileName { get; }
     }
 
-    public class SqliteFitFilesDbService : IFitFilesDbService
+    public class SqliteShotViewFilesDbService : IShotViewFilesDbService
     {
-        const string SelectByIdSql = "SELECT * FROM FitFiles WHERE Id=@Id;";
+        const string SelectByIdSql = "SELECT * FROM ShotViewFiles WHERE Id=@Id;";
 
-        /// <summary>
-        ///     This SQL statement inserts a new record into the FitFiles table with specified values for Id, FileName, and
-        ///     Contents.
-        ///     If a record with the same Id already exists, it updates the existing record with the new FileName, Contents,
-        ///     and sets the Modified timestamp to the current UTC time. The statement returns the RowId of the affected row.
-        /// </summary>
         const string InsertSql = """
-                                 INSERT INTO FitFiles (Id, FileName, Contents) 
+                                 INSERT INTO ShotViewFiles (Id, FileName, Contents) 
                                  VALUES (@Id, @FileName, @Contents) 
                                  ON CONFLICT(id) DO UPDATE SET FileName = @FileName, Contents = @Contents, Modified=utcnow()
                                  RETURNING RowId;
                                  """;
 
-        /// <summary>
-        ///     This SQL will update the contents of a FitFile record by its FileName, setting the Modified timestamp to the
-        ///     current UTC time.
-        /// </summary>
-        const string UpdateFitFileByName = """
-                                           UPDATE FitFiles
-                                           SET Contents=@Contents, Modified=utcnow()  
-                                           WHERE FileName=@FileName;
-                                           """;
+        const string UpdateShotViewFileByName = """
+                                                UPDATE ShotViewFiles
+                                                SET Contents=@Contents, Modified=utcnow()  
+                                                WHERE FileName=@FileName;
+                                                """;
 
-        /// <summary>
-        ///     This SQL command deletes a FitFile record from the database where the ID matches the provided parameter.
-        /// </summary>
-        const string DeleteSql = "DELETE FROM FitFiles WHERE Id = @Id";
+        const string DeleteSql = "DELETE FROM ShotViewFiles WHERE Id = @Id";
 
-        /// <summary>
-        ///     This SQL inserts an association between a range event and a fit file into the
-        ///     SimpleRangeEvent_FitFiles table. If the association already exists, no action is taken.
-        ///     The query returns the RowId of the inserted or existing record.
-        /// </summary>
         const string AssociateWithRangeEventSql =
-            "INSERT INTO SimpleRangeEvent_FitFiles (SimpleRangeEventId, FitFileId) VALUES (@RangeEventId, @FitFileId) ON CONFLICT DO NOTHING RETURNING RowId";
+            "INSERT INTO SimpleRangeEvent_ShotViewFiles (SimpleRangeEventId, ShotViewFileId) VALUES (@RangeEventId, @ShotViewFileId) ON CONFLICT DO NOTHING RETURNING RowId";
 
-        public async Task<Result<(EntityId EntityId, string FileName, ReadOnlyMemory<byte> contents)>> GetFitFileAsync(
+        public async Task<Result<(EntityId EntityId, string FileName, string contents)>> GetShotViewFileAsync(
             IDbConnection connection,
             string id,
             CancellationToken cancellationToken = default)
@@ -81,25 +60,22 @@ namespace MyLittleRangeBook.Database.Sqlite
                     new { Id = id },
                     cancellationToken: cancellationToken);
 
-                FitFileRow? record = await conn.QuerySingleOrDefaultAsync<FitFileRow>(cd);
+                ShotViewFileRow? record = await conn.QuerySingleOrDefaultAsync<ShotViewFileRow>(cd);
 
                 if (record is null)
                 {
-                    Error err = new Error("FIT file with ID not found in database").Enrich(id, null);
+                    Error err = new Error("ShotView file with ID not found in database").Enrich(id, null);
 
                     return Result.Fail(err);
                 }
 
                 var eid = new EntityId(record.Id, record.RowId);
-                (EntityId eid, string fileName, ReadOnlyMemory<byte> contents) x = (eid,
-                    fileName: record.FileName,
-                    contents: new ReadOnlyMemory<byte>(record.Contents));
 
-                return Result.Ok(x);
+                return Result.Ok((eid, record.FileName, record.Contents));
             }
             catch (Exception ex)
             {
-                Error err = new Error("Unexpected exception trying to retrieve FIT file from database.")
+                Error err = new Error("Unexpected exception trying to retrieve ShotView file from database.")
                     .CausedBy(ex)
                     .Enrich(id, null);
 
@@ -107,7 +83,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
         }
 
-        public async Task<Result> DeleteFitFileAsync(IDbConnection connection,
+        public async Task<Result> DeleteShotViewFileAsync(IDbConnection connection,
             string id,
             CancellationToken cancellationToken = default)
         {
@@ -127,13 +103,13 @@ namespace MyLittleRangeBook.Database.Sqlite
                     new { Id = id },
                     cancellationToken: cancellationToken);
 
-                long x = await conn.QuerySingleOrDefaultAsync<long>(cd);
+                await conn.ExecuteAsync(cd);
 
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                Error err = new Error("Unexpected exception trying to delete FIT file.")
+                Error err = new Error("Unexpected exception trying to delete ShotView file.")
                     .CausedBy(ex)
                     .Enrich(id, null);
 
@@ -141,9 +117,9 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
         }
 
-        public async Task<Result<EntityId>> UpsertFitFileAsync(IDbConnection connection,
+        public async Task<Result<EntityId>> UpsertShotViewFileAsync(IDbConnection connection,
             string id,
-            ReadOnlyMemory<byte> contents,
+            string contents,
             string? fileName,
             CancellationToken cancellationToken = default)
         {
@@ -159,24 +135,25 @@ namespace MyLittleRangeBook.Database.Sqlite
 
             if (string.IsNullOrWhiteSpace(fileName))
             {
-                fileName = $"{id}-{DateTime.UtcNow:yyyyMMddhhmm}.fit";
+                fileName = $"{id}-{DateTime.UtcNow:yyyyMMddhhmm}.csv";
             }
 
-            Result<EntityId> upsertResult = await SaveFitFileAsync(conn, id, fileName, contents, cancellationToken);
+            Result<EntityId> upsertResult =
+                await SaveShotViewFileAsync(conn, id, fileName, contents, cancellationToken);
             if (upsertResult.IsSuccess)
             {
                 return upsertResult;
             }
 
             Result<EntityId> updateResult =
-                await SaveFitFileByFilenameAsync(conn, fileName, contents, cancellationToken);
+                await SaveShotViewFileByFilenameAsync(conn, fileName, contents, cancellationToken);
 
             return updateResult;
         }
 
         public async Task<Result<long?>> AssociateWithRangeEvent(IDbConnection connection,
             string rangeEventId,
-            string fitFileId,
+            string shotViewFileId,
             CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -191,15 +168,14 @@ namespace MyLittleRangeBook.Database.Sqlite
 
             try
             {
-                var p = new { RangeEventId = rangeEventId, FitFileId = fitFileId };
+                var p = new { RangeEventId = rangeEventId, ShotViewFileId = shotViewFileId };
 
                 await conn.ExecuteScalarAsync(AssociateWithRangeEventSql, p);
 
-                // [TO20260506] Need to retrieve the RowId of the association.
                 var cd = new CommandDefinition("SELECT RowId " +
-                                               "FROM main.SimpleRangeEvent_FitFiles " +
-                                               "WHERE SimpleRangeEventId=@SimpleRangeEventId AND FitFileId=@FitFileId;",
-                    new { SimpleRangeEventId = rangeEventId, FitFileId = fitFileId },
+                                               "FROM main.SimpleRangeEvent_ShotViewFiles " +
+                                               "WHERE SimpleRangeEventId=@SimpleRangeEventId AND ShotViewFileId=@ShotViewFileId;",
+                    new { SimpleRangeEventId = rangeEventId, ShotViewFileId = shotViewFileId },
                     cancellationToken: cancellationToken);
                 long? l = await conn.ExecuteScalarAsync<long?>(cd);
                 if (l is not null)
@@ -207,29 +183,29 @@ namespace MyLittleRangeBook.Database.Sqlite
                     return new Result<long?>().WithValue(Convert.ToInt64(l.Value));
                 }
 
-                var err = new Error("Could not find the association for the range event and FIT file");
+                var err = new Error("Could not find the association for the range event and ShotView file");
 
                 return Result.Fail(err);
             }
             catch (Exception ex)
             {
-                Error err = new Error("Unexpected exception trying to upsert FIT file")
+                Error err = new Error("Unexpected exception trying to associate ShotView file with range event")
                     .CausedBy(ex);
 
                 return Result.Fail(err);
             }
         }
 
-        async Task<Result<EntityId>> SaveFitFileAsync(SqliteConnection conn,
+        async Task<Result<EntityId>> SaveShotViewFileAsync(SqliteConnection conn,
             string id,
             string fileName,
-            ReadOnlyMemory<byte> contents,
+            string contents,
             CancellationToken cancellationToken)
         {
             try
             {
                 var cd = new CommandDefinition(InsertSql,
-                    new { Id = id, FileName = fileName, Contents = contents.ToArray() },
+                    new { Id = id, FileName = fileName, Contents = contents },
                     cancellationToken: cancellationToken);
 
                 long rowId = await conn.QuerySingleOrDefaultAsync<long>(cd);
@@ -238,13 +214,10 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
             catch (SqliteException sex)
             {
-                // [TO20260506] Detect if we've trigger a unique constraint violation.
-                // If we have, it's probably a duplicate file name.
                 const int SQLITE_CONSTRAINT_VIOLATION = 19;
                 const int SQLITE_CONSTRAINT_UNIQUE = 2067;
 
-                Error err = new Error("Could not upsert FIT file.").CausedBy(sex).Enrich(id, null);
-                // SQLite Error 19: 'UNIQUE constraint failed: FitFiles.FileName'.
+                Error err = new Error("Could not upsert ShotView file.").CausedBy(sex).Enrich(id, null);
 
                 if (sex.SqliteErrorCode != SQLITE_CONSTRAINT_VIOLATION)
                 {
@@ -253,14 +226,14 @@ namespace MyLittleRangeBook.Database.Sqlite
 
                 if (sex.SqliteExtendedErrorCode == SQLITE_CONSTRAINT_UNIQUE)
                 {
-                    err = new DuplicateFitFileNameError(fileName).CausedBy(sex).Enrich(id, null);
+                    err = new DuplicateShotViewFileNameError(fileName).CausedBy(sex).Enrich(id, null);
                 }
 
                 return Result.Fail<EntityId>(err);
             }
             catch (Exception ex)
             {
-                Error err = new Error("Unexpected exception trying to upsert FIT file")
+                Error err = new Error("Unexpected exception trying to upsert ShotView file")
                     .CausedBy(ex)
                     .Enrich(id, null);
 
@@ -268,28 +241,16 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
         }
 
-        /// <summary>
-        ///     Update an existing FIT record based on the filename.
-        /// </summary>
-        /// <remarks>
-        ///     This assumes that the FIT record will exist.
-        /// </remarks>
-        /// <param name="conn"></param>
-        /// <param name="fileName"></param>
-        /// <param name="contents"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns>An <c cref="Result{EntityId}" /> holding the RowId and the ID of the record.</returns>
-        async Task<Result<EntityId>> SaveFitFileByFilenameAsync(SqliteConnection conn,
+        async Task<Result<EntityId>> SaveShotViewFileByFilenameAsync(SqliteConnection conn,
             string fileName,
-            ReadOnlyMemory<byte> contents,
+            string contents,
             CancellationToken cancellationToken)
         {
             EntityId entityId;
             try
             {
-                // [TO20260506] Get the RowId and the ID for the record.
                 var getCd = new CommandDefinition(
-                    "SELECT Id, RowId FROM main.FitFiles WHERE FileName=@FileName",
+                    "SELECT Id, RowId FROM main.ShotViewFiles WHERE FileName=@FileName",
                     new { FileName = fileName },
                     cancellationToken: cancellationToken);
 
@@ -297,7 +258,7 @@ namespace MyLittleRangeBook.Database.Sqlite
 
                 if (record == default)
                 {
-                    Error err = new Error("Could not find a FIT record for the filename.")
+                    Error err = new Error("Could not find a ShotView record for the filename.")
                         .WithMetadata("FileName", fileName);
 
                     return Result.Fail(err);
@@ -307,7 +268,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
             catch (Exception ex)
             {
-                Error err = new Error("Could not find a FIT record for the filename.")
+                Error err = new Error("Could not find a ShotView record for the filename.")
                     .CausedBy(ex)
                     .WithMetadata("FileName", fileName);
 
@@ -317,16 +278,15 @@ namespace MyLittleRangeBook.Database.Sqlite
             int rowsAffected;
             try
             {
-                // [TO20260506] Update based on the filename.
-                var updateCd = new CommandDefinition(UpdateFitFileByName,
-                    new { FileName = fileName, Contents = contents.ToArray() },
+                var updateCd = new CommandDefinition(UpdateShotViewFileByName,
+                    new { FileName = fileName, Contents = contents },
                     cancellationToken: cancellationToken);
                 rowsAffected = await conn.ExecuteAsync(updateCd);
             }
             catch (Exception ex)
             {
                 rowsAffected = 0;
-                Error err = new Error("Could not update the FIT record for the filename.")
+                Error err = new Error("Could not update the ShotView record for the filename.")
                     .CausedBy(ex)
                     .Enrich(entityId)
                     .WithMetadata("FileName", fileName);
@@ -336,23 +296,22 @@ namespace MyLittleRangeBook.Database.Sqlite
 
             if (rowsAffected == 0)
             {
-                Error err = new Error("Did not update any FIT records for the filename.")
+                Error err = new Error("Did not update any ShotView records for the filename.")
                     .Enrich(entityId)
                     .WithMetadata("FileName", fileName);
 
                 return Result.Fail(err);
             }
 
-            // [TO20260506] If we make it this far, all good
             return Result.Ok(entityId);
         }
 
-        record FitFileRow(
+        record ShotViewFileRow(
             long RowId,
             string Id,
             string FileName,
             string MimeType,
-            byte[] Contents,
+            string Contents,
             string Created,
             string Modified);
     }

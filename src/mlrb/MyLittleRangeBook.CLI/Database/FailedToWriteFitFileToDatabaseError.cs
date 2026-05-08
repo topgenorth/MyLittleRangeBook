@@ -3,7 +3,6 @@
     public class FailedToWriteFitFileToDatabaseError : MlrbBaseError
     {
         /// <summary>
-        ///
         /// </summary>
         /// <param name="file">The name of the FIT file.</param>
         /// <param name="size">Size of the FIT file.</param>

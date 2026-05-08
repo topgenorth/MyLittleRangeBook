@@ -7,7 +7,7 @@ namespace MyLittleRangeBook.Database.Sqlite
         public string DatabaseFile { get; }
 
         /// <summary>
-        ///    Writes the provided file contents to the specified table in the SQLite database.
+        ///     Writes the provided file contents to the specified table in the SQLite database.
         /// </summary>
         /// <param name="conn"></param>
         /// <param name="table"></param>

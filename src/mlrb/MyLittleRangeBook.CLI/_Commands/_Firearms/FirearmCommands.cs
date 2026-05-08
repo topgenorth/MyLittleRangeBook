@@ -14,12 +14,13 @@ namespace MyLittleRangeBook.CLI
     [RegisterCommands("firearm")]
     public class FirearmCommands
     {
-        readonly ILogger _logger;
-        readonly ISqliteHelper _sqliteHelper;
         readonly IFirearmsDbService _firearmsDbService;
+        readonly ILogger _logger;
         readonly FirearmsTablePrinter _printer;
+        readonly ISqliteHelper _sqliteHelper;
 
-        public FirearmCommands([FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)]IFirearmsDbService firearmsDbService,
+        public FirearmCommands(
+            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IFirearmsDbService firearmsDbService,
             ISqliteHelper sqliteHelper,
             ILogger logger)
         {
@@ -31,14 +32,14 @@ namespace MyLittleRangeBook.CLI
 
 
         /// <summary>
-        /// List all the active firearms.
+        ///     List all the active firearms.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("list")]
         [UsedImplicitly]
         public async Task<int> PrintFirearmsToConsole(CancellationToken cancellationToken = default)
-         {
+        {
             AnsiConsole.Console.PrintAppInfo();
             AnsiConsole.Console.WriteLine("Retrieving firearms...");
 
@@ -53,17 +54,20 @@ namespace MyLittleRangeBook.CLI
             {
                 _logger.Warning("Failed to retrieve firearms.");
                 AnsiConsole.Console.WriteProblem("Failed to retrieve firearms.");
+
                 return ReturnCodes.FAILURE;
             }
 
             if (!firearms.Value.Any())
             {
                 AnsiConsole.Console.WriteWarning("No firearms found.");
+
                 return ReturnCodes.SUCCESS;
             }
 
             _printer.SetFirearms(firearms.Value).Print(AnsiConsole.Console);
             AnsiConsole.Console.PrintSuccess("Firearms retrieved.");
+
             return ReturnCodes.SUCCESS;
         }
     }

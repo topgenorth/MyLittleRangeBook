@@ -50,6 +50,7 @@ namespace MyLittleRangeBook.CLI.Console
         /// <param name="notes">Any notes or comments.  Optional</param>
         /// <param name="date">The date of the range trip in YYYY-MM-DD format. Default to today if omitted</param>
         /// <param name="fitFile">The path to a Garmin FIT file from the Xero C1.</param>
+        /// <param name="csvFile">The path to a ShotView CSV file.</param>
         /// <param name="quiet">If this parameter is provided, then the command will display minimal output the the console.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -62,6 +63,7 @@ namespace MyLittleRangeBook.CLI.Console
             string notes = "",
             [RangeTripDateParser] DateOnly date = default,
             string fitFile = "",
+            string csvFile = "",
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
@@ -81,16 +83,19 @@ namespace MyLittleRangeBook.CLI.Console
             {
                 SimpleRangeEvent sre = await CreateSimpleRangeEventAsync(firearm, rounds, range, ammo, notes, date,
                         firearms, ranges, cancellationToken)
-                    .ConfigureAwait(true);
-                byte[] fitBytes = await GetBytesFromFitFileAsync(fitFile, cancellationToken).ConfigureAwait(true);
+                    .ConfigureAwait(false);
+                byte[] fitBytes = await GetBytesFromFitFileAsync(fitFile, cancellationToken).ConfigureAwait(false);
+                string csvContents = await GetTextFromCsvFileAsync(csvFile, cancellationToken).ConfigureAwait(false);
 
                 if (cancellationToken.IsCancellationRequested)
                 {
                     _logger.Warning("Operation cancelled by user.");
                     _cliDisplay.PrintFailure("Operation cancelled.");
+
                     return COMMAND_CANCELLED;
                 }
-                Result<long?> result = await _repo.UpsertAsync(sre, fitBytes, cancellationToken).ConfigureAwait(true);
+
+                Result<long?> result = await _repo.UpsertAsync(sre, fitBytes, csvContents, Path.GetFileName(csvFile), cancellationToken).ConfigureAwait(false);
 
                 if (result.IsSuccess)
                 {
@@ -137,6 +142,23 @@ namespace MyLittleRangeBook.CLI.Console
             return bytesToWrite;
         }
 
+        async Task<string> GetTextFromCsvFileAsync(string csvFile, CancellationToken cancellationToken)
+        {
+            string csvContents;
+            if (string.IsNullOrWhiteSpace(csvFile))
+            {
+                csvContents = string.Empty;
+            }
+            else
+            {
+                Result<string> r = await csvFile.LoadFileTextAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                csvContents = r.IsSuccess ? r.Value : string.Empty;
+            }
+
+            return csvContents;
+        }
+
         async Task<SimpleRangeEvent> CreateSimpleRangeEventAsync(string firearm,
             int rounds,
             string range,
@@ -147,11 +169,11 @@ namespace MyLittleRangeBook.CLI.Console
             List<string> ranges,
             CancellationToken cancellationToken)
         {
-            firearm = await AskUserForFirearmAsync(firearm, firearms, cancellationToken).ConfigureAwait(true);
-            rounds = await AskUserForRoundCountAsync(rounds, cancellationToken).ConfigureAwait(true);
-            range = await AskUserForRangeAsync(range, ranges, cancellationToken).ConfigureAwait(true);
-            ammo = await AskUserForAmmoAsync(firearm, ammo, cancellationToken).ConfigureAwait(true);
-            notes = await AskUserForNotesAsync(notes, cancellationToken).ConfigureAwait(true);
+            firearm = await AskUserForFirearmAsync(firearm, firearms, cancellationToken).ConfigureAwait(false);
+            rounds = await AskUserForRoundCountAsync(rounds, cancellationToken).ConfigureAwait(false);
+            range = await AskUserForRangeAsync(range, ranges, cancellationToken).ConfigureAwait(false);
+            ammo = await AskUserForAmmoAsync(firearm, ammo, cancellationToken).ConfigureAwait(false);
+            notes = await AskUserForNotesAsync(notes, cancellationToken).ConfigureAwait(false);
             var sre = SimpleRangeEvent.New(
                 RemoveSurroundingQuotes(firearm),
                 rounds,
@@ -173,7 +195,7 @@ namespace MyLittleRangeBook.CLI.Console
 
             TextPrompt<string> p = new TextPrompt<string>("Enter any [green]notes[/] (optional)")
                 .AllowEmpty();
-            notes = await _cliDisplay.Console.PromptAsync(p, cancellationToken).ConfigureAwait(true);
+            notes = await _cliDisplay.Console.PromptAsync(p, cancellationToken).ConfigureAwait(false);
 
             return notes;
         }
@@ -205,7 +227,7 @@ namespace MyLittleRangeBook.CLI.Console
                     .AddChoices(ammoChoices.Value);
             }
 
-            return await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(true);
+            return await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(false);
         }
 
         async Task<string> AskUserForRangeAsync(string range,
@@ -232,7 +254,7 @@ namespace MyLittleRangeBook.CLI.Console
                 prompt = new TextPrompt<string>("Enter [green]range[/]?");
             }
 
-            return await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(true);
+            return await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -260,7 +282,7 @@ namespace MyLittleRangeBook.CLI.Console
                 prompt = new TextPrompt<string>("Enter [green]firearm[/]?");
             }
 
-            firearm = await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(true);
+            firearm = await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(false);
 
             return firearm;
         }
@@ -275,7 +297,7 @@ namespace MyLittleRangeBook.CLI.Console
             TextPrompt<int> p = new TextPrompt<int>("      [green]Rounds[/]")
                 .DefaultValue(0)
                 .Validate(x => x > 0);
-            roundCount = await _cliDisplay.Console.PromptAsync(p, cancellationToken).ConfigureAwait(true);
+            roundCount = await _cliDisplay.Console.PromptAsync(p, cancellationToken).ConfigureAwait(false);
 
             return roundCount;
         }

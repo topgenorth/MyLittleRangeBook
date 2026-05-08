@@ -3,7 +3,7 @@ using Dapper;
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
-/// <summary>
+    /// <summary>
     ///     All dates are stored as a DateTimeOffset in SQLite, formatted to ISO 8601.  We need a special handler to convert
     ///     these back and forth, since SQLite doesn't have a native DateTimeOffset type.
     /// </summary>
