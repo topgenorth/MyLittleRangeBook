@@ -7,12 +7,11 @@
     Contents TEXT                           not null, -- The file contents as TEXT.
     Created  TEXT default CURRENT_TIMESTAMP not null, -- The date the record was created.
     Modified TEXT default CURRENT_TIMESTAMP not null, -- The date the file was last modified.
-    CONSTRAINT UQ_ShotViewFiles_Id UNIQUE (ID)
+    CONSTRAINT UQ_ShotViewFiles_Id UNIQUE (ID),
+    CONSTRAINT UQ_ShotViewFiles_FileName UNIQUE (FileName)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS IX_ShotViewFiles_Id
     ON ShotViewFiles (Id);
-CREATE UNIQUE INDEX IF NOT EXISTS IX_ShotViewFiles_FileName
-    ON ShotViewFiles (FileName);
 
 CREATE TABLE IF NOT EXISTS SimpleRangeEvent_ShotViewFiles
 (
