@@ -36,5 +36,25 @@
                 return Result.Fail<ReadOnlyMemory<byte>>(new Error($"Failed to read file {filename}: {e.Message}").CausedBy(e));
             }
         }
+
+        public static async Task<Result<string>> LoadFileTextAsync(this string filename,
+            CancellationToken ct)
+        {
+            try
+            {
+                string result = await File.ReadAllTextAsync(filename, ct).ConfigureAwait(false);
+
+                return Result.Ok(result);
+            }
+            catch (OperationCanceledException oce)
+            {
+                Error? err = new Error($"Operation was cancelled by user; did not read  {filename}").CausedBy(oce);
+                return Result.Fail<string>(err);
+            }
+            catch (Exception e)
+            {
+                return Result.Fail<string>(new Error($"Failed to read file {filename}: {e.Message}").CausedBy(e));
+            }
+        }
     }
 }

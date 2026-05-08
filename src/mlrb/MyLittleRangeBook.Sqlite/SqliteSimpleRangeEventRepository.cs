@@ -12,16 +12,19 @@ namespace MyLittleRangeBook.Database.Sqlite
     {
         // TODO [TO20260505] Introduce SQLite transactions.
         readonly IFitFilesDbService _filesDbService;
+        readonly IShotViewFilesDbService _shotViewFilesDbService;
         readonly ISimpleRangeLogService _simpleRangeEventService;
         readonly ISqliteHelper _sqliteHelper;
 
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeLogService simpleRangeEventService,
-            [FromKeyedServices(DI_KEYS_SQLITE)] IFitFilesDbService filesDbService)
+            [FromKeyedServices(DI_KEYS_SQLITE)] IFitFilesDbService filesDbService,
+            [FromKeyedServices(DI_KEYS_SQLITE)] IShotViewFilesDbService shotViewFilesDbService)
         {
             _sqliteHelper = sqliteHelper;
             _simpleRangeEventService = simpleRangeEventService;
             _filesDbService = filesDbService;
+            _shotViewFilesDbService = shotViewFilesDbService;
         }
 
         /// <summary>
@@ -82,6 +85,58 @@ namespace MyLittleRangeBook.Database.Sqlite
             catch (Exception e)
             {
                 Error? err = new Error("Failed to upsert simple range event with FIT file contents.")
+                    .Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId)
+                    .CausedBy(e);
+                finalResult = Result.Fail<long?>(err);
+            }
+
+            return finalResult;
+        }
+
+        public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
+            string shotViewCsvContents,
+            string fileName,
+            CancellationToken cancellationToken = default)
+        {
+            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+            Result<long?> finalResult;
+            try
+            {
+                Result<long?> sreResult = await _simpleRangeEventService
+                    .UpsertAsync(conn, simpleRangeEvent, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (!string.IsNullOrEmpty(shotViewCsvContents))
+                {
+                    Result<EntityId> shotViewResult = await _shotViewFilesDbService
+                        .UpsertShotViewFileAsync(conn,
+                            await Nanoid.GenerateAsync(),
+                            shotViewCsvContents,
+                            fileName, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (shotViewResult.IsSuccess)
+                    {
+                        Result<long?> joinResult = await _shotViewFilesDbService
+                            .AssociateWithRangeEvent(conn, simpleRangeEvent.Id!, shotViewResult.Value.Id,
+                                cancellationToken)
+                            .ConfigureAwait(false);
+                        finalResult = Result.Merge(sreResult, shotViewResult, joinResult)
+                            .ToResult(simpleRangeEvent.RowId);
+                    }
+                    else
+                    {
+                        finalResult = Result.Merge(sreResult, shotViewResult).ToResult(simpleRangeEvent.RowId);
+                    }
+                }
+                else
+                {
+                    finalResult = sreResult;
+                }
+            }
+            catch (Exception e)
+            {
+                Error? err = new Error("Failed to upsert simple range event with ShotView file contents.")
                     .Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId)
                     .CausedBy(e);
                 finalResult = Result.Fail<long?>(err);

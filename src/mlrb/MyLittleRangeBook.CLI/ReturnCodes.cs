@@ -75,5 +75,17 @@
         /// </summary>
         public const int FIT_FILE_PARSE_FAILURE = 203;
         #endregion;
+        
+        #region ShotView File return codes
+        /// <summary>
+        ///     Could not find the ShotView CSV file.
+        /// </summary>
+        public const int SHOTVIEW_FILE_NOT_FOUND = 501;
+
+        /// <summary>
+        ///     There was an issue reading the ShotView CSV file.
+        /// </summary>
+        public const int SHOTVIEW_FILE_READ_FAILURE = 502;
+        #endregion
     }
 }

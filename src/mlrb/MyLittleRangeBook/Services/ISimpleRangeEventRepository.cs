@@ -23,6 +23,11 @@ namespace MyLittleRangeBook.Services
             byte[] fitFileContents,
             CancellationToken cancellationToken = default);
 
+        Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
+            string shotViewCsvContents,
+            string fileName,
+            CancellationToken cancellationToken = default);
+
         Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(CancellationToken cancellationToken =
             default);
     }
