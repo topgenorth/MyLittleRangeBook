@@ -1,20 +1,18 @@
-﻿using System.Reflection;
-using MyLittleRangeBook.IO;
+﻿using MyLittleRangeBook.IO;
 using Spectre.Console;
 
 namespace MyLittleRangeBook.CLI.Console
 {
     public class CliDisplay : ICliDisplay
     {
-        // [TO20260503] This might be better off as extension methods to IAnsiConsole?
-        public string AppVersion { get; }
-
-
         public CliDisplay(IAnsiConsole console)
         {
             AppVersion = GetType().Assembly.GetAssemblyVersionInformation();
             Console = console;
         }
+
+        // [TO20260503] This might be better off as extension methods to IAnsiConsole?
+        public string AppVersion { get; }
 
         public IAnsiConsole Console { get; }
 
@@ -24,7 +22,7 @@ namespace MyLittleRangeBook.CLI.Console
             // OriginalAppHeaderPrinter x = new OriginalAppHeaderPrinter()
             //     .SetAction(action)
             //     .SetAppVersion(AppVersion);
-            SimpleAppHeader x = new SimpleAppHeader();
+            var x = new SimpleAppHeader();
             x.Print(Console);
         }
 
@@ -49,7 +47,8 @@ namespace MyLittleRangeBook.CLI.Console
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     await action(cancellationToken).ConfigureAwait(false);
-                }).ConfigureAwait(false);
+                })
+                .ConfigureAwait(false);
         }
 
         public async Task<T> RunStatusAsync<T>(
@@ -64,7 +63,8 @@ namespace MyLittleRangeBook.CLI.Console
                     cancellationToken.ThrowIfCancellationRequested();
 
                     return await action(cancellationToken).ConfigureAwait(false);
-                }).ConfigureAwait(false);
+                })
+                .ConfigureAwait(false);
         }
     }
 }

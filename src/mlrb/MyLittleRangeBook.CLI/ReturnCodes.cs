@@ -75,7 +75,7 @@
         /// </summary>
         public const int FIT_FILE_PARSE_FAILURE = 203;
         #endregion;
-        
+
         #region ShotView File return codes
         /// <summary>
         ///     Could not find the ShotView CSV file.

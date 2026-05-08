@@ -9,12 +9,6 @@ namespace MyLittleRangeBook.CLI
     {
         IEnumerable<Firearm> _firearms = [];
 
-        public FirearmsTablePrinter SetFirearms(IEnumerable<Firearm> firearms)
-        {
-            _firearms = firearms;
-
-            return this;
-        }
         public void Print(IAnsiConsole console)
         {
             console.Write(BuildRenderable());
@@ -39,6 +33,13 @@ namespace MyLittleRangeBook.CLI
             Panel p = new Panel(table).Expand().Border(BoxBorder.None);
 
             return p;
+        }
+
+        public FirearmsTablePrinter SetFirearms(IEnumerable<Firearm> firearms)
+        {
+            _firearms = firearms;
+
+            return this;
         }
     }
 }

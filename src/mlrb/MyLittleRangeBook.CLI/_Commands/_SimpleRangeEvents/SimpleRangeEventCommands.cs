@@ -31,7 +31,7 @@ namespace MyLittleRangeBook.CLI.Console
 
 
         /// <summary>
-        /// List all the range events in the database.
+        ///     List all the range events in the database.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>

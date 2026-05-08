@@ -1,5 +1,4 @@
-﻿using Dapper;
-using FluentResults;
+﻿using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;

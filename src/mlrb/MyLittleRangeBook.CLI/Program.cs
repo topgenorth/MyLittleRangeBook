@@ -48,7 +48,7 @@ using IServiceScope scope = host.Services.CreateScope();
 ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
-var logger = host.Services.GetRequiredService <Serilog.ILogger>();
+ILogger logger = host.Services.GetRequiredService<ILogger>();
 
 logger.Information("MyLittleRangeBook CLI v{AppVersion}", typeof(ReturnCodes).Assembly.GetAssemblyVersionInformation());
 await app.RunAsync(args).ConfigureAwait(true);

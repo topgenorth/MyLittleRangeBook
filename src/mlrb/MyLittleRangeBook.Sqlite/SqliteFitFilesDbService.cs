@@ -208,8 +208,8 @@ namespace MyLittleRangeBook.Database.Sqlite
                 }
 
                 var err = new Error("Could not find the association for the range event and FIT file");
-                return Result.Fail(err);
 
+                return Result.Fail(err);
             }
             catch (Exception ex)
             {

@@ -4,11 +4,15 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public interface ICliDisplay
     {
+        string AppVersion { get; }
+        IAnsiConsole Console { get; }
+
         /// <summary>
-        /// This is a simple one line header that is printed on the console when a command starts.
+        ///     This is a simple one line header that is printed on the console when a command starts.
         /// </summary>
         /// <param name="action"></param>
         void WriteAppInfo(string action);
+
         void WriteSuccess(string message);
         void PrintFailure(string message);
 
@@ -21,8 +25,5 @@ namespace MyLittleRangeBook.CLI.Console
             string status,
             Func<CancellationToken, Task<T>> action,
             CancellationToken cancellationToken = default);
-
-        string AppVersion { get; }
-        IAnsiConsole Console { get; }
     }
 }

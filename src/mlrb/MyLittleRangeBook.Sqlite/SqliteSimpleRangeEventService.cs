@@ -105,7 +105,9 @@ namespace MyLittleRangeBook.Database.Sqlite
 
             try
             {
-                var rangeEvents = await conn.QueryAsync<SimpleRangeEvent>(SelectSql, cancellationToken);
+                IEnumerable<SimpleRangeEvent> rangeEvents =
+                    await conn.QueryAsync<SimpleRangeEvent>(SelectSql, cancellationToken);
+
                 return Result.Ok(rangeEvents);
             }
             catch (Exception e)

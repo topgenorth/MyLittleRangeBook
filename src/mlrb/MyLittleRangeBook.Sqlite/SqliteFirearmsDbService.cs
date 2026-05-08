@@ -116,7 +116,9 @@ namespace MyLittleRangeBook.Database.Sqlite
             var command = new CommandDefinition(SelectByIdSql, new { Id = id }, cancellationToken: cancellationToken);
             Firearm? f = await connection.QueryFirstOrDefaultAsync<Firearm>(command);
 
-            return f is null ? Result.Fail<Firearm>(new Error($"Firearm with id `{id}` not found").Enrich(id, null)) : Result.Ok(f);
+            return f is null
+                ? Result.Fail<Firearm>(new Error($"Firearm with id `{id}` not found").Enrich(id, null))
+                : Result.Ok(f);
         }
     }
 }

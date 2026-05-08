@@ -88,8 +88,10 @@ namespace MyLittleRangeBook.CLI.Console
                 {
                     _logger.Warning("Operation cancelled by user.");
                     _cliDisplay.PrintFailure("Operation cancelled.");
+
                     return COMMAND_CANCELLED;
                 }
+
                 Result<long?> result = await _repo.UpsertAsync(sre, fitBytes, cancellationToken).ConfigureAwait(true);
 
                 if (result.IsSuccess)

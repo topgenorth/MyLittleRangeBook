@@ -1,7 +1,6 @@
 using System.Data;
 using Dapper;
 using FluentResults;
-using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 
@@ -9,7 +8,8 @@ namespace MyLittleRangeBook.Database.Sqlite
 {
     public class DuplicateShotViewFileNameError : MlrbBaseError
     {
-        public DuplicateShotViewFileNameError(string fileName) : base($"The file {fileName} already exists in the ShotView table")
+        public DuplicateShotViewFileNameError(string fileName) : base(
+            $"The file {fileName} already exists in the ShotView table")
         {
             FileName = fileName;
         }
@@ -29,10 +29,10 @@ namespace MyLittleRangeBook.Database.Sqlite
                                  """;
 
         const string UpdateShotViewFileByName = """
-                                           UPDATE ShotViewFiles
-                                           SET Contents=@Contents, Modified=utcnow()  
-                                           WHERE FileName=@FileName;
-                                           """;
+                                                UPDATE ShotViewFiles
+                                                SET Contents=@Contents, Modified=utcnow()  
+                                                WHERE FileName=@FileName;
+                                                """;
 
         const string DeleteSql = "DELETE FROM ShotViewFiles WHERE Id = @Id";
 
@@ -70,6 +70,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                 }
 
                 var eid = new EntityId(record.Id, record.RowId);
+
                 return Result.Ok((eid, record.FileName, record.Contents));
             }
             catch (Exception ex)
@@ -137,7 +138,8 @@ namespace MyLittleRangeBook.Database.Sqlite
                 fileName = $"{id}-{DateTime.UtcNow:yyyyMMddhhmm}.csv";
             }
 
-            Result<EntityId> upsertResult = await SaveShotViewFileAsync(conn, id, fileName, contents, cancellationToken);
+            Result<EntityId> upsertResult =
+                await SaveShotViewFileAsync(conn, id, fileName, contents, cancellationToken);
             if (upsertResult.IsSuccess)
             {
                 return upsertResult;
@@ -182,8 +184,8 @@ namespace MyLittleRangeBook.Database.Sqlite
                 }
 
                 var err = new Error("Could not find the association for the range event and ShotView file");
-                return Result.Fail(err);
 
+                return Result.Fail(err);
             }
             catch (Exception ex)
             {

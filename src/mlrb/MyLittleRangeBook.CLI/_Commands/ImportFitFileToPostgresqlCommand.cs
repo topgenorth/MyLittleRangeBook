@@ -83,7 +83,8 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
                 return Result.Fail(new FitFileNotFoundError(sourceFile)).ToResult(ReturnCodes.FIT_FILE_NOT_FOUND);
             }
 
-            Result<ReadOnlyMemory<byte>> fileContents = await sourceFile.LoadFileBytesAsync(cancellationToken).ConfigureAwait(false);
+            Result<ReadOnlyMemory<byte>> fileContents =
+                await sourceFile.LoadFileBytesAsync(cancellationToken).ConfigureAwait(false);
             if (fileContents.IsFailed)
             {
                 _logger.Error("Failed to load FIT file {fitFile}.", sourceFile);
@@ -96,8 +97,11 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
 
             try
             {
-                using IDbConnection connection = await _databaseHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
-                long rowId = await SaveBytesAsync((NpgsqlConnection)connection, bytesToSave, sourceFile, cancellationToken).ConfigureAwait(false);
+                using IDbConnection connection = await _databaseHelper.GetDatabaseConnectionAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                long rowId =
+                    await SaveBytesAsync((NpgsqlConnection)connection, bytesToSave, sourceFile, cancellationToken)
+                        .ConfigureAwait(false);
                 Success? success = new WroteFitFileToDatabaseSuccess(sourceFile, bytesToSave.Length)
                     .WithMetadata("RowId", rowId);
 
