@@ -27,7 +27,7 @@ namespace MyLittleRangeBook.CLI.Console
             return console;
         }
 
-        public static IAnsiConsole WriteProblem(this IAnsiConsole console, string message)
+        public static IAnsiConsole PrintProblem(this IAnsiConsole console, string message)
         {
             console.MarkupLineInterpolated($"[bold red]{ErrorGlyph} {message.Trim()}[/]");
 

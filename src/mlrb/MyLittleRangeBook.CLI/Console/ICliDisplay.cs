@@ -8,19 +8,24 @@ namespace MyLittleRangeBook.CLI.Console
         IAnsiConsole Console { get; }
 
         /// <summary>
-        ///     This is a simple one line header that is printed on the console when a command starts.
+        ///     This prints a header to the console when the command starts up.
         /// </summary>
         /// <param name="action"></param>
-        void WriteAppInfo(string action);
+        void PrintCommandHeader(string? action = null);
 
-        void WriteSuccess(string message);
+        /// <summary>
+        /// Prints a one line success message to the console.
+        /// </summary>
+        /// <param name="message"></param>
+        void PrintSuccess(string message);
+
+        /// <summary>
+        /// Prints a one line failure message to the console.
+        /// </summary>
+        /// <param name="message"></param>
         void PrintFailure(string message);
 
-        Task RunStatusAsync(
-            string status,
-            Func<CancellationToken, Task> action,
-            CancellationToken cancellationToken = default);
-
+        [Obsolete]
         Task<T> RunStatusAsync<T>(
             string status,
             Func<CancellationToken, Task<T>> action,

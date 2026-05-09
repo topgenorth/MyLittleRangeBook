@@ -11,6 +11,11 @@ namespace MyLittleRangeBook.CLI.Console
     public interface IConsolePrinter
     {
         void Print(IAnsiConsole console);
+
+        /// <summary>
+        /// Returns the renderable object that represents the console output.
+        /// </summary>
+        /// <returns></returns>
         IRenderable BuildRenderable();
     }
 }

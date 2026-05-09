@@ -101,7 +101,7 @@ namespace MyLittleRangeBook.CLI.Console
 
                 if (result.IsSuccess)
                 {
-                    _cliDisplay.WriteSuccess("Range trip added successfully.");
+                    _cliDisplay.PrintSuccess("Range trip added successfully.");
                     _simpleRangeEventPrinter.Print(_cliDisplay.Console, sre, quiet);
 
                     return SUCCESS;

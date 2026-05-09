@@ -312,7 +312,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             string dbPath = DatabaseFile;
             string dbDir = Path.GetDirectoryName(dbPath) ?? ".";
             string historyDir = Path.Combine(dbDir,
-                OperatingSystem.IsWindows() ? "RangeEventsAssets" : "range-event-assets");
+                OperatingSystem.IsWindows() ? "RangeEventAssets" : "range-event-assets");
             string eventHistoryDir = Path.Combine(historyDir, rangeEventId);
             Directory.CreateDirectory(eventHistoryDir);
             #endregion

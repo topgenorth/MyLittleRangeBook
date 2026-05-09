@@ -10,7 +10,7 @@ namespace MyLittleRangeBook.CLI.Console
             var c = new TestConsole();
 
             var cliDisplay = new CliDisplay(c);
-            cliDisplay.WriteSuccess("Hello World");
+            cliDisplay.PrintSuccess("Hello World");
 
             c.Output.ShouldStartWith("✓ Hello World");
         }

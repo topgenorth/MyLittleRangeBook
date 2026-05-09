@@ -56,7 +56,7 @@ namespace MyLittleRangeBook.CLI
         [UsedImplicitly]
         public async Task<int> ToConsoleAsync(string file, CancellationToken cancellationToken)
         {
-            _cliDisplay.WriteAppInfo("Displaying FIT File");
+            _cliDisplay.PrintCommandHeader("Displaying FIT File");
             if (!File.Exists(file))
             {
                 _logger.Warning("File {file} not found.", file);
@@ -94,7 +94,7 @@ namespace MyLittleRangeBook.CLI
 
             ShotSession? session = result.Value;
             DisplaySessionToConsole(_cliDisplay, session);
-            _cliDisplay.WriteSuccess("FIT file loaded.");
+            _cliDisplay.PrintSuccess("FIT file loaded.");
 
             return SUCCESS;
         }

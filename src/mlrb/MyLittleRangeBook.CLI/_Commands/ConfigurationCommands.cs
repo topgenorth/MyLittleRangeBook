@@ -35,7 +35,7 @@ namespace MyLittleRangeBook.CLI
             string connectionString,
             CancellationToken cancellationToken = default)
         {
-            _cliDisplay.WriteAppInfo("Set Database Path");
+            _cliDisplay.PrintCommandHeader("Set Database Path");
             string appSettingsJsonFile = ConfigurationExtensions.DefaultAppSettingsFile.FullName;
             string originalAppSettingsJson;
             try
@@ -75,7 +75,7 @@ namespace MyLittleRangeBook.CLI
                 return ReturnCodes.FAILURE;
             }
 
-            _cliDisplay.WriteSuccess("Updated path to SQLite database in appsettings.json file.");
+            _cliDisplay.PrintSuccess("Updated path to SQLite database in appsettings.json file.");
 
             return ReturnCodes.SUCCESS;
         }
@@ -86,7 +86,7 @@ namespace MyLittleRangeBook.CLI
         public async Task<int> ShowConfigAsync(CancellationToken cancellationToken = default)
         {
             _logger.Verbose("Showing configuration values.");
-            _cliDisplay.WriteAppInfo("Show Configuration");
+            _cliDisplay.PrintCommandHeader("Show Configuration");
 
             Table table = new Table().BorderColor(Color.White).Expand();
             table.AddColumn("Key");
@@ -100,7 +100,7 @@ namespace MyLittleRangeBook.CLI
             }
 
             _cliDisplay.Console.Write(table);
-            _cliDisplay.WriteSuccess("Configuration displayed.");
+            _cliDisplay.PrintSuccess("Configuration displayed.");
 
             return ReturnCodes.SUCCESS;
         }

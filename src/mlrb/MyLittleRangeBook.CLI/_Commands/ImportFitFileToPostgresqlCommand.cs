@@ -49,13 +49,13 @@ namespace MyLittleRangeBook.CLI.Database.Postgres
         [UsedImplicitly]
         public async Task<int> ImportFileAsync(string fitFile, CancellationToken cancellationToken = default)
         {
-            _cliDisplay.WriteAppInfo("Importing FIT file to Postgresql");
+            _cliDisplay.PrintCommandHeader("Importing FIT file to Postgresql");
             Result<int> result = await _cliDisplay.RunStatusAsync<Result<int>>("Importing FIT file to Postgresql",
                 async ct => await DoWorkAsync(fitFile, ct), cancellationToken);
 
             if (result.IsSuccess)
             {
-                _cliDisplay.WriteSuccess($"Imported FIT file {fitFile} to Postgresql");
+                _cliDisplay.PrintSuccess($"Imported FIT file {fitFile} to Postgresql");
             }
             else
             {

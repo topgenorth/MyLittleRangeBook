@@ -55,7 +55,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             CancellationToken cancellationToken = default)
         {
             // TODO [TO20260419] Improve console output.
-            _cliDisplay.WriteAppInfo("Importing FIT File");
+            _cliDisplay.PrintCommandHeader("Importing FIT File");
             _logger.Information("Inserting FIT {fitFileName} into the database.", fitFile);
 
             Result<ReadOnlyMemory<byte>> fileResult = await fitFile
@@ -100,7 +100,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                     }
                 }
 
-                _cliDisplay.WriteSuccess($"Saved {fileResult.Value.Length} bytes from FIT file {fitFile} to database.");
+                _cliDisplay.PrintSuccess($"Saved {fileResult.Value.Length} bytes from FIT file {fitFile} to database.");
 
                 return ReturnCodes.SUCCESS;
             }

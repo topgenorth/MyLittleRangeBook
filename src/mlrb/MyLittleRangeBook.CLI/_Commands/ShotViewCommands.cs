@@ -115,7 +115,7 @@ namespace MyLittleRangeBook.CLI.Console
                     }
                     else
                     {
-                        _cliDisplay.WriteSuccess("No range events found to associate with.");
+                        _cliDisplay.PrintSuccess("No range events found to associate with.");
                     }
                 }
             }
@@ -140,7 +140,7 @@ namespace MyLittleRangeBook.CLI.Console
                     .ConfigureAwait(false);
                 if (associateResult.IsSuccess)
                 {
-                    _cliDisplay.WriteSuccess($"ShotView file associated with range event {rangeEventId}.");
+                    _cliDisplay.PrintSuccess($"ShotView file associated with range event {rangeEventId}.");
                 }
                 else
                 {
@@ -148,7 +148,7 @@ namespace MyLittleRangeBook.CLI.Console
                 }
             }
 
-            _cliDisplay.WriteSuccess($"Successfully added ShotView file {csvFile} to database.");
+            _cliDisplay.PrintSuccess($"Successfully added ShotView file {csvFile} to database.");
 
             return ReturnCodes.SUCCESS;
         }

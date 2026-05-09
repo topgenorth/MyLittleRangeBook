@@ -5,10 +5,13 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public class CliDisplay : ICliDisplay
     {
-        public CliDisplay(IAnsiConsole console)
+        readonly ICommandHeaderPrinter _commandHeaderPrinter;
+
+        public CliDisplay(IAnsiConsole console, ICommandHeaderPrinter commandHeaderPrinter)
         {
             AppVersion = GetType().Assembly.GetAssemblyVersionInformation();
             Console = console;
+            _commandHeaderPrinter = commandHeaderPrinter;
         }
 
         // [TO20260503] This might be better off as extension methods to IAnsiConsole?
@@ -17,25 +20,23 @@ namespace MyLittleRangeBook.CLI.Console
         public IAnsiConsole Console { get; }
 
 
-        public void WriteAppInfo(string action)
+        public void PrintCommandHeader(string? action)
         {
-            // OriginalAppHeaderPrinter x = new OriginalAppHeaderPrinter()
-            //     .SetAction(action)
-            //     .SetAppVersion(AppVersion);
-            var x = new SimpleAppHeader();
-            x.Print(Console);
+            _commandHeaderPrinter.SetAction(action).Print(Console);
+
         }
 
-        public void WriteSuccess(string message)
+        public void PrintSuccess(string message)
         {
             Console.PrintSuccess(message);
         }
 
         public void PrintFailure(string message)
         {
-            Console.WriteProblem(message);
+            Console.PrintProblem(message);
         }
 
+        [Obsolete]
         public async Task RunStatusAsync(
             string status,
             Func<CancellationToken, Task> action,
@@ -51,6 +52,7 @@ namespace MyLittleRangeBook.CLI.Console
                 .ConfigureAwait(false);
         }
 
+        [Obsolete]
         public async Task<T> RunStatusAsync<T>(
             string status,
             Func<CancellationToken, Task<T>> action,

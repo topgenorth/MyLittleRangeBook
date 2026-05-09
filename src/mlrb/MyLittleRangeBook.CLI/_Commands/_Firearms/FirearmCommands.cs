@@ -53,7 +53,7 @@ namespace MyLittleRangeBook.CLI
             if (firearms.IsFailed)
             {
                 _logger.Warning("Failed to retrieve firearms.");
-                AnsiConsole.Console.WriteProblem("Failed to retrieve firearms.");
+                AnsiConsole.Console.PrintProblem("Failed to retrieve firearms.");
 
                 return ReturnCodes.FAILURE;
             }
