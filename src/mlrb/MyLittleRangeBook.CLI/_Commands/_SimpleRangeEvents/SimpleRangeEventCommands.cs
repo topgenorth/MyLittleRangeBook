@@ -11,22 +11,18 @@ using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
 namespace MyLittleRangeBook.CLI.Console
 {
     [RegisterCommands("rangeevent")]
-    public class SimpleRangeEventCommands
+    public class SimpleRangeEventCommands: MlrbCommandBase
     {
-        readonly ICliDisplay _cliDisplay;
-        readonly ILogger _logger;
         readonly ISimpleRangeEventListPrinter _printer;
         readonly ISimpleRangeEventRepository _repo;
 
-        public SimpleRangeEventCommands(ICliDisplay cliDisplay,
-            ILogger logger,
+        public SimpleRangeEventCommands(ILogger logger,
+            ICliDisplay cliDisplay,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
-            ISimpleRangeEventListPrinter printer)
+            ISimpleRangeEventListPrinter printer): base(logger, cliDisplay)
         {
-            _cliDisplay = cliDisplay;
             _repo = repo;
             _printer = printer;
-            _logger = logger;
         }
 
 
@@ -39,13 +35,13 @@ namespace MyLittleRangeBook.CLI.Console
         [UsedImplicitly]
         public async Task<int> ListRangeEvents(CancellationToken cancellationToken)
         {
-            _cliDisplay.PrintAppInfo();
+            CliDisplay.PrintAppInfo();
             Result<IEnumerable<SimpleRangeEvent>> rangeEvents = await _repo.GetSimpleRangeEventsAsync(cancellationToken)
                 .ConfigureAwait(false);
             if (rangeEvents.IsFailed)
             {
-                _cliDisplay.PrintFailure("Could not retrieve the list.");
-                _logger.Warning("Failed to retrieve list from database.");
+                CliDisplay.PrintFailure("Could not retrieve the list.");
+                Logger.Warning("Failed to retrieve list from database.");
 
                 return FAILURE;
             }
@@ -55,8 +51,8 @@ namespace MyLittleRangeBook.CLI.Console
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    _logger.Warning("Operation cancelled by user.");
-                    _cliDisplay.PrintFailure("Operation cancelled.");
+                    Logger.Warning("Operation cancelled by user.");
+                    CliDisplay.PrintFailure("Operation cancelled.");
                     await _printer.Finish().ConfigureAwait(false);
 
                     return COMMAND_CANCELLED;

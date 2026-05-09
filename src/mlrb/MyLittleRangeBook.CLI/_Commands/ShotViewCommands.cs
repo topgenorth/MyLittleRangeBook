@@ -14,25 +14,23 @@ namespace MyLittleRangeBook.CLI.Console
 {
     [RegisterCommands("shotview")]
     [UsedImplicitly]
-    public class ShotViewCommands
+    public class ShotViewCommands:MlrbCommandBase
     {
-        readonly ICliDisplay _cliDisplay;
-        readonly ILogger _logger;
         readonly ISimpleRangeEventRepository _repo;
         readonly IShotViewFilesDbService _shotViewFilesDbService;
         readonly ISqliteHelper _sqliteHelper;
 
-        public ShotViewCommands(ICliDisplay cliDisplay,
-            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IShotViewFilesDbService shotViewFilesDbService,
+        public ShotViewCommands(ILogger logger,
+            ICliDisplay cliDisplay,
             [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
-            ISqliteHelper sqliteHelper,
-            ILogger logger)
+            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IShotViewFilesDbService shotViewFilesDbService,
+            ISqliteHelper sqliteHelper): base(logger, cliDisplay)
         {
-            _cliDisplay = cliDisplay;
+            CliDisplay = cliDisplay;
             _shotViewFilesDbService = shotViewFilesDbService;
             _repo = repo;
             _sqliteHelper = sqliteHelper;
-            _logger = logger;
+            Logger = logger;
         }
 
         /// <summary>
@@ -51,11 +49,11 @@ namespace MyLittleRangeBook.CLI.Console
             string? rangeEventId = null,
             CancellationToken cancellationToken = default)
         {
-            _cliDisplay.PrintAppInfo();
+            CliDisplay.PrintAppInfo();
 
             if (string.IsNullOrWhiteSpace(csvFile))
             {
-                csvFile = await _cliDisplay.Console.PromptAsync(
+                csvFile = await CliDisplay.Console.PromptAsync(
                         new TextPrompt<string>("Enter the path to the ShotView [green]CSV file[/]:")
                             .Validate(path =>
                                 File.Exists(path)
@@ -67,7 +65,7 @@ namespace MyLittleRangeBook.CLI.Console
 
             if (!File.Exists(csvFile))
             {
-                _cliDisplay.PrintFailure($"File not found: {csvFile}");
+                CliDisplay.PrintFailure($"File not found: {csvFile}");
 
                 return ReturnCodes.SHOTVIEW_FILE_NOT_FOUND;
             }
@@ -77,8 +75,8 @@ namespace MyLittleRangeBook.CLI.Console
             {
                 IError? err = fileResult.Errors[0];
                 string? msg = err.Message;
-                _logger.Error(msg);
-                _cliDisplay.PrintFailure(msg);
+                Logger.Error(msg);
+                CliDisplay.PrintFailure(msg);
 
                 return ReturnCodes.SHOTVIEW_FILE_READ_FAILURE;
             }
@@ -88,7 +86,7 @@ namespace MyLittleRangeBook.CLI.Console
 
             if (string.IsNullOrWhiteSpace(rangeEventId))
             {
-                string selection = await _cliDisplay.Console.PromptAsync(
+                string selection = await CliDisplay.Console.PromptAsync(
                         new SelectionPrompt<string>()
                             .Title("Do you want to associate this file with a range event?")
                             .AddChoices("Yes", "No"),
@@ -101,7 +99,7 @@ namespace MyLittleRangeBook.CLI.Console
                         await _repo.GetSimpleRangeEventsAsync(cancellationToken).ConfigureAwait(false);
                     if (eventsResult.IsSuccess && eventsResult.Value.Any())
                     {
-                        SimpleRangeEvent selectedEvent = await _cliDisplay.Console.PromptAsync(
+                        SimpleRangeEvent selectedEvent = await CliDisplay.Console.PromptAsync(
                                 new SelectionPrompt<SimpleRangeEvent>()
                                     .Title("Select a [green]range event[/] to associate with:")
                                     .PageSize(10)
@@ -115,7 +113,7 @@ namespace MyLittleRangeBook.CLI.Console
                     }
                     else
                     {
-                        _cliDisplay.PrintSuccess("No range events found to associate with.");
+                        CliDisplay.PrintSuccess("No range events found to associate with.");
                     }
                 }
             }
@@ -128,7 +126,7 @@ namespace MyLittleRangeBook.CLI.Console
 
             if (upsertResult.IsFailed)
             {
-                _cliDisplay.PrintFailure("Failed to save ShotView file to database.");
+                CliDisplay.PrintFailure("Failed to save ShotView file to database.");
 
                 return ReturnCodes.SQL_FAILED_TO_WRITE_TO_DATABASE;
             }
@@ -140,15 +138,15 @@ namespace MyLittleRangeBook.CLI.Console
                     .ConfigureAwait(false);
                 if (associateResult.IsSuccess)
                 {
-                    _cliDisplay.PrintSuccess($"ShotView file associated with range event {rangeEventId}.");
+                    CliDisplay.PrintSuccess($"ShotView file associated with range event {rangeEventId}.");
                 }
                 else
                 {
-                    _cliDisplay.PrintFailure("Failed to associate ShotView file with range event.");
+                    CliDisplay.PrintFailure("Failed to associate ShotView file with range event.");
                 }
             }
 
-            _cliDisplay.PrintSuccess($"Successfully added ShotView file {csvFile} to database.");
+            CliDisplay.PrintSuccess($"Successfully added ShotView file {csvFile} to database.");
 
             return ReturnCodes.SUCCESS;
         }

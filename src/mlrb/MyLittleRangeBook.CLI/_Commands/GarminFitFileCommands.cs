@@ -10,17 +10,13 @@ using static MyLittleRangeBook.CLI.ReturnCodes;
 namespace MyLittleRangeBook.CLI
 {
     [RegisterCommands("fit")]
-    public class GarminFitFileCommands
+    public class GarminFitFileCommands : MlrbCommandBase
     {
-        readonly ICliDisplay _cliDisplay;
-        readonly ILogger _logger;
         readonly IXeroShotSessionParser _xeroParser;
 
-        public GarminFitFileCommands(ILogger logger, ICliDisplay cliDisplay, IXeroShotSessionParser xeroParser)
+        public GarminFitFileCommands(ILogger logger, ICliDisplay cliDisplay, IXeroShotSessionParser xeroParser) : base(
+            logger, cliDisplay)
         {
-            _logger = logger;
-            _xeroParser = xeroParser;
-            _cliDisplay = cliDisplay;
             _xeroParser = xeroParser;
         }
 
@@ -28,19 +24,23 @@ namespace MyLittleRangeBook.CLI
         ///     Used to explore the FIT file.
         /// </summary>
         /// <param name="file"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
         [Command("explore")]
-        public async Task<int> ExploreAsync(string file, CancellationToken cancellationToken)
+        [UsedImplicitly]
+        public async Task<int> ExploreAsync(string file, CancellationToken ct)
         {
-            _cliDisplay.PrintAppInfo();
-            _cliDisplay.Console.MarkupLine($"Exploring the FIT file {file}");
+            CliDisplay.PrintCommandHeader("Explore FIT file");
 
-            Result<ShotSession> result =
-                await ((XeroShotSessionParser)_xeroParser).ExploreFitFileAsync(file, cancellationToken);
+            Result<ShotSession> result = await ((XeroShotSessionParser)_xeroParser)
+                .ExploreFitFileAsync(file, ct)
+                .ConfigureAwait(false);
             if (result.IsFailed)
             {
-                _cliDisplay.Console.MarkupLine($"[red]Failed to explore FIT file {file}.[/]");
+                Logger.Error("Failed to explore FIT file {file}.", file);
+                CliDisplay.Console.MarkupLine($"[red]Failed to explore FIT file {file}.[/]");
+
+                return FIT_FILE_PARSE_FAILURE;
             }
 
             return SUCCESS;
@@ -50,57 +50,51 @@ namespace MyLittleRangeBook.CLI
         ///     Displays the FIT file to the console.
         /// </summary>
         /// <param name="file">Path to the FIT file</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
         [Command("console")]
         [UsedImplicitly]
-        public async Task<int> ToConsoleAsync(string file, CancellationToken cancellationToken)
+        public async Task<int> ToConsoleAsync(string file, CancellationToken ct)
         {
-            _cliDisplay.PrintCommandHeader("Displaying FIT File");
+            CliDisplay.PrintCommandHeader("Displaying FIT File");
             if (!File.Exists(file))
             {
-                _logger.Warning("File {file} not found.", file);
-                _cliDisplay.PrintFailure($"Could not find '{file}'.");
+                Logger.Warning("File {file} not found.", file);
+                CliDisplay.PrintFailure($"Could not find '{file}'.");
 
                 return FIT_FILE_NOT_FOUND;
             }
 
-            Result<ShotSession>? result = await _cliDisplay.RunStatusAsync("Loading FIT file...",
-                async ct =>
-                {
-                    Result<ShotSession> result = await _xeroParser.DecodeFITFileAsync(file, ct);
-
-                    if (result.IsFailed)
-                    {
-                        _logger.Error("Failed to process FIT file {file}.", file);
-
-                        return Result.Fail<ShotSession>(result.Errors);
-                    }
-
-                    ShotSession? shotSession = result.Value;
-                    shotSession.FileName = file;
-
-                    return Result.Ok(shotSession);
-                },
-                cancellationToken
-            );
+            Result<ShotSession> result = await _xeroParser.DecodeFITFileAsync(file, ct).ConfigureAwait(false);
 
             if (result.IsFailed)
             {
-                _cliDisplay.PrintFailure("Failed to parse FIT file.");
+                Logger.Error("Failed to process FIT file {file}.", file);
+
+                return FIT_FILE_PARSE_FAILURE;
+            }
+
+            ShotSession? shotSession = result.Value;
+            shotSession.FileName = file;
+
+
+            if (result.IsFailed)
+            {
+                CliDisplay.PrintFailure("Failed to parse FIT file.");
 
                 return result.HasError<UnsupportedFitFileTypeError>() ? FIT_FILE_PARSE_FAILURE : FAILURE;
             }
 
             ShotSession? session = result.Value;
-            DisplaySessionToConsole(_cliDisplay, session);
-            _cliDisplay.PrintSuccess("FIT file loaded.");
+            DisplaySessionToConsole(CliDisplay, session);
+            CliDisplay.PrintSuccess("FIT file loaded.");
 
             return SUCCESS;
         }
 
         void DisplaySessionToConsole(ICliDisplay cliDisplay, ShotSession session)
         {
+            // TODO [TO20260509] Refactor this into a IConsolePrinter.
             TableTitle title = new TableTitle("Session Stats").SetStyle(Style.Parse("bold"));
             Style captionStyle = Style.Parse("italic").Foreground(Color.White);
 

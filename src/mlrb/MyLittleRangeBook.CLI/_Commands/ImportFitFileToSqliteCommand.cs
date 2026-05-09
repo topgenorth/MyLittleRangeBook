@@ -16,29 +16,25 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
     ///     Save the FIT file to the SQLite database and optionally associate it with a range event.
     /// </summary>
     [RegisterCommands("fit import")]
-    public class ImportFitFileToSqliteCommand
+    public class ImportFitFileToSqliteCommand: MlrbCommandBase
     {
-        readonly ICliDisplay _cliDisplay;
         readonly IFitFilesDbService _filesDbService;
-        readonly ILogger _logger;
         readonly ISqliteHelper _sqliteHelper;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ImportFitFileToSqliteCommand" /> class.
         /// </summary>
+        /// <param name="logger"></param>
         /// <param name="cliDisplay">The CLI display helper for user interaction.</param>
         /// <param name="sqliteHelper">The helper for SQLite database operations.</param>
         /// <param name="filesDbService"></param>
-        /// <param name="logger"></param>
-        public ImportFitFileToSqliteCommand(ICliDisplay cliDisplay,
+        public ImportFitFileToSqliteCommand(ILogger logger,
+            ICliDisplay cliDisplay,
             ISqliteHelper sqliteHelper,
-            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IFitFilesDbService filesDbService,
-            ILogger logger)
+            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IFitFilesDbService filesDbService): base(logger, cliDisplay)
         {
-            _cliDisplay = cliDisplay;
             _sqliteHelper = sqliteHelper;
             _filesDbService = filesDbService;
-            _logger = logger;
         }
 
         /// <summary>
@@ -55,8 +51,8 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             CancellationToken cancellationToken = default)
         {
             // TODO [TO20260419] Improve console output.
-            _cliDisplay.PrintCommandHeader("Importing FIT File");
-            _logger.Information("Inserting FIT {fitFileName} into the database.", fitFile);
+            CliDisplay.PrintCommandHeader("Importing FIT File");
+            Logger.Information("Inserting FIT {fitFileName} into the database.", fitFile);
 
             Result<ReadOnlyMemory<byte>> fileResult = await fitFile
                 .LoadFileBytesAsync(cancellationToken)
@@ -65,8 +61,8 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             {
                 IError? err = fileResult.Errors[0];
                 string? msg = err.Message;
-                _logger.Error(msg);
-                _cliDisplay.PrintFailure(msg);
+                Logger.Error(msg);
+                CliDisplay.PrintFailure(msg);
 
                 return ReturnCodes.FIT_FILE_READ_FAILURE;
             }
@@ -88,19 +84,19 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                         .AssociateWithRangeEvent(conn, rangeEventId, fitResult.Value.Id, cancellationToken);
                     if (associateResult.IsSuccess)
                     {
-                        _logger.Information("Associating FIT {fitFileName} with range event {rangeEventId}.",
+                        Logger.Information("Associating FIT {fitFileName} with range event {rangeEventId}.",
                             fitFile,
                             rangeEventId);
                     }
                     else
                     {
-                        _logger.Warning("Failed to associate FIT {fitFileName} with range event {rangeEventId}.",
+                        Logger.Warning("Failed to associate FIT {fitFileName} with range event {rangeEventId}.",
                             fitFile,
                             rangeEventId);
                     }
                 }
 
-                _cliDisplay.PrintSuccess($"Saved {fileResult.Value.Length} bytes from FIT file {fitFile} to database.");
+                CliDisplay.PrintSuccess($"Saved {fileResult.Value.Length} bytes from FIT file {fitFile} to database.");
 
                 return ReturnCodes.SUCCESS;
             }

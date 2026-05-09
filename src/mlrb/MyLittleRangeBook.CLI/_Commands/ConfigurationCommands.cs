@@ -10,50 +10,44 @@ using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions
 namespace MyLittleRangeBook.CLI
 {
     [RegisterCommands("config")]
-    public class ConfigurationCommands
+    public class ConfigurationCommands: MlrbCommandBase
     {
-        readonly ICliDisplay _cliDisplay;
         readonly IConfiguration _configuration;
-        readonly ILogger _logger;
 
-        public ConfigurationCommands(ICliDisplay cliDisplay, IConfiguration configuration, ILogger logger)
+        public ConfigurationCommands(ILogger logger, ICliDisplay cliDisplay, IConfiguration configuration) : base(logger, cliDisplay)
         {
-            _cliDisplay = cliDisplay;
             _configuration = configuration;
-            _logger = logger;
         }
 
         /// <summary>
         ///     Used to set the path to the SQLite datbase
         /// </summary>
         /// <param name="connectionString"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
         [Command("set db")]
         [UsedImplicitly]
-        public async Task<int> SetDatabasePath(
-            string connectionString,
-            CancellationToken cancellationToken = default)
+        public async Task<int> SetDatabasePath(string connectionString, CancellationToken ct = default)
         {
-            _cliDisplay.PrintCommandHeader("Set Database Path");
+            CliDisplay.PrintCommandHeader("Set Database Path");
             string appSettingsJsonFile = ConfigurationExtensions.DefaultAppSettingsFile.FullName;
             string originalAppSettingsJson;
             try
             {
-                originalAppSettingsJson = await File.ReadAllTextAsync(appSettingsJsonFile, cancellationToken);
+                originalAppSettingsJson = await File.ReadAllTextAsync(appSettingsJsonFile, ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Failed to read appsettings.json file.");
-
+                Logger.Error(ex, "Failed to read appsettings.json file.");
+                CliDisplay.PrintFailure("Could not read the settings file.");
                 return ReturnCodes.FAILURE;
             }
 
             var rootNode = JsonNode.Parse(originalAppSettingsJson);
             if (rootNode is null)
             {
-                _logger.Error("Failed to parse appsettings.json file.");
-
+                Logger.Error("Failed to parse appsettings.json file.");
+                CliDisplay.PrintFailure("Could not parse the settings file.");
                 return ReturnCodes.FAILURE;
             }
 
@@ -66,16 +60,16 @@ namespace MyLittleRangeBook.CLI
             {
                 rootNode["ConnectionStrings"]!["SqliteConnection"] = sb.ConnectionString;
 
-                await File.WriteAllTextAsync(appSettingsJsonFile, rootNode!.ToString(), cancellationToken);
+                await File.WriteAllTextAsync(appSettingsJsonFile, rootNode!.ToString(), ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Failed to write appsettings.json file.");
-
+                Logger.Error(ex, "Failed to write appsettings.json file.");
+                CliDisplay.PrintFailure("Failed to write to the settings file.");
                 return ReturnCodes.FAILURE;
             }
 
-            _cliDisplay.PrintSuccess("Updated path to SQLite database in appsettings.json file.");
+            CliDisplay.PrintSuccess("Updated path to SQLite database in appsettings.json file.");
 
             return ReturnCodes.SUCCESS;
         }
@@ -85,8 +79,8 @@ namespace MyLittleRangeBook.CLI
         // ReSharper disable once AsyncMethodWithoutAwait
         public async Task<int> ShowConfigAsync(CancellationToken cancellationToken = default)
         {
-            _logger.Verbose("Showing configuration values.");
-            _cliDisplay.PrintCommandHeader("Show Configuration");
+            Logger.Verbose("Showing configuration values.");
+            CliDisplay.PrintCommandHeader("Show Configuration");
 
             Table table = new Table().BorderColor(Color.White).Expand();
             table.AddColumn("Key");
@@ -99,8 +93,8 @@ namespace MyLittleRangeBook.CLI
                     Markup.Escape(pair.Value ?? string.Empty));
             }
 
-            _cliDisplay.Console.Write(table);
-            _cliDisplay.PrintSuccess("Configuration displayed.");
+            CliDisplay.Console.Write(table);
+            CliDisplay.PrintSuccess("Configuration displayed.");
 
             return ReturnCodes.SUCCESS;
         }

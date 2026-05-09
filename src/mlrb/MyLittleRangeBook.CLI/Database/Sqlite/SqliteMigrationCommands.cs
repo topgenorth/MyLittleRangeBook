@@ -14,9 +14,16 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
     /// </summary>
     [RegisterCommands("db")]
     [UsedImplicitly]
-    public class SqliteMigrationCommands(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper)
+    public class SqliteMigrationCommands : MlrbCommandBase
     {
         const string MigrationsSql = "SELECT * FROM SchemaVersions ORDER BY Applied DESC";
+        readonly ISqliteHelper _sqliteHelper;
+
+        public SqliteMigrationCommands(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper) :
+            base(logger, cliDisplay)
+        {
+            _sqliteHelper = sqliteHelper;
+        }
 
         /// <summary>
         ///     Will return all the migrations that have been applied to the database.
@@ -27,12 +34,12 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         [UsedImplicitly]
         public async Task<int> DisplayMigrationVersionsToConsoleAsync(CancellationToken ct = default)
         {
-            cliDisplay.PrintCommandHeader("Show migration versions");
+            CliDisplay.PrintCommandHeader("Show migration versions");
             await RunMigrations(ct).ConfigureAwait(false);
 
             try
             {
-                await using SqliteConnection connection = await sqliteHelper
+                await using SqliteConnection connection = await _sqliteHelper
                     .GetDatabaseConnectionAsync(ct)
                     .ConfigureAwait(false);
                 await using var cmd = new SqliteCommand(MigrationsSql, connection);
@@ -53,15 +60,15 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                     table.AddRow(schemaVersionId!, scriptName, applied);
                 }
 
-                cliDisplay.Console.Write(table);
-                cliDisplay.PrintSuccess("Migration Versions listed.");
+                CliDisplay.Console.Write(table);
+                CliDisplay.PrintSuccess("Migration Versions listed.");
 
                 return SUCCESS;
             }
             catch (Exception e)
             {
-                cliDisplay.Console.WriteException(e);
-                logger.Error(e, "Fail to display migrations.");
+                CliDisplay.Console.WriteException(e);
+                Logger.Error(e, "Fail to display migrations.");
 
                 return SQL_FAILED_TO_APPLY_MIGRATIONS;
             }
@@ -69,10 +76,10 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
 
         async Task RunMigrations(CancellationToken ct)
         {
-            Result<bool> migrations = await sqliteHelper.ApplyDbupMigrationsAsync(ct).ConfigureAwait(false);
+            Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(ct).ConfigureAwait(false);
             if (migrations.IsFailed)
             {
-                logger.Warning("There was a problem running the migrations. ");
+                Logger.Warning("There was a problem running the migrations. ");
             }
         }
 
@@ -87,40 +94,41 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         // ReSharper disable once IdentifierTypo
         public async Task<int> RunSqlOnDatabase(string sqlfile, CancellationToken ct)
         {
-            cliDisplay.PrintCommandHeader("Apply SQL to Database.");
+            CliDisplay.PrintCommandHeader("Apply SQL to Database.");
             await RunMigrations(ct).ConfigureAwait(false);
 
             if (!File.Exists(sqlfile))
             {
-                logger.Warning("SQL File {sqlFile} not found.", sqlfile);
-                cliDisplay.PrintFailure($"Could not find the SQL file '{sqlfile}'.");
+                Logger.Warning("SQL File {sqlFile} not found.", sqlfile);
+                CliDisplay.PrintFailure($"Could not find the SQL file '{sqlfile}'.");
 
                 return SQL_SCRIPT_FILE_NOT_FOUND;
             }
 
             try
             {
-                cliDisplay.Console.MarkupLineInterpolated($"[green]✓ Loading SQL file {sqlfile}.[/]");
+                CliDisplay.Console.MarkupLineInterpolated($"[green]✓ Loading SQL file {sqlfile}.[/]");
                 string sql = await File.ReadAllTextAsync(sqlfile, ct).ConfigureAwait(false);
 
-                Result<bool> result = await sqliteHelper.RunSqlOnDatabaseAsync(sql, ct).ConfigureAwait(false);
+                Result<bool> result = await _sqliteHelper.RunSqlOnDatabaseAsync(sql, ct).ConfigureAwait(false);
                 if (result.IsFailed)
                 {
-                    logger.Error("Failed to run SQL '{sqlfile}'.", sqlfile);
-                    cliDisplay.PrintFailure($"Failed to run SQL '{sqlfile}'.");
+                    Logger.Error("Failed to run SQL '{sqlfile}'.", sqlfile);
+                    CliDisplay.PrintFailure($"Failed to run SQL '{sqlfile}'.");
 
                     return SQL_FAILED_TO_RUN_SCRIPT;
                 }
             }
             catch (Exception e)
             {
-                logger.Error(e, "Failed to run SQL.");
-                cliDisplay.PrintFailure($"Failed to run SQL '{e.Message}'.");
+                Logger.Error(e, "Failed to run SQL.");
+                CliDisplay.PrintFailure($"Failed to run SQL '{e.Message}'.");
 
                 return SQL_FAILED_TO_RUN_SCRIPT;
             }
 
-            cliDisplay.PrintSuccess($"Successfully ran SQL '{sqlfile}'.");
+            CliDisplay.PrintSuccess($"Successfully ran SQL '{sqlfile}'.");
+
             return SUCCESS;
         }
 
@@ -133,26 +141,27 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         [UsedImplicitly]
         public async Task<int> MigrateSchemaAsync(CancellationToken ct = default)
         {
-            cliDisplay.PrintCommandHeader("Applying Migrations");
+            CliDisplay.PrintCommandHeader("Applying Migrations");
 
-            if (!File.Exists(sqliteHelper.DatabaseFile))
+            if (!File.Exists(_sqliteHelper.DatabaseFile))
             {
-                logger.Warning("SQLite database {file} not found.", sqliteHelper.DatabaseFile);
-                cliDisplay.PrintFailure($"Could not find the SQLite database '{sqliteHelper.DatabaseFile}'.");
+                Logger.Warning("SQLite database {file} not found.", _sqliteHelper.DatabaseFile);
+                CliDisplay.PrintFailure($"Could not find the SQLite database '{_sqliteHelper.DatabaseFile}'.");
 
                 return SQL_FAILED_TO_APPLY_MIGRATIONS;
             }
 
-            Result<bool> migrationResult = await sqliteHelper.ApplyDbupMigrationsAsync(ct).ConfigureAwait(false);
+            Result<bool> migrationResult = await _sqliteHelper.ApplyDbupMigrationsAsync(ct).ConfigureAwait(false);
             if (migrationResult.IsSuccess)
             {
-                logger.Information("Migrations applied.");
-                cliDisplay.PrintSuccess("Migrations applied.");
+                Logger.Information("Migrations applied.");
+                CliDisplay.PrintSuccess("Migrations applied.");
+
                 return SUCCESS;
             }
 
-            logger.Error("Failed to apply migrations.");
-            cliDisplay.PrintFailure("Failed to apply migrations.");
+            Logger.Error("Failed to apply migrations.");
+            CliDisplay.PrintFailure("Failed to apply migrations.");
 
             return SQL_FAILED_TO_APPLY_MIGRATIONS;
         }

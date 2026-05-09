@@ -16,10 +16,8 @@ namespace MyLittleRangeBook.CLI.Console
     /// </summary>
     [RegisterCommands("rangeevent")]
     [UsedImplicitly]
-    public class SimpleRangeEventCommandAddToSqlite
+    public class SimpleRangeEventCommandAddToSqlite: MlrbCommandBase
     {
-        readonly ICliDisplay _cliDisplay;
-        readonly ILogger _logger;
         readonly ISimpleRangeEventHelper _rangeEventHelper;
         readonly ISimpleRangeEventRepository _repo;
         readonly ISimpleRangeEventPrinter _simpleRangeEventPrinter;
@@ -28,10 +26,8 @@ namespace MyLittleRangeBook.CLI.Console
             ICliDisplay cliDisplay,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventHelper rangeEventHelper,
-            ISimpleRangeEventPrinter simpleRangeEventPrinter)
+            ISimpleRangeEventPrinter simpleRangeEventPrinter): base(logger, cliDisplay)
         {
-            _cliDisplay = cliDisplay;
-            _logger = logger;
             _repo = repo;
             _rangeEventHelper = rangeEventHelper;
             _simpleRangeEventPrinter = simpleRangeEventPrinter;
@@ -69,13 +65,13 @@ namespace MyLittleRangeBook.CLI.Console
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
-            _cliDisplay.PrintAppInfo();
+            CliDisplay.PrintCommandHeader("Add range event");
             Result<(List<string>, List<string>)> r1 = await _rangeEventHelper
                 .GetFirearmsAndRangesAsync(cancellationToken)
                 .ConfigureAwait(false);
             if (r1.IsFailed)
             {
-                _logger.Warning("Failed to retrieve list of firearms and/or ranges.");
+                Logger.Warning("Failed to retrieve list of firearms and/or ranges.");
             }
 
             List<string> firearms = r1.Value.Item1;
@@ -91,8 +87,8 @@ namespace MyLittleRangeBook.CLI.Console
 
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    _logger.Warning("Operation cancelled by user.");
-                    _cliDisplay.PrintFailure("Operation cancelled.");
+                    Logger.Warning("Operation cancelled by user.");
+                    CliDisplay.PrintFailure("Operation cancelled.");
 
                     return COMMAND_CANCELLED;
                 }
@@ -101,27 +97,27 @@ namespace MyLittleRangeBook.CLI.Console
 
                 if (result.IsSuccess)
                 {
-                    _cliDisplay.PrintSuccess("Range trip added successfully.");
-                    _simpleRangeEventPrinter.Print(_cliDisplay.Console, sre, quiet);
+                    CliDisplay.PrintSuccess("Range trip added successfully.");
+                    _simpleRangeEventPrinter.Print(CliDisplay.Console, sre, quiet);
 
                     return SUCCESS;
                 }
 
-                _cliDisplay.PrintFailure("Failed to add range trip.");
+                CliDisplay.PrintFailure("Failed to add range trip.");
 
                 return RANGE_EVENT_FAILED_TO_CREATE;
             }
             catch (TaskCanceledException tce)
             {
-                _logger.Warning(tce, "AddSimpleRangeEventAsync was cancelled.s");
-                _cliDisplay.PrintFailure("AddSimpleRangeEventAsync was cancelled.");
+                Logger.Warning(tce, "AddSimpleRangeEventAsync was cancelled.s");
+                CliDisplay.PrintFailure("AddSimpleRangeEventAsync was cancelled.");
 
                 return COMMAND_CANCELLED;
             }
             catch (Exception e)
             {
-                _logger.Error(e, "Unexpected error trying to add SimpleRangeEvent");
-                _cliDisplay.PrintFailure($"Unexpected error trying to add SimpleRangeEvent: {e.Message}");
+                Logger.Error(e, "Unexpected error trying to add SimpleRangeEvent");
+                CliDisplay.PrintFailure($"Unexpected error trying to add SimpleRangeEvent: {e.Message}");
 
                 return RANGE_EVENT_FAILED_TO_CREATE;
             }
@@ -197,7 +193,7 @@ namespace MyLittleRangeBook.CLI.Console
 
             TextPrompt<string> p = new TextPrompt<string>("Enter any [green]notes[/] (optional)")
                 .AllowEmpty();
-            notes = await _cliDisplay.Console.PromptAsync(p, cancellationToken).ConfigureAwait(false);
+            notes = await CliDisplay.Console.PromptAsync(p, cancellationToken).ConfigureAwait(false);
 
             return notes;
         }
@@ -229,7 +225,7 @@ namespace MyLittleRangeBook.CLI.Console
                     .AddChoices(ammoChoices.Value);
             }
 
-            return await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(false);
+            return await CliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(false);
         }
 
         async Task<string> AskUserForRangeAsync(string range,
@@ -256,7 +252,7 @@ namespace MyLittleRangeBook.CLI.Console
                 prompt = new TextPrompt<string>("Enter [green]range[/]?");
             }
 
-            return await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(false);
+            return await CliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -284,7 +280,7 @@ namespace MyLittleRangeBook.CLI.Console
                 prompt = new TextPrompt<string>("Enter [green]firearm[/]?");
             }
 
-            firearm = await _cliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(false);
+            firearm = await CliDisplay.Console.PromptAsync(prompt, cancellationToken).ConfigureAwait(false);
 
             return firearm;
         }
@@ -299,7 +295,7 @@ namespace MyLittleRangeBook.CLI.Console
             TextPrompt<int> p = new TextPrompt<int>("      [green]Rounds[/]")
                 .DefaultValue(0)
                 .Validate(x => x > 0);
-            roundCount = await _cliDisplay.Console.PromptAsync(p, cancellationToken).ConfigureAwait(false);
+            roundCount = await CliDisplay.Console.PromptAsync(p, cancellationToken).ConfigureAwait(false);
 
             return roundCount;
         }

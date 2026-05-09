@@ -36,7 +36,7 @@ namespace MyLittleRangeBook.CLI.Console
             Console.PrintProblem(message);
         }
 
-        [Obsolete]
+        [Obsolete("Don't use", true)]
         public async Task RunStatusAsync(
             string status,
             Func<CancellationToken, Task> action,
@@ -52,7 +52,7 @@ namespace MyLittleRangeBook.CLI.Console
                 .ConfigureAwait(false);
         }
 
-        [Obsolete]
+        [Obsolete("Don't use", true)]
         public async Task<T> RunStatusAsync<T>(
             string status,
             Func<CancellationToken, Task<T>> action,

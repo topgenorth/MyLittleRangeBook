@@ -12,21 +12,18 @@ using Spectre.Console;
 namespace MyLittleRangeBook.CLI
 {
     [RegisterCommands("firearm")]
-    public class FirearmCommands
+    public class FirearmCommands: MlrbCommandBase
     {
         readonly IFirearmsDbService _firearmsDbService;
-        readonly ILogger _logger;
         readonly FirearmsTablePrinter _printer;
         readonly ISqliteHelper _sqliteHelper;
 
-        public FirearmCommands(
+        public FirearmCommands(ILogger logger, ICliDisplay cliDisplay,
             [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IFirearmsDbService firearmsDbService,
-            ISqliteHelper sqliteHelper,
-            ILogger logger)
+            ISqliteHelper sqliteHelper): base (logger, cliDisplay)
         {
             _firearmsDbService = firearmsDbService;
             _sqliteHelper = sqliteHelper;
-            _logger = logger;
             _printer = new FirearmsTablePrinter();
         }
 
@@ -52,7 +49,7 @@ namespace MyLittleRangeBook.CLI
 
             if (firearms.IsFailed)
             {
-                _logger.Warning("Failed to retrieve firearms.");
+                Logger.Warning("Failed to retrieve firearms.");
                 AnsiConsole.Console.PrintProblem("Failed to retrieve firearms.");
 
                 return ReturnCodes.FAILURE;
