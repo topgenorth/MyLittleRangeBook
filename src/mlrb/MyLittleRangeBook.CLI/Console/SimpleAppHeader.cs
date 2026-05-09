@@ -4,30 +4,6 @@ using Spectre.Console.Rendering;
 
 namespace MyLittleRangeBook.CLI.Console
 {
-    public interface ICommandHeaderPrinter
-    {
-        void Print(IAnsiConsole console);
-        ICommandHeaderPrinter SetAction(string? action);
-    }
-    public class SimpleAppHeaderWithLogging : SimpleAppHeader
-    {
-        ILogger _logger;
-
-        public SimpleAppHeaderWithLogging(ILogger logger)
-        {
-            _logger = logger;
-        }
-
-        public override void Print(IAnsiConsole console)
-        {
-            if (!string.IsNullOrWhiteSpace(Action))
-            {
-                _logger.Information(Action!);
-            }
-
-            base.Print(console);
-        }
-    }
     public class SimpleAppHeader : IConsolePrinter, ICommandHeaderPrinter
     {
         protected string? Action;
