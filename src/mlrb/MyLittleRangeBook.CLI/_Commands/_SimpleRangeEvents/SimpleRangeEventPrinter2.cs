@@ -22,6 +22,7 @@ namespace MyLittleRangeBook.CLI.Console
         {
             Table table = new Table()
                 .Border(TableBorder.Square)
+                .HideFooters()
                 .Expand()
                 .AddColumn("Date", col => col.Alignment(Justify.Center).Width(10))
                 .AddColumn("Firearm", col => col.Alignment(Justify.Center))
@@ -29,10 +30,11 @@ namespace MyLittleRangeBook.CLI.Console
                 .AddColumn("Rounds", col => col.Alignment(Justify.Center).Width(6));
             table.AddRow(
                 sre.EventDate.ToString("yyyy-MM-dd"),
-                sre.FirearmName,
-                sre.RangeName,
-                sre.RoundsFired.ToString()
+                sre.FirearmName.Trim(),
+                sre.RangeName.Trim(),
+                sre.RoundsFired.ToString().Trim()
             );
+
 
             Layout root = new Layout("root").SplitRows(
                 new Layout("details"),
@@ -42,16 +44,19 @@ namespace MyLittleRangeBook.CLI.Console
 
             root["details"].Update(table);
 
-            root["ammo"].SplitColumns(new Layout("ammolabel"), new Layout("ammocontent"));
-            root["ammolabel"].Update(new Text("Ammo:"));
-            root["ammocontent"].Update(new Text(sre.AmmoDescription?.Trim() ?? string.Empty));
+            Grid grid = new Grid().AddColumn().AddColumn();
+            grid.AddRow("Ammo: ", sre.AmmoDescription?.Trim() ?? string.Empty);
+            root["ammo"].Update(new Panel(grid).Border(BoxBorder.Square).Expand());
+
+            // root["ammo"].SplitColumns(new Layout("ammolabel"), new Layout("ammocontent"));
+            // root["ammolabel"].Update(new Text("Ammo:"));
+            // root["ammocontent"].Update(new Text(sre.AmmoDescription?.Trim() ?? string.Empty));
 
             root["notes"].SplitColumns(new Layout("noteslabel"), new Layout("notescontent"));
             root["noteslabel"].Update(new Text("Notes:"));
             root["notescontent"].Update(new Text(sre.Notes?.Trim() ?? string.Empty));
 
             return root;
-
         }
 
         IRenderable TryTable(SimpleRangeEvent sre)
