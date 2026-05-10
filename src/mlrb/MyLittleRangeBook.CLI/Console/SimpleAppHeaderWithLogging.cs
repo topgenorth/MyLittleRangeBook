@@ -4,11 +4,11 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public class SimpleAppHeaderWithLogging : ICommandHeaderPrinter
     {
-        readonly ICommandHeaderPrinter _inner;
+        readonly SimpleAppHeader _inner;
         readonly ILogger _logger;
         string? _action;
 
-        public SimpleAppHeaderWithLogging(ICommandHeaderPrinter inner, ILogger logger)
+        public SimpleAppHeaderWithLogging(SimpleAppHeader inner, ILogger logger)
         {
             _inner = inner;
             _logger = logger;

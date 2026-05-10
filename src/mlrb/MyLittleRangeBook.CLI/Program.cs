@@ -30,6 +30,7 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
 #region Spectre.Console dependencies
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.AddTransient<ICliDisplay, CliDisplay>();
+builder.Services.AddTransient<SimpleAppHeader>();
 builder.Services.AddTransient<ICommandHeaderPrinter, SimpleAppHeaderWithLogging>();
 builder.Services.AddTransient<ISimpleRangeEventPrinter, SimpleRangeEventPrinter>();
 builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventListPrinter>();
