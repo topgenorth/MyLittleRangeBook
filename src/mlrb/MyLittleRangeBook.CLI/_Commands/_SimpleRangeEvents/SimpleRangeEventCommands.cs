@@ -11,7 +11,7 @@ using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
 namespace MyLittleRangeBook.CLI.Console
 {
     [RegisterCommands("rangeevent")]
-    public class SimpleRangeEventCommands: MlrbCommandBase
+    public class SimpleRangeEventCommands : MlrbCommandBase
     {
         readonly ISimpleRangeEventListPrinter _printer;
         readonly ISimpleRangeEventRepository _repo;
@@ -19,12 +19,53 @@ namespace MyLittleRangeBook.CLI.Console
         public SimpleRangeEventCommands(ILogger logger,
             ICliDisplay cliDisplay,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
-            ISimpleRangeEventListPrinter printer): base(logger, cliDisplay)
+            ISimpleRangeEventListPrinter printer) : base(logger, cliDisplay)
         {
             _repo = repo;
             _printer = printer;
         }
 
+        /// <summary>
+        /// Display a single range event.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        [Command("show")]
+        [UsedImplicitly]
+        public async Task<int> DisplayOneRangeEvent(string id, CancellationToken ct = default)
+        {
+            CliDisplay.PrintCommandHeader($"Show range event {id}");
+            int returnCode;
+
+            try
+            {
+                Result<SimpleRangeEvent> result = await _repo.GetAsync(id, ct).ConfigureAwait(false);
+
+                if (result.IsFailed)
+                {
+                    Logger.Warning("Could not find simple range event {id} for display.", id);
+                    CliDisplay.PrintFailure("Could not find the request range event.");
+                    returnCode = FAILURE;
+                }
+                else
+                {
+                    var p = new SimpleRangeEventPrinter2();
+                    p.Print(CliDisplay.Console, result.Value!);
+                    CliDisplay.PrintSuccess("Range event displayed successfully.");
+                    returnCode = SUCCESS;
+                }
+            }
+            catch (Exception e)
+            {
+                returnCode = FAILURE;
+                Logger.Error(e, e.Message);
+                CliDisplay.PrintFailure("An error occurred while displaying the range event.");
+            }
+
+            // System.Console.ReadKey();
+            return returnCode;
+        }
 
         /// <summary>
         ///     List all the range events in the database.
@@ -35,7 +76,7 @@ namespace MyLittleRangeBook.CLI.Console
         [UsedImplicitly]
         public async Task<int> ListRangeEvents(CancellationToken cancellationToken)
         {
-            CliDisplay.PrintAppInfo();
+            CliDisplay.PrintCommandHeader("List range events.");
             Result<IEnumerable<SimpleRangeEvent>> rangeEvents = await _repo.GetSimpleRangeEventsAsync(cancellationToken)
                 .ConfigureAwait(false);
             if (rangeEvents.IsFailed)

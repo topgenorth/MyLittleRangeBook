@@ -51,22 +51,5 @@ namespace MyLittleRangeBook.CLI.Console
                 })
                 .ConfigureAwait(false);
         }
-
-        [Obsolete("Don't use", true)]
-        public async Task<T> RunStatusAsync<T>(
-            string status,
-            Func<CancellationToken, Task<T>> action,
-            CancellationToken cancellationToken = default)
-        {
-            return await Console.Status()
-                .Spinner(Spinner.Known.Dots)
-                .StartAsync(status, async _ =>
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    return await action(cancellationToken).ConfigureAwait(false);
-                })
-                .ConfigureAwait(false);
-        }
     }
 }
