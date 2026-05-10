@@ -29,13 +29,22 @@ namespace MyLittleRangeBook.CLI.Console
         /// Display a single range event.
         /// </summary>
         /// <param name="id"></param>
+        /// <param name="quiet"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         [Command("show")]
         [UsedImplicitly]
-        public async Task<int> DisplayOneRangeEvent(string id, CancellationToken ct = default)
+        public async Task<int> DisplayOneRangeEvent(string id, bool quiet = false,  CancellationToken ct = default)
         {
-            CliDisplay.PrintCommandHeader($"Show range event {id}");
+            if (quiet)
+            {
+                CliDisplay.PrintCommandHeader();
+            }
+            else
+            {
+                CliDisplay.PrintCommandHeader($"Show range event {id}");
+            }
+
             int returnCode;
 
             try
@@ -51,7 +60,7 @@ namespace MyLittleRangeBook.CLI.Console
                 else
                 {
                     var p = new SimpleRangeEventPrinter2();
-                    p.Print(CliDisplay.Console, result.Value!);
+                    p.Print(CliDisplay.Console, result.Value!, quiet);
                     CliDisplay.PrintSuccess("Range event displayed successfully.");
                     returnCode = SUCCESS;
                 }

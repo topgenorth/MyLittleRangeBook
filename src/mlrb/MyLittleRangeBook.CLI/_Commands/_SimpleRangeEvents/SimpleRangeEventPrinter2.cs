@@ -6,12 +6,27 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public class SimpleRangeEventPrinter2 : ISimpleRangeEventPrinter
     {
+        IRenderable QuietLayout(SimpleRangeEvent sre)
+        {
+            Grid grid = new Grid().Expand()
+                .AddColumn()
+                .AddColumn()
+                .AddColumn()
+                .AddColumn()
+                .AddColumn();
+            grid.AddRow("Id: " + sre.Id?.Trim(),
+                ", Date: " + sre.EventDate.ToString("yyyy-MM-dd"),
+                ", Firearm: " + sre.FirearmName.Trim(),
+                ", Range: " + sre.RangeName.Trim(),
+                ", Rounds: " + sre.RoundsFired);
+
+            return grid;
+        }
         public void Print(IAnsiConsole console, SimpleRangeEvent sre, bool quiet = false)
         {
             if (quiet)
             {
-                console.MarkupLineInterpolated($"[green]Range Trip RowId {sre.RowId}, Id {sre.Id}.[/]");
-
+                console.Write(QuietLayout(sre));
                 return;
             }
 
@@ -34,7 +49,6 @@ namespace MyLittleRangeBook.CLI.Console
                 sre.RangeName.Trim(),
                 sre.RoundsFired.ToString().Trim()
             );
-
 
             Layout root = new Layout("root").SplitRows(
                 new Layout("details"),
@@ -59,29 +73,5 @@ namespace MyLittleRangeBook.CLI.Console
             return root;
         }
 
-        IRenderable TryTable(SimpleRangeEvent sre)
-        {
-            Table table = new Table()
-                .Expand()
-                .AddColumn("Date", col => col.Alignment(Justify.Center))
-                .AddColumn("Firearm", col => col.Alignment(Justify.Center))
-                .AddColumn("Range", col => col.Alignment(Justify.Left))
-                .AddColumn("Rounds", col => col.Alignment(Justify.Center));
-
-            table.AddRow(sre.EventDate.ToString("yyyy-MM-dd"), sre.FirearmName, sre.RangeName,
-                sre.RoundsFired.ToString());
-
-            if (!string.IsNullOrWhiteSpace(sre.AmmoDescription))
-            {
-                table.AddRow("Ammo", sre.AmmoDescription!, string.Empty, string.Empty);
-            }
-
-            if (!string.IsNullOrWhiteSpace(sre.Notes))
-            {
-                table.AddRow("Notes", sre.Notes!, string.Empty, string.Empty, string.Empty);
-            }
-
-            return table;
-        }
     }
 }
