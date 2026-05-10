@@ -2,23 +2,34 @@
 
 namespace MyLittleRangeBook.CLI.Console
 {
-    public class SimpleAppHeaderWithLogging : SimpleAppHeader
+    public class SimpleAppHeaderWithLogging : ICommandHeaderPrinter
     {
-        ILogger _logger;
+        readonly ICommandHeaderPrinter _inner;
+        readonly ILogger _logger;
+        string? _action;
 
-        public SimpleAppHeaderWithLogging(ILogger logger)
+        public SimpleAppHeaderWithLogging(ICommandHeaderPrinter inner, ILogger logger)
         {
+            _inner = inner;
             _logger = logger;
         }
 
-        public override void Print(IAnsiConsole console)
+        public void Print(IAnsiConsole console)
         {
-            if (!string.IsNullOrWhiteSpace(Action))
+            if (!string.IsNullOrWhiteSpace(_action))
             {
-                _logger.Information(Action!);
+                _logger.Information(_action!);
             }
 
-            base.Print(console);
+            _inner.Print(console);
+        }
+
+        public ICommandHeaderPrinter SetAction(string? action)
+        {
+            _action = action;
+            _inner.SetAction(action);
+
+            return this;
         }
     }
 }
