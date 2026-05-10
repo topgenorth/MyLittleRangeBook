@@ -14,6 +14,10 @@ namespace MyLittleRangeBook.CLI.Console
             _logger = logger;
         }
 
+        /// <summary>
+        /// Print the app header to the console, and log the action that is being performed. Resets the action when done.
+        /// </summary>
+        /// <param name="console"></param>
         public void Print(IAnsiConsole console)
         {
             if (!string.IsNullOrWhiteSpace(_action))
@@ -22,6 +26,8 @@ namespace MyLittleRangeBook.CLI.Console
             }
 
             _inner.Print(console);
+            _action = null;
+            _inner.SetAction(null);
         }
 
         public ICommandHeaderPrinter SetAction(string? action)
