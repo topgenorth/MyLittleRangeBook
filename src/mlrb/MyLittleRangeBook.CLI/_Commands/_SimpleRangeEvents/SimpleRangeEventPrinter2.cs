@@ -20,10 +20,19 @@ namespace MyLittleRangeBook.CLI.Console
 
         IRenderable TryLayouts(SimpleRangeEvent sre)
         {
-            var t1 = new Text("Date: " + sre.EventDate.ToString("yyyy-MM-dd"));
-            var t2 = new Text("Firearm: " + sre.FirearmName);
-            var t3 = new Text("Range: " + sre.RangeName);
-            var t4 = new Text("Rounds: " + sre.RoundsFired);
+            Table table = new Table()
+                .Border(TableBorder.Square)
+                .Expand()
+                .AddColumn("Date", col => col.Alignment(Justify.Center).Width(10))
+                .AddColumn("Firearm", col => col.Alignment(Justify.Center))
+                .AddColumn("Range", col => col.Alignment(Justify.Center))
+                .AddColumn("Rounds", col => col.Alignment(Justify.Center).Width(6));
+            table.AddRow(
+                sre.EventDate.ToString("yyyy-MM-dd"),
+                sre.FirearmName,
+                sre.RangeName,
+                sre.RoundsFired.ToString()
+            );
 
             Layout root = new Layout("root").SplitRows(
                 new Layout("details"),
@@ -31,23 +40,15 @@ namespace MyLittleRangeBook.CLI.Console
                 new Layout("notes")
             );
 
-            Table table = new Table()
-                .Border(TableBorder.Square)
-                .Expand()
-                .AddColumn("Date", col => col.Alignment(Justify.Left).Width(10))
-                .AddColumn("Firearm", col => col.Alignment(Justify.Center))
-                .AddColumn("Range", col => col.Alignment(Justify.Left))
-                .AddColumn("Rounds", col => col.Alignment(Justify.Center).Width(6))
-                .AddRow(
-                    sre.EventDate.ToString("yyyy-MM-dd"),
-                    sre.FirearmName,
-                    sre.RangeName,
-                    sre.RoundsFired.ToString());
-            root["details"].Update(table).Ratio(1);
+            root["details"].Update(table);
 
             root["ammo"].SplitColumns(new Layout("ammolabel"), new Layout("ammocontent"));
-            root["ammolabel"].Update(new Text("Ammo:")).Size(6);
-            root["ammocontent"].Update(new Text(sre.AmmoDescription ?? string.Empty));
+            root["ammolabel"].Update(new Text("Ammo:"));
+            root["ammocontent"].Update(new Text(sre.AmmoDescription?.Trim() ?? string.Empty));
+
+            root["notes"].SplitColumns(new Layout("noteslabel"), new Layout("notescontent"));
+            root["noteslabel"].Update(new Text("Notes:"));
+            root["notescontent"].Update(new Text(sre.Notes?.Trim() ?? string.Empty));
 
             return root;
 

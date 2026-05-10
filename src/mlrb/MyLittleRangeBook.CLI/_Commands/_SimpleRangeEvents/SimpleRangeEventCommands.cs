@@ -63,7 +63,9 @@ namespace MyLittleRangeBook.CLI.Console
                 CliDisplay.PrintFailure("An error occurred while displaying the range event.");
             }
 
-            // System.Console.ReadKey();
+            #if DEBUG
+            System.Console.ReadKey();
+            #endif
             return returnCode;
         }
 
