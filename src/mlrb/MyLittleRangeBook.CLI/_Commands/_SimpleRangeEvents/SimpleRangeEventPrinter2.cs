@@ -6,6 +6,18 @@ namespace MyLittleRangeBook.CLI.Console
 {
     public class SimpleRangeEventPrinter2 : ISimpleRangeEventPrinter
     {
+        public void Print(IAnsiConsole console, SimpleRangeEvent sre, bool quiet = false)
+        {
+            if (quiet)
+            {
+                console.Write(QuietLayout(sre));
+
+                return;
+            }
+
+            console.Write(TryLayouts(sre));
+        }
+
         IRenderable QuietLayout(SimpleRangeEvent sre)
         {
             Grid grid = new Grid().Expand()
@@ -22,24 +34,13 @@ namespace MyLittleRangeBook.CLI.Console
 
             return grid;
         }
-        public void Print(IAnsiConsole console, SimpleRangeEvent sre, bool quiet = false)
-        {
-            if (quiet)
-            {
-                console.Write(QuietLayout(sre));
-                return;
-            }
-
-            console.Write(TryLayouts(sre));
-        }
 
         IRenderable TryLayouts(SimpleRangeEvent sre)
         {
             Table table = new Table()
                 .Border(TableBorder.Square)
-                .HideFooters()
                 .Expand()
-                .AddColumn("Date", col => col.Alignment(Justify.Center).Width(10))
+                .AddColumn("Date", col => col.Alignment(Justify.Center).Width(10).Padding(0, 0))
                 .AddColumn("Firearm", col => col.Alignment(Justify.Center))
                 .AddColumn("Range", col => col.Alignment(Justify.Center))
                 .AddColumn("Rounds", col => col.Alignment(Justify.Center).Width(6));
@@ -55,23 +56,21 @@ namespace MyLittleRangeBook.CLI.Console
                 new Layout("ammo"),
                 new Layout("notes")
             );
-
             root["details"].Update(table);
 
-            Grid grid = new Grid().AddColumn().AddColumn();
+            GridColumn c1 = new GridColumn().Padding(0, 0).Width(7);
+            GridColumn c2 = new GridColumn().Padding(0, 0);
+            Grid grid = new Grid().AddColumn(c1).AddColumn(c2).Expand();
             grid.AddRow("Ammo: ", sre.AmmoDescription?.Trim() ?? string.Empty);
-            root["ammo"].Update(new Panel(grid).Border(BoxBorder.Square).Expand());
+            root["ammo"].Update(new Panel(grid).Border(BoxBorder.Square).Expand().Padding(0,0));
 
-            // root["ammo"].SplitColumns(new Layout("ammolabel"), new Layout("ammocontent"));
-            // root["ammolabel"].Update(new Text("Ammo:"));
-            // root["ammocontent"].Update(new Text(sre.AmmoDescription?.Trim() ?? string.Empty));
+            GridColumn c3 = new GridColumn().Padding(0, 0).Width(7);
+            GridColumn c4 = new GridColumn().Padding(0, 0);
+            Grid grid2 = new Grid().AddColumn(c3).AddColumn(c4).Collapse();
+            grid2.AddRow("Notes: ", sre.Notes?.Trim() ?? string.Empty);
+            root["notes"].Update(new Panel(grid2).Border(BoxBorder.Square).Expand());
 
-            root["notes"].SplitColumns(new Layout("noteslabel"), new Layout("notescontent"));
-            root["noteslabel"].Update(new Text("Notes:"));
-            root["notescontent"].Update(new Text(sre.Notes?.Trim() ?? string.Empty));
-
-            return root;
+            return new Panel(root).Border(BoxBorder.Square).Expand();
         }
-
     }
 }

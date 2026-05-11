@@ -26,15 +26,15 @@ namespace MyLittleRangeBook.CLI.Console
         }
 
         /// <summary>
-        /// Display a single range event.
+        ///     Display a single range event.
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="quiet"></param>
+        /// <param name="quiet">If set to true, then less verbose, single line output.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
         [Command("show")]
         [UsedImplicitly]
-        public async Task<int> DisplayOneRangeEvent(string id, bool quiet = false,  CancellationToken ct = default)
+        public async Task<int> DisplayOneRangeEvent(string id, bool quiet = false, CancellationToken ct = default)
         {
             if (quiet)
             {
@@ -72,9 +72,9 @@ namespace MyLittleRangeBook.CLI.Console
                 CliDisplay.PrintFailure("An error occurred while displaying the range event.");
             }
 
-            #if DEBUG
+#if DEBUG
             System.Console.ReadKey();
-            #endif
+#endif
             return returnCode;
         }
 
