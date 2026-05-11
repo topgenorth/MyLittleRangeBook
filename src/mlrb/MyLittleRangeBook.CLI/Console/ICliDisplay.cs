@@ -24,11 +24,5 @@ namespace MyLittleRangeBook.CLI.Console
         /// </summary>
         /// <param name="message"></param>
         void PrintFailure(string message);
-
-        [Obsolete]
-        Task<T> RunStatusAsync<T>(
-            string status,
-            Func<CancellationToken, Task<T>> action,
-            CancellationToken cancellationToken = default);
     }
 }

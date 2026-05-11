@@ -2,12 +2,16 @@
 
 namespace MyLittleRangeBook.CLI
 {
-    public class MlrbCommandBase
+
+    /// <summary>
+    /// Base class for classes that will handle commands for the Console Application Framework.
+    /// </summary>
+    public abstract class MlrbCommandBase
     {
         protected ICliDisplay CliDisplay;
         protected ILogger Logger;
 
-        public MlrbCommandBase(ILogger logger, ICliDisplay cliDisplay)
+        protected MlrbCommandBase(ILogger logger, ICliDisplay cliDisplay)
         {
             Logger = logger;
             CliDisplay = cliDisplay;

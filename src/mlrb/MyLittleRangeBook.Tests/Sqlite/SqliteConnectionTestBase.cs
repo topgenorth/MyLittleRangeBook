@@ -11,7 +11,6 @@ namespace MyLittleRangeBook.Sqlite
     /// </summary>
     public abstract class SqliteConnectionTestBase
     {
-        readonly string _inMemory = "Data Source=:memory:";
         readonly string _sqliteDbFileName = Path.GetTempFileName();
 
         static SqliteConnectionTestBase()

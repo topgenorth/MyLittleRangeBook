@@ -49,7 +49,7 @@ namespace MyLittleRangeBook.CLI.Console
             string? rangeEventId = null,
             CancellationToken cancellationToken = default)
         {
-            CliDisplay.PrintAppInfo();
+            CliDisplay.PrintCommandHeader("Add ShotView CSV file");
 
             if (string.IsNullOrWhiteSpace(csvFile))
             {

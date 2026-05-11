@@ -13,6 +13,7 @@ namespace MyLittleRangeBook.CLI.Console
         public const string SuccessGlyph = "✓";
         public const string ErrorGlyph = "✗";
 
+        [Obsolete("Don't use")]
         public static ICliDisplay PrintAppInfo(this ICliDisplay cliDisplay)
         {
             cliDisplay.Console.PrintAppInfo();

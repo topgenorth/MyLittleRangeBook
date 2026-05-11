@@ -2,23 +2,40 @@
 
 namespace MyLittleRangeBook.CLI.Console
 {
-    public class SimpleAppHeaderWithLogging : SimpleAppHeader
+    public class SimpleAppHeaderWithLogging : ICommandHeaderPrinter
     {
-        ILogger _logger;
+        readonly SimpleAppHeader _inner;
+        readonly ILogger _logger;
+        string? _action;
 
-        public SimpleAppHeaderWithLogging(ILogger logger)
+        public SimpleAppHeaderWithLogging(SimpleAppHeader inner, ILogger logger)
         {
+            _inner = inner;
             _logger = logger;
         }
 
-        public override void Print(IAnsiConsole console)
+        /// <summary>
+        /// Print the app header to the console, and log the action that is being performed. Resets the action when done.
+        /// </summary>
+        /// <param name="console"></param>
+        public void Print(IAnsiConsole console)
         {
-            if (!string.IsNullOrWhiteSpace(Action))
+            if (!string.IsNullOrWhiteSpace(_action))
             {
-                _logger.Information(Action!);
+                _logger.Information(_action!);
             }
 
-            base.Print(console);
+            _inner.Print(console);
+            _action = null;
+            _inner.SetAction(null);
+        }
+
+        public ICommandHeaderPrinter SetAction(string? action)
+        {
+            _action = action;
+            _inner.SetAction(action);
+
+            return this;
         }
     }
 }

@@ -65,6 +65,7 @@ namespace MyLittleRangeBook.CLI
                 return FIT_FILE_NOT_FOUND;
             }
 
+
             Result<ShotSession> result = await _xeroParser.DecodeFITFileAsync(file, ct).ConfigureAwait(false);
 
             if (result.IsFailed)
@@ -74,16 +75,10 @@ namespace MyLittleRangeBook.CLI
                 return FIT_FILE_PARSE_FAILURE;
             }
 
+            Logger.Debug("Fit file {fitFile}", file);
+
             ShotSession? shotSession = result.Value;
             shotSession.FileName = file;
-
-
-            if (result.IsFailed)
-            {
-                CliDisplay.PrintFailure("Failed to parse FIT file.");
-
-                return result.HasError<UnsupportedFitFileTypeError>() ? FIT_FILE_PARSE_FAILURE : FAILURE;
-            }
 
             ShotSession? session = result.Value;
             DisplaySessionToConsole(CliDisplay, session);

@@ -32,5 +32,7 @@ namespace MyLittleRangeBook.Services
 
         Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(CancellationToken cancellationToken =
             default);
+
+        Task<Result<SimpleRangeEvent>> GetAsync(string id, CancellationToken cancellationToken);
     }
 }

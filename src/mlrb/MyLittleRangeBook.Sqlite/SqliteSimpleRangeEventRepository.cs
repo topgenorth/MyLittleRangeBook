@@ -176,6 +176,33 @@ VALUES (@SimpleRangeEventId, @ImageId);";
             return await _simpleRangeEventService.GetSimpleRangeEventsAsync(conn, cancellationToken);
         }
 
+        public async Task<Result<SimpleRangeEvent>> GetAsync(string id, CancellationToken cancellationToken)
+        {
+            const string SQL = "SELECT * FROM main.SimpleRangeEvents WHERE Id=@Id;";
+            await using SqliteConnection conn = await _sqliteHelper
+                .GetDatabaseConnectionAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            try
+            {
+                SimpleRangeEvent? sre = await conn.QueryFirstOrDefaultAsync<SimpleRangeEvent>(SQL, new { Id = id });
+                if (sre is not null)
+                {
+                    return Result.Ok(sre);
+                }
+
+                Error err = new Error("Could not find range event " + id + ".").Enrich(id);
+                return Result.Fail(err);
+            }
+            catch (Exception ex)
+            {
+                Error err = new Error(ex.Message).CausedBy(ex).Enrich(id);
+
+                return Result.Fail(err);
+            }
+
+        }
+
         public async Task<Result<bool>> DeleteAsync(SimpleRangeEvent simpleRangeEvent,
             CancellationToken cancellationToken = default)
         {

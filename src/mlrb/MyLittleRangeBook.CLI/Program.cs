@@ -11,6 +11,12 @@ using MyLittleRangeBook.IO;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
+// [TO20260510] For Spectre.Console - force UTF8
+if (Console.OutputEncoding.CodePage == 437) // DOS/OEM encoding
+{
+    Console.OutputEncoding = System.Text.Encoding.UTF8;
+}
+
 IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
     .AddBootStrapper(SerilogAppSettingsJsonFileBootstrap.SerilogSection)
     .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
@@ -30,6 +36,7 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
 #region Spectre.Console dependencies
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.AddTransient<ICliDisplay, CliDisplay>();
+builder.Services.AddTransient<SimpleAppHeader>();
 builder.Services.AddTransient<ICommandHeaderPrinter, SimpleAppHeaderWithLogging>();
 builder.Services.AddTransient<ISimpleRangeEventPrinter, SimpleRangeEventPrinter>();
 builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventListPrinter>();
