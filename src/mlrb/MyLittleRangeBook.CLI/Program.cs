@@ -42,13 +42,13 @@ builder.Services.AddTransient<ISimpleRangeEventPrinter, SimpleRangeEventPrinter>
 builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventListPrinter>();
 #endregion
 
-builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
-
 #region SQLite dependencies
 builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration);
 builder.Services.AddKeyedTransient<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>(SqliteHelperExtensions
     .DI_KEYS_SQLITE);
 #endregion
+
+builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();

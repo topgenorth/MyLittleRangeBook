@@ -269,7 +269,6 @@ namespace MyLittleRangeBook.Database.Sqlite
             using StreamReader reader = appSettings.OpenText();
             string jsonBody = await reader.ReadToEndAsync(cancellationToken);
 
-
             var node = JsonNode.Parse(jsonBody);
             if (node is null)
             {
