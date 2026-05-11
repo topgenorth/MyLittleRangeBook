@@ -76,7 +76,7 @@ namespace MyLittleRangeBook.CLI
             AnsiConsole.Console.WriteLine("Adding cartridge...");
             var cartridge = new Cartridge
             {
-                Id = Nanoid.Generate(),
+                Id = await Nanoid.GenerateAsync().ConfigureAwait(false),
                 Name = name,
                 CommonName = commonName,
                 ProjectileDiameterMetric = diameterMetric,
