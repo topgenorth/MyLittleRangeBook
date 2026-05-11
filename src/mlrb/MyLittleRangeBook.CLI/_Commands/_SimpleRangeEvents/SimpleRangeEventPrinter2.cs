@@ -37,10 +37,25 @@ namespace MyLittleRangeBook.CLI.Console
 
         IRenderable TryLayouts(SimpleRangeEvent sre)
         {
+            Layout root = new Layout("root").SplitRows(
+                new Layout("details"),
+                new Layout("ammo"),
+                new Layout("notes")
+            );
+
+            AddDetails(root, sre);
+            AddAmmo(root, sre);
+            AddNotes(root, sre);
+
+            return root;
+        }
+
+        static void AddDetails(Layout root, SimpleRangeEvent sre)
+        {
             Table table = new Table()
                 .Border(TableBorder.Square)
                 .Expand()
-                .AddColumn("Date", col => col.Alignment(Justify.Center).Width(10).Padding(0, 0))
+                .AddColumn("Date", col => col.Alignment(Justify.Center).Width(10))
                 .AddColumn("Firearm", col => col.Alignment(Justify.Center))
                 .AddColumn("Range", col => col.Alignment(Justify.Center))
                 .AddColumn("Rounds", col => col.Alignment(Justify.Center).Width(6));
@@ -51,26 +66,33 @@ namespace MyLittleRangeBook.CLI.Console
                 sre.RoundsFired.ToString().Trim()
             );
 
-            Layout root = new Layout("root").SplitRows(
-                new Layout("details"),
-                new Layout("ammo"),
-                new Layout("notes")
-            );
-            root["details"].Update(table);
 
+            Panel detailsPanel = new Panel(table).Expand().Border(BoxBorder.None).Padding(0, 0);
+            detailsPanel.Height = 7;
+            root["details"].Update(detailsPanel);
+        }
+
+        static void AddNotes(Layout root, SimpleRangeEvent sre)
+        {
+            GridColumn c3 = new GridColumn().Padding(0, 0).Width(7);
+            GridColumn c4 = new GridColumn().Padding(0,  0);
+            Grid grid2 = new Grid().AddColumn(c3).AddColumn(c4).Collapse();
+            grid2.AddRow("Notes: ", sre.Notes?.Trim() ?? string.Empty);
+            Panel notesPanel = new Panel(grid2).Border(BoxBorder.None).Expand().Padding(0, 0);
+            notesPanel.Height = 4;
+            root["notes"].Update(notesPanel);
+        }
+
+        static void AddAmmo(Layout root, SimpleRangeEvent sre)
+        {
             GridColumn c1 = new GridColumn().Padding(0, 0).Width(7);
             GridColumn c2 = new GridColumn().Padding(0, 0);
             Grid grid = new Grid().AddColumn(c1).AddColumn(c2).Expand();
             grid.AddRow("Ammo: ", sre.AmmoDescription?.Trim() ?? string.Empty);
-            root["ammo"].Update(new Panel(grid).Border(BoxBorder.Square).Expand().Padding(0,0));
+            Panel ammoPanel = new Panel(grid).Border(BoxBorder.None).Expand().Padding(0, 0);
+            ammoPanel.Height = 3;
 
-            GridColumn c3 = new GridColumn().Padding(0, 0).Width(7);
-            GridColumn c4 = new GridColumn().Padding(0, 0);
-            Grid grid2 = new Grid().AddColumn(c3).AddColumn(c4).Collapse();
-            grid2.AddRow("Notes: ", sre.Notes?.Trim() ?? string.Empty);
-            root["notes"].Update(new Panel(grid2).Border(BoxBorder.Square).Expand());
-
-            return new Panel(root).Border(BoxBorder.Square).Expand();
+            root["ammo"].Update(ammoPanel);
         }
     }
 }
