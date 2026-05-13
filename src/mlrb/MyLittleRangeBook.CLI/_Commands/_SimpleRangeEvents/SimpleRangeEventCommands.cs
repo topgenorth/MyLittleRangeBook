@@ -122,5 +122,65 @@ namespace MyLittleRangeBook.CLI.Console
 
             return SUCCESS;
         }
+
+        /// <summary>
+        ///     Delete a range event from the database by ID.
+        /// </summary>
+        /// <param name="id">The ID of the range event to delete.</param>
+        /// <param name="quiet">If set to true, then less verbose output.</param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        [Command("delete")]
+        [UsedImplicitly]
+        public async Task<int> DeleteRangeEvent(string id, bool quiet = false, CancellationToken ct = default)
+        {
+            if (!quiet)
+            {
+                CliDisplay.PrintCommandHeader($"Delete range event {id}");
+            }
+
+            int returnCode;
+
+            try
+            {
+                // First, retrieve the event to ensure it exists
+                Result<SimpleRangeEvent> getResult = await _repo.GetAsync(id, ct).ConfigureAwait(false);
+
+                if (getResult.IsFailed)
+                {
+                    Logger.Warning("Could not find simple range event {id} for deletion.", id);
+                    CliDisplay.PrintFailure("Could not find the requested range event.");
+                    returnCode = FAILURE;
+                }
+                else
+                {
+                    // Delete the event
+                    Result<bool> deleteResult = await _repo.DeleteAsync(getResult.Value, ct).ConfigureAwait(false);
+
+                    if (deleteResult.IsSuccess)
+                    {
+                        CliDisplay.PrintSuccess($"Range event {id} deleted successfully.");
+                        returnCode = SUCCESS;
+                    }
+                    else
+                    {
+                        Logger.Warning("Failed to delete simple range event {id}.", id);
+                        CliDisplay.PrintFailure("Failed to delete the range event.");
+                        returnCode = FAILURE;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                returnCode = FAILURE;
+                Logger.Error(e, e.Message);
+                CliDisplay.PrintFailure("An error occurred while deleting the range event.");
+            }
+
+#if DEBUG
+            System.Console.ReadKey();
+#endif
+            return returnCode;
+        }
     }
 }
