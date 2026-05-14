@@ -1,4 +1,6 @@
 ﻿using FluentResults;
+using MyLittleRangeBook.Models;
+using MyLittleRangeBook.RangeEventAssets;
 using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook
@@ -14,7 +16,7 @@ namespace MyLittleRangeBook
         [Fact]
         public void TestUniqueNameCreated()
         {
-            Result<(string assetId, string assetPath)> name = _sut.GenerateAssetFileName("rangeEventId", Asset1);
+            Result<(MlrbId assetId, string assetPath)> name = _sut.GenerateAssetFileName("rangeEventId", Asset1);
             name.IsSuccess.ShouldBeTrue();
 
             Path.GetExtension(name.Value.assetPath).ShouldBe(".jpg");
@@ -25,11 +27,11 @@ namespace MyLittleRangeBook
         [Fact]
         public void TestIdsAreSortable()
         {
-            Result<(string assetId, string assetPath)> name1 = _sut.GenerateAssetFileName("rangeEventId", Asset1);
+            Result<(MlrbId assetId, string assetPath)> name1 = _sut.GenerateAssetFileName("rangeEventId", Asset1);
             name1.IsSuccess.ShouldBeTrue();
-            Result<(string assetId, string assetPath)> name2 = _sut.GenerateAssetFileName("rangeEventId", Asset2);
+            Result<(MlrbId assetId, string assetPath)> name2 = _sut.GenerateAssetFileName("rangeEventId", Asset2);
             name2.IsSuccess.ShouldBeTrue();
-            Result<(string assetId, string assetPath)> name3 = _sut.GenerateAssetFileName("rangeEventId", Asset3);
+            Result<(MlrbId assetId, string assetPath)> name3 = _sut.GenerateAssetFileName("rangeEventId", Asset3);
             name3.IsSuccess.ShouldBeTrue();
 
             var l = new List<string> { name3.Value.assetId, name1.Value.assetId, name2.Value.assetId };

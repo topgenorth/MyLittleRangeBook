@@ -1,8 +1,9 @@
 ﻿using FluentResults;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Services;
 using NanoidDotNet;
 
-namespace MyLittleRangeBook.Services
+namespace MyLittleRangeBook.RangeEventAssets
 {
     /// <summary>
     ///     This class will copy file for a given range event over to the data directory for the application.

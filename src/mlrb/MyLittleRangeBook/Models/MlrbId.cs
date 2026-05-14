@@ -7,7 +7,14 @@ namespace MyLittleRangeBook.Models
     /// </summary>
     public record MlrbId
     {
+        public static readonly MlrbId Empty = new(Ulid.Empty);
+
         readonly Ulid _id;
+
+        MlrbId(Ulid id)
+        {
+            _id = id;
+        }
 
         public MlrbId() : this(DateTimeOffset.UtcNow)
         {
@@ -24,6 +31,7 @@ namespace MyLittleRangeBook.Models
                 throw new ArgumentException("Byte array is not a valid Ulid.");
             }
         }
+
         public MlrbId(string value)
         {
             if (Ulid.IsValid(value))

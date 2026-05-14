@@ -1,4 +1,5 @@
 ﻿using FluentResults;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Services
 {
@@ -14,6 +15,6 @@ namespace MyLittleRangeBook.Services
         /// <param name="rangeEventId">The unique identifier of the range event.</param>
         /// <param name="assetFileName">The base file name of the asset.</param>
         /// <returns>A string representing the complete asset file name.</returns>
-        Result<(string assetId, string assetPath)> GenerateAssetFileName(string rangeEventId, string assetFileName);
+        Result<(MlrbId assetId, string assetPath)> GenerateAssetFileName(string rangeEventId, string assetFileName);
     }
 }
