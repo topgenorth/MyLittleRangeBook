@@ -303,7 +303,7 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <param name="imageFilePath"></param>
         /// <param name="rangeEventId"></param>
         /// <returns>A Nanoid to reference the file, and the full path to the copied file.</returns>
-        [Obsolete("Deprecated. Use IImportRangeEventAsset instead.", true)]
+        [Obsolete("Deprecated. Use IRangeEventAssetImporter instead.", true)]
         public async Task<Result<(string id, string imagePath)>> CopyImageToEventHistory(string imageFilePath,
             string rangeEventId)
         {

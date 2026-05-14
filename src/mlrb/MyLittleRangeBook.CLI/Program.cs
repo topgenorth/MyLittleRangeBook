@@ -35,9 +35,6 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
         .Enrich.FromLogContext();
 });
 
-
-
-
 #region Spectre.Console dependencies
 builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.AddTransient<ICliDisplay, CliDisplay>();

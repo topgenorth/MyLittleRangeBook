@@ -1,36 +1,19 @@
 ﻿using FluentResults;
-using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Models;
 using NanoidDotNet;
-using Serilog;
 
 namespace MyLittleRangeBook.Services
 {
-    public interface IImportRangeEventAsset
-    {
-        /// <summary>
-        ///     Will copy the asset to the data directory for the app, and associate it with the specified range event.
-        /// </summary>
-        /// <param name="assetToImport"></param>
-        /// <param name="rangeEventId"></param>
-        /// <param name="ct"></param>
-        /// <returns>A tuple that holds the ID of the new asset, and the path it was copied to.</returns>
-        Task<Result<(string assetId, string destinationPath)>> ImportAssetForRangeEvent(string assetToImport,
-            string rangeEventId, CancellationToken ct = default);
-    }
-
     /// <summary>
-    ///  This class will copy file for a given range event over to the data directory for the application.
+    ///     This class will copy file for a given range event over to the data directory for the application.
     /// </summary>
-    public class SimpleAssetImporter : IImportRangeEventAsset
+    public class SimpleAssetImporter : IRangeEventAssetImporter
     {
-        public static readonly string RangeAssetsFolderName = OperatingSystem.IsWindows() ? "RangeEventAssets" : "range-event-assets";
-        public string RangeAssetsDirectory { get; init; }
-
+        public static readonly string RangeAssetsFolderName =
+            OperatingSystem.IsWindows() ? "RangeEventAssets" : "range-event-assets";
 
 
         /// <summary>
-        ///
         /// </summary>
         /// <param name="dataDirectory">The data directory where range event assets will be stored. Must already exist.</param>
         public SimpleAssetImporter(string dataDirectory)
@@ -38,6 +21,16 @@ namespace MyLittleRangeBook.Services
             RangeAssetsDirectory = Path.Combine(dataDirectory, RangeAssetsFolderName);
         }
 
+        public string RangeAssetsDirectory { get; init; }
+
+        /// <summary>
+        ///     Will copy the asset (file) to the application's directory. The file will be given an unique filename that
+        ///     contain the ID of the range event.
+        /// </summary>
+        /// <param name="assetToImport">The full path to a file.</param>
+        /// <param name="rangeEventId">The nanoid of the range event.</param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         public async Task<Result<(string assetId, string destinationPath)>> ImportAssetForRangeEvent(
             string assetToImport,
             string rangeEventId,
@@ -63,7 +56,6 @@ namespace MyLittleRangeBook.Services
                 return fileName;
             }
 
-
             try
             {
                 File.Copy(assetToImport, fileName.Value.pathToAsset, true);
@@ -81,7 +73,7 @@ namespace MyLittleRangeBook.Services
         }
 
         /// <summary>
-        ///     Generates the name of the asset file that will be used by MLRB. Will create the directory if necessary.
+        ///     Generates the name of the asset file that MLRB will use. Will create the directory if necessary.
         /// </summary>
         /// <param name="rangeEventId"></param>
         /// <param name="pathToAsset"></param>

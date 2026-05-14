@@ -16,13 +16,13 @@ namespace MyLittleRangeBook.Database.Sqlite
         readonly IShotViewFilesDbService _shotViewFilesDbService;
         readonly ISimpleRangeLogService _simpleRangeEventService;
         readonly ISqliteHelper _sqliteHelper;
-        readonly IImportRangeEventAsset _importRangeEventAsset;
+        readonly IRangeEventAssetImporter _importRangeEventAsset;
 
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeLogService simpleRangeEventService,
             [FromKeyedServices(DI_KEYS_SQLITE)] IFitFilesDbService filesDbService,
             [FromKeyedServices(DI_KEYS_SQLITE)] IShotViewFilesDbService shotViewFilesDbService,
-            [FromKeyedServices(DI_KEYS_SQLITE)] IImportRangeEventAsset importRangeEventAsset
+            [FromKeyedServices(DI_KEYS_SQLITE)] IRangeEventAssetImporter importRangeEventAsset
             )
         {
             _sqliteHelper = sqliteHelper;

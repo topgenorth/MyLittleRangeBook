@@ -9,9 +9,9 @@ namespace MyLittleRangeBook.Database.Sqlite
     /// <summary>
     ///  Will copy the asset to the RangeAsset directory for the app, and update the Sqlite database.
     /// </summary>
-    public class SqliteSimpleAssetImporter: IImportRangeEventAsset
+    public class SqliteSimpleAssetImporter: IRangeEventAssetImporter
     {
-        readonly IImportRangeEventAsset _inner;
+        readonly IRangeEventAssetImporter _inner;
         readonly ISqliteHelper _sqliteHelper;
 
         public SqliteSimpleAssetImporter(ISqliteHelper sqliteHelper)
@@ -21,7 +21,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             _inner = new SimpleAssetImporter(assetDir);
         }
 
-        public SqliteSimpleAssetImporter(ISqliteHelper sqliteHelper, IImportRangeEventAsset inner)
+        public SqliteSimpleAssetImporter(ISqliteHelper sqliteHelper, IRangeEventAssetImporter inner)
         {
             _sqliteHelper = sqliteHelper;
             _inner = inner;

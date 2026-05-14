@@ -14,6 +14,7 @@ namespace MyLittleRangeBook.Sqlite
             await GetSqliteConnectionAsync();
             IFitFilesDbService fitFilesDbService = Substitute.For<IFitFilesDbService>();
             IShotViewFilesDbService shotViewFilesDbService = Substitute.For<IShotViewFilesDbService>();
+            IRangeEventAssetImporter assetImporter = Substitute.For<IRangeEventAssetImporter>();
             fitFilesDbService.UpsertFitFileAsync(Arg.Any<IDbConnection>(),
                     Arg.Any<string>(),
                     Arg.Any<ReadOnlyMemory<byte>>(),
@@ -25,7 +26,7 @@ namespace MyLittleRangeBook.Sqlite
 
 
             var simpleRangeLogService = new SqliteSimpleRangeEventService();
-            var repo = new SqliteSimpleRangeEventRepository(SqliteHelper, simpleRangeLogService, fitFilesDbService, shotViewFilesDbService);
+            var repo = new SqliteSimpleRangeEventRepository(SqliteHelper, simpleRangeLogService, fitFilesDbService, shotViewFilesDbService, assetImporter);
 
             var simpleRangeEvent = SimpleRangeEvent.New("TestFirearm", 50, "TestRange", "TestAmmo", "TestNotes");
             byte[] fitFileContents = [1, 2, 3, 4, 5];
@@ -43,6 +44,8 @@ namespace MyLittleRangeBook.Sqlite
             await GetSqliteConnectionAsync();
             IFitFilesDbService fitFilesDbService = Substitute.For<IFitFilesDbService>();
             IShotViewFilesDbService shotViewFilesDbService = Substitute.For<IShotViewFilesDbService>();
+            IRangeEventAssetImporter assetImporter = Substitute.For<IRangeEventAssetImporter>();
+
             shotViewFilesDbService.UpsertShotViewFileAsync(Arg.Any<IDbConnection>(),
                     Arg.Any<string>(),
                     Arg.Any<string>(),
@@ -55,7 +58,7 @@ namespace MyLittleRangeBook.Sqlite
 
             var simpleRangeLogService = new SqliteSimpleRangeEventService();
             var repo = new SqliteSimpleRangeEventRepository(SqliteHelper, simpleRangeLogService, fitFilesDbService,
-                shotViewFilesDbService);
+                shotViewFilesDbService, assetImporter);
 
             var simpleRangeEvent = SimpleRangeEvent.New("TestFirearm", 50, "TestRange", "TestAmmo", "TestNotes");
             string csvContents = "Shot,Velocity\n1,1000";
