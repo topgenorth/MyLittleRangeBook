@@ -2,6 +2,8 @@
 
 namespace MyLittleRangeBook.Models
 {
+    public record EntityId(string Id, long? RowId);
+
     /// <summary>
     ///     This is a unique ID value that is sortable by time.
     /// </summary>
@@ -14,6 +16,10 @@ namespace MyLittleRangeBook.Models
         MlrbId(Ulid id)
         {
             _id = id;
+        }
+
+        public MlrbId(EntityId id) : this(id.Id)
+        {
         }
 
         public MlrbId() : this(DateTimeOffset.UtcNow)
@@ -40,7 +46,7 @@ namespace MyLittleRangeBook.Models
             }
             else
             {
-                throw new ArgumentException("String value is not a valid Ulid");
+                _id = UniqueIdExtensions.FromNanoid(value);
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using FluentResults;
 using Microsoft.Extensions.Configuration;
+using MyLittleRangeBook.Models;
 using Serilog;
 
 namespace MyLittleRangeBook.Services
@@ -13,7 +14,8 @@ namespace MyLittleRangeBook.Services
         /// <param name="rangeEventId"></param>
         /// <param name="ct"></param>
         /// <returns>A tuple that holds the ID of the new asset, and the path it was copied to.</returns>
-        Task<Result<(string assetId, string destinationPath)>> ImportAssetForRangeEvent(string assetToImport,
-            string rangeEventId, CancellationToken ct = default);
+        Task<Result<(MlrbId assetId, string destinationPath)>> ImportAssetForRangeEvent(string assetToImport,
+            string rangeEventId,
+            CancellationToken ct = default);
     }
 }
