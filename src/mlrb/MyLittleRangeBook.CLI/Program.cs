@@ -8,6 +8,7 @@ using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
+using Serilog.Exceptions;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
@@ -29,9 +30,13 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
 {
     loggerConfiguration
         .ReadFrom.Configuration(builder.Configuration)
-        .ReadFrom.Services(services)
+        .Enrich.WithEnvironmentName()
+        .Enrich.WithExceptionDetails()
         .Enrich.FromLogContext();
 });
+
+
+
 
 #region Spectre.Console dependencies
 builder.Services.TryAddSingleton(AnsiConsole.Console);
@@ -57,8 +62,11 @@ ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
 ILogger logger = host.Services.GetRequiredService<ILogger>();
+logger.Debug("MyLittleRangeBook CLI v{AppVersion}", typeof(ReturnCodes).Assembly.GetAssemblyVersionInformation());
+#if DEBUG
+logger.Debug("Serilog configured.");
+#endif
 
-logger.Information("MyLittleRangeBook CLI v{AppVersion}", typeof(ReturnCodes).Assembly.GetAssemblyVersionInformation());
 await app.RunAsync(args).ConfigureAwait(false);
 
 await Log.CloseAndFlushAsync().ConfigureAwait(false);

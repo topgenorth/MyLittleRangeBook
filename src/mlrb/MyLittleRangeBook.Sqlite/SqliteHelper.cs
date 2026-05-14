@@ -6,6 +6,7 @@ using DbUp.Engine;
 using FluentResults;
 using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Services;
 using NanoidDotNet;
 
 namespace MyLittleRangeBook.Database.Sqlite
@@ -302,6 +303,7 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <param name="imageFilePath"></param>
         /// <param name="rangeEventId"></param>
         /// <returns>A Nanoid to reference the file, and the full path to the copied file.</returns>
+        [Obsolete("Deprecated. Use IImportRangeEventAsset instead.", true)]
         public async Task<Result<(string id, string imagePath)>> CopyImageToEventHistory(string imageFilePath,
             string rangeEventId)
         {
@@ -343,6 +345,7 @@ namespace MyLittleRangeBook.Database.Sqlite
         {
             return _connectionString;
         }
+
 
         static string GetSqliteConnectionString(IConfiguration configuration)
         {
