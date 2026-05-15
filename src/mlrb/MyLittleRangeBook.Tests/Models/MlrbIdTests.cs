@@ -6,18 +6,18 @@ namespace MyLittleRangeBook.Models
     public class MlrbIdTests
     {
         [Fact]
-        public void CreateMlrbFromEntityIdTests()
+        public void FromEntityId_creates_a_valid_MlrbId()
         {
             string? nanoid = Nanoid.Generate();
             var entityId = new EntityId(nanoid, null);
-            var id = new MlrbId(entityId);
+            var id = MlrbId.From(entityId);
 
             Assert.NotEqual(MlrbId.Empty, id);
             Assert.True(Ulid.IsValid(id.ToString()));
         }
 
         [Fact]
-        public void ConsistentlyConvertEntityIdToMlrbId()
+        public void EntityIds_with_same_Nanoid_should_have_equal_MlrbId()
         {
             string? nanoid = Nanoid.Generate();
             var entityId1 = new EntityId(nanoid, null);

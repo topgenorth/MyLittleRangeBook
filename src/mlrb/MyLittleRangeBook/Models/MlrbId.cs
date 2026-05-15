@@ -30,30 +30,8 @@ namespace MyLittleRangeBook.Models
             _id = id;
         }
 
-        public MlrbId(EntityId id) : this(id.Id)
-        {
-        }
-
         public MlrbId() : this(DateTimeOffset.UtcNow)
         {
-        }
-
-        public MlrbId(byte[] value)
-        {
-            if (Ulid.IsValid(value))
-            {
-                _id = Ulid.Parse(value);
-            }
-            else
-            {
-                throw new ArgumentException("Byte array is not a valid Ulid.");
-            }
-        }
-
-
-        public MlrbId(string value)
-        {
-            _id = Ulid.IsValid(value) ? Ulid.Parse(value) : FromNanoid(value);
         }
 
         public MlrbId(DateTimeOffset dto)
@@ -63,21 +41,28 @@ namespace MyLittleRangeBook.Models
 
         public static MlrbId From(EntityId eid)
         {
-            return new MlrbId(FromNanoid(eid.Id));
+            return new MlrbId(FromString(eid.Id));
         }
 
-        public static MlrbId FromNanoid(string nanoid)
+        public static MlrbId FromString(string nanoid)
         {
             if (string.IsNullOrWhiteSpace(nanoid))
             {
                 return Empty;
             }
 
-            // We need a deterministic 16-byte value for the Ulid.
-            // A SHA256 hash of the Nanoid string is a reliable way to get this.
-            byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(nanoid));
-
-            var ulid = Ulid.New(hash.AsSpan(0, 16).ToArray());
+            Ulid ulid;
+            if (Ulid.IsValid(nanoid))
+            {
+                ulid = Ulid.Parse(nanoid);
+            }
+            else
+            {
+                // We need a deterministic 16-byte value for the Ulid.
+                // A SHA256 hash of the Nanoid string is a reliable way to get this.
+                byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(nanoid));
+                ulid = Ulid.New(hash.AsSpan(0, 16).ToArray());
+            }
 
             return new MlrbId(ulid);
         }
