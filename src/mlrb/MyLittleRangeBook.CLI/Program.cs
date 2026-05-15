@@ -8,6 +8,8 @@ using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
+using MyLittleRangeBook.RangeEventAssets;
+using MyLittleRangeBook.Services;
 using Serilog.Exceptions;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
@@ -44,13 +46,17 @@ builder.Services.AddTransient<ISimpleRangeEventPrinter, SimpleRangeEventPrinter>
 builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventListPrinter>();
 #endregion
 
+builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
+// builder.Services.AddTransient<IRangeEventAssetImporter, SimpleAssetImporter>();
+
 #region SQLite dependencies
 builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration);
+builder.Services.AddKeyedTransient<IRangeEventAssetImporter, SqliteSimpleAssetImporter>(SqliteHelperExtensions
+    .DI_KEYS_SQLITE);
 builder.Services.AddKeyedTransient<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>(SqliteHelperExtensions
     .DI_KEYS_SQLITE);
 #endregion
 
-builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
