@@ -59,7 +59,7 @@ namespace MyLittleRangeBook.Models
             else
             {
                 // We need a deterministic 16-byte value for the Ulid.
-                // A SHA256 hash of the Nanoid string is a reliable way to get this.
+                // A SHA256 hash of the string is a reliable way to get this.
                 byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(nanoid));
                 ulid = Ulid.New(hash.AsSpan(0, 16).ToArray());
             }

@@ -19,9 +19,10 @@ namespace MyLittleRangeBook.RangeEventAssets
         ///     into the application's designated data directory. Provides functionality for
         ///     generating filenames and managing file imports.
         /// </summary>
-        public SimpleAssetImporter(string dataDirectory, FileNameStrategyBase assetNamer)
+        public SimpleAssetImporter(string assetsDirectory, FileNameStrategyBase assetNamer)
         {
-            RangeAssetsDirectory = Path.Combine(dataDirectory, RangeAssetsFolderName);
+            RangeAssetsDirectory = assetsDirectory;
+
             _assetNamer = assetNamer.In(RangeAssetsDirectory);
         }
 
@@ -39,6 +40,7 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// <param name="rangeEventId">A unique ID that identifies the range event..</param>
         /// <param name="ct"></param>
         /// <returns></returns>
+        // ReSharper disable once AsyncMethodWithoutAwait
         public async Task<Result<(MlrbId assetId, string destinationPath)>> ImportAssetForRangeEvent(
             string assetToImport,
             string rangeEventId,
@@ -46,7 +48,7 @@ namespace MyLittleRangeBook.RangeEventAssets
         {
             try
             {
-                string rangeEventAssetDir = Path.Combine(RangeAssetsFolderName, rangeEventId);
+                string rangeEventAssetDir = Path.Combine(RangeAssetsDirectory, rangeEventId);
                 Directory.CreateDirectory(RangeAssetsDirectory);
                 Directory.CreateDirectory(rangeEventAssetDir);
             }
