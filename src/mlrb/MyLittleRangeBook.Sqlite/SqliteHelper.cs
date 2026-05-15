@@ -17,7 +17,7 @@ namespace MyLittleRangeBook.Database.Sqlite
     public enum SqliteFileTable
     {
         FitFiles,
-        CsvFiles,
+        ShotViewCsvFiles,
         ImageFiles
     }
 
@@ -233,10 +233,52 @@ namespace MyLittleRangeBook.Database.Sqlite
 
                 return Result.Ok(true);
             }
+            catch (SqliteException sqe)
+            {
+                Error? err = new Error(sqe.Message)
+                    .CausedBy(sqe)
+                    .WithMetadata("SQL", sql)
+                    .WithMetadata("SQLiteErrorCode", sqe.ErrorCode)
+                    .WithMetadata("SQLiteExtendedErrorCode", sqe.SqliteExtendedErrorCode)
+                    .WithMetadata("Connection", _connectionString);
+
+                return Result.Fail<bool>(err).WithValue(false);
+            }
             catch (Exception e)
             {
-                Error? err = new Error("Failed to run SQL.").CausedBy(e);
+                Error? err = new Error("Unexpected error running SQL on database..").CausedBy(e);
                 err.Metadata.Add("SQL", sql);
+                err.Metadata.Add("Connection", _connectionString);
+
+                return Result.Fail<bool>(err).WithValue(false);
+            }
+        }
+
+        public async Task<Result<bool>> RunSqlOnDatabaseAsync(SqliteTransaction trans, SqliteCommand sqliteCommand, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(trans);
+
+            try
+            {
+                sqliteCommand.Transaction = trans;
+                await sqliteCommand.ExecuteNonQueryAsync(cancellationToken);
+
+                return Result.Ok(true);
+            }
+            catch (SqliteException sqe)
+            {
+                Error? err = new Error(sqe.Message)
+                    .CausedBy(sqe)
+                    .WithMetadata("SQL", sqliteCommand.CommandText)
+                    .WithMetadata("SQLiteErrorCode", sqe.ErrorCode)
+                    .WithMetadata("SQLiteExtendedErrorCode", sqe.SqliteExtendedErrorCode)
+                    .WithMetadata("Connection", _connectionString);
+                return Result.Fail<bool>(err).WithValue(false);
+            }
+            catch (Exception e)
+            {
+                Error? err = new Error("Unexpected error running SQL on database.").CausedBy(e);
+                err.Metadata.Add("SQL", sqliteCommand.CommandText);
                 err.Metadata.Add("Connection", _connectionString);
 
                 return Result.Fail<bool>(err).WithValue(false);

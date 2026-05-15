@@ -6,6 +6,7 @@ namespace MyLittleRangeBook.Database.Sqlite
     {
         public string DatabaseFile { get; }
 
+
         /// <summary>
         ///     Writes the provided file contents to the specified table in the SQLite database.
         /// </summary>
@@ -42,6 +43,7 @@ namespace MyLittleRangeBook.Database.Sqlite
 
         Task<Result<bool>> ApplyDbupMigrationsAsync(CancellationToken cancellationToken = default);
 
+
         /// <summary>
         ///     Runs a SQL script on the database.
         /// </summary>
@@ -49,6 +51,9 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task<Result<bool>> RunSqlOnDatabaseAsync(string sqlFile, CancellationToken cancellationToken = default);
+
+        Task<Result<bool>> RunSqlOnDatabaseAsync(SqliteTransaction trans, SqliteCommand sqliteCommand, CancellationToken cancellationToken = default);
+
 
         /// <summary>
         ///     Updates appsettings.json with a new database.
