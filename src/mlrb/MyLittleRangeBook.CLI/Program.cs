@@ -8,6 +8,9 @@ using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
+using MyLittleRangeBook.RangeEventAssets;
+using MyLittleRangeBook.Services;
+using Serilog.Exceptions;
 using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
@@ -29,7 +32,8 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
 {
     loggerConfiguration
         .ReadFrom.Configuration(builder.Configuration)
-        .ReadFrom.Services(services)
+        .Enrich.WithEnvironmentName()
+        .Enrich.WithExceptionDetails()
         .Enrich.FromLogContext();
 });
 
@@ -42,13 +46,18 @@ builder.Services.AddTransient<ISimpleRangeEventPrinter, SimpleRangeEventPrinter>
 builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventListPrinter>();
 #endregion
 
+builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
+// TODO [TO20260515] Need to change SimpleAssetImporter because of the dependency on a "data directory"
+// builder.Services.AddTransient<IRangeEventAssetImporter, SimpleAssetImporter>();
+
 #region SQLite dependencies
 builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration);
+builder.Services.AddKeyedTransient<IRangeEventAssetImporter, SqliteSimpleAssetImporter>(SqliteHelperExtensions
+    .DI_KEYS_SQLITE);
 builder.Services.AddKeyedTransient<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>(SqliteHelperExtensions
     .DI_KEYS_SQLITE);
 #endregion
 
-builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
@@ -57,8 +66,11 @@ ConsoleApp.ServiceProvider = scope.ServiceProvider;
 ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
 ILogger logger = host.Services.GetRequiredService<ILogger>();
+logger.Debug("MyLittleRangeBook CLI v{AppVersion}", typeof(ReturnCodes).Assembly.GetAssemblyVersionInformation());
+#if DEBUG
+logger.Debug("Serilog configured.");
+#endif
 
-logger.Information("MyLittleRangeBook CLI v{AppVersion}", typeof(ReturnCodes).Assembly.GetAssemblyVersionInformation());
 await app.RunAsync(args).ConfigureAwait(false);
 
 await Log.CloseAndFlushAsync().ConfigureAwait(false);

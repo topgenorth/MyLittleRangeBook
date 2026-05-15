@@ -17,6 +17,10 @@ namespace MyLittleRangeBook.Database.Sqlite
         public string FileName { get; }
     }
 
+    /// <summary>
+    /// This Associate a ShotView file with an existing range event. The contents of the CSV
+    ///  will be saved in the SQlite database.
+    /// </summary>
     public class SqliteShotViewFilesDbService : IShotViewFilesDbService
     {
         const string SelectByIdSql = "SELECT * FROM ShotViewFiles WHERE Id=@Id;";

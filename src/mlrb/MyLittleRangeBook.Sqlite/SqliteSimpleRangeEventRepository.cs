@@ -16,16 +16,20 @@ namespace MyLittleRangeBook.Database.Sqlite
         readonly IShotViewFilesDbService _shotViewFilesDbService;
         readonly ISimpleRangeLogService _simpleRangeEventService;
         readonly ISqliteHelper _sqliteHelper;
+        readonly IRangeEventAssetImporter _importRangeEventAsset;
 
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeLogService simpleRangeEventService,
             [FromKeyedServices(DI_KEYS_SQLITE)] IFitFilesDbService filesDbService,
-            [FromKeyedServices(DI_KEYS_SQLITE)] IShotViewFilesDbService shotViewFilesDbService)
+            [FromKeyedServices(DI_KEYS_SQLITE)] IShotViewFilesDbService shotViewFilesDbService,
+            [FromKeyedServices(DI_KEYS_SQLITE)] IRangeEventAssetImporter importRangeEventAsset
+            )
         {
             _sqliteHelper = sqliteHelper;
             _simpleRangeEventService = simpleRangeEventService;
             _filesDbService = filesDbService;
             _shotViewFilesDbService = shotViewFilesDbService;
+            _importRangeEventAsset = importRangeEventAsset;
         }
 
         /// <summary>
@@ -119,40 +123,10 @@ namespace MyLittleRangeBook.Database.Sqlite
 
                 if (!string.IsNullOrEmpty(imageFilePath) && File.Exists(imageFilePath))
                 {
-                    Result<(string id, string imagePath)> copyImageResult =
-                        await _sqliteHelper.CopyImageToEventHistory(imageFilePath, simpleRangeEvent.Id!);
-                    if (copyImageResult.IsSuccess)
-                    {
-                        string extension = Path.GetExtension(copyImageResult.Value.imagePath);
-                        string mimeType = FileExtensions.GetMimeType(extension);
-
-                        string relativePath = Path.GetRelativePath(Path.GetDirectoryName(_sqliteHelper.DatabaseFile)!,
-                            copyImageResult.Value.imagePath);
-
-                        #region File is copied, record this in the database.
-                        const string INSERT_IMAGE_SQL = @"
-INSERT INTO RangeEventImages (Id, FileName, MimeType)
-VALUES (@Id, @FileName, @MimeType)
-ON CONFLICT(Id) DO UPDATE SET
-    FileName = excluded.FileName,
-    MimeType = excluded.MimeType,
-    Modified = CURRENT_TIMESTAMP;";
-
-                        await conn.ExecuteAsync(new CommandDefinition(INSERT_IMAGE_SQL,
-                            new { Id = copyImageResult.Value.id, FileName = relativePath, MimeType = mimeType },
-                            cancellationToken: cancellationToken));
-                        #endregion
-
-                        #region Associate the record for the image to the event.
-                        const string ASSOCIATE_IMAGE_TO_EVENT_SQL = @"
-INSERT OR IGNORE INTO SimpleRangeEvent_Images (SimpleRangeEventId, ImageId)
-VALUES (@SimpleRangeEventId, @ImageId);";
-
-                        await conn.ExecuteAsync(new CommandDefinition(ASSOCIATE_IMAGE_TO_EVENT_SQL,
-                            new { SimpleRangeEventId = simpleRangeEvent.Id, ImageId = copyImageResult.Value.id },
-                            cancellationToken: cancellationToken));
-                        #endregion
-                    }
+                    Result<(MlrbId assetId, string destinationPath)> copyImageResult = await _importRangeEventAsset
+                        .ImportAssetForRangeEvent(imageFilePath, simpleRangeEvent.Id!, cancellationToken)
+                        .ConfigureAwait(false);
+                    results.Add(copyImageResult.ToResult());
                 }
 
                 finalResult = Result.Merge(results.ToArray()).ToResult(simpleRangeEvent.RowId);

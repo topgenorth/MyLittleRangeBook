@@ -63,7 +63,7 @@ namespace MyLittleRangeBook.Sqlite
         }
 
         [Theory]
-        [InlineData("{}", "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.db;Mode=ReadWriteCreate",
+        [InlineData("{}", "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.Development.db;Mode=ReadWriteCreate",
             true)]
         [InlineData(AppSettingsWithConnectionString, "Data Source=mlrb.db", false)]
         [InlineData(AppSettingsWithOutConnectionString,

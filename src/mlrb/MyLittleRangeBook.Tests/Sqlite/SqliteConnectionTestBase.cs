@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Diagnostics;
+using Dapper;
 using FluentResults;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
@@ -23,7 +24,7 @@ namespace MyLittleRangeBook.Sqlite
         protected SqliteConnectionTestBase()
         {
             Logger = Substitute.For<ILogger>();
-            var tempDb = $"Data Source={Path.GetTempFileName()}";
+            var tempDb = $"Data Source={_sqliteDbFileName}";
             SqliteHelper = new SqliteHelper(Logger, tempDb);
         }
 
@@ -43,6 +44,14 @@ namespace MyLittleRangeBook.Sqlite
             {
                 File.Delete(_sqliteDbFileName);
             }
+        }
+
+        protected async Task EnsureDatabaseExistsAsync()
+        {
+            await using SqliteConnection conn = await GetSqliteConnectionAsync();
+            await conn.CloseAsync();
+
+            Debug.Assert(File.Exists(_sqliteDbFileName));
         }
 
         /// <summary>
