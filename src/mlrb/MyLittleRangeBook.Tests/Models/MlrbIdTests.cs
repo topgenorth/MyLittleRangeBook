@@ -21,10 +21,10 @@ namespace MyLittleRangeBook.Models
         {
             string? nanoid = Nanoid.Generate();
             var entityId1 = new EntityId(nanoid, null);
-            var mlrbId1 = entityId1.ToMlrbId();
+            var mlrbId1 = MlrbId.From(entityId1);
 
             var entityId2 = new EntityId(nanoid, 1111);
-            var mlrbId2 = entityId2.ToMlrbId();
+            var mlrbId2 = MlrbId.From(entityId2);
 
             Assert.Equal(mlrbId1, mlrbId2);
         }
