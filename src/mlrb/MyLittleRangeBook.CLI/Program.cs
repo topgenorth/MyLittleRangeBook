@@ -47,6 +47,7 @@ builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventList
 #endregion
 
 builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
+// TODO [TO20260515] Need to change SimpleAssetImporter because of the dependency on a "data directory"
 // builder.Services.AddTransient<IRangeEventAssetImporter, SimpleAssetImporter>();
 
 #region SQLite dependencies
