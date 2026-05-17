@@ -49,6 +49,8 @@ namespace MyLittleRangeBook.CLI.Console
             CancellationToken cancellationToken = default)
         {
             CliDisplay.PrintCommandHeader("Add ShotView CSV file");
+            CliDisplay.PrintFailure("Currently being refactored.");
+            return ReturnCodes.FAILURE;
 
             if (string.IsNullOrWhiteSpace(csvFile))
             {

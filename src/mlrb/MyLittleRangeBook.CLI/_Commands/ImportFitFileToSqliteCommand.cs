@@ -49,6 +49,12 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             string? rangeEventId = null,
             CancellationToken cancellationToken = default)
         {
+
+            CliDisplay.PrintCommandHeader("Importing FIT File");
+
+            CliDisplay.PrintFailure("Currently being refactored.");
+            return ReturnCodes.FAILURE;
+
             // TODO [TO20260419] Improve console output.
             CliDisplay.PrintCommandHeader("Importing FIT File");
             Logger.Information("Inserting FIT {fitFileName} into the database.", fitFile);
@@ -80,7 +86,8 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 if (!string.IsNullOrWhiteSpace(rangeEventId))
                 {
                     Result<long?> associateResult = await _filesDbService
-                        .AssociateWithRangeEvent(conn, rangeEventId, fitResult.Value.Id, cancellationToken);
+                        .AssociateWithRangeEvent(conn, rangeEventId, fitResult.Value.Id, cancellationToken)
+                        .ConfigureAwait(false);
                     if (associateResult.IsSuccess)
                     {
                         Logger.Information("Associating FIT {fitFileName} with range event {rangeEventId}.",

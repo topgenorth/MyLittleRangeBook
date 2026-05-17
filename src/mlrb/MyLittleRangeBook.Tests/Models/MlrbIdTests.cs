@@ -28,5 +28,17 @@ namespace MyLittleRangeBook.Models
 
             Assert.Equal(mlrbId1, mlrbId2);
         }
+
+        [Fact]
+        public void Default_MlrbId_should_equal_Empty()
+        {
+            Assert.Equal(MlrbId.Empty, default(MlrbId));
+        }
+
+        [Fact]
+        public void New_MlrbId_with_no_args_should_not_be_Empty()
+        {
+            Assert.NotEqual(MlrbId.Empty, new MlrbId());
+        }
     }
 }

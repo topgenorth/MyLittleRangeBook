@@ -17,14 +17,12 @@ namespace MyLittleRangeBook.Sqlite
             //Insert
             Result<EntityId> result1 = await sut.UpsertAsync(conn, f0);
             result1.IsSuccess.ShouldBeTrue();
-            result1.Value.ShouldNotBeNull();
             result1.Value.Id.ShouldNotBeNullOrWhiteSpace();
 
             // Update
             var f1 = new Firearm { RowId = f0.RowId, Id = f0.Id, Name = "Unit test", Notes = "Updating" };
             Result<EntityId> result2 = await sut.UpsertAsync(conn, f1);
             result2.IsSuccess.ShouldBeTrue();
-            result2.Value.ShouldNotBeNull();
             result2.Value.Id.ShouldNotBeNullOrWhiteSpace();
             result2.Value.RowId!.Value.ShouldBeEquivalentTo(f0.RowId);
         }
@@ -39,7 +37,6 @@ namespace MyLittleRangeBook.Sqlite
 
             Result<EntityId> result = await sut.UpsertAsync(conn, f);
             result.IsSuccess.ShouldBeTrue();
-            result.Value.ShouldNotBeNull();
             result.Value.Id.ShouldNotBeNullOrWhiteSpace();
             result.Value.RowId!.Value.ShouldBeGreaterThanOrEqualTo(1L);
         }

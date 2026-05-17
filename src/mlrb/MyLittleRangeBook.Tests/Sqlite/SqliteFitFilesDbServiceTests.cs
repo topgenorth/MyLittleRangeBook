@@ -20,7 +20,6 @@ namespace MyLittleRangeBook.Sqlite
             Result<EntityId> result = await sut.UpsertFitFileAsync(conn, id, contents, null);
 
             result.IsSuccess.ShouldBeTrue();
-            result.Value.ShouldNotBeNull();
             result.Value.Id.ShouldBe(id);
             result.Value.RowId!.Value.ShouldBeGreaterThanOrEqualTo(1L);
         }
