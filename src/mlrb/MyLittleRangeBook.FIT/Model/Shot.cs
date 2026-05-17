@@ -1,4 +1,4 @@
-﻿using NanoidDotNet;
+﻿using ByteAether.Ulid;
 
 namespace MyLittleRangeBook.FIT.Model
 {
@@ -7,8 +7,9 @@ namespace MyLittleRangeBook.FIT.Model
     /// </summary>
     public class Shot
     {
-        public Shot(): this(Nanoid.Generate())
+        public Shot()
         {
+            Id = Ulid.New(DateTimeOffset.UtcNow);
         }
 
         public Shot(string shotId)
@@ -29,16 +30,16 @@ namespace MyLittleRangeBook.FIT.Model
             Notes = otherShot.Notes;
         }
 
-        public string Id { get; } = Nanoid.Generate();
+        public string Id { get; set; }
         public DateTimeOffset DateTimeUtc { get; set; } = FitExtensions.FitEpoch;
         public int ShotNumber { get; set; } = -1;
         public ShotSpeed Speed { get; set; } = ShotSpeed.Zero;
 
-        public bool CleanBore { get; set; } = false;
-        public bool ColdBore { get; set; } = false;
+        public bool CleanBore { get; set; }
+        public bool ColdBore { get; set; }
         public string? Notes { get; set; }
 
-        public bool IgnoreShot { get; set; } = false;
+        public bool IgnoreShot { get; set; }
 
         public override string ToString()
         {

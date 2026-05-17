@@ -7,10 +7,8 @@
 
 using System.Text;
 using Dynastream.Fit;
-using FluentResults;
-using NanoidDotNet;
 using DateTime = Dynastream.Fit.DateTime;
-using File = System.IO.File;
+using ByteAether.Ulid;
 
 namespace MyLittleRangeBook.FIT
 {
@@ -56,27 +54,6 @@ namespace MyLittleRangeBook.FIT
 
             return new DateTimeOffset(fitDateTime.GetDateTime().ToUniversalTime(), TimeSpan.Zero);
         }
-
-        /// <summary>
-        ///     Generate a unique ID for a shot session based on the Xero serial number and a random Nanoid. If the serial number
-        ///     is less than 1, only the Nanoid will be used as the ID.
-        /// </summary>
-        /// <remarks>The Nanoid is enclosed in square brackets to distinguish it as a child of the serial number.</remarks>
-        /// <param name="serialNumber"></param>
-        /// <returns>A unique string.</returns>
-        internal static string ToShotSessionId(this uint serialNumber)
-        {
-            string? id = Nanoid.Generate();
-
-            return serialNumber < 1 ? id : $"{serialNumber.ToString()}[{id}]";
-        }
-
-        internal static string ToShotSessionId(this uint? serialNumber)
-        {
-            return serialNumber is null ? Nanoid.Generate() : serialNumber.Value.ToShotSessionId();
-        }
-
-
 
 
 

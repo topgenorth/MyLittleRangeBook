@@ -2,7 +2,6 @@
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Models;
-using NanoidDotNet;
 
 namespace MyLittleRangeBook.Sqlite
 {
@@ -13,7 +12,7 @@ namespace MyLittleRangeBook.Sqlite
         {
             await using SqliteConnection conn = await GetSqliteConnectionAsync();
             var sut = new SqliteFirearmsDbService();
-            var f0 = new Firearm { Id = await Nanoid.GenerateAsync(), Name = "Unit test", Notes = "Inserting" };
+            var f0 = new Firearm {  Name = "Unit test", Notes = "Inserting" };
 
             //Insert
             Result<EntityId> result1 = await sut.UpsertAsync(conn, f0);
@@ -36,7 +35,7 @@ namespace MyLittleRangeBook.Sqlite
             await using SqliteConnection conn = await GetSqliteConnectionAsync();
             var sut = new SqliteFirearmsDbService();
 
-            var f = new Firearm { Id = await Nanoid.GenerateAsync(), Name = "Unit test", Notes = "Inserting" };
+            var f = new Firearm { Name = "Unit test", Notes = "Inserting" };
 
             Result<EntityId> result = await sut.UpsertAsync(conn, f);
             result.IsSuccess.ShouldBeTrue();

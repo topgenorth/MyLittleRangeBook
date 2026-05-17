@@ -8,7 +8,6 @@ using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
-using NanoidDotNet;
 
 namespace MyLittleRangeBook.CLI.Database.Sqlite
 {
@@ -71,7 +70,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
                 .GetDatabaseConnectionAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            string? fitFileId = await Nanoid.GenerateAsync().ConfigureAwait(false);
+            string? fitFileId = new MlrbId().ToString();
             Result<EntityId> fitResult = await _filesDbService
                 .UpsertFitFileAsync(conn, fitFileId, fileResult.Value, fitFile, cancellationToken)
                 .ConfigureAwait(false);

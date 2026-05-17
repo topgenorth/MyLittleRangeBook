@@ -1,4 +1,6 @@
-using NanoidDotNet;
+using ByteAether.Ulid;
+using Dynastream.Fit;
+using File = Dynastream.Fit.File;
 
 namespace MyLittleRangeBook.FIT.Model
 {
@@ -7,30 +9,52 @@ namespace MyLittleRangeBook.FIT.Model
     /// </summary>
     public class ShotSession
     {
+        internal const int EXPECTED_FILE_TYPE = 54; // TODO [TO20260414] Change the name to a FITMessageType
+
 #pragma warning disable CS0414 // Field is assigned but its value is never used
         readonly uint _xeroSerialNumber;
 #pragma warning restore CS0414 // Field is assigned but its value is never used
 
-        public ShotSession() : this($"{Nanoid.Generate()}-0")
-        {
-            _xeroSerialNumber = 0;
-            SoftwareVersion = "Unknown";
-        }
 
-        public ShotSession(uint? xeroSerialNumber)
+        public ShotSession(DeviceInfoMesg msg)
         {
-            Id = xeroSerialNumber.ToShotSessionId();
-            _xeroSerialNumber = xeroSerialNumber ?? 0;
+            FileName = string.Empty;
+            ProjectileType = "Rifle";
+            Notes = string.Empty;
+            ProjectileUnits = "grains";
+            VelocityUnits = "m/s";
+
+            SerialNumber = msg.GetSerialNumber() ?? 0;
+            TimeCreated = msg.GetTimestampUtc();
+            Manufacturer = msg.GetManufacturer();
+            Product = msg.GetProduct();
+            Id = Ulid.New(TimeCreated);
+            SoftwareVersion = msg.GetSoftwareVersion().ToString() ?? "Unknown";
+
+        }
+        public ShotSession(FileIdMesg fileIdMesg)
+        {
+            File? fitType = fileIdMesg.GetType();
+            if (EXPECTED_FILE_TYPE != (int)fitType!)
+            {
+                throw new Exception($"Expected FIT File type {EXPECTED_FILE_TYPE}, received {fitType}.");
+            }
             FileName = string.Empty;
             ProjectileType = "Rifle";
             Notes = string.Empty;
             ProjectileUnits = "grains";
             VelocityUnits = "m/s";
             SoftwareVersion = "Unknown";
+
+            SerialNumber = fileIdMesg.GetSerialNumber() ?? 0;
+            TimeCreated = fileIdMesg.GetTimeCreatedUtc();
+            Product = fileIdMesg.GetProduct();
+            Manufacturer = fileIdMesg.GetManufacturer();
+            Type = (byte)fitType;
+            Id = Ulid.New(TimeCreated);
         }
 
         /// <summary>
-        ///
         /// </summary>
         /// <param name="id">Must be unique value to identify the shot session.</param>
         public ShotSession(string id)
@@ -66,7 +90,7 @@ namespace MyLittleRangeBook.FIT.Model
         public uint SerialNumber { get; set; }
 
         public ushort? Manufacturer { get; set; }
-        public ushort? Product { get; set;  }
+        public ushort? Product { get; set; }
         public byte? Type { get; set; }
         public string SoftwareVersion { get; set; }
         public DateTimeOffset TimeCreated { get; set; }

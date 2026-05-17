@@ -285,21 +285,19 @@ namespace MyLittleRangeBook.FIT
 
         void OnFileIdMsg(object sender, MesgEventArgs e)
         {
-            var fileIdMsg = (FileIdMesg)e.mesg;
-            DynastreamFile? fitType = fileIdMsg.GetType();
+            var fileIdMesg = (FileIdMesg)e.mesg;
+            DynastreamFile? fitType = fileIdMesg.GetType();
 
             if (EXPECTED_FILE_TYPE != (int)fitType!)
             {
                 throw new Exception($"Expected FIT File type {EXPECTED_FILE_TYPE}, received {fitType}.");
             }
 
-            uint? sn = fileIdMsg.GetSerialNumber();
-
-            _shotSession ??= new ShotSession(sn);
-            _shotSession.SerialNumber = sn!.Value;
-            _shotSession.TimeCreated = fileIdMsg.GetTimeCreatedUtc();
-            _shotSession.Manufacturer = fileIdMsg.GetManufacturer();
-            _shotSession.Product = fileIdMsg.GetProduct();
+            _shotSession ??= new ShotSession(fileIdMesg);
+            _shotSession.SerialNumber = fileIdMesg.GetSerialNumber() ?? 0;
+            _shotSession.TimeCreated = fileIdMesg.GetTimeCreatedUtc();
+            _shotSession.Product = fileIdMesg.GetProduct();
+            _shotSession.Manufacturer = fileIdMesg.GetManufacturer();
             _shotSession.Type = (byte)fitType;
         }
 
@@ -307,17 +305,7 @@ namespace MyLittleRangeBook.FIT
         {
             var msg = (DeviceInfoMesg)e.mesg;
 
-            if (_shotSession == null)
-            {
-                uint? sn = msg.GetSerialNumber();
-                _shotSession = new ShotSession(sn)
-                {
-                    TimeCreated = msg.GetTimestampUtc(),
-                    Manufacturer = msg.GetManufacturer(),
-                    Product = msg.GetProduct()
-                };
-            }
-
+            _shotSession ??= new ShotSession(msg);
             _shotSession.SoftwareVersion = msg.GetSoftwareVersion().ToString() ?? "Unknown";
         }
 

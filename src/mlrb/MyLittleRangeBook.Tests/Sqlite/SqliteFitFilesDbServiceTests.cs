@@ -2,7 +2,7 @@
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Models;
-using NanoidDotNet;
+
 
 namespace MyLittleRangeBook.Sqlite
 {
@@ -14,7 +14,7 @@ namespace MyLittleRangeBook.Sqlite
             await using SqliteConnection conn = await GetSqliteConnectionAsync();
             var sut = new SqliteFitFilesDbService();
 
-            string id = await Nanoid.GenerateAsync();
+            string id =new MlrbId().ToString();
             ReadOnlyMemory<byte> contents = new byte[] { 1, 2, 3, 4, 5 }; // Dummy FIT data
 
             Result<EntityId> result = await sut.UpsertFitFileAsync(conn, id, contents, null);
@@ -31,7 +31,7 @@ namespace MyLittleRangeBook.Sqlite
             await using SqliteConnection conn = await GetSqliteConnectionAsync();
             var sut = new SqliteFitFilesDbService();
 
-            string id = await Nanoid.GenerateAsync();
+            string id = new MlrbId().ToString();
             ReadOnlyMemory<byte> contents = new byte[] { 1, 2, 3, 4, 5 }; // Dummy FIT data
 
             // Insert first
@@ -54,7 +54,7 @@ namespace MyLittleRangeBook.Sqlite
             await using SqliteConnection conn = await GetSqliteConnectionAsync();
             var sut = new SqliteFitFilesDbService();
 
-            string id = await Nanoid.GenerateAsync();
+            string id = new MlrbId().ToString();
             ReadOnlyMemory<byte> contents1 = new byte[] { 1, 2, 3, 4, 5 }; // Initial dummy FIT data
             var fileName1 = "test1.fit";
 
@@ -87,7 +87,7 @@ namespace MyLittleRangeBook.Sqlite
             await using SqliteConnection conn = await GetSqliteConnectionAsync();
             var sut = new SqliteFitFilesDbService();
 
-            string id = await Nanoid.GenerateAsync();
+            string id =new MlrbId().ToString();
             ReadOnlyMemory<byte> contents = new byte[] { 1, 2, 3, 4, 5 }; // Dummy FIT data
 
             // Insert first

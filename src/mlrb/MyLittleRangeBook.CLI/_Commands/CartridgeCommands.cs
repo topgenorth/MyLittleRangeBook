@@ -7,7 +7,6 @@ using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
-using NanoidDotNet;
 using Spectre.Console;
 namespace MyLittleRangeBook.CLI
 {
@@ -76,7 +75,6 @@ namespace MyLittleRangeBook.CLI
             AnsiConsole.Console.WriteLine("Adding cartridge...");
             var cartridge = new Cartridge
             {
-                Id = await Nanoid.GenerateAsync().ConfigureAwait(false),
                 Name = name,
                 CommonName = commonName,
                 ProjectileDiameterMetric = diameterMetric,

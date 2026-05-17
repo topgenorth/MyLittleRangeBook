@@ -3,8 +3,6 @@ using Dapper;
 using FluentResults;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
-using NanoidDotNet;
-
 namespace MyLittleRangeBook.Database.Sqlite
 {
     public class SqliteSimpleRangeEventService : ISimpleRangeLogService
@@ -69,7 +67,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             simpleRangeEvent.Modified = DateTimeOffset.UtcNow;
             try
             {
-                simpleRangeEvent.Id ??= await Nanoid.GenerateAsync();
+                simpleRangeEvent.Id ??= new MlrbId().ToString();
 
                 if (simpleRangeEvent.RowId is null)
                 {

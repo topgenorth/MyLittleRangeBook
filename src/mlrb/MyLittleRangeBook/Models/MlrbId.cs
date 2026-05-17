@@ -16,7 +16,7 @@ namespace MyLittleRangeBook.Models
     /// </summary>
     public record MlrbId
     {
-        internal static readonly Ulid.GenerationOptions DefaultOptions = new()
+        static readonly Ulid.GenerationOptions DefaultOptions = new()
         {
             Monotonicity = Ulid.GenerationOptions.MonotonicityOptions.MonotonicIncrement
         };
@@ -34,14 +34,61 @@ namespace MyLittleRangeBook.Models
         {
         }
 
+
         public MlrbId(DateTimeOffset dto)
         {
             _id = Ulid.New(dto, DefaultOptions);
         }
 
+        public DateTime DateTimeLocal => _id.Time.ToLocalTime().DateTime;
+
+        public DateTimeOffset DateTimeOffset => _id.Time;
+
         public static MlrbId From(EntityId eid)
         {
             return new MlrbId(FromString(eid.Id));
+        }
+
+        /// <summary>
+        ///     Creates a new <see cref="MlrbId" /> instance based on a given <see cref="DateOnly" /> value.
+        /// </summary>
+        /// <param name="dateOnly">
+        ///     The <see cref="DateOnly" /> value for which a new <see cref="MlrbId" /> instance will be generated.
+        ///     The ID will include the current time portion from the system clock.
+        /// </param>
+        /// <returns>
+        ///     A new <see cref="MlrbId" /> instance generated using the specified date and the current time from the system clock.
+        /// </returns>
+        public static MlrbId From(DateOnly dateOnly)
+        {
+            if (dateOnly == default)
+            {
+                return new MlrbId();
+            }
+
+            // [TO20260516] We're assuming that the dateOnly is in the current timezone.  We will make
+            // a DateTimeOffset by combining the DateOnly with the time right now.
+            TimeZoneInfo zone = TimeZoneInfo.Local;
+            var now = TimeOnly.FromDateTime(DateTime.Now);
+            var dt = dateOnly.ToDateTime(now);
+            TimeSpan offset = zone.GetUtcOffset(dt);
+            DateTimeOffset dto = new(dt, offset);
+
+            return new MlrbId(dto);
+        }
+
+        public static MlrbId From(DateTime dt)
+        {
+            // [TO20260516] Perhaps overly explicity, but assume any .Unspecified is local time.
+            DateTimeOffset dto = dt.Kind switch
+            {
+                DateTimeKind.Utc => new DateTimeOffset(dt, TimeSpan.Zero),
+                DateTimeKind.Local => new DateTimeOffset(dt, TimeZoneInfo.Local.GetUtcOffset(dt)),
+                DateTimeKind.Unspecified => new DateTimeOffset(dt, TimeZoneInfo.Local.GetUtcOffset(dt)),
+                _ => throw new InvalidOperationException($"Unexpected DateTimeKind: {dt.Kind}")
+            };
+
+            return new MlrbId(dto);
         }
 
         public static MlrbId FromString(string nanoid)

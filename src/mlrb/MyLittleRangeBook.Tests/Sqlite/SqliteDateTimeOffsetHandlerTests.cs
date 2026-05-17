@@ -1,7 +1,7 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
-using NanoidDotNet;
+
 
 namespace MyLittleRangeBook.Sqlite
 {
@@ -14,10 +14,8 @@ namespace MyLittleRangeBook.Sqlite
 
             await using SqliteConnection connection = await GetSqliteConnectionAsync();
 
-            var rangeEvent = new SimpleRangeEvent
+            var rangeEvent = new SimpleRangeEvent(DateTime.Now)
             {
-                Id = await Nanoid.GenerateAsync(),
-                EventDate = DateTime.Now,
                 FirearmName = "Test Firearm",
                 RangeName = "Test Range",
                 RoundsFired = 50,
