@@ -1,10 +1,8 @@
 ﻿using Dapper;
 using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
-using NanoidDotNet;
 using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
 
 namespace MyLittleRangeBook.Database.Sqlite
@@ -84,7 +82,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                                                simpleRangeEvent.EventDate.ToString("yyyyMMdd") + ".fit";
                     Result<EntityId> fitResult = await _filesDbService
                         .UpsertFitFileAsync(conn,
-                            await Nanoid.GenerateAsync(),
+                            new MlrbId().ToString(),
                             new ReadOnlyMemory<byte>(fitFileContents),
                             syntheticFileName, cancellationToken)
                         .ConfigureAwait(false);
@@ -104,7 +102,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                 {
                     Result<EntityId> shotViewResult = await _shotViewFilesDbService
                         .UpsertShotViewFileAsync(conn,
-                            await Nanoid.GenerateAsync(),
+                            new MlrbId().ToString(),
                             shotViewCsvContents,
                             shotViewFileName, cancellationToken)
                         .ConfigureAwait(false);

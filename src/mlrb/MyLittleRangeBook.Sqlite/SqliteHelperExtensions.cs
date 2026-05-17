@@ -4,8 +4,9 @@ using FluentResults;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
-using NanoidDotNet;
+
 using SQLitePCL;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
@@ -99,7 +100,7 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <returns></returns>
         public static SqliteConnection AddFunctions(this SqliteConnection connection)
         {
-            connection.CreateFunction("nanoid", () => Nanoid.Generate());
+            connection.CreateFunction("nanoid", () => new MlrbId().ToString());
             connection.CreateFunction("utcnow", () => DateTimeOffset.UtcNow.ToString("O"));
 
             return connection;

@@ -1,5 +1,5 @@
 ﻿using ByteAether.Ulid;
-using NanoidDotNet;
+
 
 namespace MyLittleRangeBook.Models
 {
@@ -8,7 +8,7 @@ namespace MyLittleRangeBook.Models
         [Fact]
         public void FromEntityId_creates_a_valid_MlrbId()
         {
-            string? nanoid = Nanoid.Generate();
+            string? nanoid = new MlrbId().ToString();
             var entityId = new EntityId(nanoid, null);
             var id = MlrbId.From(entityId);
 
@@ -19,7 +19,7 @@ namespace MyLittleRangeBook.Models
         [Fact]
         public void EntityIds_with_same_Nanoid_should_have_equal_MlrbId()
         {
-            string? nanoid = Nanoid.Generate();
+            string? nanoid = new MlrbId().ToString();
             var entityId1 = new EntityId(nanoid, null);
             var mlrbId1 = MlrbId.From(entityId1);
 
@@ -27,6 +27,18 @@ namespace MyLittleRangeBook.Models
             var mlrbId2 = MlrbId.From(entityId2);
 
             Assert.Equal(mlrbId1, mlrbId2);
+        }
+
+        [Fact]
+        public void Default_MlrbId_should_equal_Empty()
+        {
+            Assert.Equal(MlrbId.Empty, default(MlrbId));
+        }
+
+        [Fact]
+        public void New_MlrbId_with_no_args_should_not_be_Empty()
+        {
+            Assert.NotEqual(MlrbId.Empty, new MlrbId());
         }
     }
 }

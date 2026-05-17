@@ -7,7 +7,6 @@ using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
-using NanoidDotNet;
 using Spectre.Console;
 
 namespace MyLittleRangeBook.CLI.Console
@@ -50,6 +49,8 @@ namespace MyLittleRangeBook.CLI.Console
             CancellationToken cancellationToken = default)
         {
             CliDisplay.PrintCommandHeader("Add ShotView CSV file");
+            CliDisplay.PrintFailure("Currently being refactored.");
+            return ReturnCodes.FAILURE;
 
             if (string.IsNullOrWhiteSpace(csvFile))
             {
@@ -118,7 +119,7 @@ namespace MyLittleRangeBook.CLI.Console
                 }
             }
 
-            string shotViewFileId = await Nanoid.GenerateAsync().ConfigureAwait(false);
+            string shotViewFileId = new MlrbId().ToString();
             Result<EntityId> upsertResult = await _shotViewFilesDbService
                 .UpsertShotViewFileAsync(conn, shotViewFileId, fileResult.Value, Path.GetFileName(csvFile),
                     cancellationToken)

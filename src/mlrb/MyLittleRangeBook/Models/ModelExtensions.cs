@@ -4,6 +4,7 @@ namespace MyLittleRangeBook.Models
 {
     public static class ModelExtensions
     {
+
         public static Error Enrich(this Error error, EntityId eid)
         {
             return error.Enrich(eid.Id, eid.RowId);

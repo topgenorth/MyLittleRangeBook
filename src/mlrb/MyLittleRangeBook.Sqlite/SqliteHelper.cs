@@ -1,13 +1,13 @@
 using System.Data;
 using System.Text.Json.Nodes;
+using Dapper;
 using DbUp;
 using DbUp.Builder;
 using DbUp.Engine;
 using FluentResults;
 using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Services;
-using NanoidDotNet;
+
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
@@ -98,7 +98,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                     break;
             }
 
-            string id = await Nanoid.GenerateAsync();
+            string id = new MlrbId().ToString();
             try
             {
                 // TODO [TO20260503] It's possible to duplicate file contents; maybe file name should be unique in the database?
@@ -138,7 +138,8 @@ namespace MyLittleRangeBook.Database.Sqlite
         public async Task<SqliteConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
         {
             SqliteConnection connection = new SqliteConnection(_connectionString).AddFunctions();
-            await connection.OpenAsync(cancellationToken);
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await connection.ExecuteAsync("PRAGMA foreign_keys = ON;").ConfigureAwait(false);
 
             return connection;
         }
@@ -349,7 +350,7 @@ namespace MyLittleRangeBook.Database.Sqlite
         public async Task<Result<(string id, string imagePath)>> CopyImageToEventHistory(string imageFilePath,
             string rangeEventId)
         {
-            string id = await Nanoid.GenerateAsync();
+            string id = new MlrbId().ToString();
 
             #region Make sure the history directory exists
             string dbPath = DatabaseFile;

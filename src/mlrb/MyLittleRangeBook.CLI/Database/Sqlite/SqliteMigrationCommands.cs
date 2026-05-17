@@ -25,6 +25,8 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             _sqliteHelper = sqliteHelper;
         }
 
+
+
         /// <summary>
         ///     Will return all the migrations that have been applied to the database.
         /// </summary>

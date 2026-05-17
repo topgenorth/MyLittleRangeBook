@@ -1,9 +1,31 @@
-﻿using NanoidDotNet;
-
-namespace MyLittleRangeBook.Models
+﻿namespace MyLittleRangeBook.Models
 {
     public record SimpleRangeEvent
     {
+        public SimpleRangeEvent()
+        {
+            Id = new MlrbId().ToString();
+        }
+
+        public SimpleRangeEvent(DateOnly eventDateOnly)
+        {
+            var id = MlrbId.From(eventDateOnly);
+            Id = id.ToString();
+            EventDate = id.DateTimeLocal;
+        }
+
+        public SimpleRangeEvent(DateTime eventDateTime)
+        {
+            Id = MlrbId.From(eventDateTime).ToString();
+            EventDate = eventDateTime.ToLocalTime();
+        }
+
+        public SimpleRangeEvent(DateTimeOffset eventDateTimeOffset)
+        {
+            Id = new MlrbId(eventDateTimeOffset);
+            EventDate = eventDateTimeOffset.ToLocalTime().DateTime;
+        }
+
         /// <summary>
         ///     A Nanoid to uniquely identify the SimpleRangeEvent. Will be null for a new entity.
         /// </summary>
@@ -56,17 +78,25 @@ namespace MyLittleRangeBook.Models
 
         public bool IsActive { get; set; } = true;
 
-        public static SimpleRangeEvent New(string firearm, int rounds, string range, string ammo, string notes, DateOnly date = default)
+        public static SimpleRangeEvent New(string firearm,
+            int rounds,
+            string range,
+            string ammo,
+            string notes,
+            DateOnly date = default)
         {
+            var id = MlrbId.From(date);
+
+            DateTime eventdate = date == default ? DateTime.Now.Date : date.ToDateTime(TimeOnly.MinValue).Date;
             var sre = new SimpleRangeEvent
             {
-                Id = Nanoid.Generate(),
+                Id = id.ToString(),
                 FirearmName = firearm,
                 RoundsFired = rounds,
                 RangeName = range,
                 AmmoDescription = ammo,
                 Notes = notes,
-                EventDate = date == default ? DateTime.Now.Date : date.ToDateTime(TimeOnly.MinValue).Date
+                EventDate = eventdate
             };
 
             return sre;
