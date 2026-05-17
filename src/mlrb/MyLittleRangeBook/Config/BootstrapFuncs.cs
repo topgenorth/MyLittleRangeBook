@@ -5,7 +5,7 @@ using Serilog;
 namespace MyLittleRangeBook.Config
 {
     /// <summary>
-    ///  This class holds the functions that are used to bootstrap the CLI and GUI on the first run.
+    ///     This class holds the functions that are used to bootstrap the CLI and GUI on the first run.
     /// </summary>
     public class BootstrapFuncs
     {

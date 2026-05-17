@@ -1,10 +1,10 @@
 ﻿using FluentResults;
+using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.Models
+namespace MyLittleRangeBook
 {
-    public static class ModelExtensions
+    public static class FluentResultExtensions
     {
-
         public static Error Enrich(this Error error, EntityId eid)
         {
             return error.Enrich(eid.Id, eid.RowId);
@@ -13,8 +13,8 @@ namespace MyLittleRangeBook.Models
         public static Error Enrich(this Error error, string id)
         {
             return error.WithMetadata("Id", id);
-
         }
+
         public static Error Enrich(this Error error, long? rowId)
         {
             error.WithMetadata("RowId", rowId);

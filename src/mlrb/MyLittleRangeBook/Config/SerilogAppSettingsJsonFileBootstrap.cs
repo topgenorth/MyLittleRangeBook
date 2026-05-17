@@ -37,7 +37,8 @@ namespace MyLittleRangeBook.Config
                 string json = ConfigurationExtensions.DefaultSerilogSectionJson().Result;
                 JsonNode? serilogSection = JsonNode.Parse(json)?["Serilog"];
 
-                JsonObject? fileSink = serilogSection?["WriteTo"]?
+                JsonObject? fileSink = serilogSection?["WriteTo"]
+                    ?
                     .AsArray()
                     .OfType<JsonObject>()
                     .FirstOrDefault(x => string.Equals(x["Name"]?.GetValue<string>(), "File",

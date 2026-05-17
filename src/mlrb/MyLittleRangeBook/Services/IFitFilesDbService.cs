@@ -24,7 +24,6 @@ namespace MyLittleRangeBook.Services
             CancellationToken cancellationToken = default);
 
         /// <summary>
-        ///
         /// </summary>
         /// <param name="connection"></param>
         /// <param name="id"></param>
@@ -38,6 +37,9 @@ namespace MyLittleRangeBook.Services
             string? fileName,
             CancellationToken cancellationToken = default);
 
-        Task<Result<long?>> AssociateWithRangeEvent(IDbConnection connection, string rangeEventId, string fitFileId, CancellationToken cancellationToken = default);
+        Task<Result<long?>> AssociateWithRangeEvent(IDbConnection connection,
+            string rangeEventId,
+            string fitFileId,
+            CancellationToken cancellationToken = default);
     }
 }

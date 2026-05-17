@@ -7,14 +7,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="ByteAether.Ulid" Version="1.3.7" />
+        <PackageReference Include="ByteAether.Ulid" Version="1.3.7"/>
         <PackageReference Include="FluentResults" Version="4.0.0"/>
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.5"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5"/>
         <PackageReference Include="Serilog" Version="4.3.1"/>
-        <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
-        <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0"/>
+        <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0"/>
         <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0"/>
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0"/>
         <PackageReference Include="SerilogTraceListener" Version="3.2.0"/>
@@ -22,11 +22,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="Config\AppSettings\*.json" />
+        <EmbeddedResource Include="Config\AppSettings\*.json"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\MyLittleRangeBook.IO\MyLittleRangeBook.IO.csproj" />
+        <ProjectReference Include="..\MyLittleRangeBook.IO\MyLittleRangeBook.IO.csproj"/>
     </ItemGroup>
 
 </Project>

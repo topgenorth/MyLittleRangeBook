@@ -2,7 +2,6 @@
 using FluentResults;
 using Serilog;
 
-
 namespace MyLittleRangeBook.Config
 {
     /// <summary>
@@ -36,7 +35,7 @@ namespace MyLittleRangeBook.Config
 
             try
             {
-                originalAppSettingsJson = await System.IO.File.ReadAllTextAsync(appSettingsJsonFile, cancellationToken);
+                originalAppSettingsJson = await File.ReadAllTextAsync(appSettingsJsonFile, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -72,7 +71,7 @@ namespace MyLittleRangeBook.Config
 
             try
             {
-                await System.IO.File.WriteAllTextAsync(appSettingsJsonFile, appSettingsRoot!.ToString(), cancellationToken);
+                await File.WriteAllTextAsync(appSettingsJsonFile, appSettingsRoot!.ToString(), cancellationToken);
             }
             catch (Exception ex)
             {
@@ -112,7 +111,7 @@ namespace MyLittleRangeBook.Config
 
             try
             {
-                await System.IO.File.WriteAllTextAsync(file.FullName, contents);
+                await File.WriteAllTextAsync(file.FullName, contents);
             }
             catch (Exception ex)
             {

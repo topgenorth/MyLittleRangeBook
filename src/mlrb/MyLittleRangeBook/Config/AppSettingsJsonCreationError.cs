@@ -1,6 +1,5 @@
 ﻿namespace MyLittleRangeBook.Config
 {
-
     public class AppSettingsJsonReadError : MlrbBaseError
     {
         public const int APPSETTINGS_FILE_NOT_CREATED = 502;
@@ -32,7 +31,7 @@
         public AppSettingsJsonCreationError(string appSettingsJsonFile, Exception ex) :
             this(appSettingsJsonFile)
         {
-            this.CausedBy(ex);
+            CausedBy(ex);
             Metadata.Add("Exception", ex);
         }
     }

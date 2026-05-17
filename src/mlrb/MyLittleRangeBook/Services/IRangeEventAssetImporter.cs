@@ -1,7 +1,5 @@
 ﻿using FluentResults;
-using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Models;
-using Serilog;
 
 namespace MyLittleRangeBook.Services
 {

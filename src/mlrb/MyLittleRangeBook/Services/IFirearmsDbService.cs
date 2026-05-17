@@ -29,18 +29,18 @@ namespace MyLittleRangeBook.Services
             CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Get a list of firearms in the database.
+        ///     Get a list of firearms in the database.
         /// </summary>
         /// <param name="connection"></param>
         /// <param name="activeOnly">Set to false to retrieve all firearms.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(IDbConnection connection, bool activeOnly = true,
+        Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(IDbConnection connection,
+            bool activeOnly = true,
             CancellationToken cancellationToken = default);
 
         Task<Result<Firearm>> GetFirearmAsync(IDbConnection connection,
             string id,
             CancellationToken cancellationToken = default);
     }
-
 }

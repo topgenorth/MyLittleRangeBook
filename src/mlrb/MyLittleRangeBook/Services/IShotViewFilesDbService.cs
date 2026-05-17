@@ -14,7 +14,10 @@ namespace MyLittleRangeBook.Services
         /// <param name="connection"></param>
         /// <param name="id"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns>A tuple that will hold the <c cref="EntityId" />, the filename of the ShotView file, and the contents of the file.</returns>
+        /// <returns>
+        ///     A tuple that will hold the <c cref="EntityId" />, the filename of the ShotView file, and the contents of the
+        ///     file.
+        /// </returns>
         Task<Result<ShotViewFileData>> GetShotViewFileAsync(IDbConnection connection,
             string id,
             CancellationToken cancellationToken = default);
@@ -38,6 +41,9 @@ namespace MyLittleRangeBook.Services
             string? fileName,
             CancellationToken cancellationToken = default);
 
-        Task<Result<long?>> AssociateWithRangeEvent(IDbConnection connection, string rangeEventId, string shotViewFileId, CancellationToken cancellationToken = default);
+        Task<Result<long?>> AssociateWithRangeEvent(IDbConnection connection,
+            string rangeEventId,
+            string shotViewFileId,
+            CancellationToken cancellationToken = default);
     }
 }

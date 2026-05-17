@@ -6,6 +6,7 @@
         {
             Id = new MlrbId().ToString();
         }
+
         /// <summary>
         ///     A Nanoid to uniquely identify the Firearm. Will be null for a new entity.
         /// </summary>
