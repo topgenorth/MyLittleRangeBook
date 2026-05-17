@@ -2,7 +2,7 @@
 
 namespace MyLittleRangeBook.Models
 {
-    public static class ModelExtensions
+    public static class FluentResultExtensions
     {
 
         public static Error Enrich(this Error error, EntityId eid)
