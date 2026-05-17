@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using ByteAether.Ulid;
 using ConsoleAppFramework;
 using Dapper;
@@ -59,8 +60,35 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             IDbTransaction trans,
             CancellationToken ct = default)
         {
-            const string SQL = "SELECT Id, FileName FROM main.FitFiles WHERE length(Id) <> 26 ORDER BY EventDate;";
+            const string SQL = "SELECT Id, FileName FROM main.FitFiles WHERE length(Id) <> 26;";
             const string UPDATE = "UPDATE main.FitFiles SET Id = @newId WHERE Id = @oldId";
+
+            Logger.Information("Converting any IDs that are not 26 characters on FitFiles.");
+            IEnumerable<FitFileRow> rows =
+                await conn.QueryAsync<FitFileRow>(SQL, transaction: trans).ConfigureAwait(false);
+            var idMap = rows
+                .Where(row => !Ulid.IsValid(row.Id))
+                .ToDictionary<FitFileRow, string, string>(row => row.Id,
+                    row => MlrbId.From(row.FitFileTime));
+            Logger.Information("It seems that there are {count} IDs that need to be converted in FitFiles.", idMap.Count);
+
+            var convertedCount = 0;
+            foreach (KeyValuePair<string, string> kvp in idMap)
+            {
+                Logger.Verbose($"Converting FitFile ID {kvp.Key} to {kvp.Value}");
+                var cmd = new DapperCommand(UPDATE, new { oldId = kvp.Key, newId = kvp.Value });
+                int i = await cmd.ExecuteAsync(conn, trans, ct).ConfigureAwait(false);
+                if (i < 1)
+                {
+                    Logger.Warning("Did not convert old ID {oldId}  to new ID {newId}", kvp.Key, kvp.Value);
+                }
+                else
+                {
+                    convertedCount++;
+                }
+            }
+
+            Logger.Information("Update {update} IDs.", convertedCount);
 
             return Result.Fail("Not implemented.");
         }
@@ -107,6 +135,30 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
             Logger.Information("Update {update} IDs.", convertedCount);
 
             return Result.Ok();
+        }
+
+        public sealed record FitFileRow(string Id, string FileName)
+        {
+            const string FitFileDateFormat = "MM-dd-yyyy_HH-mm-ss";
+
+            public DateTime FitFileTime
+            {
+                get
+                {
+                    string withoutExtension = Path.GetFileNameWithoutExtension(FileName);
+
+                    CultureInfo culture = CultureInfo.InvariantCulture;
+
+                    var timestamp = DateTime.ParseExact(
+                        withoutExtension,
+                        FitFileDateFormat,
+                        culture,
+                        DateTimeStyles.AssumeLocal // ensures Kind == Local
+                    );
+
+                    return timestamp;
+                }
+            }
         }
 
         public sealed record SimpleRangeEventRow(string Id, string EventDate)
