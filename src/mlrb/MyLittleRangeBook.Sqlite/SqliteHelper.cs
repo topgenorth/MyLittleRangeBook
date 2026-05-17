@@ -1,5 +1,6 @@
 using System.Data;
 using System.Text.Json.Nodes;
+using Dapper;
 using DbUp;
 using DbUp.Builder;
 using DbUp.Engine;
@@ -137,7 +138,8 @@ namespace MyLittleRangeBook.Database.Sqlite
         public async Task<SqliteConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
         {
             SqliteConnection connection = new SqliteConnection(_connectionString).AddFunctions();
-            await connection.OpenAsync(cancellationToken);
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await connection.ExecuteAsync("PRAGMA foreign_keys = ON;").ConfigureAwait(false);
 
             return connection;
         }
