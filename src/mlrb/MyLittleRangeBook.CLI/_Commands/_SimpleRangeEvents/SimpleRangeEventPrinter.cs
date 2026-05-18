@@ -18,7 +18,6 @@
             else
             {
                 Grid bodyGrid = new Grid().AddColumns(2);
-                bodyGrid.AddRow("", "[green]Range Trip Added[/]");
 
                 bodyGrid.AddRow("  [white]RowId:[/]", sre.RowId.ToString() ?? string.Empty);
                 bodyGrid.AddRow("  [white]Id:[/]", sre.Id!);
@@ -40,13 +39,7 @@
                 {
                     bodyGrid.AddRow("  [white]Notes:[/] ", sre.Notes);
                 }
-
-                Layout layout = new Layout("root")
-                    .SplitRows(new Layout("header"), new Layout("body"));
-                Grid headerGrid = CreateHeaderGrid();
-                layout["header"].Update(headerGrid);
-                layout["body"].Update(bodyGrid);
-                console.Write(layout);
+                console.Write(bodyGrid);
             }
         }
 

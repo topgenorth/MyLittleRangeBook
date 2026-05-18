@@ -71,7 +71,7 @@ namespace MyLittleRangeBook.CLI
             DateOnly dateOnly;
             if (eventDate is null)
             {
-                var d = DateTime.Now;
+                DateTime d = DateTime.Now;
                 dateOnly = DateOnly.FromDateTime(d);
             }
             else
@@ -93,13 +93,13 @@ namespace MyLittleRangeBook.CLI
                     return COMMAND_CANCELLED;
                 }
 
-                Result<long?> result = await _repo.UpsertAsync(sre,  cancellationToken).ConfigureAwait(false);
+                Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
 
                 if (result.IsSuccess)
                 {
-                    CliDisplay.PrintSuccess("Range trip added successfully.");
-                    _simpleRangeEventPrinter.Print(CliDisplay.Console, sre, quiet);
 
+                    _simpleRangeEventPrinter.Print(CliDisplay.Console, sre, quiet);
+                    CliDisplay.PrintSuccess("Range trip added successfully.");
                     return SUCCESS;
                 }
 
