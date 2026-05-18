@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using MyLittleRangeBook.CLI;
-using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
@@ -11,7 +10,6 @@ using MyLittleRangeBook.IO;
 using MyLittleRangeBook.RangeEventAssets;
 using MyLittleRangeBook.Services;
 using Serilog.Exceptions;
-using Spectre.Console;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
 // [TO20260510] For Spectre.Console - force UTF8

@@ -1,6 +1,4 @@
-﻿using MyLittleRangeBook.CLI.Console;
-
-namespace MyLittleRangeBook.CLI
+﻿namespace MyLittleRangeBook.CLI
 {
     /// <summary>
     /// Base class for classes that will handle commands for the Console Application Framework.

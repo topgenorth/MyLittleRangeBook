@@ -1,5 +1,4 @@
 ﻿using MyLittleRangeBook.IO;
-using Spectre.Console;
 
 namespace MyLittleRangeBook.CLI.Console
 {

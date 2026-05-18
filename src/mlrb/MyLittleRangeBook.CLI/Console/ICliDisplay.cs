@@ -1,6 +1,4 @@
-﻿using Spectre.Console;
-
-namespace MyLittleRangeBook.CLI.Console
+﻿namespace MyLittleRangeBook.CLI.Console
 {
     public interface ICliDisplay
     {

@@ -5,11 +5,9 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.IO;
-using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
-using Spectre.Console;
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.CLI
 {
     [RegisterCommands("shotview")]
     [UsedImplicitly]

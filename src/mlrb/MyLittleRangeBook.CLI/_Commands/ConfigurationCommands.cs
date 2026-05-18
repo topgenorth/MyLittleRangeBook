@@ -3,8 +3,6 @@ using ConsoleAppFramework;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
-using MyLittleRangeBook.CLI.Console;
-using Spectre.Console;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.CLI

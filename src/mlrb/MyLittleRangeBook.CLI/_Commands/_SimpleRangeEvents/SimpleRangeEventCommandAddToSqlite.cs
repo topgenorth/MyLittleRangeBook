@@ -3,13 +3,11 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.IO;
-using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
-using Spectre.Console;
 using static MyLittleRangeBook.CLI.ReturnCodes;
 using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.CLI
 {
     /// <summary>
     ///     Allows us to create a new Range Event from the CLI, and optionally the FIT file that goes with it.

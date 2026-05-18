@@ -36,14 +36,14 @@ namespace MyLittleRangeBook.RangeEventAssets
         ///     Will copy the asset (file) to the application's directory. The file will be given an unique filename that
         ///     contain the ID of the range event.
         /// </summary>
-        /// <param name="assetToImport">The full path to a file.</param>
         /// <param name="rangeEventId">A unique ID that identifies the range event..</param>
+        /// <param name="assetToImport">The full path to a file.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
         // ReSharper disable once AsyncMethodWithoutAwait
         public async Task<Result<(MlrbId assetId, string destinationPath)>> ImportAssetForRangeEvent(
-            string assetToImport,
             string rangeEventId,
+            string assetToImport,
             CancellationToken ct = default)
         {
             try

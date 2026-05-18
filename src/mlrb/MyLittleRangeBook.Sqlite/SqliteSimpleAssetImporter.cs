@@ -45,13 +45,13 @@ VALUES (@SimpleRangeEventId, @ImageId);";
         }
 
         public async Task<Result<(MlrbId assetId, string destinationPath)>> ImportAssetForRangeEvent(
-            string assetToImport,
             string rangeEventId,
+            string assetToImport,
             CancellationToken ct = default)
         {
             // [TO20260514] First copy the file over.
             Result<(MlrbId assetId, string destinationPath)> copiedFile =
-                await _inner.ImportAssetForRangeEvent(assetToImport, rangeEventId, ct);
+                await _inner.ImportAssetForRangeEvent(rangeEventId, assetToImport, ct);
             if (copiedFile.IsFailed)
             {
                 return copiedFile;

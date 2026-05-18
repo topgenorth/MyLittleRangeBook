@@ -1,11 +1,10 @@
-﻿using MyLittleRangeBook.CLI.Console;
-using MyLittleRangeBook.Database.Sqlite;
+﻿using MyLittleRangeBook.Database.Sqlite;
 
 namespace MyLittleRangeBook.CLI
 {
     public abstract class MlrbSqliteCommandBase : MlrbCommandBase
     {
-        protected ISqliteHelper SqliteHelper;
+        protected readonly ISqliteHelper SqliteHelper;
 
         protected MlrbSqliteCommandBase(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper): base(logger, display)
         {

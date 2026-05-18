@@ -122,7 +122,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                 if (!string.IsNullOrEmpty(imageFilePath) && File.Exists(imageFilePath))
                 {
                     Result<(MlrbId assetId, string destinationPath)> copyImageResult = await _importRangeEventAsset
-                        .ImportAssetForRangeEvent(imageFilePath, simpleRangeEvent.Id!, cancellationToken)
+                        .ImportAssetForRangeEvent(simpleRangeEvent.Id!, imageFilePath, cancellationToken)
                         .ConfigureAwait(false);
                     results.Add(copyImageResult.ToResult());
                 }

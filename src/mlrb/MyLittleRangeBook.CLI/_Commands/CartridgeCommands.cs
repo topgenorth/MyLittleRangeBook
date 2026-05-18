@@ -3,11 +3,9 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
-using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
-using Spectre.Console;
+
 namespace MyLittleRangeBook.CLI
 {
     [RegisterCommands("cartridge")]

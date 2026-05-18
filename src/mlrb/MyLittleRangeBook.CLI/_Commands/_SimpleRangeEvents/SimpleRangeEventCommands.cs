@@ -2,13 +2,12 @@
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 using static MyLittleRangeBook.CLI.ReturnCodes;
 using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
 
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.CLI
 {
     [RegisterCommands("rangeevent")]
     public class SimpleRangeEventCommands : MlrbCommandBase

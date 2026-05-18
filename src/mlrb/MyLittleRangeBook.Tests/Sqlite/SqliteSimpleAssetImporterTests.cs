@@ -36,11 +36,11 @@ namespace MyLittleRangeBook.Sqlite
             MlrbId rangeEventId = await InsertRangeEventRecordForTest();
             string pathToAsset = Path.GetTempFileName();
             IRangeEventAssetImporter inner = Substitute.For<IRangeEventAssetImporter>();
-            inner.ImportAssetForRangeEvent(pathToAsset, rangeEventId).Returns((new MlrbId(), Path.GetTempFileName()));
+            inner.ImportAssetForRangeEvent(rangeEventId, pathToAsset).Returns((new MlrbId(), Path.GetTempFileName()));
 
             var sut = new SqliteSimpleAssetImporter(SqliteHelper, inner);
             Result<(MlrbId assetId, string destinationPath)> result =
-                await sut.ImportAssetForRangeEvent(pathToAsset, rangeEventId);
+                await sut.ImportAssetForRangeEvent(rangeEventId, pathToAsset);
 
             result.IsSuccess.ShouldBeTrue();
 

@@ -2,12 +2,10 @@
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
-using Spectre.Console;
 using static MyLittleRangeBook.CLI.ReturnCodes;
 
-namespace MyLittleRangeBook.CLI.Database.Sqlite
+namespace MyLittleRangeBook.CLI
 {
     /// <summary>
     ///     This class provides functionality for managing SQLite database migrations.
@@ -24,8 +22,6 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         {
             _sqliteHelper = sqliteHelper;
         }
-
-
 
         /// <summary>
         ///     Will return all the migrations that have been applied to the database.
@@ -94,7 +90,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         [Command("runsql")]
         [UsedImplicitly]
         // ReSharper disable once IdentifierTypo
-        public async Task<int> RunSqlOnDatabase(string sqlfile, CancellationToken ct)
+        public async Task<int> RunSqlOnDatabase(string sqlfile, CancellationToken ct=default)
         {
             CliDisplay.PrintCommandHeader("Apply SQL to Database.");
             await RunMigrations(ct).ConfigureAwait(false);

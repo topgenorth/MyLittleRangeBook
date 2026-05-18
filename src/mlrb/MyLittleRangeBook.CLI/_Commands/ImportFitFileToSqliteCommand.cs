@@ -3,13 +3,11 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.IO;
-using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 
-namespace MyLittleRangeBook.CLI.Database.Sqlite
+namespace MyLittleRangeBook.CLI
 {
     /// <summary>
     ///     Save the FIT file to the SQLite database and optionally associate it with a range event.

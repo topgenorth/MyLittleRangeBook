@@ -1,7 +1,4 @@
-﻿using MyLittleRangeBook.CLI.Console;
-using MyLittleRangeBook.Models;
-using Spectre.Console;
-using Spectre.Console.Rendering;
+﻿using Spectre.Console.Rendering;
 
 namespace MyLittleRangeBook.CLI
 {

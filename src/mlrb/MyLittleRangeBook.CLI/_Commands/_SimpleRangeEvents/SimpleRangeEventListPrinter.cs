@@ -1,7 +1,4 @@
-﻿using MyLittleRangeBook.Models;
-using Spectre.Console;
-
-namespace MyLittleRangeBook.CLI.Console
+﻿namespace MyLittleRangeBook.CLI
 {
     /// <summary>
     ///     Prints a list of SimpleRangeEvents to the console.

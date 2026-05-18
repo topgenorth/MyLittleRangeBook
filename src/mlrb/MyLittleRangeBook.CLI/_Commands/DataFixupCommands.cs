@@ -7,19 +7,17 @@ using Dapper;
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.CLI.Console;
 using MyLittleRangeBook.Database.Sqlite;
-using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Sqlite;
 
-namespace MyLittleRangeBook.CLI.Database.Sqlite
+namespace MyLittleRangeBook.CLI
 {
     [RegisterCommands("db")]
     [UsedImplicitly]
     public class DataFixupCommands : MlrbSqliteCommandBase
     {
-        public DataFixupCommands(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper) : base(logger,
-            cliDisplay, sqliteHelper)
+        public DataFixupCommands(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper) :
+            base(logger, cliDisplay, sqliteHelper)
         {
         }
 
@@ -29,6 +27,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
         /// <param name="ct">A token to monitor for cancellation requests.</param>
         /// <returns>An integer representing the success or failure of the operation.</returns>
         [Command("fix-pk-ids")]
+        [UsedImplicitly]
         public async Task<int> MigrateNanoidsToUlids(CancellationToken ct)
         {
             await using SqliteConnection conn = await SqliteHelper.GetDatabaseConnectionAsync(ct).ConfigureAwait(false);
@@ -90,7 +89,7 @@ namespace MyLittleRangeBook.CLI.Database.Sqlite
 
             Logger.Information("Update {update} IDs.", convertedCount);
 
-            return Result.Fail("Not implemented.");
+            return Result.Ok();
         }
 
         /// <summary>

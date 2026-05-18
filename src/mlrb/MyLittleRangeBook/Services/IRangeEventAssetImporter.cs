@@ -8,12 +8,12 @@ namespace MyLittleRangeBook.Services
         /// <summary>
         ///     Will copy the asset to the data directory for the app, and associate it with the specified range event.
         /// </summary>
-        /// <param name="assetToImport"></param>
         /// <param name="rangeEventId"></param>
+        /// <param name="assetToImport"></param>
         /// <param name="ct"></param>
         /// <returns>A tuple that holds the ID of the new asset, and the path it was copied to.</returns>
-        Task<Result<(MlrbId assetId, string destinationPath)>> ImportAssetForRangeEvent(string assetToImport,
-            string rangeEventId,
+        Task<Result<(MlrbId assetId, string destinationPath)>> ImportAssetForRangeEvent(string rangeEventId,
+            string assetToImport,
             CancellationToken ct = default);
     }
 }
