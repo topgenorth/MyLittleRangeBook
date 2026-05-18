@@ -48,7 +48,7 @@ namespace MyLittleRangeBook.CLI
         [Command("add")]
         [UsedImplicitly]
         public async Task<int> AddSimpleRangeEventAsync(string firearm = "",
-            int rounds = 0,
+            int rounds = -1,
             string range = "",
             string ammo = "",
             string notes = "",
@@ -254,7 +254,7 @@ namespace MyLittleRangeBook.CLI
 
         async Task<int> AskUserForRoundCountAsync(int roundCount, CancellationToken cancellationToken)
         {
-            if (roundCount > 0)
+            if (roundCount >= 0)
             {
                 return roundCount;
             }
