@@ -18,7 +18,8 @@ namespace MyLittleRangeBook.CLI
         public SimpleRangeEventCommands(ILogger logger,
             ICliDisplay cliDisplay,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
-            ISimpleRangeEventListPrinter printer) : base(logger, cliDisplay)
+            ISimpleRangeEventListPrinter printer) :
+            base(logger, cliDisplay)
         {
             _repo = repo;
             _printer = printer;
