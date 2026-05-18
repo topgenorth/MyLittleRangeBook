@@ -41,8 +41,8 @@ namespace MyLittleRangeBook.CLI
         /// <param name="range">The name of the shooting range.</param>
         /// <param name="ammo">A description of the ammo used. The recommended format is PROJECTILE[,|;]POWDER[</param>
         /// <param name="notes">Any notes or comments.  Optional</param>
-        /// <param name="eventDate">The eventDate of the range trip in YYYY-MM-DD format. Default to today if omitted</param>
-        /// <param name="quiet">If this parameter is provided, then the command will display minimal output the the console.</param>
+        /// <param name="eventDate">The eventDate of the range trip in YYYY-MM-DD format. Default to today if omitted.</param>
+        /// <param name="quiet">If this parameter is provided, then the command will display minimal output to the console.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Command("add")]
@@ -81,7 +81,7 @@ namespace MyLittleRangeBook.CLI
 
             try
             {
-                SimpleRangeEvent sre = await CreateSimpleRangeEventAsync(firearm, rounds, range, ammo, notes, dateOnly,
+                SimpleRangeEvent sre = await AskUserForMissingDataOnSimpleRangeEventAsync(firearm, rounds, range, ammo, notes, dateOnly,
                         firearms, ranges, cancellationToken)
                     .ConfigureAwait(false);
 
@@ -124,7 +124,7 @@ namespace MyLittleRangeBook.CLI
         }
 
 
-        async Task<SimpleRangeEvent> CreateSimpleRangeEventAsync(string firearm,
+        async Task<SimpleRangeEvent> AskUserForMissingDataOnSimpleRangeEventAsync(string firearm,
             int rounds,
             string range,
             string ammo,
