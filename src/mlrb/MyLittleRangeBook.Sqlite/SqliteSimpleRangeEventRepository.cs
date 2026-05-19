@@ -2,6 +2,7 @@
 using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.RangeEventAssets;
 using MyLittleRangeBook.Services;
 using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
 

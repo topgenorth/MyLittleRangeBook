@@ -2,10 +2,11 @@
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
+using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Database.Sqlite;
-using static MyLittleRangeBook.CLI.ReturnCodes;
+using static MyLittleRangeBook.ReturnCodes;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.Sqlite
 {
     /// <summary>
     ///     This class provides functionality for managing SQLite database migrations.

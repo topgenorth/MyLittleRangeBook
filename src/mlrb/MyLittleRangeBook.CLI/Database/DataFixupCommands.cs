@@ -7,10 +7,11 @@ using Dapper;
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
+using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Sqlite;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.Database
 {
     [RegisterCommands("db")]
     [UsedImplicitly]

@@ -1,6 +1,7 @@
-﻿using Spectre.Console.Rendering;
+﻿using MyLittleRangeBook.Console;
+using Spectre.Console.Rendering;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook
 {
     class FirearmsTablePrinter : IConsolePrinter
     {

@@ -1,7 +1,7 @@
 ﻿using FluentResults;
 using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.Services
+namespace MyLittleRangeBook.RangeEventAssets
 {
     public interface IRangeEventAssetImporter
     {

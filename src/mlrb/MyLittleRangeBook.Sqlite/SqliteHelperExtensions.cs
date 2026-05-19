@@ -128,7 +128,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                 .TryAddKeyedTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
             services.TryAddKeyedTransient<IFirearmsDbService, SqliteFirearmsDbService>(DI_KEYS_SQLITE);
             services.TryAddKeyedTransient<ICartridgesDbService, SqliteCartridgesDbService>(DI_KEYS_SQLITE);
-            services.TryAddKeyedTransient<IFitFilesDbService, SqliteFitFilesDbService>(DI_KEYS_SQLITE);
+            // services.TryAddKeyedTransient<IFitFilesDbService, SqliteFitFilesDbService>(DI_KEYS_SQLITE);
             services.TryAddKeyedTransient<IShotViewFilesDbService, SqliteShotViewFilesDbService>(DI_KEYS_SQLITE);
 
             return services;

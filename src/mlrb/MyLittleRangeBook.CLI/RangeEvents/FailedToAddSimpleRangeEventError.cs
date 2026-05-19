@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.CLI
+﻿namespace MyLittleRangeBook.RangeEvents
 {
     public class FailedToAddSimpleRangeEventError : MlrbBaseError
     {

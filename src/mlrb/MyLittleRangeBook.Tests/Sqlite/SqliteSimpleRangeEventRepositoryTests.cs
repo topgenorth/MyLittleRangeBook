@@ -2,6 +2,7 @@
 using FluentResults;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.RangeEventAssets;
 using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook.Sqlite

@@ -1,6 +1,6 @@
 ﻿using ConsoleAppFramework;
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.Console
 {
     /// <summary>
     ///     This attribute allows us to parse a date from the command line and return a <c cref="DateOnly" />. If the user does

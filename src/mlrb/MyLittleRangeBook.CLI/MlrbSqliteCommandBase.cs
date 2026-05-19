@@ -1,6 +1,7 @@
-﻿using MyLittleRangeBook.Database.Sqlite;
+﻿using MyLittleRangeBook.Console;
+using MyLittleRangeBook.Database.Sqlite;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook
 {
     public abstract class MlrbSqliteCommandBase : MlrbCommandBase
     {

@@ -6,8 +6,8 @@ using DbUp.Builder;
 using DbUp.Engine;
 using FluentResults;
 using Microsoft.Extensions.Configuration;
+using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Models;
-
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
@@ -58,8 +58,8 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
         }
 
-        public SqliteHelper(ILogger logger, IConfiguration configuration) : this(logger,
-            GetSqliteConnectionString(configuration))
+        public SqliteHelper(ILogger logger, IConfiguration configuration) :
+            this(logger, configuration.GetSqliteConnectionString())
         {
         }
 
@@ -98,7 +98,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                     break;
             }
 
-            string id = new MlrbId().ToString();
+            var id = new MlrbId().ToString();
             try
             {
                 // TODO [TO20260503] It's possible to duplicate file contents; maybe file name should be unique in the database?
@@ -142,31 +142,6 @@ namespace MyLittleRangeBook.Database.Sqlite
             await connection.ExecuteAsync("PRAGMA foreign_keys = ON;").ConfigureAwait(false);
 
             return connection;
-        }
-
-        /// <summary>
-        ///     Creates the SQlite database if it does not exist. Applies migrations if necessary.
-        /// </summary>
-        /// <param name="sqliteDatabaseFile"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<Result<bool>> CreateSqliteDatabaseAsync(string sqliteDatabaseFile,
-            CancellationToken cancellationToken = default)
-        {
-            if (File.Exists(sqliteDatabaseFile))
-            {
-                _logger.Verbose("Database exists {0}", sqliteDatabaseFile);
-            }
-            else
-            {
-                await using SqliteConnection conn = await GetDatabaseConnectionAsync(cancellationToken);
-                await conn.CloseAsync();
-                _logger.Debug("Created database {0}", sqliteDatabaseFile);
-            }
-
-            Result<bool> result = await ApplyDbupMigrationsAsync(cancellationToken);
-
-            return result.IsSuccess ? Result.Ok(true) : result;
         }
 
         // ReSharper disable once AsyncMethodWithoutAwait
@@ -255,7 +230,34 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
         }
 
-        public async Task<Result<bool>> RunSqlOnDatabaseAsync(SqliteTransaction trans, SqliteCommand sqliteCommand, CancellationToken cancellationToken = default)
+        /// <summary>
+        ///     Creates the SQlite database if it does not exist. Applies migrations if necessary.
+        /// </summary>
+        /// <param name="sqliteDatabaseFile"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<Result<bool>> CreateSqliteDatabaseAsync(string sqliteDatabaseFile,
+            CancellationToken cancellationToken = default)
+        {
+            if (File.Exists(sqliteDatabaseFile))
+            {
+                _logger.Verbose("Database exists {0}", sqliteDatabaseFile);
+            }
+            else
+            {
+                await using SqliteConnection conn = await GetDatabaseConnectionAsync(cancellationToken);
+                await conn.CloseAsync();
+                _logger.Debug("Created database {0}", sqliteDatabaseFile);
+            }
+
+            Result<bool> result = await ApplyDbupMigrationsAsync(cancellationToken);
+
+            return result.IsSuccess ? Result.Ok(true) : result;
+        }
+
+        public async Task<Result<bool>> RunSqlOnDatabaseAsync(SqliteTransaction trans,
+            SqliteCommand sqliteCommand,
+            CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(trans);
 
@@ -274,6 +276,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                     .WithMetadata("SQLiteErrorCode", sqe.ErrorCode)
                     .WithMetadata("SQLiteExtendedErrorCode", sqe.SqliteExtendedErrorCode)
                     .WithMetadata("Connection", _connectionString);
+
                 return Result.Fail<bool>(err).WithValue(false);
             }
             catch (Exception e)
@@ -338,65 +341,9 @@ namespace MyLittleRangeBook.Database.Sqlite
             return Result.Ok(true).WithSuccess(success);
         }
 
-
-        /// <summary>
-        ///     A helper method to copy an image file to the event history directory for a specific range event. Will overwrite any
-        ///     existing files.
-        /// </summary>
-        /// <param name="imageFilePath"></param>
-        /// <param name="rangeEventId"></param>
-        /// <returns>A Nanoid to reference the file, and the full path to the copied file.</returns>
-        [Obsolete("Deprecated. Use IRangeEventAssetImporter instead.", true)]
-        public async Task<Result<(string id, string imagePath)>> CopyImageToEventHistory(string imageFilePath,
-            string rangeEventId)
-        {
-            string id = new MlrbId().ToString();
-
-            #region Make sure the history directory exists
-            string dbPath = DatabaseFile;
-            string dbDir = Path.GetDirectoryName(dbPath) ?? ".";
-            string historyDir = Path.Combine(dbDir,
-                OperatingSystem.IsWindows() ? "RangeEventAssets" : "range-event-assets");
-            string eventHistoryDir = Path.Combine(historyDir, rangeEventId);
-            Directory.CreateDirectory(eventHistoryDir);
-            #endregion
-
-            #region Generate new filename.
-            string extension = Path.GetExtension(imageFilePath);
-            var newFileName = $"{id}{extension}";
-            #endregion
-
-            string destPath = Path.Combine(eventHistoryDir, newFileName);
-
-            try
-            {
-                File.Copy(imageFilePath, destPath, true);
-            }
-            catch (Exception ex)
-            {
-                Error? e = new Error(ex.Message).CausedBy(ex)
-                    .Enrich(rangeEventId, null);
-
-                return Result.Fail(e);
-            }
-
-
-            return Result.Ok((id, destPath));
-        }
-
         public override string ToString()
         {
             return _connectionString;
-        }
-
-
-        static string GetSqliteConnectionString(IConfiguration configuration)
-        {
-            string? connectionString = configuration.GetConnectionString("SqliteConnection");
-
-            return string.IsNullOrEmpty(connectionString)
-                ? throw new InvalidOperationException("SQLite connection string 'SqliteConnection' is not configured.")
-                : connectionString!;
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using MyLittleRangeBook.IO;
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.Console
 {
     public static class AnsiConsoleExtensions
     {

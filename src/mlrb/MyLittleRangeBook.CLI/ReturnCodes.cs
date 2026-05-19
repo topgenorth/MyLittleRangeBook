@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.CLI
+﻿namespace MyLittleRangeBook
 {
     /// <summary>
     ///     This class holds all of the return codes for this application.

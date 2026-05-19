@@ -1,6 +1,6 @@
 ﻿using FluentResults;
 
-namespace MyLittleRangeBook.CLI.Database
+namespace MyLittleRangeBook.Database
 {
     public class WroteFitFileToDatabaseSuccess : Success
     {

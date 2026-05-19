@@ -4,6 +4,11 @@ namespace MyLittleRangeBook.Database.Sqlite
 {
     public interface ISqliteHelper
     {
+        /// <summary>
+        /// Gets the path to the SQLite database file.
+        /// This property provides the location of the database file being used
+        /// by the implementation for database operations.
+        /// </summary>
         public string DatabaseFile { get; }
 
 
@@ -33,14 +38,15 @@ namespace MyLittleRangeBook.Database.Sqlite
         Task<SqliteConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
-        ///     Creates the SQLite database if it does not exist and apply migrations.
+        /// Applies the required database migrations to the SQLite database using DbUp.
         /// </summary>
-        /// <param name="sqliteDatabaseFile"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        Task<Result<bool>> CreateSqliteDatabaseAsync(string sqliteDatabaseFile,
-            CancellationToken cancellationToken = default);
-
+        /// <param name="cancellationToken">
+        /// A token to observe while waiting for the task to complete, allowing the operation to be canceled.
+        /// </param>
+        /// <returns>
+        /// A result indicating the success or failure of applying the migrations. The result contains a boolean,
+        /// where true indicates the migrations were successfully applied, and false indicates a failure.
+        /// </returns>
         Task<Result<bool>> ApplyDbupMigrationsAsync(CancellationToken cancellationToken = default);
 
 
@@ -52,27 +58,5 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <returns></returns>
         Task<Result<bool>> RunSqlOnDatabaseAsync(string sqlFile, CancellationToken cancellationToken = default);
 
-        Task<Result<bool>> RunSqlOnDatabaseAsync(SqliteTransaction trans, SqliteCommand sqliteCommand, CancellationToken cancellationToken = default);
-
-
-        /// <summary>
-        ///     Updates appsettings.json with a new database.
-        /// </summary>
-        /// <param name="sqliteDatabaseName"></param>
-        /// <param name="appSettingsFile">Optional. If missing, then the default database name will be used.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        Task<Result<bool>> UpdateSqliteDatabasePathAsync(string sqliteDatabaseName,
-            string? appSettingsFile = null,
-            CancellationToken cancellationToken = default);
-
-        /// <summary>
-        ///     A helper method to copy an image file to the event history directory for a specific range event. Will overwrite any
-        ///     existing files.
-        /// </summary>
-        /// <param name="imageFilePath"></param>
-        /// <param name="rangeEventId"></param>
-        /// <returns></returns>
-        Task<Result<(string id, string imagePath)>> CopyImageToEventHistory(string imageFilePath, string rangeEventId);
     }
 }

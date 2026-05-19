@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.CLI.Console
+﻿namespace MyLittleRangeBook.Console
 {
     public class SimpleAppHeaderWithLogging : ICommandHeaderPrinter
     {

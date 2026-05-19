@@ -1,7 +1,7 @@
 ﻿using FluentResults;
 using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.Services
+namespace MyLittleRangeBook.RangeEventAssets
 {
     /// <summary>
     ///     Interface for naming strategies that generate filenames for range event assets.

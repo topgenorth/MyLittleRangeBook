@@ -1,6 +1,6 @@
 ﻿using Spectre.Console.Rendering;
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.Console
 {
     /// <summary>
     ///     An interface for classes that can print to the console. This is used to decouple the console printing logic from

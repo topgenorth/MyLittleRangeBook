@@ -1,5 +1,7 @@
+using MyLittleRangeBook.Console;
 using Spectre.Console.Rendering;
-namespace MyLittleRangeBook.CLI
+
+namespace MyLittleRangeBook.Cartridges
 {
     class CartridgesTablePrinter : IConsolePrinter
     {

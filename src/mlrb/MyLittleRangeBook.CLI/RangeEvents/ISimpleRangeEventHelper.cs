@@ -1,6 +1,6 @@
 ﻿using FluentResults;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.RangeEvents
 {
     /// <summary>
     ///     Helper interface for getting data about firearms and ranges when trying to create a range event.

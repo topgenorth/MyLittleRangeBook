@@ -3,10 +3,11 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Services;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.Cartridges
 {
     [RegisterCommands("cartridge")]
     public class CartridgeCommands: MlrbCommandBase

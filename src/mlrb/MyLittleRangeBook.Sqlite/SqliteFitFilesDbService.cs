@@ -6,7 +6,8 @@ using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook.Database.Sqlite
 {
-    public class SqliteFitFilesDbService : IFitFilesDbService
+    [Obsolete("Don't use", true)]
+    public class SqliteFitFilesDbService
     {
         const string SelectByIdSql = "SELECT * FROM FitFiles WHERE Id=@Id;";
 
@@ -127,7 +128,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             }
         }
 
-        public async Task<Result<EntityId>> UpsertFitFileAsync(IDbConnection connection,
+        public async Task<Result<EntityId>> UpsertFitFdileAsync(IDbConnection connection,
             string id,
             ReadOnlyMemory<byte> contents,
             string? fileName,

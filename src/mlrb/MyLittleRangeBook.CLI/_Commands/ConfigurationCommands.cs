@@ -3,9 +3,10 @@ using ConsoleAppFramework;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
+using MyLittleRangeBook.Console;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook
 {
     [RegisterCommands("config")]
     public class ConfigurationCommands: MlrbCommandBase

@@ -3,11 +3,12 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Services;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook
 {
     [RegisterCommands("shotview")]
     [UsedImplicitly]

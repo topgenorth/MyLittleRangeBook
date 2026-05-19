@@ -1,4 +1,5 @@
-﻿using Spectre.Console.Testing;
+﻿using MyLittleRangeBook.Console;
+using Spectre.Console.Testing;
 
 namespace MyLittleRangeBook.CLI.Console
 {

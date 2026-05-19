@@ -29,4 +29,8 @@
         <ProjectReference Include="..\MyLittleRangeBook.IO\MyLittleRangeBook.IO.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="RangeEvent\" />
+    </ItemGroup>
+
 </Project>

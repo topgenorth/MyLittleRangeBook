@@ -1,78 +1,13 @@
 ﻿using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
-using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Console;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.FIT.Model;
-using MyLittleRangeBook.IO;
-using MyLittleRangeBook.Services;
-using static MyLittleRangeBook.CLI.ReturnCodes;
+using static MyLittleRangeBook.ReturnCodes;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook
 {
-    [RegisterCommands("fit")]
-    [UsedImplicitly]
-    public class GarminFitFileImporterCommand : MlrbCommandBase
-    {
-        readonly IRangeEventAssetImporter _assetImporter;
-        readonly ISimpleRangeEventRepository _repo;
-        public GarminFitFileImporterCommand(ILogger logger,
-            ICliDisplay cliDisplay,
-            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)]ISimpleRangeEventRepository repo,
-            IRangeEventAssetImporter assetImporter) : base(logger, cliDisplay)
-        {
-            _assetImporter = assetImporter;
-            _repo = repo;
-        }
-
-        /// <summary>
-        ///     Will copy the FIT file to the RangeAsset directory and associate it with the SimpleRangeEvent.
-        /// </summary>
-        /// <param name="rangeEventId"></param>
-        /// <param name="fitFile"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        [Command("import")]
-        [UsedImplicitly]
-        public async Task<int> AddFitFileToRangeEvent(string rangeEventId,
-            string fitFile,
-            CancellationToken ct = default)
-        {
-            CliDisplay.PrintCommandHeader("Import FIT file");
-            Logger.Debug("Adding FIT file {fitFile} to RangeAsset {rangeAssetId}.", fitFile, rangeEventId);
-
-            try
-            {
-                Result<SimpleRangeEvent> getRangeEvent = await _repo.GetAsync(rangeEventId, ct).ConfigureAwait(false);
-                if (getRangeEvent.IsFailed)
-                {
-                    Logger.Warning("Could not find SimpleRangeEvent {simpleRangeEventId}, nothing imported.", rangeEventId);
-
-                    return FAILURE;
-                }
-
-                Result<(MlrbId assetId, string destinationPath)> copyFile = await _assetImporter
-                    .ImportAssetForRangeEvent(rangeEventId, fitFile, ct)
-                    .ConfigureAwait(false);
-                if (copyFile.IsFailed)
-                {
-                    return FIT_FILE_READ_FAILURE;
-                }
-
-                Logger.Debug("Copied the file {fitFile} to {destinationPath}, ID {assetId}", fitFile,
-                    copyFile.Value.destinationPath, copyFile.Value.assetId);
-
-                return SUCCESS;
-            }
-            catch (Exception e)
-            {
-                Logger.Fatal(e, "Something when very wrong trying to import the FIT file.");
-                return FAILURE;
-            }
-        }
-    }
-
     [RegisterCommands("fit")]
     public class GarminFitFileCommands : MlrbCommandBase
     {

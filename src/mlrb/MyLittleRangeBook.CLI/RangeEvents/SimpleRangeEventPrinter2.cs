@@ -1,6 +1,6 @@
 ﻿using Spectre.Console.Rendering;
 
-namespace MyLittleRangeBook.CLI
+namespace MyLittleRangeBook.RangeEvents
 {
     public class SimpleRangeEventPrinter2 : ISimpleRangeEventPrinter
     {

@@ -1,21 +1,22 @@
-﻿using ConsoleAppFramework;
+﻿using System.Text;
+using ConsoleAppFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using MyLittleRangeBook.CLI;
+using MyLittleRangeBook;
 using MyLittleRangeBook.Config;
+using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
-using MyLittleRangeBook.RangeEventAssets;
-using MyLittleRangeBook.Services;
+using MyLittleRangeBook.RangeEvents;
 using Serilog.Exceptions;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
 // [TO20260510] For Spectre.Console - force UTF8
 if (Console.OutputEncoding.CodePage == 437) // DOS/OEM encoding
 {
-    Console.OutputEncoding = System.Text.Encoding.UTF8;
+    Console.OutputEncoding = Encoding.UTF8;
 }
 
 IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
@@ -45,13 +46,13 @@ builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventList
 #endregion
 
 builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
-// TODO [TO20260515] Need to change SimpleAssetImporter because of the dependency on a "data directory"
-// builder.Services.AddTransient<IRangeEventAssetImporter, SimpleAssetImporter>();
+// TODO [TO20260515] Need to change RangeEventFileAssetImporter because of the dependency on a "data directory"
+// builder.Services.AddTransient<IRangeEventAssetImporter, RangeEventFileAssetImporter>();
 
 #region SQLite dependencies
 builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration);
-builder.Services.AddKeyedTransient<IRangeEventAssetImporter, SqliteSimpleAssetImporter>(SqliteHelperExtensions
-    .DI_KEYS_SQLITE);
+// builder.Services.AddKeyedTransient<IRangeEventAssetImporter, SqliteSimpleAssetImporter>(SqliteHelperExtensions
+//     .DI_KEYS_SQLITE);
 builder.Services.AddKeyedTransient<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>(SqliteHelperExtensions
     .DI_KEYS_SQLITE);
 #endregion

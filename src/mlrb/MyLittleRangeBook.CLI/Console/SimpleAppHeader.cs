@@ -1,7 +1,7 @@
 ﻿using MyLittleRangeBook.IO;
 using Spectre.Console.Rendering;
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.Console
 {
     public class SimpleAppHeader : IConsolePrinter, ICommandHeaderPrinter
     {

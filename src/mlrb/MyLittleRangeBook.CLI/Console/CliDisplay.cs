@@ -1,6 +1,6 @@
 ﻿using MyLittleRangeBook.IO;
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.Console
 {
     public class CliDisplay : ICliDisplay
     {

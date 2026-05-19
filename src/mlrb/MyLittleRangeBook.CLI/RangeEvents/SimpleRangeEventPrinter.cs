@@ -1,4 +1,6 @@
-﻿namespace MyLittleRangeBook.CLI
+﻿using MyLittleRangeBook.Console;
+
+namespace MyLittleRangeBook.RangeEvents
 {
     public class SimpleRangeEventPrinter : ISimpleRangeEventPrinter
     {

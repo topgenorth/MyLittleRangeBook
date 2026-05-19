@@ -1,4 +1,6 @@
-﻿namespace MyLittleRangeBook.CLI
+﻿using MyLittleRangeBook.Console;
+
+namespace MyLittleRangeBook.RangeEvents
 {
     /// <summary>
     ///     Prints a list of SimpleRangeEvents to the console.

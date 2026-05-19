@@ -1,13 +1,12 @@
 ﻿using FluentResults;
 using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook.RangeEventAssets
 {
     /// <summary>
     ///     Strategy for naming assets in the range event directory based on the file name of the asset.
     /// </summary>
-    public abstract class FileNameStrategyBase : IRangeEventAssetNamingStrategy
+    public abstract class FileNameStrategyBase
     {
         /// <summary>
         ///     Represents a unique identifier for an asset in the context of range event asset management.
@@ -71,18 +70,6 @@ namespace MyLittleRangeBook.RangeEventAssets
             return Result.Ok((AssetId, assetPath));
         }
 
-        /// <summary>
-        ///     Configures and returns the current instance of the asset naming strategy with a specified directory for range event
-        ///     assets.
-        /// </summary>
-        /// <param name="rangeAssetsDirectory">The directory where range event assets will be stored.</param>
-        /// <returns>The current instance of the asset naming strategy, configured with the specified directory.</returns>
-        public IRangeEventAssetNamingStrategy In(string rangeAssetsDirectory)
-        {
-            RangeAssetsDirectory = rangeAssetsDirectory;
-
-            return this;
-        }
 
         /// <summary>
         ///     Generates a suitable file name for an asset within a specific range event directory.

@@ -1,5 +1,6 @@
 ﻿using System.Data.Common;
 using FluentResults;
+using MyLittleRangeBook.Config;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.RangeEventAssets;
@@ -11,6 +12,7 @@ namespace MyLittleRangeBook.Database.Sqlite
     /// <summary>
     ///     Will copy the asset to the RangeAsset directory for the app, and update the Sqlite database.
     /// </summary>
+    [Obsolete("Don't use", true)]
     public class SqliteSimpleAssetImporter : IRangeEventAssetImporter
     {
         const string InsertImageSql = @"
@@ -25,7 +27,7 @@ ON CONFLICT(Id) DO UPDATE SET
 INSERT OR IGNORE INTO SimpleRangeEvent_Images (SimpleRangeEventId, ImageId)
 VALUES (@SimpleRangeEventId, @ImageId);";
 
-        readonly IRangeEventAssetImporter _inner;
+        readonly IRangeEventAssetImporter? _inner;
 
         readonly ISqliteHelper _sqliteHelper;
 
@@ -33,9 +35,9 @@ VALUES (@SimpleRangeEventId, @ImageId);";
         {
             _sqliteHelper = sqliteHelper;
 
-            // TODO [TO20260514] For now, just assume a unique filename each time.
-            _inner = new SimpleAssetImporter(GetAssetDirectory(sqliteHelper.DatabaseFile),
-                new UniqueAssetNameStrategy());
+            // // TODO [TO20260514] For now, just assume a unique filename each time.
+            // _inner = new RangeEventFileAssetImporter(GetAssetDirectory(sqliteHelper.DatabaseFile),
+            //     new UniqueAssetNameStrategy());
         }
 
         public SqliteSimpleAssetImporter(ISqliteHelper sqliteHelper, IRangeEventAssetImporter inner)
@@ -168,7 +170,7 @@ VALUES (@SimpleRangeEventId, @ImageId);";
                 throw new ArgumentException("Invalid sqlite database directory path", nameof(sqliteDatabaseFile));
             }
 
-            string assetDir = Path.Combine(dir, SimpleAssetImporter.RangeAssetsFolderName);
+            string assetDir = Path.Combine(dir, ConfigurationExtensions.RangeAssetsFolderName);
             Directory.CreateDirectory(assetDir);
 
             return assetDir;

@@ -7,6 +7,7 @@
         <Nullable>enable</Nullable>
         <AssemblyName>mlrb</AssemblyName>
         <ApplicationIcon>AppIcon256.ico</ApplicationIcon>
+        <RootNamespace>MyLittleRangeBook</RootNamespace>
     </PropertyGroup>
 
 
@@ -73,10 +74,6 @@
         <ProjectReference Include="..\MyLittleRangeBook.FIT\MyLittleRangeBook.FIT.csproj"/>
         <ProjectReference Include="..\MyLittleRangeBook.PgSQL\MyLittleRangeBook.PgSQL.csproj"/>
         <ProjectReference Include="..\MyLittleRangeBook.Sqlite\MyLittleRangeBook.Sqlite.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="Database\Postgres\"/>
     </ItemGroup>
 
 </Project>
