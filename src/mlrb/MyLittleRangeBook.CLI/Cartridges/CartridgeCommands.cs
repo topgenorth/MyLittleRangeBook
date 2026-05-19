@@ -48,7 +48,7 @@ namespace MyLittleRangeBook.Cartridges
             }
             if (!cartridges.Value.Any())
             {
-                AnsiConsole.Console.WriteWarning("No cartridges found.");
+                AnsiConsole.Console.PrintWarning("No cartridges found.");
                 return ReturnCodes.SUCCESS;
             }
             _printer.SetCartridges(cartridges.Value).Print(AnsiConsole.Console);

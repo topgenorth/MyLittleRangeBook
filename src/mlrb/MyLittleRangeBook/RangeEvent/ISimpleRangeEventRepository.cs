@@ -1,7 +1,7 @@
 ﻿using FluentResults;
 using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.Services
+namespace MyLittleRangeBook.RangeEvent
 {
     /// <summary>
     /// Provides an interface for managing and performing operations on simple range events

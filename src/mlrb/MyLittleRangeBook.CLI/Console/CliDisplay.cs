@@ -34,5 +34,10 @@ namespace MyLittleRangeBook.Console
         {
             Console.PrintProblem(message);
         }
+
+        public void PrintWarning(string message)
+        {
+            Console.PrintWarning(message);
+        }
     }
 }

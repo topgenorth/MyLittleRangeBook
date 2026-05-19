@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.RangeEvent;
 using MyLittleRangeBook.Services;
 
 using SQLitePCL;
@@ -123,7 +124,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             services.TryAddSingleton(configuration);
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
 
-            services.TryAddKeyedTransient<ISimpleRangeLogService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
+            services.TryAddKeyedTransient<ISimpleRangeEventService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
             services
                 .TryAddKeyedTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
             services.TryAddKeyedTransient<IFirearmsDbService, SqliteFirearmsDbService>(DI_KEYS_SQLITE);

@@ -55,7 +55,7 @@ namespace MyLittleRangeBook
 
             if (!firearms.Value.Any())
             {
-                AnsiConsole.Console.WriteWarning("No firearms found.");
+                AnsiConsole.Console.PrintWarning("No firearms found.");
 
                 return ReturnCodes.SUCCESS;
             }

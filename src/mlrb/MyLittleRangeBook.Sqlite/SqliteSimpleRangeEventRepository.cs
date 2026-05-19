@@ -2,6 +2,7 @@
 using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.RangeEvent;
 using MyLittleRangeBook.RangeEventAssets;
 using MyLittleRangeBook.Services;
 using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
@@ -11,24 +12,15 @@ namespace MyLittleRangeBook.Database.Sqlite
     public class SqliteSimpleRangeEventRepository : ISimpleRangeEventRepository
     {
         // TODO [TO20260505] Introduce SQLite transactions.
-        readonly IFitFilesDbService _filesDbService;
-        readonly IShotViewFilesDbService _shotViewFilesDbService;
-        readonly ISimpleRangeLogService _simpleRangeEventService;
+        readonly ISimpleRangeEventService _simpleRangeEventService;
         readonly ISqliteHelper _sqliteHelper;
-        readonly IRangeEventAssetImporter _importRangeEventAsset;
 
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
-            [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeLogService simpleRangeEventService,
-            [FromKeyedServices(DI_KEYS_SQLITE)] IFitFilesDbService filesDbService,
-            [FromKeyedServices(DI_KEYS_SQLITE)] IShotViewFilesDbService shotViewFilesDbService,
-            [FromKeyedServices(DI_KEYS_SQLITE)] IRangeEventAssetImporter importRangeEventAsset
+            [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventService simpleRangeEventService
             )
         {
             _sqliteHelper = sqliteHelper;
             _simpleRangeEventService = simpleRangeEventService;
-            _filesDbService = filesDbService;
-            _shotViewFilesDbService = shotViewFilesDbService;
-            _importRangeEventAsset = importRangeEventAsset;
         }
 
         /// <summary>
@@ -75,58 +67,6 @@ namespace MyLittleRangeBook.Database.Sqlite
                 }
 
                 List<Result> results = [sreResult.ToResult()];
-
-                if (fitFileContents is { Length: > 0 })
-                {
-                    // [TO20260504] Not sure how important the file name really is.
-                    string syntheticFileName = simpleRangeEvent.Id + "_" +
-                                               simpleRangeEvent.EventDate.ToString("yyyyMMdd") + ".fit";
-                    Result<EntityId> fitResult = await _filesDbService
-                        .UpsertFitFileAsync(conn,
-                            new MlrbId().ToString(),
-                            new ReadOnlyMemory<byte>(fitFileContents),
-                            syntheticFileName, cancellationToken)
-                        .ConfigureAwait(false);
-
-                    results.Add(fitResult.ToResult());
-
-                    if (fitResult.IsSuccess)
-                    {
-                        Result<long?> joinResult = await _filesDbService
-                            .AssociateWithRangeEvent(conn, simpleRangeEvent.Id!, fitResult.Value.Id, cancellationToken)
-                            .ConfigureAwait(false);
-                        results.Add(joinResult.ToResult());
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(shotViewCsvContents))
-                {
-                    Result<EntityId> shotViewResult = await _shotViewFilesDbService
-                        .UpsertShotViewFileAsync(conn,
-                            new MlrbId().ToString(),
-                            shotViewCsvContents,
-                            shotViewFileName, cancellationToken)
-                        .ConfigureAwait(false);
-
-                    results.Add(shotViewResult.ToResult());
-
-                    if (shotViewResult.IsSuccess)
-                    {
-                        Result<long?> joinResult = await _shotViewFilesDbService
-                            .AssociateWithRangeEvent(conn, simpleRangeEvent.Id!, shotViewResult.Value.Id,
-                                cancellationToken)
-                            .ConfigureAwait(false);
-                        results.Add(joinResult.ToResult());
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(imageFilePath) && File.Exists(imageFilePath))
-                {
-                    Result<(MlrbId assetId, string destinationPath)> copyImageResult = await _importRangeEventAsset
-                        .ImportAssetForRangeEvent(simpleRangeEvent.Id!, imageFilePath, cancellationToken)
-                        .ConfigureAwait(false);
-                    results.Add(copyImageResult.ToResult());
-                }
 
                 finalResult = Result.Merge(results.ToArray()).ToResult(simpleRangeEvent.RowId);
             }

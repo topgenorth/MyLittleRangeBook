@@ -17,6 +17,7 @@ using FluentResults;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.RangeEvent;
 using MyLittleRangeBook.Services;
 using SharedControls.Controls;
 using SharedControls.Helper;

@@ -2,9 +2,9 @@
 using FluentResults;
 using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.Services
+namespace MyLittleRangeBook.RangeEvent
 {
-    public interface ISimpleRangeLogService
+    public interface ISimpleRangeEventService
     {
         Task<Result<bool>> DeleteAsync(IDbConnection connection,
             SimpleRangeEvent simpleRangeEvent,

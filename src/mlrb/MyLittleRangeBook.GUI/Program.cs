@@ -10,6 +10,7 @@ using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
+using MyLittleRangeBook.RangeEvent;
 using MyLittleRangeBook.Services;
 using SharedControls.Services;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;

@@ -2,10 +2,11 @@
 using Dapper;
 using FluentResults;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.RangeEvent;
 using MyLittleRangeBook.Services;
 namespace MyLittleRangeBook.Database.Sqlite
 {
-    public class SqliteSimpleRangeEventService : ISimpleRangeLogService
+    public class SqliteSimpleRangeEventService : ISimpleRangeEventService
     {
         const string SelectSql = """
                                  SELECT *

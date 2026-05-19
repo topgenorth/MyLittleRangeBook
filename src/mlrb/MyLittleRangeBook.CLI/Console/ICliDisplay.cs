@@ -22,5 +22,7 @@
         /// </summary>
         /// <param name="message"></param>
         void PrintFailure(string message);
+
+        void PrintWarning(string message);
     }
 }

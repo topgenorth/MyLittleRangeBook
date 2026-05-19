@@ -4,12 +4,11 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Console;
-using Serilog;
 
 namespace MyLittleRangeBook.RangeEventAssets
 {
     /// <summary>
-    ///     The simplest way to import - copy the file into the asset directory for the range event.
+    ///     The simplest way to import - copy the file into the asset directory.
     /// </summary>
     [RegisterCommands("range-assets")]
     [UsedImplicitly]
@@ -25,22 +24,22 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// <summary>
         ///     Copy the file to the asset directory for the range event.
         /// </summary>
+        /// <param name="file"></param>
         /// <param name="rangeEventId"></param>
-        /// <param name="filePath"></param>
         /// <returns></returns>
         [Command("add")]
         [UsedImplicitly]
-        public async Task<int> CopyFileToAssetDirectory(string rangeEventId, string filePath)
+        public async Task<int> CopyFileToAssetDirectory(string file, string? rangeEventId = null)
         {
             CliDisplay.PrintCommandHeader(
-                $"Copying file '{filePath}' to asset directory for range event '{rangeEventId}'");
+                $"Copying file '{file}' to asset directory for range event '{rangeEventId}'");
             if (string.IsNullOrWhiteSpace(rangeEventId))
             {
-                CliDisplay.PrintFailure("Must provide a range event Id");
-
-                return ReturnCodes.FAILURE;
+                rangeEventId = MlrbId.Empty.ToString();
+                Logger.Warning("No RangeEvent specified. Assigning file {assetFile} to {rangeEventId}.", file, rangeEventId);
+                CliDisplay.PrintWarning($"The file {file} is not assigned to any RangeEvent.");
             }
-            if (!File.Exists(filePath))
+            if (!File.Exists(file))
             {
                 CliDisplay.PrintFailure("File does not exit.");
 
@@ -48,17 +47,16 @@ namespace MyLittleRangeBook.RangeEventAssets
             }
 
             string rangeEventAssetDir = Path.Combine(_assetsDirectory, rangeEventId);
+            Directory.CreateDirectory(rangeEventAssetDir);
 
-            string NameFileFit(string rangeEventTargetDir, string assetFileName)
+            string AssetFileDestination(string rangeEventTargetDir, string assetFileName)
             {
-                string targetFileName = Path.GetFileName(filePath);
-                Directory.CreateDirectory(rangeEventAssetDir);
-
-                return Path.Combine(rangeEventTargetDir, targetFileName);
+                string targetFileName = Path.GetFileName(file);
+                return Path.Combine(rangeEventAssetDir, targetFileName);
             }
 
-            RangeEventAssetFile rfe = new RangeEventAssetFile(rangeEventId, filePath);
-            Result<string> copiedFile = rfe.CopyToRangeEvent(NameFileFit);
+            RangeEventAssetFile rfe = new RangeEventAssetFile(rangeEventId, file);
+            Result<string> copiedFile = rfe.CopyToRangeEvent(AssetFileDestination);
 
             if (copiedFile.IsFailed)
             {
@@ -68,8 +66,9 @@ namespace MyLittleRangeBook.RangeEventAssets
                 return ReturnCodes.FAILURE;
             }
 
-            Logger.Verbose($"Copied file '{filePath}' to range event '{copiedFile.Value}'");
+            Logger.Verbose($"Copied file '{file}' to range event '{copiedFile.Value}'");
             CliDisplay.PrintSuccess("Copied file to range event.");
+
 
             return ReturnCodes.SUCCESS;
         }

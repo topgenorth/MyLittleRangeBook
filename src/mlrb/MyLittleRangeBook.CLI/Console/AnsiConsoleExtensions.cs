@@ -20,7 +20,7 @@ namespace MyLittleRangeBook.Console
             return cliDisplay;
         }
 
-        public static IAnsiConsole WriteWarning(this IAnsiConsole console, string message)
+        public static IAnsiConsole PrintWarning(this IAnsiConsole console, string message)
         {
             console.MarkupLineInterpolated($"[bold yellow]{WarningGlyph} {message.Trim()}[/]");
 

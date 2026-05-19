@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.IO;
+using MyLittleRangeBook.RangeEvent;
 using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook

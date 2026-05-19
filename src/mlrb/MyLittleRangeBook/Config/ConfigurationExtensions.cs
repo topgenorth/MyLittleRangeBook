@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -160,10 +161,13 @@ namespace MyLittleRangeBook.Config
         /// </exception>
         public static string GetRangeAssetDirectory(this IConfiguration config)
         {
-            string sqliteDir = config.GetSqliteConnectionString();
-            string? d1 = Path.GetDirectoryName(sqliteDir);
-
-            return Path.Combine(d1!, RangeAssetsFolderName);
+            string connectionString = config.GetSqliteConnectionString();
+            SqliteConnectionStringBuilder sb = new SqliteConnectionStringBuilder(connectionString);
+            string db = sb.DataSource;
+            string? dir = Path.GetDirectoryName(db);
+            string rangeAssetsDir =  Path.Combine(dir!, RangeAssetsFolderName);
+            Directory.CreateDirectory(rangeAssetsDir);
+            return rangeAssetsDir;
         }
 
         /// <summary>
