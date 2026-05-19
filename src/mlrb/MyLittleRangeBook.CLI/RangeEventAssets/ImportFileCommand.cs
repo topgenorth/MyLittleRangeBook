@@ -46,11 +46,10 @@ namespace MyLittleRangeBook.RangeEventAssets
                 return ReturnCodes.FIT_FILE_NOT_FOUND;
             }
 
-            string rangeEventAssetDir = Path.Combine(_assetsDirectory, rangeEventId);
-            Directory.CreateDirectory(rangeEventAssetDir);
-
             string AssetFileDestination(string rangeEventTargetDir, string assetFileName)
             {
+                string rangeEventAssetDir = Path.Combine(_assetsDirectory, rangeEventId);
+                Directory.CreateDirectory(rangeEventAssetDir);
                 string targetFileName = Path.GetFileName(file);
                 return Path.Combine(rangeEventAssetDir, targetFileName);
             }
