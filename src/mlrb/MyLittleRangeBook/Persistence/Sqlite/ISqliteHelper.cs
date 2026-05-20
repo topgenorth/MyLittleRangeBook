@@ -32,7 +32,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         ///     A result indicating the success or failure of applying the migrations. The result contains a boolean,
         ///     where true indicates the migrations were successfully applied, and false indicates a failure.
         /// </returns>
-        Task<Result<bool>> ApplyDbupMigrationsAsync(CancellationToken cancellationToken = default);
+        Task<Result> ApplyDbupMigrationsAsync(CancellationToken cancellationToken = default);
 
 
         /// <summary>
@@ -41,6 +41,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <param name="sqlFile"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<Result<bool>> RunSqlOnDatabaseAsync(string sqlFile, CancellationToken cancellationToken = default);
+        Task<Result> RunSqlOnDatabaseAsync(string sqlFile, CancellationToken cancellationToken = default);
     }
 }

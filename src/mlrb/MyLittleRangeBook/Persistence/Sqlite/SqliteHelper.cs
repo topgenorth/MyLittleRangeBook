@@ -93,10 +93,15 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             return connection;
         }
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         // ReSharper disable once AsyncMethodWithoutAwait
-        public async Task<Result<bool>> ApplyDbupMigrationsAsync(CancellationToken cancellationToken = default)
+        public async Task<Result> ApplyDbupMigrationsAsync(CancellationToken cancellationToken = default)
         {
-            Result<bool> result;
+            Result result;
             try
             {
                 UpgradeEngineBuilder? ueb = DeployChanges.To
@@ -114,8 +119,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                 if (migrationResult.Successful)
                 {
                     // TODO [TO20260419] Include a reason.
-                    result = new Result<bool>()
-                        .WithValue(true);
+                    result = new Result();
                 }
                 else
                 {
@@ -123,7 +127,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                         .WithMetadata("Errors", migrationResult.Error)
                         .WithMetadata("Database", _connectionString);
 
-                    result = new Result<bool>().WithValue(false).WithError(err);
+                    result = new Result().WithError(err);
                 }
             }
             catch (Exception e)
@@ -135,19 +139,19 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                         .WithMetadata("Database", _connectionString)
                     ;
 
-                result = new Result<bool>().WithValue(false).WithError(err);
+                result = new Result().WithError(err);
             }
 
             return result;
         }
 
-        public async Task<Result<bool>> RunSqlOnDatabaseAsync(string sql, CancellationToken cancellationToken = default)
+        public async Task<Result> RunSqlOnDatabaseAsync(string sql, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(sql))
             {
                 _logger.Information("There is no SQL - nothing to do.");
 
-                return Result.Ok(true);
+                return Result.Ok();
             }
 
             try
@@ -156,7 +160,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                 await using var cmd = new SqliteCommand(sql, connection);
                 await cmd.ExecuteNonQueryAsync(cancellationToken);
 
-                return Result.Ok(true);
+                return Result.Ok();
             }
             catch (SqliteException sqe)
             {
@@ -167,7 +171,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                     .WithMetadata("SQLiteExtendedErrorCode", sqe.SqliteExtendedErrorCode)
                     .WithMetadata("Connection", _connectionString);
 
-                return Result.Fail<bool>(err).WithValue(false);
+                return Result.Fail(err);
             }
             catch (Exception e)
             {
@@ -175,7 +179,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                 err.Metadata.Add("SQL", sql);
                 err.Metadata.Add("Connection", _connectionString);
 
-                return Result.Fail<bool>(err).WithValue(false);
+                return Result.Fail(err);
             }
         }
 

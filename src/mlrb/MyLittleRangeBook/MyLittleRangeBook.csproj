@@ -28,19 +28,7 @@
 
     <ItemGroup>
         <EmbeddedResource Include="Config\AppSettings\*.json"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\001-initial-schema.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\002-create-modified-index-on-simplerangeevents.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\003-firearms-isactive.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\004-simplerangeevent-fitfiles-table.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\005-simplerangeevent_fitfiles-new-index.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\006-fitfiles-change-filename-index-to-be-unique.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\007-shotview-csv-table.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\008-cleanup-index-names.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\009-simplerangeevent-images-table.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\010-create-cartridges-table.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\011-simplerangeevents_fitfiles-cascading-updates.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\012-cascading-updates.sql"/>
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\013-simplerangeevents_shotviewfiles-cascading-updates.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\*.sql"/>
     </ItemGroup>
 
 </Project>
