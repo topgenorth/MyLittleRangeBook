@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Models;

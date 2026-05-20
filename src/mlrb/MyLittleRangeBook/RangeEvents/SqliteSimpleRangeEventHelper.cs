@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using System.Runtime.CompilerServices;
-using FluentResults;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Persistence.Sqlite;
 

@@ -1,5 +1,4 @@
-﻿using FluentResults;
-using MyLittleRangeBook.Models;
+﻿using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.RangeEventAssets
 {

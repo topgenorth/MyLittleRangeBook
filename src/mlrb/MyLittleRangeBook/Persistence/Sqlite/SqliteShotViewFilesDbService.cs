@@ -1,10 +1,10 @@
 using System.Data;
 using Dapper;
-using FluentResults;
 using Microsoft.Data.Sqlite;
+using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 
-namespace MyLittleRangeBook.RangeEventAssets
+namespace MyLittleRangeBook.Persistence.Sqlite
 {
     public class DuplicateShotViewFileNameError : MlrbBaseError
     {

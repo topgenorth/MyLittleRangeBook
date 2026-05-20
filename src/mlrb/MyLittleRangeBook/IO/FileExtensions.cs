@@ -1,6 +1,4 @@
-﻿using FluentResults;
-
-namespace MyLittleRangeBook.IO
+﻿namespace MyLittleRangeBook.IO
 {
     public static class FileExtensions
     {

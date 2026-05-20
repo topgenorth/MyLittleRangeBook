@@ -4,13 +4,11 @@ using Dapper;
 using DbUp;
 using DbUp.Builder;
 using DbUp.Engine;
-using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database;
 using MyLittleRangeBook.Models;
-using Serilog;
 
 namespace MyLittleRangeBook.Persistence.Sqlite
 {

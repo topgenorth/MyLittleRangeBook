@@ -1,10 +1,10 @@
 ﻿using System.Data;
 using Dapper;
-using FluentResults;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.Persistence;
+using MyLittleRangeBook.Models;
+using MyLittleRangeBook.RangeEventAssets;
 
-namespace MyLittleRangeBook.RangeEventAssets
+namespace MyLittleRangeBook.Persistence.Sqlite
 {
     [Obsolete("Don't use", true)]
     public class SqliteFitFilesDbService
