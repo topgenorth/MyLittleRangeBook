@@ -51,7 +51,7 @@ namespace MyLittleRangeBook.RangeEventAssets
                 string rangeEventAssetDir = Path.Combine(_assetsDirectory, rangeEventId);
                 Directory.CreateDirectory(rangeEventAssetDir);
                 string targetFileName = Path.GetFileName(file);
-                var x= Path.Combine(rangeEventAssetDir, targetFileName);
+                string x= Path.Combine(rangeEventAssetDir, targetFileName);
 
                 return x;
             }
@@ -67,7 +67,7 @@ namespace MyLittleRangeBook.RangeEventAssets
                 return ReturnCodes.FAILURE;
             }
 
-            Logger.Verbose($"Copied file '{file}' to range event '{copiedFile.Value}'");
+            Logger.Verbose($"Copied file '{file}' to '{copiedFile.Value}'");
             CliDisplay.PrintSuccess("Copied file to range event.");
 
             return ReturnCodes.SUCCESS;

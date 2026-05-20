@@ -49,16 +49,14 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// </returns>
         public Result<string> CopyToRangeEvent(AssetFileNameResolver assetNamer)
         {
-            Result result;
+            Result<string> result;
             try
             {
                 string rangeEventAssetFileName = assetNamer(_rangeEventId, _pathToAsset);
 
                 File.Copy(_pathToAsset, rangeEventAssetFileName, true);
 
-                result = Result.Ok(rangeEventAssetFileName)
-                    .WithValue(rangeEventAssetFileName)
-                    .ToResult();
+                result = Result.Ok(rangeEventAssetFileName);
             }
             catch (Exception e)
             {
