@@ -1,17 +1,17 @@
 ﻿using System.Text.Json.Nodes;
 using Dapper;
 using FluentResults;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.RangeEvent;
-using MyLittleRangeBook.Services;
-
+using MyLittleRangeBook.RangeEvents;
 using SQLitePCL;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
-namespace MyLittleRangeBook.Database.Sqlite
+namespace MyLittleRangeBook.Persistence.Sqlite
 {
     /// <summary>
     ///     Extension methods for setting up SQLite and registering <see cref="ISqliteHelper" /> in the dependency injection
@@ -127,10 +127,10 @@ namespace MyLittleRangeBook.Database.Sqlite
             services.TryAddKeyedTransient<ISimpleRangeEventService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
             services
                 .TryAddKeyedTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
-            services.TryAddKeyedTransient<IFirearmsDbService, SqliteFirearmsDbService>(DI_KEYS_SQLITE);
-            services.TryAddKeyedTransient<ICartridgesDbService, SqliteCartridgesDbService>(DI_KEYS_SQLITE);
+            // services.TryAddKeyedTransient<IFirearmsDbService, SqliteFirearmsDbService>(DI_KEYS_SQLITE);
+            // services.TryAddKeyedTransient<ICartridgesDbService, SqliteCartridgesDbService>(DI_KEYS_SQLITE);
             // services.TryAddKeyedTransient<IFitFilesDbService, SqliteFitFilesDbService>(DI_KEYS_SQLITE);
-            services.TryAddKeyedTransient<IShotViewFilesDbService, SqliteShotViewFilesDbService>(DI_KEYS_SQLITE);
+            // services.TryAddKeyedTransient<IShotViewFilesDbService, SqliteShotViewFilesDbService>(DI_KEYS_SQLITE);
 
             return services;
         }

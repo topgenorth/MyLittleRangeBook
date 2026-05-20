@@ -23,7 +23,7 @@ DROP INDEX IF EXISTS SimpleRangeEvents_Range_Date_IDX;
 DROP INDEX IF EXISTS IX_SimpleRangeEvents_Range_Date;
 DROP INDEX IF EXISTS IX_FitFiles_Modified;
 DROP INDEX IF EXISTS SimpleRangeEvents_Id_IDX;
-DROP INDEX IF Exists IX_SimpleRangeEvents_Id;
+DROP INDEX IF EXISTS IX_SimpleRangeEvents_Id;
 DROP INDEX IF EXISTS SimpleRangeEvents_EventDate_FirearmName_RangeName_IDX;
 DROP INDEX IF EXISTS IX_SimpleRangeEvents_EventDate_FirearmName_RangeName;
 DROP INDEX IF EXISTS SimpleRangeEvents_Firearm_Date_IDX;

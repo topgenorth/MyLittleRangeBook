@@ -4,21 +4,22 @@ using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook
 {
     [RegisterCommands("firearm")]
-    public class FirearmCommands: MlrbCommandBase
+    public class FirearmCommands : MlrbCommandBase
     {
         readonly IFirearmsDbService _firearmsDbService;
         readonly FirearmsTablePrinter _printer;
         readonly ISqliteHelper _sqliteHelper;
 
-        public FirearmCommands(ILogger logger, ICliDisplay cliDisplay,
+        public FirearmCommands(ILogger logger,
+            ICliDisplay cliDisplay,
             [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IFirearmsDbService firearmsDbService,
-            ISqliteHelper sqliteHelper): base (logger, cliDisplay)
+            ISqliteHelper sqliteHelper) : base(logger, cliDisplay)
         {
             _firearmsDbService = firearmsDbService;
             _sqliteHelper = sqliteHelper;

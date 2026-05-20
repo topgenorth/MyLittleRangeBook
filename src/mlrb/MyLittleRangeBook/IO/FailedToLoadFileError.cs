@@ -1,4 +1,6 @@
-﻿namespace MyLittleRangeBook.IO
+﻿using FluentResults;
+
+namespace MyLittleRangeBook.IO
 {
     public class FailedToLoadFileError : Error
     {

@@ -4,16 +4,16 @@ using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.IO;
+using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvent;
 using MyLittleRangeBook.Services;
 
-namespace MyLittleRangeBook
+namespace MyLittleRangeBook.RangeEventAssets
 {
     [RegisterCommands("shotview")]
     [UsedImplicitly]
-    public class ShotViewCommands:MlrbCommandBase
+    public class ShotViewCommands : MlrbCommandBase
     {
         readonly ISimpleRangeEventRepository _repo;
         readonly IShotViewFilesDbService _shotViewFilesDbService;
@@ -23,7 +23,7 @@ namespace MyLittleRangeBook
             ICliDisplay cliDisplay,
             [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
             [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IShotViewFilesDbService shotViewFilesDbService,
-            ISqliteHelper sqliteHelper): base(logger, cliDisplay)
+            ISqliteHelper sqliteHelper) : base(logger, cliDisplay)
         {
             CliDisplay = cliDisplay;
             _shotViewFilesDbService = shotViewFilesDbService;
@@ -50,6 +50,7 @@ namespace MyLittleRangeBook
         {
             CliDisplay.PrintCommandHeader("Add ShotView CSV file");
             CliDisplay.PrintFailure("Currently being refactored.");
+
             return ReturnCodes.FAILURE;
 
             if (string.IsNullOrWhiteSpace(csvFile))
@@ -119,7 +120,7 @@ namespace MyLittleRangeBook
                 }
             }
 
-            string shotViewFileId = new MlrbId().ToString();
+            var shotViewFileId = new MlrbId().ToString();
             Result<EntityId> upsertResult = await _shotViewFilesDbService
                 .UpsertShotViewFileAsync(conn, shotViewFileId, fileResult.Value, Path.GetFileName(csvFile),
                     cancellationToken)

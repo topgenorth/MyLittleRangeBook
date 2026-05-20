@@ -41,6 +41,7 @@ namespace MyLittleRangeBook.RangeEvents
                 {
                     bodyGrid.AddRow("  [white]Notes:[/] ", sre.Notes);
                 }
+
                 console.Write(bodyGrid);
             }
         }

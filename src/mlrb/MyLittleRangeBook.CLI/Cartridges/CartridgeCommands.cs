@@ -4,25 +4,28 @@ using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook.Cartridges
 {
     [RegisterCommands("cartridge")]
-    public class CartridgeCommands: MlrbCommandBase
+    public class CartridgeCommands : MlrbCommandBase
     {
         readonly ICartridgesDbService _cartridgesDbService;
         readonly CartridgesTablePrinter _printer;
         readonly ISqliteHelper _sqliteHelper;
-        public CartridgeCommands(ILogger logger, ICliDisplay cliDisplay,
+
+        public CartridgeCommands(ILogger logger,
+            ICliDisplay cliDisplay,
             [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] ICartridgesDbService cartridgesDbService,
-            ISqliteHelper sqliteHelper): base (logger, cliDisplay)
+            ISqliteHelper sqliteHelper) : base(logger, cliDisplay)
         {
             _cartridgesDbService = cartridgesDbService;
             _sqliteHelper = sqliteHelper;
             _printer = new CartridgesTablePrinter();
         }
+
         /// <summary>
         ///     List all the active cartridges.
         /// </summary>
@@ -44,17 +47,23 @@ namespace MyLittleRangeBook.Cartridges
             {
                 Logger.Warning("Failed to retrieve cartridges.");
                 AnsiConsole.Console.PrintProblem("Failed to retrieve cartridges.");
+
                 return ReturnCodes.FAILURE;
             }
+
             if (!cartridges.Value.Any())
             {
                 AnsiConsole.Console.PrintWarning("No cartridges found.");
+
                 return ReturnCodes.SUCCESS;
             }
+
             _printer.SetCartridges(cartridges.Value).Print(AnsiConsole.Console);
             AnsiConsole.Console.PrintSuccess("Cartridges retrieved.");
+
             return ReturnCodes.SUCCESS;
         }
+
         /// <summary>
         ///     Add a new cartridge.
         /// </summary>
@@ -68,7 +77,13 @@ namespace MyLittleRangeBook.Cartridges
         /// <returns></returns>
         [Command("add")]
         [UsedImplicitly]
-        public async Task<int> AddCartridge(string name, string? commonName = null, double diameterMetric = 0, double diameterImperial = 0, bool rifle = false, bool pistol = false, CancellationToken cancellationToken = default)
+        public async Task<int> AddCartridge(string name,
+            string? commonName = null,
+            double diameterMetric = 0,
+            double diameterImperial = 0,
+            bool rifle = false,
+            bool pistol = false,
+            CancellationToken cancellationToken = default)
         {
             AnsiConsole.Console.PrintAppInfo();
             AnsiConsole.Console.WriteLine("Adding cartridge...");
@@ -91,9 +106,12 @@ namespace MyLittleRangeBook.Cartridges
             {
                 Logger.Warning("Failed to add cartridge.");
                 AnsiConsole.Console.PrintProblem("Failed to add cartridge.");
+
                 return ReturnCodes.FAILURE;
             }
+
             AnsiConsole.Console.PrintSuccess($"Cartridge '{name}' added with ID {result.Value.Id}.");
+
             return ReturnCodes.SUCCESS;
         }
     }

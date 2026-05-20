@@ -1,12 +1,12 @@
 ﻿CREATE TABLE IF NOT EXISTS ShotViewFiles
 (
     RowId    INTEGER PRIMARY KEY AUTOINCREMENT,
-    Id       TEXT                           not null, --NanoID unique key.
-    FileName TEXT                           not null,
-    MimeType TEXT default 'text/csv'        not null,
-    Contents TEXT                           not null, -- The file contents as TEXT.
-    Created  TEXT default CURRENT_TIMESTAMP not null, -- The date the record was created.
-    Modified TEXT default CURRENT_TIMESTAMP not null, -- The date the file was last modified.
+    Id       TEXT                           NOT NULL, --NanoID unique key.
+    FileName TEXT                           NOT NULL,
+    MimeType TEXT DEFAULT 'text/csv'        NOT NULL,
+    Contents TEXT                           NOT NULL, -- The file contents as TEXT.
+    Created  TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL, -- The date the record was created.
+    Modified TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL, -- The date the file was last modified.
     CONSTRAINT UQ_ShotViewFiles_Id UNIQUE (ID),
     CONSTRAINT UQ_ShotViewFiles_FileName UNIQUE (FileName)
 );

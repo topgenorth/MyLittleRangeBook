@@ -73,7 +73,7 @@ namespace MyLittleRangeBook.RangeEvents
         static void AddNotes(Layout root, SimpleRangeEvent sre)
         {
             GridColumn c3 = new GridColumn().Padding(0, 0).Width(7);
-            GridColumn c4 = new GridColumn().Padding(0,  0);
+            GridColumn c4 = new GridColumn().Padding(0, 0);
             Grid grid2 = new Grid().AddColumn(c3).AddColumn(c4).Collapse();
             grid2.AddRow("Notes: ", sre.Notes?.Trim() ?? string.Empty);
             Panel notesPanel = new Panel(grid2).Border(BoxBorder.None).Expand().Padding(0, 0);

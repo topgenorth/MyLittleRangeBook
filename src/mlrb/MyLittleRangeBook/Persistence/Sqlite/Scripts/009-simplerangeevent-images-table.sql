@@ -1,11 +1,11 @@
 CREATE TABLE IF NOT EXISTS RangeEventImages
 (
     RowId    INTEGER PRIMARY KEY AUTOINCREMENT,
-    Id       TEXT                           not null, --NanoID unique key.
-    FileName TEXT                           not null, -- Path relative to the database file.
-    MimeType TEXT                           not null,
-    Created  TEXT default CURRENT_TIMESTAMP not null, -- The date the record was created.
-    Modified TEXT default CURRENT_TIMESTAMP not null, -- The date the file was last modified.
+    Id       TEXT                           NOT NULL, --NanoID unique key.
+    FileName TEXT                           NOT NULL, -- Path relative to the database file.
+    MimeType TEXT                           NOT NULL,
+    Created  TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL, -- The date the record was created.
+    Modified TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL, -- The date the file was last modified.
     CONSTRAINT UQ_RangeEventImages_Id UNIQUE (Id)
 );
 

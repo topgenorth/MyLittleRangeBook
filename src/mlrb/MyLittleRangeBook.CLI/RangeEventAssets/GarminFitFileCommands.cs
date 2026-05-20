@@ -6,7 +6,7 @@ using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.FIT.Model;
 using static MyLittleRangeBook.ReturnCodes;
 
-namespace MyLittleRangeBook
+namespace MyLittleRangeBook.RangeEventAssets
 {
     [RegisterCommands("fit")]
     public class GarminFitFileCommands : MlrbCommandBase

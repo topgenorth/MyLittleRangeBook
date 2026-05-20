@@ -1,13 +1,12 @@
 ﻿using System.Data.Common;
 using FluentResults;
+using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.IO;
-using MyLittleRangeBook.Models;
-using MyLittleRangeBook.RangeEventAssets;
-using MyLittleRangeBook.Services;
-using MyLittleRangeBook.Sqlite;
+using MyLittleRangeBook.Persistence;
+using MyLittleRangeBook.Persistence.Sqlite;
 
-namespace MyLittleRangeBook.Database.Sqlite
+namespace MyLittleRangeBook.RangeEventAssets
 {
     /// <summary>
     ///     Will copy the asset to the RangeAsset directory for the app, and update the Sqlite database.
@@ -77,9 +76,8 @@ VALUES (@SimpleRangeEventId, @ImageId);";
             }
 
             File.Delete(copiedFile.Value.destinationPath);
+
             return Result.Fail("Didn't associate asset with the range event");
-
-
         }
 
         /// <summary>
@@ -127,6 +125,7 @@ VALUES (@SimpleRangeEventId, @ImageId);";
                 }
 
                 await trans.RollbackAsync(ct);
+
                 return Result.Fail("Could not update the database with the file.");
             }
             catch (SqliteException sqe)
@@ -136,6 +135,7 @@ VALUES (@SimpleRangeEventId, @ImageId);";
                     .Enrich(rangeEventId);
                 err.WithMetadata("asset_destination", pathToAsset);
                 await trans.RollbackAsync(ct);
+
                 return Result.Fail(err);
             }
             catch (Exception e)

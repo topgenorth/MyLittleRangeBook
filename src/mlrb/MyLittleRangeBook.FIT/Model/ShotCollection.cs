@@ -18,18 +18,18 @@ namespace MyLittleRangeBook.FIT.Model
         {
             get
             {
-                var shotValues = ActiveShots.ToArray();
+                Shot[] shotValues = ActiveShots.ToArray();
                 if (shotValues.Length == 0)
                 {
                     return ShotSpeed.Zero;
                 }
 
-                var mean = shotValues.Average(s => s.Speed);
+                float mean = shotValues.Average(s => s.Speed);
                 var squaredDistances = shotValues.Select(s => Math.Pow(Math.Abs(s.Speed - mean), 2)).ToList();
-                var shotCount = shotValues.Count();
-                var meanSquaredDistances = squaredDistances.Sum() / shotCount;
+                int shotCount = shotValues.Count();
+                double meanSquaredDistances = squaredDistances.Sum() / shotCount;
 
-                var speed = Math.Sqrt(meanSquaredDistances);
+                double speed = Math.Sqrt(meanSquaredDistances);
 
                 return new ShotSpeed((float)speed, Units);
             }
@@ -50,8 +50,8 @@ namespace MyLittleRangeBook.FIT.Model
                     return ShotSpeed.Zero;
                 }
 
-                var units = _shots.First().Value.Speed.Units;
-                var avg = ActiveShots.Select(s => s).Average(s => s.Speed.Value);
+                string units = _shots.First().Value.Speed.Units;
+                double avg = ActiveShots.Select(s => s).Average(s => s.Speed.Value);
 
                 return new ShotSpeed(avg, units);
             }

@@ -8,9 +8,12 @@
 
     <ItemGroup>
         <PackageReference Include="ByteAether.Ulid" Version="1.3.7"/>
+        <PackageReference Include="Dapper" Version="2.1.79"/>
+        <PackageReference Include="dbup-core" Version="6.1.1"/>
+        <PackageReference Include="dbup-sqlite" Version="6.0.4"/>
         <PackageReference Include="FluentResults" Version="4.0.0"/>
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.5"/>
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.8"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5"/>
         <PackageReference Include="Serilog" Version="4.3.1"/>
@@ -19,15 +22,25 @@
         <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0"/>
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0"/>
         <PackageReference Include="SerilogTraceListener" Version="3.2.0"/>
+        <PackageReference Include="Spectre.Console" Version="0.55.2"/>
 
     </ItemGroup>
 
     <ItemGroup>
         <EmbeddedResource Include="Config\AppSettings\*.json"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\MyLittleRangeBook.IO\MyLittleRangeBook.IO.csproj"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\001-initial-schema.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\002-create-modified-index-on-simplerangeevents.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\003-firearms-isactive.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\004-simplerangeevent-fitfiles-table.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\005-simplerangeevent_fitfiles-new-index.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\006-fitfiles-change-filename-index-to-be-unique.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\007-shotview-csv-table.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\008-cleanup-index-names.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\009-simplerangeevent-images-table.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\010-create-cartridges-table.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\011-simplerangeevents_fitfiles-cascading-updates.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\012-cascading-updates.sql"/>
+        <EmbeddedResource Include="Persistence\Sqlite\Scripts\013-simplerangeevents_shotviewfiles-cascading-updates.sql"/>
     </ItemGroup>
 
 </Project>

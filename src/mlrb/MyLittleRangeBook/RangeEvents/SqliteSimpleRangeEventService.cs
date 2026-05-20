@@ -1,10 +1,11 @@
 ﻿using System.Data;
 using Dapper;
 using FluentResults;
+using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.RangeEvent;
-using MyLittleRangeBook.Services;
-namespace MyLittleRangeBook.Database.Sqlite
+
+namespace MyLittleRangeBook.RangeEvents
 {
     public class SqliteSimpleRangeEventService : ISimpleRangeEventService
     {
@@ -47,7 +48,7 @@ namespace MyLittleRangeBook.Database.Sqlite
             {
                 var cmd = new SqliteCommand(DeleteSql, (SqliteConnection)connection);
                 cmd.Parameters.AddWithValue("@Id", simpleRangeEvent.Id);
-                await cmd.ExecuteNonQueryAsync(cancellationToken);
+                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception e)
             {

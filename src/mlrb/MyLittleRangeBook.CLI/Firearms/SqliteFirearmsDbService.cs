@@ -1,10 +1,10 @@
 ﻿using System.Data;
 using Dapper;
 using FluentResults;
-using MyLittleRangeBook.Models;
+using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Services;
 
-namespace MyLittleRangeBook.Database.Sqlite
+namespace MyLittleRangeBook
 {
     public class SqliteFirearmsDbService : IFirearmsDbService
     {
@@ -43,7 +43,7 @@ namespace MyLittleRangeBook.Database.Sqlite
                 var cmd = new SqliteCommand(DeleteSql, (SqliteConnection)connection);
                 cmd.Parameters.AddWithValue("@Id", firearm.Id);
                 cmd.CommandType = CommandType.Text;
-                await cmd.ExecuteNonQueryAsync(cancellationToken);
+                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception e)
             {

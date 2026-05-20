@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.Database.Sqlite
+﻿namespace MyLittleRangeBook.Persistence
 {
     /// <summary>
     ///     Thrown when attempting to insert a FIT file with a name that already exists in the database - this indicates that

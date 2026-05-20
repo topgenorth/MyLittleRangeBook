@@ -22,7 +22,6 @@ namespace MyLittleRangeBook.Console
         public void PrintCommandHeader(string? action)
         {
             _commandHeaderPrinter.SetAction(action).Print(Console);
-
         }
 
         public void PrintSuccess(string message)

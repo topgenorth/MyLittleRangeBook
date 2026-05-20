@@ -8,8 +8,8 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.Database.Sqlite;
-using MyLittleRangeBook.Sqlite;
+using MyLittleRangeBook.Persistence;
+using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Database
 {
@@ -70,7 +70,8 @@ namespace MyLittleRangeBook.Database
                 .Where(row => !Ulid.IsValid(row.Id))
                 .ToDictionary<FitFileRow, string, string>(row => row.Id,
                     row => MlrbId.From(row.FitFileTime));
-            Logger.Information("It seems that there are {count} IDs that need to be converted in FitFiles.", idMap.Count);
+            Logger.Information("It seems that there are {count} IDs that need to be converted in FitFiles.",
+                idMap.Count);
 
             var convertedCount = 0;
             foreach (KeyValuePair<string, string> kvp in idMap)

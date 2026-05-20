@@ -32,8 +32,6 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// </summary>
         readonly string _rangeEventId;
 
-        string? _pathToRangeEventAsset;
-
         public RangeEventAssetFile(string rangeEventId, string pathToAsset)
         {
             _rangeEventId = rangeEventId;
@@ -41,7 +39,7 @@ namespace MyLittleRangeBook.RangeEventAssets
         }
 
 
-        public string? PathToRangeEventAsset => _pathToRangeEventAsset;
+        public string? PathToRangeEventAsset { get; private set; }
 
         /// <summary>
         ///     Copies an asset file to the directory associated with a given range event, using a custom filename resolver.
@@ -54,11 +52,11 @@ namespace MyLittleRangeBook.RangeEventAssets
             Result<string> result;
             try
             {
-                _pathToRangeEventAsset = assetNamer(_rangeEventId, _pathToAsset);
+                PathToRangeEventAsset = assetNamer(_rangeEventId, _pathToAsset);
 
-                File.Copy(_pathToAsset, _pathToRangeEventAsset, true);
+                File.Copy(_pathToAsset, PathToRangeEventAsset, true);
 
-                result = Result.Ok(_pathToRangeEventAsset);
+                result = Result.Ok(PathToRangeEventAsset);
             }
             catch (Exception e)
             {

@@ -4,9 +4,8 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.RangeEvent;
-using MyLittleRangeBook.Services;
 using static MyLittleRangeBook.ReturnCodes;
-using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
+using static MyLittleRangeBook.Persistence.Sqlite.SqliteHelperExtensions;
 
 namespace MyLittleRangeBook.RangeEvents
 {
@@ -15,7 +14,7 @@ namespace MyLittleRangeBook.RangeEvents
     /// </summary>
     [RegisterCommands("rangeevent")]
     [UsedImplicitly]
-    public class SimpleRangeEventCommandAddToSqlite: MlrbCommandBase
+    public class SimpleRangeEventCommandAddToSqlite : MlrbCommandBase
     {
         readonly ISimpleRangeEventHelper _rangeEventHelper;
         readonly ISimpleRangeEventRepository _repo;
@@ -25,7 +24,7 @@ namespace MyLittleRangeBook.RangeEvents
             ICliDisplay cliDisplay,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventHelper rangeEventHelper,
-            ISimpleRangeEventPrinter simpleRangeEventPrinter): base(logger, cliDisplay)
+            ISimpleRangeEventPrinter simpleRangeEventPrinter) : base(logger, cliDisplay)
         {
             _repo = repo;
             _rangeEventHelper = rangeEventHelper;
@@ -83,7 +82,8 @@ namespace MyLittleRangeBook.RangeEvents
 
             try
             {
-                SimpleRangeEvent sre = await AskUserForMissingDataOnSimpleRangeEventAsync(firearm, rounds, range, ammo, notes, dateOnly,
+                SimpleRangeEvent sre = await AskUserForMissingDataOnSimpleRangeEventAsync(firearm, rounds, range, ammo,
+                        notes, dateOnly,
                         firearms, ranges, cancellationToken)
                     .ConfigureAwait(false);
 
@@ -99,9 +99,9 @@ namespace MyLittleRangeBook.RangeEvents
 
                 if (result.IsSuccess)
                 {
-
                     _simpleRangeEventPrinter.Print(CliDisplay.Console, sre, quiet);
                     CliDisplay.PrintSuccess("Range trip added successfully.");
+
                     return SUCCESS;
                 }
 

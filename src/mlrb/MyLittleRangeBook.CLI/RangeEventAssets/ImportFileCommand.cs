@@ -16,7 +16,8 @@ namespace MyLittleRangeBook.RangeEventAssets
     {
         readonly string _assetsDirectory;
 
-        public ImportFileCommand(ILogger logger, ICliDisplay cliDisplay, IConfiguration configuration) : base(logger, cliDisplay)
+        public ImportFileCommand(ILogger logger, ICliDisplay cliDisplay, IConfiguration configuration) : base(logger,
+            cliDisplay)
         {
             _assetsDirectory = configuration.GetRangeAssetDirectory();
         }
@@ -39,6 +40,7 @@ namespace MyLittleRangeBook.RangeEventAssets
                 Logger.Warning("No RangeEvent specified.");
                 CliDisplay.PrintWarning($"The file {file} is not assigned to any RangeEvent.");
             }
+
             if (!File.Exists(file))
             {
                 CliDisplay.PrintFailure("File does not exit.");
@@ -51,12 +53,12 @@ namespace MyLittleRangeBook.RangeEventAssets
                 string rangeEventAssetDir = Path.Combine(_assetsDirectory, rangeEventId);
                 Directory.CreateDirectory(rangeEventAssetDir);
                 string targetFileName = Path.GetFileName(file);
-                string x= Path.Combine(rangeEventAssetDir, targetFileName);
+                string x = Path.Combine(rangeEventAssetDir, targetFileName);
 
                 return x;
             }
 
-            RangeEventAssetFile rfe = new RangeEventAssetFile(rangeEventId, file);
+            var rfe = new RangeEventAssetFile(rangeEventId, file);
             Result<string> copiedFile = rfe.CopyToRangeEvent(AssetFileDestination);
 
             if (copiedFile.IsFailed)

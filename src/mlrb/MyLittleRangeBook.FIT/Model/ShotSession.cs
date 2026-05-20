@@ -30,8 +30,8 @@ namespace MyLittleRangeBook.FIT.Model
             Product = msg.GetProduct();
             Id = Ulid.New(TimeCreated);
             SoftwareVersion = msg.GetSoftwareVersion().ToString() ?? "Unknown";
-
         }
+
         public ShotSession(FileIdMesg fileIdMesg)
         {
             File? fitType = fileIdMesg.GetType();
@@ -39,6 +39,7 @@ namespace MyLittleRangeBook.FIT.Model
             {
                 throw new Exception($"Expected FIT File type {EXPECTED_FILE_TYPE}, received {fitType}.");
             }
+
             FileName = string.Empty;
             ProjectileType = "Rifle";
             Notes = string.Empty;

@@ -1,8 +1,8 @@
 ﻿using System.Data;
 using FluentResults;
-using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.RangeEventAssets;
+using MyLittleRangeBook.RangeEvents;
 using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook.Sqlite
@@ -27,7 +27,7 @@ namespace MyLittleRangeBook.Sqlite
 
 
             var simpleRangeLogService = new SqliteSimpleRangeEventService();
-            var repo = new SqliteSimpleRangeEventRepository(SqliteHelper, simpleRangeLogService, fitFilesDbService, shotViewFilesDbService, assetImporter);
+            var repo = new SqliteSimpleRangeEventRepository(SqliteHelper, simpleRangeLogService);
 
             var simpleRangeEvent = SimpleRangeEvent.New("TestFirearm", 50, "TestRange", "TestAmmo", "TestNotes");
             byte[] fitFileContents = [1, 2, 3, 4, 5];
@@ -53,16 +53,16 @@ namespace MyLittleRangeBook.Sqlite
                     Arg.Any<string?>())
                 .Returns(Task.FromResult(Result.Ok().ToResult(new EntityId("x", 1)))
                 );
-            shotViewFilesDbService.AssociateWithRangeEvent(Arg.Any<IDbConnection>(), Arg.Any<string>(), Arg.Any<string>())
+            shotViewFilesDbService
+                .AssociateWithRangeEvent(Arg.Any<IDbConnection>(), Arg.Any<string>(), Arg.Any<string>())
                 .Returns(Task.FromResult(Result.Ok((long?)1)));
 
 
             var simpleRangeLogService = new SqliteSimpleRangeEventService();
-            var repo = new SqliteSimpleRangeEventRepository(SqliteHelper, simpleRangeLogService, fitFilesDbService,
-                shotViewFilesDbService, assetImporter);
+            var repo = new SqliteSimpleRangeEventRepository(SqliteHelper, simpleRangeLogService);
 
             var simpleRangeEvent = SimpleRangeEvent.New("TestFirearm", 50, "TestRange", "TestAmmo", "TestNotes");
-            string csvContents = "Shot,Velocity\n1,1000";
+            var csvContents = "Shot,Velocity\n1,1000";
 
             Result<long?> result = await repo.UpsertAsync(simpleRangeEvent, [], csvContents, "test.csv");
 

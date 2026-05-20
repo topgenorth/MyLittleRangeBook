@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using Dapper;
 
-namespace MyLittleRangeBook.Database.Sqlite
+namespace MyLittleRangeBook.Persistence.Sqlite
 {
     /// <summary>
     ///     All dates are stored as a DateTimeOffset in SQLite, formatted to ISO 8601.  We need a special handler to convert

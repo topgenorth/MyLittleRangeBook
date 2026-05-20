@@ -12,7 +12,7 @@ namespace MyLittleRangeBook.Console
         void Print(IAnsiConsole console);
 
         /// <summary>
-        /// Returns the renderable object that represents the console output.
+        ///     Returns the renderable object that represents the console output.
         /// </summary>
         /// <returns></returns>
         IRenderable BuildRenderable();

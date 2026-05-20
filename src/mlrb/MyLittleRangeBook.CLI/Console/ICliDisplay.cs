@@ -12,13 +12,13 @@
         void PrintCommandHeader(string? action = null);
 
         /// <summary>
-        /// Prints a one line success message to the console.
+        ///     Prints a one line success message to the console.
         /// </summary>
         /// <param name="message"></param>
         void PrintSuccess(string message);
 
         /// <summary>
-        /// Prints a one line failure message to the console.
+        ///     Prints a one line failure message to the console.
         /// </summary>
         /// <param name="message"></param>
         void PrintFailure(string message);

@@ -13,7 +13,7 @@
         }
 
         /// <summary>
-        /// Print the app header to the console, and log the action that is being performed. Resets the action when done.
+        ///     Print the app header to the console, and log the action that is being performed. Resets the action when done.
         /// </summary>
         /// <param name="console"></param>
         public void Print(IAnsiConsole console)

@@ -28,10 +28,8 @@ namespace MyLittleRangeBook.FIT.Model
             {
                 throw new ArgumentException("Duplicate shot session cannot be added", nameof(item));
             }
-            else
-            {
-                _sessions.Add(item);
-            }
+
+            _sessions.Add(item);
         }
 
         public void Clear()
@@ -56,7 +54,5 @@ namespace MyLittleRangeBook.FIT.Model
 
         public int Count => _sessions.Count;
         public bool IsReadOnly => false;
-
-
     }
 }

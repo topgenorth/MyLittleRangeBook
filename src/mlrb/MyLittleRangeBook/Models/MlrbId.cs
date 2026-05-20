@@ -47,7 +47,7 @@ namespace MyLittleRangeBook.Models
 
 
         /// <summary>
-        /// THe FIT file name should be the local date & time of when it was created. DateTimeKind will be local.
+        ///     THe FIT file name should be the local date & time of when it was created. DateTimeKind will be local.
         /// </summary>
         /// <param name="fitFileName"></param>
         /// <returns></returns>
@@ -55,9 +55,9 @@ namespace MyLittleRangeBook.Models
         {
             string withoutExtension = Path.GetFileNameWithoutExtension(fitFileName);
 
-            const string  FORMAT = "MM-dd-yyyy_HH-mm-ss";
+            const string FORMAT = "MM-dd-yyyy_HH-mm-ss";
 
-            DateTime timestamp = DateTime.ParseExact(
+            var timestamp = DateTime.ParseExact(
                 withoutExtension,
                 FORMAT,
                 CultureInfo.InvariantCulture,
@@ -65,8 +65,8 @@ namespace MyLittleRangeBook.Models
             );
 
             return From(timestamp);
-
         }
+
         public static MlrbId From(EntityId eid)
         {
             return new MlrbId(FromString(eid.Id));
@@ -101,11 +101,14 @@ namespace MyLittleRangeBook.Models
         }
 
         /// <summary>
-        /// Creates an instance of <see cref="MlrbId"/> from the specified <see cref="DateTime"/>.
+        ///     Creates an instance of <see cref="MlrbId" /> from the specified <see cref="DateTime" />.
         /// </summary>
-        /// <param name="dateTime">The <see cref="DateTime"/> value to create the MlrbId from. The kind of DateTime (Utc, Local, or Unspecified) determines how the value is processed.</param>
-        /// <returns>A new instance of <see cref="MlrbId"/> corresponding to the provided <see cref="DateTime"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when the <see cref="DateTime.Kind"/> is an unexpected value.</exception>
+        /// <param name="dateTime">
+        ///     The <see cref="DateTime" /> value to create the MlrbId from. The kind of DateTime (Utc, Local,
+        ///     or Unspecified) determines how the value is processed.
+        /// </param>
+        /// <returns>A new instance of <see cref="MlrbId" /> corresponding to the provided <see cref="DateTime" />.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when the <see cref="DateTime.Kind" /> is an unexpected value.</exception>
         public static MlrbId From(DateTime dateTime)
         {
             // [TO20260516] Perhaps overly explicity, but assume any .Unspecified is local time.

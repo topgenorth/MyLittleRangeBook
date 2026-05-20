@@ -8,7 +8,15 @@ namespace MyLittleRangeBook.Console
         protected string? Action;
         protected string? AppVersion;
 
-        public virtual  void Print(IAnsiConsole console)
+
+        public ICommandHeaderPrinter SetAction(string? action)
+        {
+            Action = string.IsNullOrWhiteSpace(action) ? null : action.Trim();
+
+            return this;
+        }
+
+        public virtual void Print(IAnsiConsole console)
         {
             console.Write(BuildRenderable());
         }
@@ -32,19 +40,14 @@ namespace MyLittleRangeBook.Console
                 .Border(BoxBorder.None);
 
             Action = null;
+
             return panel;
-        }
-
-
-        public ICommandHeaderPrinter SetAction(string? action)
-        {
-            Action = string.IsNullOrWhiteSpace(action) ? null : action.Trim();
-            return this;
         }
 
         public SimpleAppHeader SetAppVersion(string appVersion)
         {
             AppVersion = appVersion.Trim();
+
             return this;
         }
     }

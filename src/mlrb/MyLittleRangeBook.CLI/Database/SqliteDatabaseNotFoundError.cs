@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.Sqlite
+﻿namespace MyLittleRangeBook.Database
 {
     public class SqliteDatabaseNotFoundError : MlrbBaseError
     {

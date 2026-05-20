@@ -5,11 +5,14 @@ using DbUp;
 using DbUp.Builder;
 using DbUp.Engine;
 using FluentResults;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Config;
+using MyLittleRangeBook.Database;
 using MyLittleRangeBook.Models;
+using Serilog;
 
-namespace MyLittleRangeBook.Database.Sqlite
+namespace MyLittleRangeBook.Persistence.Sqlite
 {
     /// <summary>
     ///     An enumeration that represents the types of files that can be saved in SQlite.
@@ -68,61 +71,6 @@ namespace MyLittleRangeBook.Database.Sqlite
             return await GetDatabaseConnectionAsync(cancellationToken);
         }
 
-        public async Task<Result<(string id, long rowId)>> WriteFileToTableAsync(SqliteConnection conn,
-            SqliteFileTable table,
-            string fileName,
-            byte[] fileContents,
-            CancellationToken cancellationToken)
-        {
-            string sql = table switch
-            {
-                SqliteFileTable.FitFiles => """
-                                            INSERT INTO FitFiles (Id, FileName, Contents)
-                                            VALUES (@Id, @FileName, @FileContents)
-                                            RETURNING rowid;
-                                            """,
-                _ => throw new ArgumentOutOfRangeException(nameof(table), $"Unsupported table: {table}")
-            };
-
-            switch (fileContents.Length)
-            {
-                case 0:
-                    return Result.Ok((string.Empty, 0L))
-                        .WithReason(
-                            new Success("File contents are empty - nothing to write.").WithMetadata("Table", table));
-                case > FILE_LENGTH_THRESHOLD:
-                    _logger.Warning(
-                        "File contents are larger than 100KB. This may cause performance issues when writing to the database. Table: {Table}, Size: {Size} bytes",
-                        table, fileContents.Length);
-
-                    break;
-            }
-
-            var id = new MlrbId().ToString();
-            try
-            {
-                // TODO [TO20260503] It's possible to duplicate file contents; maybe file name should be unique in the database?
-                var cmd = new SqliteCommand(sql, conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@Id", id);
-                cmd.Parameters.AddWithValue("@FileContents", fileContents);
-                cmd.Parameters.AddWithValue("@FileName", fileName);
-
-                object? l = await cmd.ExecuteScalarAsync(cancellationToken);
-                long rowId = l is null ? -1 : Convert.ToInt64(l);
-
-                return Result.Ok((id, rowId));
-            }
-            catch (Exception e)
-            {
-                Error? err = new Error($"Failed to write file to table {table}.").CausedBy(e);
-                err.Metadata.Add("Table", table);
-                err.Metadata.Add("FileName", fileName);
-
-                return Result.Fail(err);
-            }
-        }
-
 
         public string DatabaseFile { get; }
 
@@ -137,7 +85,8 @@ namespace MyLittleRangeBook.Database.Sqlite
         /// <returns>The opened connection.</returns>
         public async Task<SqliteConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
         {
-            SqliteConnection connection = new SqliteConnection(_connectionString).AddFunctions();
+            var connection = new SqliteConnection(_connectionString);
+            connection.AddFunctions();
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
             await connection.ExecuteAsync("PRAGMA foreign_keys = ON;").ConfigureAwait(false);
 
@@ -227,6 +176,61 @@ namespace MyLittleRangeBook.Database.Sqlite
                 err.Metadata.Add("Connection", _connectionString);
 
                 return Result.Fail<bool>(err).WithValue(false);
+            }
+        }
+
+        public async Task<Result<(string id, long rowId)>> WriteFileToTableAsync(SqliteConnection conn,
+            SqliteFileTable table,
+            string fileName,
+            byte[] fileContents,
+            CancellationToken cancellationToken)
+        {
+            string sql = table switch
+            {
+                SqliteFileTable.FitFiles => """
+                                            INSERT INTO FitFiles (Id, FileName, Contents)
+                                            VALUES (@Id, @FileName, @FileContents)
+                                            RETURNING rowid;
+                                            """,
+                _ => throw new ArgumentOutOfRangeException(nameof(table), $"Unsupported table: {table}")
+            };
+
+            switch (fileContents.Length)
+            {
+                case 0:
+                    return Result.Ok((string.Empty, 0L))
+                        .WithReason(
+                            new Success("File contents are empty - nothing to write.").WithMetadata("Table", table));
+                case > FILE_LENGTH_THRESHOLD:
+                    _logger.Warning(
+                        "File contents are larger than 100KB. This may cause performance issues when writing to the database. Table: {Table}, Size: {Size} bytes",
+                        table, fileContents.Length);
+
+                    break;
+            }
+
+            var id = new MlrbId().ToString();
+            try
+            {
+                // TODO [TO20260503] It's possible to duplicate file contents; maybe file name should be unique in the database?
+                var cmd = new SqliteCommand(sql, conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@Id", id);
+                cmd.Parameters.AddWithValue("@FileContents", fileContents);
+                cmd.Parameters.AddWithValue("@FileName", fileName);
+
+                object? l = await cmd.ExecuteScalarAsync(cancellationToken);
+                long rowId = l is null ? -1 : Convert.ToInt64(l);
+
+                return Result.Ok((id, rowId));
+            }
+            catch (Exception e)
+            {
+                Error? err = new Error($"Failed to write file to table {table}.").CausedBy(e);
+                err.Metadata.Add("Table", table);
+                err.Metadata.Add("FileName", fileName);
+
+                return Result.Fail(err);
             }
         }
 

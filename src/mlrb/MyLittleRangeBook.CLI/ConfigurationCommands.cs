@@ -9,11 +9,12 @@ using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions
 namespace MyLittleRangeBook
 {
     [RegisterCommands("config")]
-    public class ConfigurationCommands: MlrbCommandBase
+    public class ConfigurationCommands : MlrbCommandBase
     {
         readonly IConfiguration _configuration;
 
-        public ConfigurationCommands(ILogger logger, ICliDisplay cliDisplay, IConfiguration configuration) : base(logger, cliDisplay)
+        public ConfigurationCommands(ILogger logger, ICliDisplay cliDisplay, IConfiguration configuration) : base(
+            logger, cliDisplay)
         {
             _configuration = configuration;
         }
@@ -39,6 +40,7 @@ namespace MyLittleRangeBook
             {
                 Logger.Error(ex, "Failed to read appsettings.json file.");
                 CliDisplay.PrintFailure("Could not read the settings file.");
+
                 return ReturnCodes.FAILURE;
             }
 
@@ -47,6 +49,7 @@ namespace MyLittleRangeBook
             {
                 Logger.Error("Failed to parse appsettings.json file.");
                 CliDisplay.PrintFailure("Could not parse the settings file.");
+
                 return ReturnCodes.FAILURE;
             }
 
@@ -65,6 +68,7 @@ namespace MyLittleRangeBook
             {
                 Logger.Error(ex, "Failed to write appsettings.json file.");
                 CliDisplay.PrintFailure("Failed to write to the settings file.");
+
                 return ReturnCodes.FAILURE;
             }
 

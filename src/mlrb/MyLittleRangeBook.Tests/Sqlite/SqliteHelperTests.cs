@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using FluentResults;
-using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Sqlite
 {
@@ -63,7 +63,8 @@ namespace MyLittleRangeBook.Sqlite
         }
 
         [Theory]
-        [InlineData("{}", "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.Development.db;Mode=ReadWriteCreate",
+        [InlineData("{}",
+            "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.Development.db;Mode=ReadWriteCreate",
             true)]
         [InlineData(AppSettingsWithConnectionString, "Data Source=mlrb.db", false)]
         [InlineData(AppSettingsWithOutConnectionString,

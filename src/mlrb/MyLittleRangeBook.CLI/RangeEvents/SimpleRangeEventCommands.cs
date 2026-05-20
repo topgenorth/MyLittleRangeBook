@@ -4,9 +4,8 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.RangeEvent;
-using MyLittleRangeBook.Services;
 using static MyLittleRangeBook.ReturnCodes;
-using static MyLittleRangeBook.Database.Sqlite.SqliteHelperExtensions;
+using static MyLittleRangeBook.Persistence.Sqlite.SqliteHelperExtensions;
 
 
 namespace MyLittleRangeBook.RangeEvents

@@ -162,11 +162,12 @@ namespace MyLittleRangeBook.Config
         public static string GetRangeAssetDirectory(this IConfiguration config)
         {
             string connectionString = config.GetSqliteConnectionString();
-            SqliteConnectionStringBuilder sb = new SqliteConnectionStringBuilder(connectionString);
+            var sb = new SqliteConnectionStringBuilder(connectionString);
             string db = sb.DataSource;
             string? dir = Path.GetDirectoryName(db);
-            string rangeAssetsDir =  Path.Combine(dir!, RangeAssetsFolderName);
+            string rangeAssetsDir = Path.Combine(dir!, RangeAssetsFolderName);
             Directory.CreateDirectory(rangeAssetsDir);
+
             return rangeAssetsDir;
         }
 

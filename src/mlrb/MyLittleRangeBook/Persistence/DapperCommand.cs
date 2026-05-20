@@ -1,11 +1,12 @@
 ﻿using System.Data;
 using Dapper;
 
-namespace MyLittleRangeBook.Sqlite
+namespace MyLittleRangeBook.Persistence
 {
     /// <summary>
-    /// Encapsulates a SQL command to be executed using Dapper, including the command text, parameters, and execution settings.
-    /// Used for simplifying the creation and execution of SQL commands.
+    ///     Encapsulates a SQL command to be executed using Dapper, including the command text, parameters, and execution
+    ///     settings.
+    ///     Used for simplifying the creation and execution of SQL commands.
     /// </summary>
     public class DapperCommand
     {

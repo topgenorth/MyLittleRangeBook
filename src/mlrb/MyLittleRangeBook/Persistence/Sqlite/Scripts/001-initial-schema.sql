@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS SimpleRangeEvents
     RoundsFired     INTEGER DEFAULT 0                 NOT NULL, -- How many rounds were fired.
     AmmoDescription TEXT,
     Notes           TEXT,
-    Created         TEXT    default CURRENT_TIMESTAMP not null, -- The date the record was created.
-    Modified        TEXT    default CURRENT_TIMESTAMP not null, -- The date the file was last modified.
+    Created         TEXT    DEFAULT CURRENT_TIMESTAMP NOT NULL, -- The date the record was created.
+    Modified        TEXT    DEFAULT CURRENT_TIMESTAMP NOT NULL, -- The date the file was last modified.
     CONSTRAINT UQ_SimpleRangeEvents_Id UNIQUE (ID)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS IX_SimpleRangeEvents_Id
@@ -24,12 +24,12 @@ CREATE INDEX IF NOT EXISTS IX_SimpleRangeEvents_Range_Date
 CREATE TABLE IF NOT EXISTS FitFiles
 (
     RowId    INTEGER PRIMARY KEY AUTOINCREMENT,
-    Id       TEXT                                    not null, --NanoID unique key.
-    FileName TEXT                                    not null,
-    MimeType TEXT default 'application/octet-stream' not null,
-    Contents BLOB                                    not null, -- The file contents.
-    Created  TEXT default CURRENT_TIMESTAMP          not null, -- The date the record was created.
-    Modified TEXT default CURRENT_TIMESTAMP          not null, -- The date the file was last modified.
+    Id       TEXT                                    NOT NULL, --NanoID unique key.
+    FileName TEXT                                    NOT NULL,
+    MimeType TEXT DEFAULT 'application/octet-stream' NOT NULL,
+    Contents BLOB                                    NOT NULL, -- The file contents.
+    Created  TEXT DEFAULT CURRENT_TIMESTAMP          NOT NULL, -- The date the record was created.
+    Modified TEXT DEFAULT CURRENT_TIMESTAMP          NOT NULL, -- The date the file was last modified.
     CONSTRAINT UQ_FileFiles UNIQUE (ID)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS IX_FitFiles_Id
@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS Firearms
     Id       TEXT                           NOT NULL, --NanoID unique key.
     Name     TEXT                           NOT NULL, -- The name of the firearm.
     Notes    TEXT,
-    Created  TEXT default CURRENT_TIMESTAMP not null, -- The date the record was created.
-    Modified TEXT default CURRENT_TIMESTAMP not null, -- The date the file was last modified.
+    Created  TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL, -- The date the record was created.
+    Modified TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL, -- The date the file was last modified.
     CONSTRAINT UQ_Firearms_Id UNIQUE (ID)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS IX_Firearms_Id

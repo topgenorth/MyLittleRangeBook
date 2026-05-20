@@ -3,7 +3,7 @@
 namespace MyLittleRangeBook
 {
     /// <summary>
-    /// Base class for classes that will handle commands for the Console Application Framework.
+    ///     Base class for classes that will handle commands for the Console Application Framework.
     /// </summary>
     public abstract class MlrbCommandBase
     {

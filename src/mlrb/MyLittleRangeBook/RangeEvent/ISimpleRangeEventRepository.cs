@@ -4,14 +4,14 @@ using MyLittleRangeBook.Models;
 namespace MyLittleRangeBook.RangeEvent
 {
     /// <summary>
-    /// Provides an interface for managing and performing operations on simple range events
-    /// in a repository. This includes CRUD operations such as creating, updating, retrieving,
-    /// and deleting simple range events.
+    ///     Provides an interface for managing and performing operations on simple range events
+    ///     in a repository. This includes CRUD operations such as creating, updating, retrieving,
+    ///     and deleting simple range events.
     /// </summary>
     public interface ISimpleRangeEventRepository
     {
         /// <summary>
-        /// Deletes the specified simple range event from the repository.
+        ///     Deletes the specified simple range event from the repository.
         /// </summary>
         /// <param name="simpleRangeEvent">The simple range event to be deleted.</param>
         /// <param name="cancellationToken">A token to cancel the operation if required.</param>
@@ -20,7 +20,7 @@ namespace MyLittleRangeBook.RangeEvent
             CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Adds or updates a simple range event. If necessary, a new Firearm record will also be created.
+        ///     Adds or updates a simple range event. If necessary, a new Firearm record will also be created.
         /// </summary>
         /// <param name="simpleRangeEvent">The simple range event to add or update.</param>
         /// <param name="cancellationToken">A token to cancel the operation if required.</param>
@@ -29,7 +29,7 @@ namespace MyLittleRangeBook.RangeEvent
             CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Retrieves a collection of simple range events.
+        ///     Retrieves a collection of simple range events.
         /// </summary>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         /// <returns>A result containing an enumerable of simple range events, or an error if the operation fails.</returns>
@@ -37,7 +37,7 @@ namespace MyLittleRangeBook.RangeEvent
             default);
 
         /// <summary>
-        /// Retrieves a specific SimpleRangeEvent by its unique identifier.
+        ///     Retrieves a specific SimpleRangeEvent by its unique identifier.
         /// </summary>
         /// <param name="id">The unique identifier of the SimpleRangeEvent to retrieve.</param>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>

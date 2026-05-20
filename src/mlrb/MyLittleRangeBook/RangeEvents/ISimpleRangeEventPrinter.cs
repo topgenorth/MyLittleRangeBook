@@ -1,4 +1,7 @@
-﻿namespace MyLittleRangeBook.RangeEvents
+﻿using MyLittleRangeBook.Models;
+using Spectre.Console;
+
+namespace MyLittleRangeBook.RangeEvents
 {
     public interface ISimpleRangeEventPrinter
     {
