@@ -29,14 +29,14 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// <returns></returns>
         [Command("add")]
         [UsedImplicitly]
+        // ReSharper disable once AsyncMethodWithoutAwait
         public async Task<int> CopyFileToAssetDirectory(string file, string? rangeEventId = null)
         {
-            CliDisplay.PrintCommandHeader(
-                $"Copying file '{file}' to asset directory for range event '{rangeEventId}'");
+            CliDisplay.PrintCommandHeader("Add asset");
             if (string.IsNullOrWhiteSpace(rangeEventId))
             {
                 rangeEventId = MlrbId.Empty.ToString();
-                Logger.Warning("No RangeEvent specified. Assigning file {assetFile} to {rangeEventId}.", file, rangeEventId);
+                Logger.Warning("No RangeEvent specified.");
                 CliDisplay.PrintWarning($"The file {file} is not assigned to any RangeEvent.");
             }
             if (!File.Exists(file))
@@ -51,7 +51,9 @@ namespace MyLittleRangeBook.RangeEventAssets
                 string rangeEventAssetDir = Path.Combine(_assetsDirectory, rangeEventId);
                 Directory.CreateDirectory(rangeEventAssetDir);
                 string targetFileName = Path.GetFileName(file);
-                return Path.Combine(rangeEventAssetDir, targetFileName);
+                var x= Path.Combine(rangeEventAssetDir, targetFileName);
+
+                return x;
             }
 
             RangeEventAssetFile rfe = new RangeEventAssetFile(rangeEventId, file);
@@ -67,7 +69,6 @@ namespace MyLittleRangeBook.RangeEventAssets
 
             Logger.Verbose($"Copied file '{file}' to range event '{copiedFile.Value}'");
             CliDisplay.PrintSuccess("Copied file to range event.");
-
 
             return ReturnCodes.SUCCESS;
         }
