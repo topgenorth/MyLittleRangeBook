@@ -7,8 +7,9 @@
 
 using System.Text;
 using Dynastream.Fit;
+using FluentResults;
 using DateTime = Dynastream.Fit.DateTime;
-using ByteAether.Ulid;
+using File = System.IO.File;
 
 namespace MyLittleRangeBook.FIT
 {
@@ -54,7 +55,6 @@ namespace MyLittleRangeBook.FIT
 
             return new DateTimeOffset(fitDateTime.GetDateTime().ToUniversalTime(), TimeSpan.Zero);
         }
-
 
 
         public static TimeSpan? TimezoneOffset(this ActivityMesg activity)
@@ -168,6 +168,29 @@ namespace MyLittleRangeBook.FIT
         public static double ToFps(this double metresPerSecond)
         {
             return metresPerSecond * MetresToFeet;
+        }
+
+        public static async Task<Result<ReadOnlyMemory<byte>>> LoadFileBytesAsync(this string fileName,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return Result.Fail("Filename cannot be null or whitespace.");
+            }
+
+            try
+            {
+                byte[] x = await File.ReadAllBytesAsync(fileName, ct).ConfigureAwait(false);
+                ReadOnlyMemory<byte> y = x;
+
+                return Result.Ok(y);
+            }
+            catch (Exception ex)
+            {
+                Error? err = new Error(ex.Message).CausedBy(ex).WithMetadata("filename", fileName);
+
+                return Result.Fail(err);
+            }
         }
     }
 }

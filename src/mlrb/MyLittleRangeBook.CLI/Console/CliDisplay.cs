@@ -1,7 +1,6 @@
 ﻿using MyLittleRangeBook.IO;
-using Spectre.Console;
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.Console
 {
     public class CliDisplay : ICliDisplay
     {
@@ -23,7 +22,6 @@ namespace MyLittleRangeBook.CLI.Console
         public void PrintCommandHeader(string? action)
         {
             _commandHeaderPrinter.SetAction(action).Print(Console);
-
         }
 
         public void PrintSuccess(string message)
@@ -34,6 +32,11 @@ namespace MyLittleRangeBook.CLI.Console
         public void PrintFailure(string message)
         {
             Console.PrintProblem(message);
+        }
+
+        public void PrintWarning(string message)
+        {
+            Console.PrintWarning(message);
         }
     }
 }

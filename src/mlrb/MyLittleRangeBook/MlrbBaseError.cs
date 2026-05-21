@@ -1,6 +1,4 @@
-﻿using FluentResults;
-
-namespace MyLittleRangeBook
+﻿namespace MyLittleRangeBook
 {
     /// <summary>
     ///     Base class for FluentResult errors that will return a specific return code for errors within the app.

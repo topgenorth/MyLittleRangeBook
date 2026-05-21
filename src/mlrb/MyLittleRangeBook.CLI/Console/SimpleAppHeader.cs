@@ -1,15 +1,22 @@
 ﻿using MyLittleRangeBook.IO;
-using Spectre.Console;
 using Spectre.Console.Rendering;
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.Console
 {
     public class SimpleAppHeader : IConsolePrinter, ICommandHeaderPrinter
     {
         protected string? Action;
         protected string? AppVersion;
 
-        public virtual  void Print(IAnsiConsole console)
+
+        public ICommandHeaderPrinter SetAction(string? action)
+        {
+            Action = string.IsNullOrWhiteSpace(action) ? null : action.Trim();
+
+            return this;
+        }
+
+        public virtual void Print(IAnsiConsole console)
         {
             console.Write(BuildRenderable());
         }
@@ -33,19 +40,14 @@ namespace MyLittleRangeBook.CLI.Console
                 .Border(BoxBorder.None);
 
             Action = null;
+
             return panel;
-        }
-
-
-        public ICommandHeaderPrinter SetAction(string? action)
-        {
-            Action = string.IsNullOrWhiteSpace(action) ? null : action.Trim();
-            return this;
         }
 
         public SimpleAppHeader SetAppVersion(string appVersion)
         {
             AppVersion = appVersion.Trim();
+
             return this;
         }
     }

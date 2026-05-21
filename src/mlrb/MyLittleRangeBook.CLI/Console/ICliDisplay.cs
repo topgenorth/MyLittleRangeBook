@@ -1,6 +1,4 @@
-﻿using Spectre.Console;
-
-namespace MyLittleRangeBook.CLI.Console
+﻿namespace MyLittleRangeBook.Console
 {
     public interface ICliDisplay
     {
@@ -14,15 +12,17 @@ namespace MyLittleRangeBook.CLI.Console
         void PrintCommandHeader(string? action = null);
 
         /// <summary>
-        /// Prints a one line success message to the console.
+        ///     Prints a one line success message to the console.
         /// </summary>
         /// <param name="message"></param>
         void PrintSuccess(string message);
 
         /// <summary>
-        /// Prints a one line failure message to the console.
+        ///     Prints a one line failure message to the console.
         /// </summary>
         /// <param name="message"></param>
         void PrintFailure(string message);
+
+        void PrintWarning(string message);
     }
 }

@@ -1,5 +1,4 @@
 ﻿using FluentResults;
-using MyLittleRangeBook.IO;
 
 namespace MyLittleRangeBook.FIT
 {
@@ -19,17 +18,30 @@ namespace MyLittleRangeBook.FIT
         ///     Will load the contents of the file.
         /// </summary>
         /// <param name="fileName"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public static async Task<XeroFitFile> New(string fileName, CancellationToken cancellationToken = default)
+        public static async Task<Result<XeroFitFile>> New(string fileName, CancellationToken ct = default)
         {
-            Result<ReadOnlyMemory<byte>> result = await fileName.LoadFileBytesAsync(cancellationToken);
+            try
+            {
+                byte[] contents = await File.ReadAllBytesAsync(fileName, ct).ConfigureAwait(false);
+                var x = new XeroFitFile(fileName, contents);
 
-            return result.IsSuccess
-                ? new XeroFitFile(fileName, result.Value)
-                : throw new InvalidOperationException($"Failed to load file '{fileName}'");
+                return Result.Ok(x);
+            }
+            catch (OperationCanceledException oce)
+            {
+                Error? err = new Error($"Operation was cancelled by user; did not read  {fileName}").CausedBy(oce);
+
+                return Result.Fail(err);
+            }
+            catch (Exception e)
+            {
+                return Result.Fail(new Error($"Failed to read file {fileName}: {e.Message}").CausedBy(e));
+            }
         }
+
 
         public override string ToString()
         {

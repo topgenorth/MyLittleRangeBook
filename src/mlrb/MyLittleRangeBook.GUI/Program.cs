@@ -10,6 +10,7 @@ using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
+using MyLittleRangeBook.RangeEvent;
 using MyLittleRangeBook.Services;
 using SharedControls.Services;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
@@ -58,7 +59,7 @@ namespace MyLittleRangeBook.GUI
 
             services.AddMyLittleRangeBookSqlite(configuration);
             services.TryAddTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();
-            services.TryAddTransient<IFirearmsDbService, SqliteFirearmsDbService>();
+            // services.TryAddTransient<IFirearmsDbService, SqliteFirearmsDbService>();
             services.TryAddSingleton<ISettingsStorageService, AppSettingsFileStorageService>();
             // Register the DialogService factory for creating dialog services with specific participants
             services.AddSingleton<Func<IDialogParticipant, IDialogService>>(provider =>

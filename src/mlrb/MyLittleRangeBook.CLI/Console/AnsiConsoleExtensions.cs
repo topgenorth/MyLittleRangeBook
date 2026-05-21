@@ -1,8 +1,7 @@
 ﻿using System.Reflection;
 using MyLittleRangeBook.IO;
-using Spectre.Console;
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.Console
 {
     public static class AnsiConsoleExtensions
     {
@@ -21,7 +20,7 @@ namespace MyLittleRangeBook.CLI.Console
             return cliDisplay;
         }
 
-        public static IAnsiConsole WriteWarning(this IAnsiConsole console, string message)
+        public static IAnsiConsole PrintWarning(this IAnsiConsole console, string message)
         {
             console.MarkupLineInterpolated($"[bold yellow]{WarningGlyph} {message.Trim()}[/]");
 

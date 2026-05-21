@@ -1,6 +1,4 @@
-﻿using Spectre.Console;
-
-namespace MyLittleRangeBook.CLI.Console
+﻿namespace MyLittleRangeBook.Console
 {
     public interface ICommandHeaderPrinter
     {

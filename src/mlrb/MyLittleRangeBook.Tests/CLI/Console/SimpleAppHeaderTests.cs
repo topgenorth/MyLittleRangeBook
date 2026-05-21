@@ -1,6 +1,8 @@
-﻿using Spectre.Console;
+﻿using MyLittleRangeBook.Console;
+using Spectre.Console;
 using Spectre.Console.Rendering;
 using Spectre.Console.Testing;
+using AnsiConsoleExtensions = MyLittleRangeBook.Console.AnsiConsoleExtensions;
 
 namespace MyLittleRangeBook.CLI.Console
 {

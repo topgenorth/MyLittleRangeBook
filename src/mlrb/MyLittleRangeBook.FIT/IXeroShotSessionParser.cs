@@ -15,14 +15,14 @@ namespace MyLittleRangeBook.FIT
         Task<Result<ShotSession>> DecodeFITFileAsync(string filePath, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Decodes a FIT byte stream into a ShotSession.
+        ///     Decodes a FIT byte stream into a ShotSession.
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
         Result<ShotSession> Decode(Stream input);
 
         /// <summary>
-        /// Decodes a FIT byte stream into a ShotSession, with logging to a custom logger.
+        ///     Decodes a FIT byte stream into a ShotSession, with logging to a custom logger.
         /// </summary>
         /// <param name="input"></param>
         /// <param name="logger"></param>

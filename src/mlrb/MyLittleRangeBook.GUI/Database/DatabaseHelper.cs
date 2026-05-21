@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.RangeEvent;
 using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook.GUI.Database
@@ -29,7 +30,7 @@ namespace MyLittleRangeBook.GUI.Database
         /// <param name="repo"></param>
         /// <param name="targetStream">The target Stream to save to</param>
         /// <param name="cancellationToken"></param>
-        public static async Task ExportToJsonAsync(ISimpleRangeLogService repo,
+        public static async Task ExportToJsonAsync(ISimpleRangeEventService repo,
             Stream targetStream,
             CancellationToken cancellationToken = default)
         {

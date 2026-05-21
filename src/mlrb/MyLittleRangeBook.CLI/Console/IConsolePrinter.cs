@@ -1,7 +1,6 @@
-﻿using Spectre.Console;
-using Spectre.Console.Rendering;
+﻿using Spectre.Console.Rendering;
 
-namespace MyLittleRangeBook.CLI.Console
+namespace MyLittleRangeBook.Console
 {
     /// <summary>
     ///     An interface for classes that can print to the console. This is used to decouple the console printing logic from
@@ -13,7 +12,7 @@ namespace MyLittleRangeBook.CLI.Console
         void Print(IAnsiConsole console);
 
         /// <summary>
-        /// Returns the renderable object that represents the console output.
+        ///     Returns the renderable object that represents the console output.
         /// </summary>
         /// <returns></returns>
         IRenderable BuildRenderable();

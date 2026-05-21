@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -11,6 +12,14 @@ namespace MyLittleRangeBook.Config
     /// </summary>
     public static class ConfigurationExtensions
     {
+        /// <summary>
+        ///     The folder name used to store range event assets, with platform-specific naming
+        ///     conventions. On Windows, it is "RangeEventAssets", and on non-Windows platforms,
+        ///     it is "range-event-assets".
+        /// </summary>
+        public static readonly string RangeAssetsFolderName =
+            OperatingSystem.IsWindows() ? "RangeEventAssets" : "range-event-assets";
+
         /// <summary>
         ///     The name of the default database.
         /// </summary>
@@ -25,7 +34,7 @@ namespace MyLittleRangeBook.Config
         /// <summary>
         ///     Default name of this application's local application data folder.'
         /// </summary>
-        internal static readonly string DefaultLocalAppDataFolder =
+        internal static readonly string MlrbDataFolderName =
             OperatingSystem.IsWindows() ? "MyLittleRangeBook" : "mylittlerangebook";
 
         /// <summary>
@@ -35,7 +44,7 @@ namespace MyLittleRangeBook.Config
         /// </summary>
         public static DirectoryInfo DefaultUserSettingsDirectory => new(Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            DefaultLocalAppDataFolder));
+            MlrbDataFolderName));
 
         /// <summary>
         ///     Gets the default log directory path for this application. It is a "Logs" subdirectory within the user settings
@@ -44,37 +53,14 @@ namespace MyLittleRangeBook.Config
         public static DirectoryInfo DefaultLogDirectory => new(Path.Combine(DefaultUserSettingsDirectory.FullName,
             OperatingSystem.IsWindows() ? "Logs" : "logs"));
 
+        /// <summary>
+        ///     Full file path of the default log file, used for logging application events.
+        /// </summary>
         public static string DefaultLogFile => Path.Combine(DefaultLogDirectory.FullName, "mlrb-.log");
 
         public static FileInfo DefaultAppSettingsFile =>
             new FileInfo(Path.Combine(DefaultUserSettingsDirectory.FullName, AppSettingsFileName))
                 .InjectEnvironmentIntoFileName();
-
-        /// <summary>
-        ///     Determines the full file path for the SQLite database based on the current environment.
-        ///     Suffixes the database name with the environment name (e.g., Development) if not in Production.
-        /// </summary>
-        /// <param name="inferFromEnvironment">
-        ///     If set to true, then the database name will be suffixed with the current environment
-        ///     name (e.g., Development  ). Defaults to true.
-        /// </param>
-        /// <returns>The full path to the SQLite database file.</returns>
-        public static string DefaultSqliteDatabaseName(bool inferFromEnvironment = true)
-        {
-            // TODO [TO20260425] Move this to the SQLite Assembly
-            string fullPath = Path.Combine(DefaultUserSettingsDirectory.FullName, SqliteDatabaseName);
-            if (inferFromEnvironment)
-            {
-                fullPath = new FileInfo(fullPath).InjectEnvironmentIntoFileName().FullName;
-            }
-
-            if (!OperatingSystem.IsWindows())
-            {
-                fullPath = fullPath.ToLowerInvariant();
-            }
-
-            return fullPath;
-        }
 
         /// <summary>
         ///     Reads the default Serilog configuration section from an embedded JSON file. This provides a fallback configuration
@@ -158,6 +144,56 @@ namespace MyLittleRangeBook.Config
             services.TryAddSingleton(config);
 
             return config;
+        }
+
+        /// <summary>
+        ///     Retrieves the directory path where range asset files are stored. This directory is determined
+        ///     by appending the 'RangeAssetsFolderName' value to the directory path of the SQLite connection string
+        ///     specified in the configuration.
+        /// </summary>
+        /// <param name="config">The application configuration object that provides access to the SQLite connection string.</param>
+        /// <returns>
+        ///     The fully qualified directory path for the range asset files.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        ///     Thrown if the SQLite connection string ('SqliteConnection') is not configured
+        ///     in the application settings.
+        /// </exception>
+        public static string GetRangeAssetDirectory(this IConfiguration config)
+        {
+            string connectionString = config.GetSqliteConnectionString();
+            var sb = new SqliteConnectionStringBuilder(connectionString);
+            string db = sb.DataSource;
+            string? dir = Path.GetDirectoryName(db);
+            string rangeAssetsDir = Path.Combine(dir!, RangeAssetsFolderName);
+            Directory.CreateDirectory(rangeAssetsDir);
+
+            return rangeAssetsDir;
+        }
+
+        /// <summary>
+        ///     Retrieves the SQLite connection string from the given configuration. This connection string is used to
+        ///     establish a connection to the SQLite database configured in the application settings.
+        /// </summary>
+        /// <param name="config">
+        ///     The application configuration object from which to retrieve the SQLite connection string.
+        ///     Typically, this is an instance of <see cref="IConfiguration" />.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="string" /> representing the SQLite connection string configured under the key
+        ///     "SqliteConnection" in the application's configuration.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        ///     Thrown if the connection string "SqliteConnection" is not configured or is null/empty in the provided
+        ///     configuration.
+        /// </exception>
+        public static string GetSqliteConnectionString(this IConfiguration config)
+        {
+            string? connectionString = config.GetConnectionString("SqliteConnection");
+
+            return string.IsNullOrEmpty(connectionString)
+                ? throw new InvalidOperationException("SQLite connection string 'SqliteConnection' is not configured.")
+                : connectionString!;
         }
     }
 }

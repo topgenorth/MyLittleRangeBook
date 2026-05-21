@@ -4,8 +4,7 @@ using FluentResults;
 using MyLittleRangeBook.FIT.Model;
 using DynastreamFile = Dynastream.Fit.File;
 using File = System.IO.File;
-using MyLittleRangeBook;
-using MyLittleRangeBook.IO;
+
 
 namespace MyLittleRangeBook.FIT
 {

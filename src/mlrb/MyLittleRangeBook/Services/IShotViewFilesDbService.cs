@@ -1,5 +1,4 @@
 using System.Data;
-using FluentResults;
 using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Services

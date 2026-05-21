@@ -43,13 +43,14 @@
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="CsvHelper" Version="33.1.0"/>
-        <PackageReference Include="Dapper" Version="2.1.72"/>
+        <PackageReference Include="Dapper" Version="2.1.79" />
         <PackageReference Include="dbup-core" Version="6.1.1"/>
         <PackageReference Include="dbup-sqlite" Version="6.0.4"/>
+        <PackageReference Include="FluentResults" Version="4.0.0" />
         <PackageReference Include="JetBrains.Annotations" Version="2025.2.4"/>
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.5"/>
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5"/>
         <PackageReference Include="Serilog" Version="4.3.1"/>
@@ -66,7 +67,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\MyLittleRangeBook.Sqlite\MyLittleRangeBook.Sqlite.csproj" />
+        <ProjectReference Include="..\MyLittleRangeBook\MyLittleRangeBook.csproj" />
         <ProjectReference Include="..\SharedControls\SharedControls.csproj"/>
     </ItemGroup>
 

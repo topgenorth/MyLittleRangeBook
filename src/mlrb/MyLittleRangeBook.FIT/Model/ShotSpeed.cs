@@ -2,7 +2,7 @@ namespace MyLittleRangeBook.FIT.Model
 {
     public struct ShotSpeed : IEquatable<ShotSpeed>, IComparable<ShotSpeed>
     {
-        public static readonly ShotSpeed Zero = new(0, "m/s");
+        public static readonly ShotSpeed Zero = new(0);
 
         public ShotSpeed(double value, string units = "m/s")
         {
@@ -42,7 +42,7 @@ namespace MyLittleRangeBook.FIT.Model
                 throw new ArgumentException("Cannot add two ShotSpeeds of different units");
             }
 
-            var v = s1.Value - s2.Value;
+            int v = s1.Value - s2.Value;
 
             return new ShotSpeed(v, s1.Units);
         }
@@ -54,7 +54,7 @@ namespace MyLittleRangeBook.FIT.Model
                 throw new ArgumentException("Cannot add two ShotSpeeds of different units");
             }
 
-            var v = s1.Value + s2.Value;
+            int v = s1.Value + s2.Value;
 
             return new ShotSpeed(v, s1.Units);
         }
