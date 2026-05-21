@@ -25,7 +25,7 @@ jobs:
     env:
       VERSION_MAJOR: 0
       VERSION_MINOR: 9
-      VERSION_REVISION: 0
+      VERSION_REVISION: 1
 
     steps:
       - name: Checkout code
@@ -72,6 +72,11 @@ jobs:
           dotnet restore src/mlrb/MyLittleRangeBook.CLI/MyLittleRangeBook.CLI.csproj \
             -r "${{ matrix.rid }}"
 
+      - name: Run tests
+        shell: bash
+        run: |
+          dotnet test src/mlrb/MyLittleRangeBook.Tests/MyLittleRangeBook.Tests.csproj -c Release
+
       - name: Publish CLI
         shell: bash
         run: |
@@ -83,29 +88,23 @@ jobs:
             -p:IncludeNativeLibrariesForSelfExtract=true \
             -o "./out/${{ matrix.platform }}/MyLittleRangeBook-CLI"
 
-      - name: Restore GUI
-        shell: bash
-        run: |
-          dotnet restore src/mlrb/MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj \
-            -r "${{ matrix.rid }}"
-
-#      - name: Run tests
+# [TO20260521] For now, we ignore the GUI project; focus is solely on the CLI.
+#      - name: Restore GUI
 #        shell: bash
 #        run: |
-#          # [To20260419] Disable GUI tests for now.
-#          #  dotnet test src/mlrb/MyLittleRangeBook.GUI.Tests/MyLittleRangeBook.GUI.Tests.csproj -c Release
-#          dotnet test src/mlrb/MyLittleRangeBook.Tests/MyLittleRangeBook.Tests.csproj -c Release
-
-      - name: Publish GUI
-        shell: bash
-        run: |
-          dotnet publish src/mlrb/MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj \
-            -c Release \
-            -r "${{ matrix.rid }}" \
-            --self-contained true \
-            -p:PublishSingleFile=true \
-            -p:IncludeNativeLibrariesForSelfExtract=true \
-            -o "./out/${{ matrix.platform }}/MyLittleRangeBook-GUI"
+#          dotnet restore src/mlrb/MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj \
+#            -r "${{ matrix.rid }}"
+#
+#      - name: Publish GUI
+#        shell: bash
+#        run: |
+#          dotnet publish src/mlrb/MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj \
+#            -c Release \
+#            -r "${{ matrix.rid }}" \
+#            --self-contained true \
+#            -p:PublishSingleFile=true \
+#            -p:IncludeNativeLibrariesForSelfExtract=true \
+#            -o "./out/${{ matrix.platform }}/MyLittleRangeBook-GUI"
 
       - name: Show resolved versions
         shell: bash
