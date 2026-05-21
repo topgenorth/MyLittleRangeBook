@@ -4,12 +4,11 @@
 
 **Tech Stack**:
 - **.NET 10** with implicit usings and nullable reference types enabled
-- **Avalonia** – Cross-platform GUI (disabled tests in CI; see build-simplerangelog.yml)
 - **ConsoleAppFramework** – Attribute-routed CLI with command dispatch
 - **Spectre.Console** – Rich TUI formatting (CLI only)
-- **Dapper** (2.1.72) – Micro-ORM without LINQ; hand-written SQL required
+- **Dapper** – Micro-ORM without LINQ; hand-written SQL required
 - **DBUp** – Schema migration framework (scripts in MyLittleRangeBook.Sqlite/Scripts/)
-- **FluentResults** (4.0.0) – Railway-oriented error handling (all service methods return `Result<T>`)
+- **FluentResults**  – Railway-oriented error handling (all service methods return `Result<T>`)
 - **Serilog** – Structured logging to console/debug
 - **Garmin.FIT.SDK** – Xero FIT file parsing
 - **Microsoft.Data.Sqlite** + **SQLitePCLRaw** – SQLite driver

@@ -8,16 +8,14 @@ description: Use this skill when implementing features in MyLittleRangeBook unde
 Use this skill when working in the MyLittleRangeBook solution located at `src/mlrb`.
 
 ## Purpose
-
-This solution is a .NET 10 desktop application with two primary apps:
+This solution is a .NET 10 CLI Desktop application:
 
 - CLI app using ConsoleAppFramework and Spectre.Console.
-- GUI app using Avalonia.
 - Shared/domain libraries for application logic, FIT parsing, SQLite, PostgreSQL, IO, and tests.
 
 The main purpose of the application is to act as a marksman log book:
 - Capture data about trips to the range.
-- Import and process Garmin Xero FIT files.
+- Import and process for Garmin Xero FIT files.
 - Import and process CSV files from the Garmin ShotView app.
 - Import and process pictures of target.
 - Store and query firearms, range events, and FIT-derived data.
