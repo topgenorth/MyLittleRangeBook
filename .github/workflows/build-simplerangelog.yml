@@ -75,7 +75,7 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          dotnet test src/mlrb/MyLittleRangeBook.Tests/MyLittleRangeBook.Tests.csproj -c Release
+          dotnet test src/mlrb/MyLittleRangeBook.Tests/MyLittleRangeBook.Tests.csproj -c Release -e DOTNET_ENVIRONMENT=Development
 
       - name: Publish CLI
         shell: bash

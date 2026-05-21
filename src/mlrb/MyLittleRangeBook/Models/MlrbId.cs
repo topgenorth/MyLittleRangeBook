@@ -175,11 +175,10 @@ namespace MyLittleRangeBook.Models
         /// <returns></returns>
         public static MlrbId FromFitFile(string fitFileName)
         {
+            const string FIT_FILENAME_FORMAT = "MM-dd-yyyy_HH-mm-ss";
             ArgumentException.ThrowIfNullOrWhiteSpace(fitFileName);
 
             string withoutExtension = Path.GetFileNameWithoutExtension(fitFileName);
-
-            const string FIT_FILENAME_FORMAT = "MM-dd-yyyy_HH-mm-ss";
 
             var localTimestamp = DateTime.ParseExact(
                 withoutExtension,
@@ -188,7 +187,7 @@ namespace MyLittleRangeBook.Models
                 DateTimeStyles.AssumeLocal // ensures Kind == Local
             );
 
-            Ulid ulid = CreateFileUlid(withoutExtension, localTimestamp);
+            Ulid ulid = CreateFileUlid(fitFileName, localTimestamp);
 
             return new MlrbId(ulid);
         }

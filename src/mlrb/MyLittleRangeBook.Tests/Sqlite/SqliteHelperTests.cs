@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using FluentResults;
+using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Sqlite
@@ -63,16 +64,23 @@ namespace MyLittleRangeBook.Sqlite
         }
 
         [Theory]
-        [InlineData("{}",
-            "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.Development.db;Mode=ReadWriteCreate",
-            true)]
-        [InlineData(AppSettingsWithConnectionString, "Data Source=mlrb.db", false)]
-        [InlineData(AppSettingsWithOutConnectionString,
-            "Data Source=C:\\Users\\tom\\AppData\\Local\\MyLittleRangeBook\\mlrb.db;Mode=ReadWriteCreate", true)]
-        public void SqliteExtensions_EnsureSqliteConnectionString(string? json, string expected, bool wasUpdated)
+        [InlineData("{}", true)]
+        [InlineData(AppSettingsWithConnectionString, false)]
+        [InlineData(AppSettingsWithOutConnectionString, true)]
+        public void SqliteExtensions_EnsureSqliteConnectionString(string? json, bool wasUpdated)
         {
             var n = JsonNode.Parse(json ?? "{}");
             n.ShouldNotBeNull();
+
+            var expected = json switch
+            {
+                AppSettingsWithConnectionString => "Data Source=mlrb.db",
+                _ => new SqliteConnectionStringBuilder
+                {
+                    DataSource = SqliteHelperExtensions.DefaultSqliteDatabaseName(),
+                    Mode = SqliteOpenMode.ReadWriteCreate
+                }.ConnectionString
+            };
 
             n.EnsureDefaultSqliteConnectionString().ShouldBe(wasUpdated);
             n["ConnectionStrings"].ShouldNotBeNull();
