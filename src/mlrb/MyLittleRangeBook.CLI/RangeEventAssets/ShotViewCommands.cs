@@ -122,7 +122,7 @@ namespace MyLittleRangeBook.RangeEventAssets
 
             var shotViewFileId = new MlrbId().ToString();
             Result<EntityId> upsertResult = await _shotViewFilesDbService
-                .UpsertShotViewFileAsync(conn, shotViewFileId, fileResult.Value, Path.GetFileName(csvFile),
+                .UpsertShotViewFileAsync(conn, shotViewFileId, fileResult.Value, Path.GetFileName(csvFile.Replace('\\', '/')),
                     cancellationToken)
                 .ConfigureAwait(false);
 

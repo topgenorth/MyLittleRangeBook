@@ -97,7 +97,7 @@ namespace MyLittleRangeBook.RangeEventAssets
 
             Table table = new Table()
                 .Title(title)
-                .Caption($"File: {Path.GetFileName(session.FileName)}", captionStyle)
+                .Caption($"File: {Path.GetFileName(session.FileName?.Replace('\\', '/'))}", captionStyle)
                 .Border(TableBorder.DoubleEdge);
 
             table.AddColumn("Stat");

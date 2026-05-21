@@ -178,7 +178,10 @@ namespace MyLittleRangeBook.Models
             const string FIT_FILENAME_FORMAT = "MM-dd-yyyy_HH-mm-ss";
             ArgumentException.ThrowIfNullOrWhiteSpace(fitFileName);
 
-            string withoutExtension = Path.GetFileNameWithoutExtension(fitFileName);
+            // [TO20260521] Ensure we handle both Windows and Linux separators when extracting the filename.
+            // On Linux, Path.GetFileNameWithoutExtension does not recognize '\' as a separator.
+            string normalizedPath = fitFileName.Replace('\\', '/');
+            string withoutExtension = Path.GetFileNameWithoutExtension(normalizedPath);
 
             var localTimestamp = DateTime.ParseExact(
                 withoutExtension,

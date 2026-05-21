@@ -146,7 +146,9 @@ namespace MyLittleRangeBook.Database
             {
                 get
                 {
-                    string withoutExtension = Path.GetFileNameWithoutExtension(FileName);
+                    // [TO20260521] Ensure we handle both Windows and Linux separators.
+                    string normalizedFileName = FileName.Replace('\\', '/');
+                    string withoutExtension = Path.GetFileNameWithoutExtension(normalizedFileName);
 
                     CultureInfo culture = CultureInfo.InvariantCulture;
 

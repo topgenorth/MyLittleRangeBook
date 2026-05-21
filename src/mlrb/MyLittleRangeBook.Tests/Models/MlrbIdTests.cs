@@ -7,11 +7,22 @@ namespace MyLittleRangeBook.Models
         [Fact]
         public void FromFitFile_should_create_same_MlrbId_each_time()
         {
-                var id1 = MlrbId.FromFitFile("C:\\Temp\\06-21-2026_13-15-45.fit");
-                var id2 = MlrbId.FromFitFile("C:\\Temp\\06-21-2026_13-15-45.fit");
+            const string fileName = "06-21-2026_13-15-45.fit";
+            var id1 = MlrbId.FromFitFile(fileName);
+            var id2 = MlrbId.FromFitFile(fileName);
 
-                id1.ShouldBeEquivalentTo(id2);
-                id1.DateTimeOffset.ShouldBeEquivalentTo(id2.DateTimeOffset);
+            id1.ShouldBeEquivalentTo(id2);
+            id1.DateTimeOffset.ShouldBeEquivalentTo(id2.DateTimeOffset);
+        }
+
+        [Fact]
+        public void FromFitFile_should_handle_windows_paths_on_any_platform()
+        {
+            // Even on Linux, this should now work because we normalize backslashes
+            var id = MlrbId.FromFitFile("C:\\Temp\\06-21-2026_13-15-45.fit");
+            id.DateTimeOffset.Year.ShouldBe(2026);
+            id.DateTimeOffset.Month.ShouldBe(6);
+            id.DateTimeOffset.Day.ShouldBe(21);
         }
 
         [Fact]

@@ -40,7 +40,8 @@ namespace MyLittleRangeBook.RangeEventAssets
             string rangeEventAssetDir = Path.Combine(rangeAssetDirectory, rangeEventAssetFile.RangeEventId);
             Directory.CreateDirectory(rangeEventAssetDir);
 
-            string filename = Path.GetFileName(rangeEventAssetFile.PathToAsset);
+            // [TO20260521] Handle both Windows and Linux separators.
+            string filename = Path.GetFileName(rangeEventAssetFile.PathToAsset.Replace('\\', '/'));
 
             string rangeEventAssetFilename = Path.Combine(rangeEventAssetDir, filename);
 
