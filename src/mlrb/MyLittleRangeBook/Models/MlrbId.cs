@@ -17,7 +17,7 @@ namespace MyLittleRangeBook.Models
     /// </summary>
     public readonly record struct MlrbId
     {
-        static readonly Ulid.GenerationOptions DefaultOptions = new()
+        internal static readonly Ulid.GenerationOptions DefaultOptions = new()
         {
             Monotonicity = Ulid.GenerationOptions.MonotonicityOptions.MonotonicIncrement
         };
@@ -26,7 +26,7 @@ namespace MyLittleRangeBook.Models
 
         readonly Ulid _id;
 
-        MlrbId(Ulid id)
+        internal MlrbId(Ulid id)
         {
             _id = id;
         }
@@ -34,7 +34,6 @@ namespace MyLittleRangeBook.Models
         public MlrbId() : this(DateTimeOffset.UtcNow)
         {
         }
-
 
         public MlrbId(DateTimeOffset dto)
         {
@@ -45,28 +44,56 @@ namespace MyLittleRangeBook.Models
 
         public DateTimeOffset DateTimeOffset => _id.Time;
 
-
         /// <summary>
-        ///     THe FIT file name should be the local date & time of when it was created. DateTimeKind will be local.
+        ///     Creates a new <see cref="Ulid" /> that is sortable by timestamp and incorporates a deterministic hash of a given
+        ///     filename.
         /// </summary>
-        /// <param name="fitFileName"></param>
-        /// <returns></returns>
-        public static MlrbId FromFitFileName(string fitFileName)
+        /// <param name="filename">
+        ///     The name of the file, which will be hashed for deterministic randomness in the ULID generation.
+        ///     This value must not be null, empty, or consist solely of whitespace.
+        /// </param>
+        /// <param name="timestamp">
+        ///     The point in time that will be used as the basis for the timestamp portion of the ULID.
+        ///     This ensures that the generated ULID is chronologically sortable.
+        /// </param>
+        /// <returns>
+        ///     A new <see cref="Ulid" /> instance that contains a timestamp generated from the provided
+        ///     <paramref name="timestamp" />
+        ///     and a deterministic randomness derived from the hashed <paramref name="filename" />.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///     Thrown when <paramref name="filename" /> is null, empty, or contains only whitespace characters.
+        /// </exception>
+        static Ulid CreateFileUlid(string filename, DateTimeOffset timestamp)
         {
-            string withoutExtension = Path.GetFileNameWithoutExtension(fitFileName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(filename);
 
-            const string FORMAT = "MM-dd-yyyy_HH-mm-ss";
+            // The timestamp (first 48 bits) ensures chronological sortability
+            // Hash the filename to get deterministic randomness (remaining 80 bits)
+            byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(filename));
+            Span<byte> randomness = stackalloc byte[10];
+            hash[..10].CopyTo(randomness);
 
-            var timestamp = DateTime.ParseExact(
-                withoutExtension,
-                FORMAT,
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeLocal // ensures Kind == Local
-            );
-
-            return From(timestamp);
+            // ULID struct: [48-bit timestamp][80-bit randomness]
+            // Sorting is by timestamp first, then randomness
+            return Ulid.New(timestamp, randomness);
         }
 
+        /// <summary>
+        ///     Creates a new <see cref="MlrbId" /> instance from an existing <see cref="EntityId" />.
+        /// </summary>
+        /// <param name="eid">
+        ///     The <see cref="EntityId" /> containing a unique string identifier from which the <see cref="MlrbId" /> will be
+        ///     derived.
+        ///     The string ID in <paramref name="eid" /> must represent a valid ULID.
+        /// </param>
+        /// <returns>
+        ///     A new <see cref="MlrbId" /> instance generated from the unique string identifier in the provided
+        ///     <see cref="EntityId" />.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if the string ID in <paramref name="eid" /> is null, empty, or not a valid ULID.
+        /// </exception>
         public static MlrbId From(EntityId eid)
         {
             return new MlrbId(FromString(eid.Id));
@@ -123,6 +150,62 @@ namespace MyLittleRangeBook.Models
             return new MlrbId(dto);
         }
 
+        /// <summary>
+        ///     Create a MlrbId from a FileInfo object (based on file last write time and filename)
+        /// </summary>
+        /// <param name="fileInfo"></param>
+        /// <returns></returns>
+        public static MlrbId FromFile(FileInfo fileInfo)
+        {
+            if (!fileInfo.Exists)
+            {
+                throw new FileNotFoundException("File does not exist on disk: " + fileInfo.FullName);
+            }
+
+            var dto = new DateTimeOffset(fileInfo.LastWriteTimeUtc);
+            Ulid ulid = CreateFileUlid(fileInfo.FullName, dto);
+
+            return new MlrbId(ulid);
+        }
+
+        /// <summary>
+        ///     Create a MlrbId from a FIT file, using the name of the file as the creation date.
+        /// </summary>
+        /// <param name="fitFileName"></param>
+        /// <returns></returns>
+        public static MlrbId FromFitFile(string fitFileName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(fitFileName);
+
+            string withoutExtension = Path.GetFileNameWithoutExtension(fitFileName);
+
+            const string FIT_FILENAME_FORMAT = "MM-dd-yyyy_HH-mm-ss";
+
+            var localTimestamp = DateTime.ParseExact(
+                withoutExtension,
+                FIT_FILENAME_FORMAT,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeLocal // ensures Kind == Local
+            );
+
+            Ulid ulid = CreateFileUlid(withoutExtension, localTimestamp);
+
+            return new MlrbId(ulid);
+        }
+
+        /// <summary>
+        ///     Converts the provided string value into an instance of <see cref="MlrbId" />.
+        ///     If the string is determined to be a valid ULID, it is directly converted.
+        ///     Otherwise, a deterministic ULID is generated by hashing the input string.
+        /// </summary>
+        /// <param name="stringValue">
+        ///     The string representation to be converted into a <see cref="MlrbId" />.
+        ///     This value cannot be null, empty, or consist solely of whitespace.
+        /// </param>
+        /// <returns>
+        ///     A new <see cref="MlrbId" /> instance created from the provided <paramref name="stringValue" />.
+        ///     If the input string is null, empty, or whitespace, the method returns <see cref="MlrbId.Empty" />.
+        /// </returns>
         public static MlrbId FromString(string stringValue)
         {
             if (string.IsNullOrWhiteSpace(stringValue))

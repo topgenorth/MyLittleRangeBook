@@ -5,66 +5,68 @@ namespace MyLittleRangeBook.RangeEventAssets
     /// <summary>
     ///     Represents an asset file specifically associated with a range event in the context of the application.
     ///     Provides functionality to define, identify, and process assets for range events, including copying the
-    ///     asset file to the appropriate directory.
+    ///     asset file to the asset directory for a RangeEvent.
     /// </summary>
     public record RangeEventAssetFile
     {
-        /// <summary>
-        ///     This delegate is used to create the name of a file based asset that will be copied over to the range event
-        ///     directory.
-        /// </summary>
-        public delegate string AssetFileNameResolver(string rangeEventTargetDir, string assetFileName);
+        public RangeEventAssetFile(string pathToAsset, string? rangeEventId = null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(pathToAsset);
+            PathToAsset = pathToAsset;
+            RangeEventId = rangeEventId ?? MlrbId.Empty.ToString();
+            Id = MlrbId.FromFile(new FileInfo(pathToAsset));
+        }
 
         /// <summary>
-        ///     This delegate is used to resolve and generate a unique identifier, in the form of an MlrbId,
-        ///     for a file-based asset based on its file name.
+        ///     A unique ID that will identify the range asset file
         /// </summary>
-        public delegate MlrbId AssetIdResolver(string assetFileName);
+        public MlrbId Id { get; private set; }
 
         /// <summary>
         ///     Path to the asset that is to be copied over to the range event asset directory.
         /// </summary>
-        readonly string _pathToAsset;
+        public string PathToAsset { get; }
 
         /// <summary>
         ///     The ID of the range event.
         /// </summary>
-        readonly string _rangeEventId;
+        public string RangeEventId { get; private set; }
 
-        public RangeEventAssetFile(string rangeEventId, string pathToAsset)
+        /// <summary>
+        ///     Constructs the full destination path for the asset file associated with a range event.
+        ///     This includes combining the base directory for range assets, the specific range event directory,
+        ///     and the file name of the asset.
+        /// </summary>
+        /// <param name="rangeAssetsDirectory">
+        ///     The base directory path where range event assets are stored.
+        /// </param>
+        /// <param name="rangeEventAssetFile">
+        ///     An instance of <see cref="RangeEventAssetFile" /> representing the asset file and its associated details.
+        /// </param>
+        /// <returns>
+        ///     A string representing the full destination path for the specified range event asset file.
+        /// </returns>
+        public static string DefaultRangeEventAssetFileDestination(string rangeAssetsDirectory,
+            RangeEventAssetFile rangeEventAssetFile)
         {
-            _rangeEventId = rangeEventId;
-            _pathToAsset = pathToAsset;
+            string rangeEventAssetDir = Path.Combine(rangeAssetsDirectory, rangeEventAssetFile.RangeEventId);
+            string assetFileName = Path.GetFileName(rangeEventAssetFile.PathToAsset);
+            string rangeEventAssetFileName = Path.Combine(rangeEventAssetDir, assetFileName);
+
+            return rangeEventAssetFileName;
         }
 
 
-        public string? PathToRangeEventAsset { get; private set; }
-
-        /// <summary>
-        ///     Copies an asset file to the directory associated with a given range event, using a custom filename resolver.
-        /// </summary>
-        /// <returns>
-        ///     A result containing the full path of the copied file if successful, or an error description if the operation fails.
-        /// </returns>
-        public Result<string> CopyToRangeEvent(AssetFileNameResolver assetNamer)
+        public RangeEventAssetFile ForRangeEvent(string rangeEventId)
         {
-            Result<string> result;
-            try
-            {
-                PathToRangeEventAsset = assetNamer(_rangeEventId, _pathToAsset);
+            RangeEventId = rangeEventId;
 
-                File.Copy(_pathToAsset, PathToRangeEventAsset, true);
+            return this;
+        }
 
-                result = Result.Ok(PathToRangeEventAsset);
-            }
-            catch (Exception e)
-            {
-                Error? err = new Error(e.Message).CausedBy(e);
-
-                result = Result.Fail(err);
-            }
-
-            return result;
+        public override string ToString()
+        {
+            return PathToAsset;
         }
     }
 }

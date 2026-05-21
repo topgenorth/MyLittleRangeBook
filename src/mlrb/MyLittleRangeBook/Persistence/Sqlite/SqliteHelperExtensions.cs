@@ -134,19 +134,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             return services;
         }
 
-        public static async Task EnsureSqliteDatabaseIsInAppSettings(string appSettingsFileName)
-        {
-            string appSettingsJson = await File.ReadAllTextAsync(appSettingsFileName);
-            var jsonRoot = JsonNode.Parse(appSettingsJson);
-            if (jsonRoot.EnsureDefaultSqliteConnectionString())
-            {
-                if (jsonRoot is not null)
-                {
-                    await File.WriteAllTextAsync(appSettingsFileName, jsonRoot.ToString());
-                }
-            }
-        }
-
         /// <summary>
         ///     Ensures that the given JSON node contains a default SQLite connection string in the "ConnectionStrings" section. If
         ///     the "ConnectionStrings" section or the "SqliteConnection" entry does not exist, they will be created with a default
