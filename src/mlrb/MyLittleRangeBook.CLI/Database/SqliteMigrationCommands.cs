@@ -1,5 +1,6 @@
 ﻿using ConsoleAppFramework;
 using FluentResults;
+using System.Linq;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Console;
@@ -78,7 +79,7 @@ namespace MyLittleRangeBook.Database
             Result<bool> migrations = await _sqliteHelper.ApplyDbupMigrationsAsync(ct).ConfigureAwait(false);
             if (migrations.IsFailed)
             {
-                Logger.Warning("There was a problem running the migrations. ");
+                Logger.Warning("There was a problem running the migrations: {Error}", migrations.Errors.FirstOrDefault()?.Message);
             }
         }
 
@@ -112,8 +113,9 @@ namespace MyLittleRangeBook.Database
                 Result<bool> result = await _sqliteHelper.RunSqlOnDatabaseAsync(sql, ct).ConfigureAwait(false);
                 if (result.IsFailed)
                 {
-                    Logger.Error("Failed to run SQL '{sqlfile}'.", sqlfile);
-                    CliDisplay.PrintFailure($"Failed to run SQL '{sqlfile}'.");
+                    string? msg = result.Errors.FirstOrDefault()?.Message;
+                    Logger.Error("Failed to run SQL '{sqlfile}': {Error}", sqlfile, msg);
+                    CliDisplay.PrintFailure($"Failed to run SQL '{sqlfile}': {msg}");
 
                     return SQL_FAILED_TO_RUN_SCRIPT;
                 }
@@ -159,8 +161,9 @@ namespace MyLittleRangeBook.Database
                 return SUCCESS;
             }
 
-            Logger.Error("Failed to apply migrations.");
-            CliDisplay.PrintFailure("Failed to apply migrations.");
+            string? msg = migrationResult.Errors.FirstOrDefault()?.Message;
+            Logger.Error("Failed to apply migrations: {Error}", msg);
+            CliDisplay.PrintFailure($"Failed to apply migrations: {msg}");
 
             return SQL_FAILED_TO_APPLY_MIGRATIONS;
         }

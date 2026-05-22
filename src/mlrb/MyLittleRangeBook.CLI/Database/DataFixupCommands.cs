@@ -1,7 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Globalization;
-using ByteAether.Ulid;
 using ConsoleAppFramework;
 using Dapper;
 using FluentResults;
@@ -37,13 +36,22 @@ namespace MyLittleRangeBook.Database
             CliDisplay.PrintCommandHeader($"Fixing up IDs on {conn.DataSource}");
 
             Result t1 = await ChangeSimpleRangeEventIdsToUlids(conn, trans, ct).ConfigureAwait(false);
+            if (t1.IsFailed)
+            {
+                CliDisplay.PrintFailure("There were issues fixing up ids on the Range Events.");
+                Logger.Warning("Could not update the IDs on range events. " + t1.Errors[0]);
+                await trans.RollbackAsync(ct).ConfigureAwait(false);
+
+                return ReturnCodes.FAILURE;
+            }
+
             Result t2 = await ChangeFitFileIdsToUlids(conn, trans, ct).ConfigureAwait(false);
 
-            if (t1.IsFailed || t2.IsFailed)
+            if (t2.IsFailed)
             {
                 await trans.RollbackAsync(ct).ConfigureAwait(false);
-                Logger.Warning("One of the tasks failed - rolling back.");
-                CliDisplay.PrintFailure("Failed to update IDs.");
+                CliDisplay.PrintFailure("There were issues fixing up ids on the Fit Files.");
+                Logger.Warning("Could not update the IDs on range events. " + t2.Errors[0]);
 
                 return ReturnCodes.FAILURE;
             }
@@ -56,20 +64,28 @@ namespace MyLittleRangeBook.Database
         }
 
 
+        /// <summary>
+        ///     Generate the <c cref="MlrbId" /> using the timestamp from the FitFile name.  This is because the FitFile name
+        ///     contains a timestamp in the format of "MM-dd-yyyy_HH-mm-ss".  By using this timestamp, we can ensure that the
+        ///     generated ID is consistent and can be traced back to the original file.
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <param name="trans"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         async Task<Result> ChangeFitFileIdsToUlids(SqliteConnection conn,
             IDbTransaction trans,
             CancellationToken ct = default)
         {
-            const string SQL = "SELECT Id, FileName FROM main.FitFiles WHERE length(Id) <> 26;";
+            const string SQL = "SELECT Id, FileName FROM FitFiles;";
             const string UPDATE = "UPDATE main.FitFiles SET Id = @newId WHERE Id = @oldId";
 
-            Logger.Information("Converting any IDs that are not 26 characters on FitFiles.");
+            Logger.Information("Converting any IDs on FitFiles.");
             IEnumerable<FitFileRow> rows =
                 await conn.QueryAsync<FitFileRow>(SQL, transaction: trans).ConfigureAwait(false);
             var idMap = rows
-                .Where(row => !Ulid.IsValid(row.Id))
                 .ToDictionary<FitFileRow, string, string>(row => row.Id,
-                    row => MlrbId.From(row.FitFileTime));
+                    row => MlrbId.FromFitFile(Path.Combine("C:\\Temp", row.FileName)));
             Logger.Information("It seems that there are {count} IDs that need to be converted in FitFiles.",
                 idMap.Count);
 
@@ -95,7 +111,8 @@ namespace MyLittleRangeBook.Database
         }
 
         /// <summary>
-        ///     If we don't have a valid Ulid for the ID, then create a new one.
+        ///     If we don't have a valid Ulid for the ID, then create a new one.  Use the date of the event as
+        ///     part of the ID generation.
         /// </summary>
         /// <param name="conn"></param>
         /// <param name="trans"></param>
@@ -105,14 +122,13 @@ namespace MyLittleRangeBook.Database
             IDbTransaction trans,
             CancellationToken ct = default)
         {
-            Logger.Information("Converting any IDs that are not 26 characters on SimpleRangeEvents.");
-            const string SQL = "SELECT Id, EventDate FROM SimpleRangeEvents WHERE length(Id) <> 26 ORDER BY EventDate;";
+            Logger.Information("Updating IDs on SimpleRangeEvents.");
+            const string SQL = "SELECT Id, EventDate FROM SimpleRangeEvents;";
             const string UPDATE = "UPDATE main.SimpleRangeEvents SET Id = @newId WHERE Id = @oldId";
 
             IEnumerable<SimpleRangeEventRow> rows =
                 await conn.QueryAsync<SimpleRangeEventRow>(SQL, transaction: trans).ConfigureAwait(false);
             var idMap = rows
-                .Where(simpleRangeEventRow => !Ulid.IsValid(simpleRangeEventRow.Id))
                 .ToDictionary<SimpleRangeEventRow, string, string>(simpleRangeEventRow => simpleRangeEventRow.Id,
                     simpleRangeEventRow => MlrbId.From(simpleRangeEventRow.EventDateTime));
             Logger.Information("It seems that there are {count} IDs that need to be converted.", idMap.Count);
