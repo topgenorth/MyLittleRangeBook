@@ -13,11 +13,11 @@ namespace MyLittleRangeBook.RangeEventAssets
     [UsedImplicitly]
     public class ImportRangeAssetFile : MlrbCommandBase
     {
-        readonly CopyFileToRangeAsset _assetCopier;
-        public ImportRangeAssetFile(ILogger logger, ICliDisplay cliDisplay, IConfiguration configuration) : base(logger,
+        readonly IPipeline<RangeEventAssetFile> _assetPipeline;
+        public ImportRangeAssetFile(ILogger logger, ICliDisplay cliDisplay, IPipeline<RangeEventAssetFile> assetPipeline) : base(logger,
             cliDisplay)
         {
-            _assetCopier = new CopyFileToRangeAsset(configuration);
+            _assetPipeline = assetPipeline;
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace MyLittleRangeBook.RangeEventAssets
         [Command("add")]
         [UsedImplicitly]
         // ReSharper disable once AsyncMethodWithoutAwait
-        public async Task<int> CopyFileToAssetDirectory(string file, string? rangeEventId = null)
+        public async Task<int> CopyFileToAssetDirectory(string file, string? rangeEventId = null, CancellationToken ct = default)
         {
             CliDisplay.PrintCommandHeader("Add file as range asset");
             if (!File.Exists(file))
@@ -47,24 +47,18 @@ namespace MyLittleRangeBook.RangeEventAssets
             }
 
             var rfe = new RangeEventAssetFile(file, rangeEventId);
-            Result<string> copiedFile = await _assetCopier.CopyFileAsync(rfe).ConfigureAwait(false);
+            Result result = await _assetPipeline.ExecuteAsync(rfe, ct).ConfigureAwait(false);
 
-            if (copiedFile.IsFailed)
+            if (result.IsFailed)
             {
-                Logger.Warning("Could not copy the file over.");
-                CliDisplay.PrintFailure("Could not copy the file.");
+                CliDisplay.PrintFailure("Could not process the file.");
 
                 return ReturnCodes.FAILURE;
             }
 
-            Logger.Verbose($"Copied file '{file}' to '{copiedFile.Value}'");
-            if (rangeEventId.Equals(MlrbId.Empty.ToString()))             {
-                CliDisplay.PrintSuccess("Copied file to generic range event asset.");
-            }
-            else
-            {
-                CliDisplay.PrintSuccess($"Copied file for range event '{rangeEventId}'.");
-            }
+            CliDisplay.PrintSuccess(rangeEventId.Equals(MlrbId.Empty.ToString())
+                ? "Copied file to generic range event asset."
+                : $"Copied file for range event '{rangeEventId}'.");
 
             return ReturnCodes.SUCCESS;
         }
