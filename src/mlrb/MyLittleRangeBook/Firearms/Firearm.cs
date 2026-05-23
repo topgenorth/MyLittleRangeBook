@@ -1,4 +1,6 @@
-﻿namespace MyLittleRangeBook.Models
+﻿using MyLittleRangeBook.Models;
+
+namespace MyLittleRangeBook.Firearms
 {
     public record Firearm
     {

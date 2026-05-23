@@ -31,4 +31,8 @@
         <EmbeddedResource Include="Persistence\Sqlite\Scripts\*.sql"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Folder Include="Console\"/>
+    </ItemGroup>
+
 </Project>

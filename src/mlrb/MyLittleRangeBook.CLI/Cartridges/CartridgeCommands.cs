@@ -5,7 +5,6 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Persistence.Sqlite;
-using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook.Cartridges
 {

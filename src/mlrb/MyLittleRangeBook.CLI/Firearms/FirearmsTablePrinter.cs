@@ -1,4 +1,5 @@
 ﻿using MyLittleRangeBook.Console;
+using MyLittleRangeBook.Firearms;
 using Spectre.Console.Rendering;
 
 namespace MyLittleRangeBook

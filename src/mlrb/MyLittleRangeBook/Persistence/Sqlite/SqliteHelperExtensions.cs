@@ -112,7 +112,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <param name="services">The <see cref="IServiceCollection" /> to add the service to.</param>
         /// <param name="configuration"></param>
         /// <returns>The original <see cref="IServiceCollection" /> for chaining.</returns>
-        public static IServiceCollection AddMyLittleRangeBookSqlite(this IServiceCollection services,
+        public static IServiceCollection RegisterMyLittleRangeBookSqlite(this IServiceCollection services,
             IConfiguration configuration)
         {
             SetSqlite3ProviderAndInit();
@@ -126,10 +126,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             services.TryAddKeyedTransient<ISimpleRangeEventService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
             services
                 .TryAddKeyedTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
-            // services.TryAddKeyedTransient<IFirearmsDbService, SqliteFirearmsDbService>(DI_KEYS_SQLITE);
-            // services.TryAddKeyedTransient<ICartridgesDbService, SqliteCartridgesDbService>(DI_KEYS_SQLITE);
-            // services.TryAddKeyedTransient<IFitFilesDbService, SqliteFitFilesDbService>(DI_KEYS_SQLITE);
-            // services.TryAddKeyedTransient<IShotViewFilesDbService, SqliteShotViewFilesDbService>(DI_KEYS_SQLITE);
+            services.AddKeyedTransient<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>(DI_KEYS_SQLITE);
 
             return services;
         }

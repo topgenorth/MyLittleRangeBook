@@ -1,6 +1,4 @@
-﻿using MyLittleRangeBook.Models;
-
-namespace MyLittleRangeBook.RangeEvent
+﻿namespace MyLittleRangeBook.RangeEvent
 {
     /// <summary>
     ///     Provides an interface for managing and performing operations on simple range events

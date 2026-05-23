@@ -1,6 +1,6 @@
 ﻿## MyLittleRangeBook – .NET 10 Shooting Logbook
 
-**Project**: A multi-platform logbook application for tracking range trips, Garmin Xero FIT files, and ballistic data. Compiled as single-file self-contained executables on Windows, Linux, and macOS.
+**Project**: A multi-platform logbook application for tracking range trips, Garmin Xero FIT files, and ballistic data. Compiled as single-file self-contained executables on Windows and Linux.
 
 **Tech Stack**:
 - **.NET 10** with implicit usings and nullable reference types enabled
@@ -12,7 +12,6 @@
 - **Serilog** – Structured logging to console/debug
 - **Garmin.FIT.SDK** – Xero FIT file parsing
 - **Microsoft.Data.Sqlite** + **SQLitePCLRaw** – SQLite driver
-- **Supabase** cloud database (PostgreSQL backend)
 
 ### Build & Restore
 
@@ -67,7 +66,6 @@ All data operations are abstracted through interfaces in `MyLittleRangeBook/Serv
 
 Concrete implementations:
 - `MyLittleRangeBook.Sqlite/` – SQLite implementations (local default)
-- `MyLittleRangeBook.PgSQL/` – PostgreSQL implementations (Supabase)
 
 **Registration** (see `SqliteHelperExtensions.AddMyLittleRangeBookSqlite()`):
 ```csharp
@@ -97,9 +95,9 @@ services.TryAddKeyedSingleton<ISimpleRangeLogService, SqliteSimpleRangeEventServ
    ```
 
 4. **Model IDs**: 
-   - `Id` (Nanoid string, immutable) – for cross-system references
+   - `Id` (ULID string, immutable) – for cross-system references.  See MlrbId for details on how these are implemented.
    - `RowId` (nullable long) – SQLite ROWID for internal lookups
-   - `Created` / `Modified` (DateTimeOffset) – always set by database via SQL (use `utcnow()` function)
+   - `Created` / `Modified` (DateTimeOffset) – always set by database via SQL (use `utcnow()` function). These must always be in UTC.
 
 5. **Custom Dapper functions** (registered in `SqliteHelperExtensions.AddFunctions()`):
    - `nanoid()` – generates unique ID
@@ -146,13 +144,9 @@ dotnet test --logger "console;verbosity=detailed"
 src/mlrb/
 ├── MyLittleRangeBook/            # Core models, interfaces, config
 ├── MyLittleRangeBook.CLI/        # CLI entry point (Program.cs, ConsoleAppFramework)
-├── MyLittleRangeBook.GUI/        # Avalonia GUI
 ├── MyLittleRangeBook.FIT/        # Garmin FIT parsing (custom error types)
-├── MyLittleRangeBook.Sqlite/     # SQLite service implementations + DBUp scripts
-├── MyLittleRangeBook.PgSQL/      # PostgreSQL service implementations
 ├── MyLittleRangeBook.Tests/      # Unit tests (xUnit)
-├── SharedControls/               # Reusable UI components
-└── fit-reader/                   # Go CLI for FIT parsing (alternative)
+
 ```
 
 ### Linting & Formatting

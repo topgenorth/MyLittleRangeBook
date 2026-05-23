@@ -1,5 +1,6 @@
 ﻿using FluentResults;
 using Microsoft.Data.Sqlite;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Sqlite

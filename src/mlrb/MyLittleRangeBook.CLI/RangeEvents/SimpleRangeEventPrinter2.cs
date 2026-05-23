@@ -1,4 +1,5 @@
-﻿using Spectre.Console.Rendering;
+﻿using MyLittleRangeBook.RangeEvent;
+using Spectre.Console.Rendering;
 
 namespace MyLittleRangeBook.RangeEvents
 {

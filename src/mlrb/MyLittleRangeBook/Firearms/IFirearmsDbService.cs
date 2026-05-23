@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.Services
+namespace MyLittleRangeBook.Firearms
 {
     public interface IFirearmsDbService
     {

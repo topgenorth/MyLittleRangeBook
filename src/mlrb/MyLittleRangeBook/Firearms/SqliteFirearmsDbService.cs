@@ -1,10 +1,9 @@
 ﻿using System.Data;
 using Dapper;
-using FluentResults;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.Services;
+using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook
+namespace MyLittleRangeBook.Firearms
 {
     public class SqliteFirearmsDbService : IFirearmsDbService
     {

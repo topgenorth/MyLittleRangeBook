@@ -9,6 +9,7 @@ using MyLittleRangeBook.Console;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.RangeEventAssets;
 using MyLittleRangeBook.RangeEvents;
 using Serilog.Exceptions;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
@@ -46,17 +47,8 @@ builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventList
 #endregion
 
 builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
-// TODO [TO20260515] Need to change RangeEventFileAssetImporter because of the dependency on a "data directory"
-// builder.Services.AddTransient<IRangeEventAssetImporter, RangeEventFileAssetImporter>();
-
-#region SQLite dependencies
-builder.Services.AddMyLittleRangeBookSqlite(builder.Configuration);
-// builder.Services.AddKeyedTransient<IRangeEventAssetImporter, SqliteSimpleAssetImporter>(SqliteHelperExtensions
-//     .DI_KEYS_SQLITE);
-builder.Services.AddKeyedTransient<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>(SqliteHelperExtensions
-    .DI_KEYS_SQLITE);
-#endregion
-
+builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration);
+builder.Services.RegisterRangeAssetHandlers();
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();

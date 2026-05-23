@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.RangeEvent
 {
