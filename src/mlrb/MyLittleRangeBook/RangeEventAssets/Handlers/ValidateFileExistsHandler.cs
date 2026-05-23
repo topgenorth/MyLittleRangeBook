@@ -1,4 +1,6 @@
-﻿namespace MyLittleRangeBook.RangeEventAssets.Handlers
+﻿using MyLittleRangeBook.IO;
+
+namespace MyLittleRangeBook.RangeEventAssets.Handlers
 {
     /// <summary>
     ///     Handler that validates that a RangeEventAssetFile exists on disk.
@@ -6,6 +8,11 @@
     /// </summary>
     public class ValidateFileExistsHandler : IPipelineHandler<RangeEventAssetFile>
     {
+        /// <summary>
+        /// Defines the maximum file size, in bytes, that a SQLite file can have to be considered valid.
+        /// This constant is used during validation to ensure the file size does not exceed predefined limits.
+        /// </summary>
+        internal const int MaxFileSizeForSqlite = 90 * 1024;
         readonly ILogger _logger;
 
         /// <summary>
@@ -43,6 +50,12 @@
                 context.Metadata["FileExists"] = true;
                 context.Metadata["FileSizeBytes"] = fileInfo.Length;
                 context.Metadata["FileLastModified"] = fileInfo.LastWriteTimeUtc;
+
+                if (fileInfo.Length > MaxFileSizeForSqlite)
+                {
+                    var errorMessage = $"File size exceeds limit: '{filePath}' is {fileInfo.Length} bytes";
+                    _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
+                }
 
                 _logger.Information("File validation passed: {FilePath} ({FileSize} bytes)",
                     filePath,
