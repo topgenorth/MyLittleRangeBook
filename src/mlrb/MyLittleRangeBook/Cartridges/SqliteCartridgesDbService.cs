@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
-using FluentResults;
 using Microsoft.Data.Sqlite;
+using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Services;
 
 namespace MyLittleRangeBook.Cartridges

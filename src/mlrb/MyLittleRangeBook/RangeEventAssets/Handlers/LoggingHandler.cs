@@ -1,17 +1,15 @@
 ﻿namespace MyLittleRangeBook.RangeEventAssets.Handlers
 {
     /// <summary>
-    /// Handler that logs the actions taken by the pipeline and their results.
-    /// This handler should be placed last in the pipeline to capture all metadata from previous handlers.
+    ///     Handler that logs the actions taken by the pipeline and their results.
+    ///     This handler should be placed last in the pipeline to capture all metadata from previous handlers.
     /// </summary>
     public class LoggingHandler : IPipelineHandler<RangeEventAssetFile>
     {
-        public string Name => "Logging";
-
-        private readonly ILogger _logger;
+        readonly ILogger _logger;
 
         /// <summary>
-        /// Initializes a new instance of the LoggingHandler.
+        ///     Initializes a new instance of the LoggingHandler.
         /// </summary>
         /// <param name="logger">Logger instance for recording pipeline execution details.</param>
         public LoggingHandler(ILogger logger)
@@ -20,12 +18,14 @@
             _logger = logger;
         }
 
+        public string Name => "Logging";
+
         public async Task<Result> ExecuteAsync(
             PipelineContext<RangeEventAssetFile> context,
             Func<PipelineContext<RangeEventAssetFile>, Task<Result>> next)
         {
             // Call next handler (in case there are handlers after this one)
-            var result = await next(context);
+            Result result = await next(context);
 
             // Log the overall result and metadata
             if (result.IsSuccess)
@@ -40,7 +40,7 @@
             return result;
         }
 
-        private void LogSuccessfulExecution(PipelineContext<RangeEventAssetFile> context)
+        void LogSuccessfulExecution(PipelineContext<RangeEventAssetFile> context)
         {
             var logContext = new Dictionary<string, string>
             {
@@ -50,12 +50,12 @@
             };
 
             // Add handler-specific metadata
-            if (context.Metadata.TryGetValue("DestinationPath", out var destPath))
+            if (context.Metadata.TryGetValue("DestinationPath", out object? destPath))
             {
                 logContext["DestinationPath"] = destPath?.ToString() ?? "unknown";
             }
 
-            if (context.Metadata.TryGetValue("CopySuccess", out var copySuccess))
+            if (context.Metadata.TryGetValue("CopySuccess", out object? copySuccess))
             {
                 logContext["FileCopySuccessful"] = copySuccess?.ToString() ?? "unknown";
             }
@@ -64,7 +64,7 @@
             _logger.Information("Pipeline completed successfully for RangeEventAssetFile: {LogDetails}", logMessage);
         }
 
-        private void LogFailedExecution(PipelineContext<RangeEventAssetFile> context, Result result)
+        void LogFailedExecution(PipelineContext<RangeEventAssetFile> context, Result result)
         {
             var logContext = new Dictionary<string, string>
             {
@@ -74,12 +74,12 @@
             };
 
             // Add handler-specific metadata and errors
-            if (context.Metadata.TryGetValue("CopySuccess", out var copySuccess))
+            if (context.Metadata.TryGetValue("CopySuccess", out object? copySuccess))
             {
                 logContext["FileCopySuccessful"] = copySuccess?.ToString() ?? "unknown";
             }
 
-            if (context.Metadata.TryGetValue("CopyError", out var copyError))
+            if (context.Metadata.TryGetValue("CopyError", out object? copyError))
             {
                 logContext["CopyErrorMessage"] = copyError?.ToString() ?? "unknown";
             }
@@ -93,4 +93,3 @@
         }
     }
 }
-

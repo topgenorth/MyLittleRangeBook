@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Services

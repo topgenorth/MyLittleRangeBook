@@ -92,7 +92,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         }
 
         /// <summary>
-        ///
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>

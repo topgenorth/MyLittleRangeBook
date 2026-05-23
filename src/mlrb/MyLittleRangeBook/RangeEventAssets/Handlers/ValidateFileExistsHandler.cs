@@ -1,17 +1,15 @@
 ﻿namespace MyLittleRangeBook.RangeEventAssets.Handlers
 {
     /// <summary>
-    /// Handler that validates that a RangeEventAssetFile exists on disk.
-    /// This handler should typically be placed early in the pipeline to fail fast if the file is missing.
+    ///     Handler that validates that a RangeEventAssetFile exists on disk.
+    ///     This handler should typically be placed early in the pipeline to fail fast if the file is missing.
     /// </summary>
     public class ValidateFileExistsHandler : IPipelineHandler<RangeEventAssetFile>
     {
-        public string Name => "Validate File Exists";
-
-        private readonly ILogger _logger;
+        readonly ILogger _logger;
 
         /// <summary>
-        /// Initializes a new instance of the ValidateFileExistsHandler.
+        ///     Initializes a new instance of the ValidateFileExistsHandler.
         /// </summary>
         /// <param name="logger">Logger instance for recording validation details.</param>
         public ValidateFileExistsHandler(ILogger logger)
@@ -20,11 +18,13 @@
             _logger = logger;
         }
 
+        public string Name => "Validate File Exists";
+
         public async Task<Result> ExecuteAsync(
             PipelineContext<RangeEventAssetFile> context,
             Func<PipelineContext<RangeEventAssetFile>, Task<Result>> next)
         {
-            var filePath = context.Record.PathToAsset;
+            string filePath = context.Record.PathToAsset;
 
             if (!File.Exists(filePath))
             {
@@ -32,6 +32,7 @@
                 _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
                 context.Metadata["FileExists"] = false;
                 context.Metadata["ValidationError"] = errorMessage;
+
                 return Result.Fail(errorMessage);
             }
 
@@ -56,9 +57,9 @@
                 _logger.Error(ex, "File validation error: {ErrorMessage}", errorMessage);
                 context.Metadata["FileExists"] = false;
                 context.Metadata["ValidationError"] = ex.Message;
+
                 return Result.Fail(new Error(errorMessage).CausedBy(ex));
             }
         }
     }
 }
-

@@ -1,4 +1,5 @@
 ﻿using MyLittleRangeBook.Console;
+using MyLittleRangeBook.RangeEvent;
 
 namespace MyLittleRangeBook.RangeEvents
 {
