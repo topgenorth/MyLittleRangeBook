@@ -1,8 +1,7 @@
 using System.Data;
-using MyLittleRangeBook.Cartridges;
 using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.Services
+namespace MyLittleRangeBook.Cartridges
 {
     public interface ICartridgesDbService
     {

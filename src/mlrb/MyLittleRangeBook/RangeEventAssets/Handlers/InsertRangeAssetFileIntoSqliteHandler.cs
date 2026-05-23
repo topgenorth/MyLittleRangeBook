@@ -35,7 +35,6 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                                  ;
                                  """;
 
-        const int BufferSize = 81920;
         readonly ISqliteHelper _sqliteHelper;
 
         public InsertRangeAssetFileIntoSqliteHandler(ISqliteHelper sqliteHelper)
@@ -53,32 +52,21 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
 
             try
             {
-                Result<ReadOnlyMemory<byte>> fileContents = await context.Record.PathToAsset
-                    .LoadFileBytesAsync(CancellationToken.None)
+                Result<RangeEventAssetRow> rowResult = await CreateRow(context)
                     .ConfigureAwait(false);
-
-                if (fileContents.IsFailed)
+                if (rowResult.IsFailed)
                 {
                     context.Metadata["InsertIntoSqlite"] = false;
-                    context.Metadata["InsertIntoSqliteError"] = fileContents.Errors[0].Message;
-
-                    return await next(context);
+                    context.Metadata["InsertIntoSqliteError"] = rowResult.Errors[0].Message;
                 }
-
-                var row = new RangeEventAssetRow(
-                    null,
-                    context.Record.Id.ToString(),
-                    Path.GetFileName(context.Record.PathToAsset),
-                    FileExtensions.GetMimeType(fileExtension),
-                    fileContents.Value.ToArray(),
-                    Created: DateTimeOffset.UtcNow,
-                    Modified: DateTimeOffset.UtcNow);
-
-                await using SqliteConnection conn =
-                    await _sqliteHelper.GetDatabaseConnectionAsync().ConfigureAwait(false);
-                var cd = new CommandDefinition(UpsertSql, row);
-                int i = await conn.ExecuteAsync(cd).ConfigureAwait(false);
-                context.Metadata["InsertIntoSqlite"] = i == 1;
+                else
+                {
+                    await using SqliteConnection conn =
+                        await _sqliteHelper.GetDatabaseConnectionAsync().ConfigureAwait(false);
+                    var cd = new CommandDefinition(UpsertSql, rowResult.Value);
+                    int i = await conn.ExecuteAsync(cd).ConfigureAwait(false);
+                    context.Metadata["InsertIntoSqlite"] = i == 1;
+                }
             }
             catch (Exception ex)
             {
@@ -87,6 +75,32 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
             }
 
             return await next(context);
+        }
+
+        async Task<Result<RangeEventAssetRow>> CreateRow(PipelineContext<RangeEventAssetFile> context)
+        {
+            Result<ReadOnlyMemory<byte>> fileContents = await context.Record.PathToAsset
+                .LoadFileBytesAsync(CancellationToken.None)
+                .ConfigureAwait(false);
+            if (fileContents.IsFailed)
+            {
+                context.Metadata["InsertIntoSqlite"] = false;
+                context.Metadata["InsertIntoSqliteError"] = fileContents.Errors[0].Message;
+
+                return Result.Fail(fileContents.Errors[0].Message);
+            }
+
+            string fileExtension = Path.GetExtension(context.Record.PathToAsset);
+            var row = new RangeEventAssetRow(
+                null,
+                context.Record.Id.ToString(),
+                Path.GetFileName(context.Record.PathToAsset),
+                FileExtensions.GetMimeType(fileExtension),
+                fileContents.Value.ToArray(),
+                Created: DateTimeOffset.UtcNow,
+                Modified: DateTimeOffset.UtcNow);
+
+            return Result.Ok(row);
         }
 
         /// <summary>

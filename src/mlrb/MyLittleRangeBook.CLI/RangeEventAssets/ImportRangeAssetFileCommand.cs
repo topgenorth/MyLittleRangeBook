@@ -1,7 +1,6 @@
 ﻿using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Console;
 
 namespace MyLittleRangeBook.RangeEventAssets
@@ -11,10 +10,13 @@ namespace MyLittleRangeBook.RangeEventAssets
     /// </summary>
     [RegisterCommands("range-assets")]
     [UsedImplicitly]
-    public class ImportRangeAssetFile : MlrbCommandBase
+    public class ImportRangeAssetFileCommand : MlrbCommandBase
     {
         readonly IPipeline<RangeEventAssetFile> _assetPipeline;
-        public ImportRangeAssetFile(ILogger logger, ICliDisplay cliDisplay, IPipeline<RangeEventAssetFile> assetPipeline) : base(logger,
+
+        public ImportRangeAssetFileCommand(ILogger logger,
+            ICliDisplay cliDisplay,
+            IPipeline<RangeEventAssetFile> assetPipeline) : base(logger,
             cliDisplay)
         {
             _assetPipeline = assetPipeline;
@@ -25,11 +27,14 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// </summary>
         /// <param name="file"></param>
         /// <param name="rangeEventId"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
         [Command("add")]
         [UsedImplicitly]
         // ReSharper disable once AsyncMethodWithoutAwait
-        public async Task<int> CopyFileToAssetDirectory(string file, string? rangeEventId = null, CancellationToken ct = default)
+        public async Task<int> CopyFileToAssetDirectory(string file,
+            string? rangeEventId = null,
+            CancellationToken ct = default)
         {
             CliDisplay.PrintCommandHeader("Add file as range asset");
             if (!File.Exists(file))
