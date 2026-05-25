@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace MyLittleRangeBook.Database
+namespace MyLittleRangeBook.Persistence
 {
     public interface IDatabaseHelper
     {
