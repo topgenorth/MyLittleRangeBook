@@ -26,21 +26,6 @@ namespace MyLittleRangeBook.RangeEvents
             _simpleRangeEventService = simpleRangeEventService;
         }
 
-        /// <summary>
-        ///     Will add or update a simple range event. If necessary, then a new Firearm record will be added.
-        /// </summary>
-        /// <param name="simpleRangeEvent"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
-            CancellationToken cancellationToken = default)
-        {
-            // TODO [TO20260524] This will have to be refactored once we introduce transactions, since we will want to
-            // upsert the SRE and the round counts per firearm, where applicable.
-            return await UpsertAsync(simpleRangeEvent, Array.Empty<byte>(), cancellationToken)
-                .ConfigureAwait(false);
-        }
-
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
             CancellationToken cancellationToken = default)
         {
@@ -86,19 +71,6 @@ namespace MyLittleRangeBook.RangeEvents
 
 
         public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
-            byte[] fitFileContents,
-            CancellationToken cancellationToken = default)
-        {
-            return await UpsertAsync(simpleRangeEvent, fitFileContents, string.Empty, string.Empty, string.Empty,
-                    cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
-            byte[] fitFileContents,
-            string shotViewCsvContents,
-            string shotViewFileName,
-            string imageFilePath = "",
             CancellationToken cancellationToken = default)
         {
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
