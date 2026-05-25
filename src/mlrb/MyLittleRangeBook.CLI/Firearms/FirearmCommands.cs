@@ -9,19 +9,19 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook
 {
-    [RegisterCommands("firearm")]
+    [RegisterCommands("firearms")]
     public class FirearmCommands : MlrbCommandBase
     {
-        readonly IFirearmsDbService _firearmsDbService;
+        readonly IFirearmsService _firearmsService;
         readonly FirearmsTablePrinter _printer;
         readonly ISqliteHelper _sqliteHelper;
 
         public FirearmCommands(ILogger logger,
             ICliDisplay cliDisplay,
-            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IFirearmsDbService firearmsDbService,
+            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IFirearmsService firearmsService,
             ISqliteHelper sqliteHelper) : base(logger, cliDisplay)
         {
-            _firearmsDbService = firearmsDbService;
+            _firearmsService = firearmsService;
             _sqliteHelper = sqliteHelper;
             _printer = new FirearmsTablePrinter();
         }
@@ -42,7 +42,7 @@ namespace MyLittleRangeBook
             await using SqliteConnection conn = await _sqliteHelper
                 .GetDatabaseConnectionAsync(cancellationToken)
                 .ConfigureAwait(false);
-            Result<IEnumerable<Firearm>> firearms = await _firearmsDbService
+            Result<IEnumerable<Firearm>> firearms = await _firearmsService
                 .GetFirearmsAsync(conn, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 

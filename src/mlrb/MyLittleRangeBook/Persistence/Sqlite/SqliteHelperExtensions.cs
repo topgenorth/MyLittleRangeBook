@@ -4,6 +4,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.RangeEvent;
 using MyLittleRangeBook.RangeEvents;
@@ -26,6 +27,12 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// </summary>
         public const string SQLITE_DATABASE_NAME = "mlrb.db";
 
+        /// <summary>
+        /// A function that initializes and ensures the presence of a valid SQLite connection string
+        /// within a JSON-based application settings structure. Operates on a <see cref="JsonNode"/>
+        /// root node and updates or creates the necessary connection string entries, ensuring
+        /// readiness for database operations.
+        /// </summary>
         public static readonly Func<JsonNode?, Result> SqliteConnectionStringBootStrapper = rootNode =>
         {
             if (rootNode is not JsonObject rootObject)
@@ -92,7 +99,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             return fullPath;
         }
 
-
         /// <summary>
         ///     Add some custom functions to the SQLite connection.
         /// </summary>
@@ -100,6 +106,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <returns></returns>
         public static SqliteConnection AddFunctions(this SqliteConnection connection)
         {
+            // [TO20260524] Note that the Nanoid is actually a ULID.
             connection.CreateFunction("nanoid", () => new MlrbId().ToString());
             connection.CreateFunction("utcnow", () => DateTimeOffset.UtcNow.ToString("O"));
 
@@ -128,6 +135,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                 .TryAddKeyedTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
             services.AddKeyedTransient<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>(DI_KEYS_SQLITE);
 
+            services.AddKeyedScoped<IFirearmsService, SqliteFirearmsService>(DI_KEYS_SQLITE);
             return services;
         }
 

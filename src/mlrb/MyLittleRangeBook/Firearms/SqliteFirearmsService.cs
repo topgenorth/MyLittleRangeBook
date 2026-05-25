@@ -5,7 +5,7 @@ using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Firearms
 {
-    public class SqliteFirearmsDbService : IFirearmsDbService
+    public class SqliteFirearmsService : IFirearmsService
     {
         const string SelectSql = "SELECT * FROM Firearms ORDER BY Name;";
         const string SelectByIdSql = "SELECT * FROM Firearms WHERE Id=@Id;";
@@ -56,8 +56,8 @@ namespace MyLittleRangeBook.Firearms
             return Result.Ok(true);
         }
 
-        public async Task<Result<EntityId>> UpsertAsync(IDbConnection connection,
-            Firearm firearm,
+        public async Task<Result<EntityId>> UpsertAsync(Firearm firearm,
+            IDbConnection connection,
             CancellationToken cancellationToken = default)
         {
             var valuesToInsert = new { firearm.Id, firearm.Name, firearm.Notes };
@@ -108,8 +108,8 @@ namespace MyLittleRangeBook.Firearms
             }
         }
 
-        public async Task<Result<Firearm>> GetFirearmAsync(IDbConnection connection,
-            string id,
+        public async Task<Result<Firearm>> GetFirearmAsync(string id,
+            IDbConnection connection,
             CancellationToken cancellationToken = default)
         {
             var command = new CommandDefinition(SelectByIdSql, new { Id = id }, cancellationToken: cancellationToken);
@@ -118,6 +118,15 @@ namespace MyLittleRangeBook.Firearms
             return f is null
                 ? Result.Fail<Firearm>(new Error($"Firearm with id `{id}` not found").Enrich(id, null))
                 : Result.Ok(f);
+        }
+
+        public Task<Result> AssociateAssetWithFirearm(string firearmId,
+            string assetId,
+            IDbConnection connection,
+            IDbTransaction? transaction = null,
+            CancellationToken ct = default)
+        {
+                throw new NotImplementedException();
         }
     }
 }
