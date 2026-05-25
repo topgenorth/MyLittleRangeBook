@@ -5,7 +5,7 @@ using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Cartridges
 {
-    public class SqliteCartridgesDbService : ICartridgesDbService
+    public class SqliteCartridgesService : ICartridgesService
     {
         const string SelectSql = "SELECT * FROM Cartridges ORDER BY Name;";
         const string SelectByIdSql = "SELECT * FROM Cartridges WHERE Id=@Id;";

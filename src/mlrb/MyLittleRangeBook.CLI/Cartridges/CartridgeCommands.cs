@@ -8,19 +8,19 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Cartridges
 {
-    [RegisterCommands("cartridge")]
+    [RegisterCommands("cartridges")]
     public class CartridgeCommands : MlrbCommandBase
     {
-        readonly ICartridgesDbService _cartridgesDbService;
+        readonly ICartridgesService _cartridgesService;
         readonly CartridgesTablePrinter _printer;
         readonly ISqliteHelper _sqliteHelper;
 
         public CartridgeCommands(ILogger logger,
             ICliDisplay cliDisplay,
-            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] ICartridgesDbService cartridgesDbService,
+            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] ICartridgesService cartridgesService,
             ISqliteHelper sqliteHelper) : base(logger, cliDisplay)
         {
-            _cartridgesDbService = cartridgesDbService;
+            _cartridgesService = cartridgesService;
             _sqliteHelper = sqliteHelper;
             _printer = new CartridgesTablePrinter();
         }
@@ -39,7 +39,7 @@ namespace MyLittleRangeBook.Cartridges
             await using SqliteConnection conn = await _sqliteHelper
                 .GetDatabaseConnectionAsync(cancellationToken)
                 .ConfigureAwait(false);
-            Result<IEnumerable<Cartridge>> cartridges = await _cartridgesDbService
+            Result<IEnumerable<Cartridge>> cartridges = await _cartridgesService
                 .GetCartridgesAsync(conn, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             if (cartridges.IsFailed)
@@ -98,7 +98,7 @@ namespace MyLittleRangeBook.Cartridges
             await using SqliteConnection conn = await _sqliteHelper
                 .GetDatabaseConnectionAsync(cancellationToken)
                 .ConfigureAwait(false);
-            Result<EntityId> result = await _cartridgesDbService
+            Result<EntityId> result = await _cartridgesService
                 .UpsertAsync(conn, cartridge, cancellationToken)
                 .ConfigureAwait(false);
             if (result.IsFailed)

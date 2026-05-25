@@ -4,6 +4,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MyLittleRangeBook.Cartridges;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.RangeEvent;
@@ -28,10 +29,10 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         public const string SQLITE_DATABASE_NAME = "mlrb.db";
 
         /// <summary>
-        /// A function that initializes and ensures the presence of a valid SQLite connection string
-        /// within a JSON-based application settings structure. Operates on a <see cref="JsonNode"/>
-        /// root node and updates or creates the necessary connection string entries, ensuring
-        /// readiness for database operations.
+        ///     A function that initializes and ensures the presence of a valid SQLite connection string
+        ///     within a JSON-based application settings structure. Operates on a <see cref="JsonNode" />
+        ///     root node and updates or creates the necessary connection string entries, ensuring
+        ///     readiness for database operations.
         /// </summary>
         public static readonly Func<JsonNode?, Result> SqliteConnectionStringBootStrapper = rootNode =>
         {
@@ -130,12 +131,14 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             services.TryAddSingleton(configuration);
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
 
-            services.TryAddKeyedTransient<ISimpleRangeEventService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
+            services.TryAddKeyedScoped<ISimpleRangeEventService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
             services
-                .TryAddKeyedTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
-            services.AddKeyedTransient<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>(DI_KEYS_SQLITE);
+                .TryAddKeyedScoped<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
+            services.AddKeyedScoped<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>(DI_KEYS_SQLITE);
 
             services.AddKeyedScoped<IFirearmsService, SqliteFirearmsService>(DI_KEYS_SQLITE);
+            services.AddKeyedScoped<ICartridgesService, SqliteCartridgesService>(DI_KEYS_SQLITE);
+
             return services;
         }
 

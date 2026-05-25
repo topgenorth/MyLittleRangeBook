@@ -3,7 +3,7 @@ using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Cartridges
 {
-    public interface ICartridgesDbService
+    public interface ICartridgesService
     {
         Task<Result<bool>> DeleteAsync(IDbConnection connection,
             Cartridge cartridge,
