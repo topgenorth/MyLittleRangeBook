@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using System.Data.Common;
-using System.Globalization;
 using ConsoleAppFramework;
 using Dapper;
 using FluentResults;
@@ -16,6 +15,7 @@ namespace MyLittleRangeBook.Database
     [UsedImplicitly]
     public class DataFixupCommands : MlrbSqliteCommandBase
     {
+        readonly string[] _tablesToUpdate = ["Cartridges", "Firearms"];
         public DataFixupCommands(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper) :
             base(logger, cliDisplay, sqliteHelper)
         {
@@ -35,23 +35,29 @@ namespace MyLittleRangeBook.Database
             Logger.Information("Fixing up IDs on {databaseName}.", conn.DataSource);
             CliDisplay.PrintCommandHeader($"Fixing up IDs on {conn.DataSource}");
 
-            Result t1 = await ChangeSimpleRangeEventIdsToUlids(conn, trans, ct).ConfigureAwait(false);
-            if (t1.IsFailed)
+            Logger.Information("Skipping {tableName} - already done.", "SimpleRangeEvents");
+            // Result t1 = await ChangeSimpleRangeEventIdsToUlids(conn, trans, ct).ConfigureAwait(false);
+            // if (t1.IsFailed)
+            // {
+            //     CliDisplay.PrintFailure("There were issues fixing up ids on the Range Events.");
+            //     Logger.Warning("Could not update the IDs on range events. " + t1.Errors[0]);
+            //     await trans.RollbackAsync(ct).ConfigureAwait(false);
+            //
+            //     return ReturnCodes.FAILURE;
+            // }
+
+
+            foreach (string tableName in _tablesToUpdate)
             {
-                CliDisplay.PrintFailure("There were issues fixing up ids on the Range Events.");
-                Logger.Warning("Could not update the IDs on range events. " + t1.Errors[0]);
+                Result t = await UpdateIdsToUlids(conn, trans, tableName, ct).ConfigureAwait(false);
+                if (!t.IsFailed)
+                {
+                    continue;
+                }
+
                 await trans.RollbackAsync(ct).ConfigureAwait(false);
-
-                return ReturnCodes.FAILURE;
-            }
-
-            Result t2 = await ChangeFitFileIdsToUlids(conn, trans, ct).ConfigureAwait(false);
-
-            if (t2.IsFailed)
-            {
-                await trans.RollbackAsync(ct).ConfigureAwait(false);
-                CliDisplay.PrintFailure("There were issues fixing up ids on the Fit Files.");
-                Logger.Warning("Could not update the IDs on range events. " + t2.Errors[0]);
+                CliDisplay.PrintFailure($"There were issues fixing up ids on the {tableName}.");
+                Logger.Warning("Could not update the IDs on {tableName}: {reason}.", tableName, t.Errors[0]);
 
                 return ReturnCodes.FAILURE;
             }
@@ -63,41 +69,33 @@ namespace MyLittleRangeBook.Database
             return ReturnCodes.SUCCESS;
         }
 
-
-        /// <summary>
-        ///     Generate the <c cref="MlrbId" /> using the timestamp from the FitFile name.  This is because the FitFile name
-        ///     contains a timestamp in the format of "MM-dd-yyyy_HH-mm-ss".  By using this timestamp, we can ensure that the
-        ///     generated ID is consistent and can be traced back to the original file.
-        /// </summary>
-        /// <param name="conn"></param>
-        /// <param name="trans"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        async Task<Result> ChangeFitFileIdsToUlids(SqliteConnection conn,
+        async Task<Result> UpdateIdsToUlids(SqliteConnection conn,
             IDbTransaction trans,
-            CancellationToken ct = default)
+            string tableName,
+            CancellationToken ct)
         {
-            const string SQL = "SELECT Id, FileName FROM FitFiles;";
-            const string UPDATE = "UPDATE main.FitFiles SET Id = @newId WHERE Id = @oldId";
-
-            Logger.Information("Converting any IDs on FitFiles.");
-            IEnumerable<FitFileRow> rows =
-                await conn.QueryAsync<FitFileRow>(SQL, transaction: trans).ConfigureAwait(false);
-            var idMap = rows
-                .ToDictionary<FitFileRow, string, string>(row => row.Id,
-                    row => MlrbId.FromFitFile(Path.Combine("C:\\Temp", row.FileName)));
-            Logger.Information("It seems that there are {count} IDs that need to be converted in FitFiles.",
-                idMap.Count);
+            var sql = $"SELECT Id from {tableName};";
+            var update = $"UPDATE {tableName} SET Id=@newId WHERE Id=@oldId";
+            Logger.Information("Updating IDs on: {tableName}.", tableName);
+            IEnumerable<SimpleRow> rows =
+                await conn.QueryAsync<SimpleRow>(sql, transaction: trans).ConfigureAwait(false);
 
             var convertedCount = 0;
-            foreach (KeyValuePair<string, string> kvp in idMap)
+            foreach (SimpleRow row in rows)
             {
-                Logger.Verbose($"Converting FitFile ID {kvp.Key} to {kvp.Value}");
-                var cmd = new DapperCommand(UPDATE, new { oldId = kvp.Key, newId = kvp.Value });
+                if (row.OldId.Equals(row.NewId, StringComparison.Ordinal))
+                {
+                    Logger.Verbose("Skipping {tableName} ID {id} - already a MrlbId.", tableName, row.OldId);
+                    continue;
+                }
+
+                Logger.Verbose("Converting {tableName} ID from {oldId}, {newId}.", tableName, row.OldId, row.NewId);
+                var cmd = new DapperCommand(update, new { oldId = row.OldId, newId = row.NewId });
                 int i = await cmd.ExecuteAsync(conn, trans, ct).ConfigureAwait(false);
                 if (i < 1)
                 {
-                    Logger.Warning("Did not convert old ID {oldId}  to new ID {newId}", kvp.Key, kvp.Value);
+                    Logger.Warning("Did not convert old {tableName} ID {oldId}  to new ID {newId}", tableName,
+                        row.OldId, row.NewId);
                 }
                 else
                 {
@@ -105,7 +103,7 @@ namespace MyLittleRangeBook.Database
                 }
             }
 
-            Logger.Information("Update {update} IDs.", convertedCount);
+            Logger.Information("Updated {update} IDs on table: {tableName}.", convertedCount, tableName);
 
             return Result.Ok();
         }
@@ -122,26 +120,26 @@ namespace MyLittleRangeBook.Database
             IDbTransaction trans,
             CancellationToken ct = default)
         {
-            Logger.Information("Updating IDs on SimpleRangeEvents.");
+            const string TABLENAME = "SimpleRangeEvents";
+            Logger.Information("Updating IDs on: {tableName}.", TABLENAME);
+
             const string SQL = "SELECT Id, EventDate FROM SimpleRangeEvents;";
-            const string UPDATE = "UPDATE main.SimpleRangeEvents SET Id = @newId WHERE Id = @oldId";
+            const string UPDATE = "UPDATE SimpleRangeEvents SET Id = @newId WHERE Id = @oldId";
 
             IEnumerable<SimpleRangeEventRow> rows =
                 await conn.QueryAsync<SimpleRangeEventRow>(SQL, transaction: trans).ConfigureAwait(false);
-            var idMap = rows
-                .ToDictionary<SimpleRangeEventRow, string, string>(simpleRangeEventRow => simpleRangeEventRow.Id,
-                    simpleRangeEventRow => MlrbId.From(simpleRangeEventRow.EventDateTime));
-            Logger.Information("It seems that there are {count} IDs that need to be converted.", idMap.Count);
 
             var convertedCount = 0;
-            foreach (KeyValuePair<string, string> kvp in idMap)
+            foreach (SimpleRangeEventRow row in rows)
             {
-                Logger.Verbose($"Converting SimpleRangeEvent ID {kvp.Key} to {kvp.Value}");
-                var cmd = new DapperCommand(UPDATE, new { oldId = kvp.Key, newId = kvp.Value });
+                Logger.Verbose("Converting {tableName} ID from {oldId}, {newId}.", TABLENAME, row.OldId, row.NewId);
+
+                var cmd = new DapperCommand(UPDATE, new { oldId = row.OldId, newId = row.NewId });
                 int i = await cmd.ExecuteAsync(conn, trans, ct).ConfigureAwait(false);
                 if (i < 1)
                 {
-                    Logger.Warning("Did not convert old ID {oldId}  to new ID {newId}", kvp.Key, kvp.Value);
+                    Logger.Warning("Did not convert old {tableName} ID {oldId}  to new ID {newId}", TABLENAME,
+                        row.OldId, row.NewId);
                 }
                 else
                 {
@@ -149,39 +147,26 @@ namespace MyLittleRangeBook.Database
                 }
             }
 
-            Logger.Information("Update {update} IDs.", convertedCount);
+            Logger.Information("Updated {update} IDs on table: {tableName}.", convertedCount, TABLENAME);
+
 
             return Result.Ok();
         }
 
-        public sealed record FitFileRow(string Id, string FileName)
+        /// <summary>
+        ///     This is the simplest case possible - the Id is some kind of string that we will convert.
+        /// </summary>
+        /// <param name="Id"></param>
+        record struct SimpleRow(string Id)
         {
-            const string FitFileDateFormat = "MM-dd-yyyy_HH-mm-ss";
-
-            public DateTime FitFileTime
-            {
-                get
-                {
-                    // [TO20260521] Ensure we handle both Windows and Linux separators.
-                    string normalizedFileName = FileName.Replace('\\', '/');
-                    string withoutExtension = Path.GetFileNameWithoutExtension(normalizedFileName);
-
-                    CultureInfo culture = CultureInfo.InvariantCulture;
-
-                    var timestamp = DateTime.ParseExact(
-                        withoutExtension,
-                        FitFileDateFormat,
-                        culture,
-                        DateTimeStyles.AssumeLocal // ensures Kind == Local
-                    );
-
-                    return timestamp;
-                }
-            }
+            internal string OldId => Id;
+            internal string NewId => MlrbId.FromString(Id).ToString();
         }
 
-        public sealed record SimpleRangeEventRow(string Id, string EventDate)
+        record struct SimpleRangeEventRow(string Id, string EventDate)
         {
+            internal string OldId => Id;
+            internal string NewId => MlrbId.From(EventDateTime).ToString();
             public DateTime EventDateTime => DateTime.Parse(EventDate).ToLocalTime();
         }
     }
