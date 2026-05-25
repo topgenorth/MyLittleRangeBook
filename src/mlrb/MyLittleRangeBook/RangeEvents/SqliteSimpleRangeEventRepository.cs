@@ -1,4 +1,6 @@
-﻿using Dapper;
+﻿using System.Data;
+using System.Data.Common;
+using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Persistence.Sqlite;
@@ -7,6 +9,9 @@ using static MyLittleRangeBook.Persistence.Sqlite.SqliteHelperExtensions;
 
 namespace MyLittleRangeBook.RangeEvents
 {
+    /// <summary>
+    ///     Represents a repository implementation for managing simple range events using SQLite as the persistence layer.
+    /// </summary>
     public class SqliteSimpleRangeEventRepository : ISimpleRangeEventRepository
     {
         // TODO [TO20260505] Introduce SQLite transactions.
@@ -30,6 +35,8 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
             CancellationToken cancellationToken = default)
         {
+            // TODO [TO20260524] This will have to be refactored once we introduce transactions, since we will want to
+            // upsert the SRE and the round counts per firearm, where applicable.
             return await UpsertAsync(simpleRangeEvent, Array.Empty<byte>(), cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -95,21 +102,16 @@ namespace MyLittleRangeBook.RangeEvents
             CancellationToken cancellationToken = default)
         {
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+            await using DbTransaction trans = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
             Result<long?> finalResult;
             try
             {
                 Result<long?> sreResult = await _simpleRangeEventService
                     .UpsertAsync(conn, simpleRangeEvent, cancellationToken)
                     .ConfigureAwait(false);
+                return sreResult.IsFailed ? sreResult : sreResult;
 
-                if (sreResult.IsFailed)
-                {
-                    return sreResult;
-                }
-
-                List<Result> results = [sreResult.ToResult()];
-
-                finalResult = Result.Merge(results.ToArray()).ToResult(simpleRangeEvent.RowId);
+                ;
             }
             catch (Exception e)
             {
