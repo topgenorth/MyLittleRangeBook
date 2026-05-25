@@ -132,6 +132,12 @@ namespace MyLittleRangeBook.Database
             var convertedCount = 0;
             foreach (SimpleRangeEventRow row in rows)
             {
+                if (row.OldId.Equals(row.NewId, StringComparison.Ordinal))
+                {
+                    Logger.Verbose("Skipping {tableName} ID {id} - already a MrlbId.", TABLENAME, row.OldId);
+                    continue;
+                }
+
                 Logger.Verbose("Converting {tableName} ID from {oldId}, {newId}.", TABLENAME, row.OldId, row.NewId);
 
                 var cmd = new DapperCommand(UPDATE, new { oldId = row.OldId, newId = row.NewId });
