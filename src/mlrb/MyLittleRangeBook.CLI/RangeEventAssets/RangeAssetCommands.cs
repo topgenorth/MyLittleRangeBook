@@ -55,7 +55,12 @@ namespace MyLittleRangeBook.RangeEventAssets
                 CliDisplay.PrintWarning($"The file {file} is not assigned to any RangeEvent.");
             }
 
-            var rfe = new RangeEventAssetFile(file, rangeEventId);
+            var id = MlrbId.FromFile(new FileInfo(file));
+            Result<RangeAssetAggregate> aggregate = await _aggregateRepo.GetAsync(id, ct).ConfigureAwait(false);
+            RangeEventAssetFile rfe = aggregate.IsSuccess ?
+                new RangeEventAssetFile(file, aggregate.Value, rangeEventId) :
+                new RangeEventAssetFile(file, rangeEventId);
+
             Result result = await _assetPipeline.ExecuteAsync(rfe, ct).ConfigureAwait(false);
 
             if (result.IsFailed)
@@ -77,6 +82,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             {
                 CliDisplay.PrintFailure("Could not save the range event asset.");
                 Logger.Warning("There was an issue saving the event stream.");
+
                 return ReturnCodes.FAILURE;
             }
 

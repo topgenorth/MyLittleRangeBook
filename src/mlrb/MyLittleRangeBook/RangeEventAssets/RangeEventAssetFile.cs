@@ -18,13 +18,22 @@ namespace MyLittleRangeBook.RangeEventAssets
     /// </summary>
     public record RangeEventAssetFile
     {
+        public RangeEventAssetFile(string pathToAsset, RangeAssetAggregate agg, string? rangeEventId = null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(pathToAsset);
+            PathToAsset = pathToAsset;
+            RangeEventId = rangeEventId ?? MlrbId.Empty.ToString();
+            Aggregate = agg;
+            Id = Aggregate.Id;
+        }
+
         public RangeEventAssetFile(string pathToAsset, string? rangeEventId = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(pathToAsset);
             PathToAsset = pathToAsset;
             RangeEventId = rangeEventId ?? MlrbId.Empty.ToString();
-            Id = MlrbId.FromFile(new FileInfo(pathToAsset));
             Aggregate = RangeAssetAggregate.Create(pathToAsset, DateTimeOffset.UtcNow);
+            Id = Aggregate.Id;
         }
 
         public RangeAssetAggregate Aggregate { get; private set; }

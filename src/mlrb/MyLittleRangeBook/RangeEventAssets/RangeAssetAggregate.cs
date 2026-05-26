@@ -17,6 +17,25 @@ namespace MyLittleRangeBook.RangeEventAssets
 
         public MlrbId RangeEventId { get; private set; } = MlrbId.Empty;
 
+        ///     This factory method is used when rehydrating and existin the aggregate from persisted the event stream. The
+        ///     streamId is the same as the aggregate Id, which is the same as the asset Id.
+        /// </summary>
+        /// <param name="streamId"></param>
+        /// <returns></returns>
+        public static RangeAssetAggregate Create(MlrbId streamId)
+        {
+            // [TO20260526] No need to raise the RangeAssetImportStarted event because this implies we have an
+            // existing aggregate.
+            return new RangeAssetAggregate { RangeEventId = streamId };
+        }
+
+        /// <summary>
+        ///     This factory method is used when creating a new aggregate for a file that is being imported as a range asset. The
+        ///     sourcePath is used to generate the aggregate Id, which is the same as the asset Id and event stream Id.
+        /// </summary>
+        /// <param name="sourcePath"></param>
+        /// <param name="utcNow"></param>
+        /// <returns></returns>
         public static RangeAssetAggregate Create(string sourcePath, DateTimeOffset utcNow)
         {
             var fileInfo = new FileInfo(sourcePath);

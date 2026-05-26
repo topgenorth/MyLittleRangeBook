@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ByteAether.Ulid;
+using MyLittleRangeBook.IO;
 
 namespace MyLittleRangeBook.Models
 {
@@ -177,7 +178,7 @@ namespace MyLittleRangeBook.Models
         }
 
         /// <summary>
-        ///     Create a MlrbId from a FileInfo object (based on file last write time and filename)
+        ///     Create a MlrbId from a FileInfo object. We will try to use the contents of the file, otherwise use the filename.
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <returns></returns>
@@ -188,8 +189,24 @@ namespace MyLittleRangeBook.Models
                 throw new FileNotFoundException("File does not exist on disk: " + fileInfo.FullName);
             }
 
+            Ulid ulid;
             var dto = new DateTimeOffset(fileInfo.LastWriteTimeUtc);
-            Ulid ulid = CreateFileUlid(fileInfo.FullName, dto);
+            try
+            {
+                // [TO20260521] This is a bit of a hack to get the file bytes synchronously.  We need the file bytes to create the hash, and we don't want to change the method signature to be async.
+                Result<ReadOnlyMemory<byte>> fileContents = fileInfo.LoadFileBytesAsync().GetAwaiter().GetResult();
+                bool useFileContents = fileContents.IsSuccess && fileContents.Value.Length > 0;
+
+                ulid = useFileContents
+                    ? Ulid.New(dto, fileContents.Value.ToArray())
+                    : CreateFileUlid(fileInfo.FullName, dto);
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error(ex, "Using the file name and last write time to generate the ID for {filename}.",
+                    fileInfo.FullName);
+                ulid = CreateFileUlid(fileInfo.FullName, dto);
+            }
 
             return new MlrbId(ulid);
         }
@@ -199,6 +216,7 @@ namespace MyLittleRangeBook.Models
         /// </summary>
         /// <param name="fitFileName"></param>
         /// <returns></returns>
+        [Obsolete("Should just use FromFile")]
         public static MlrbId FromFitFile(string fitFileName)
         {
             const string FIT_FILENAME_FORMAT = "MM-dd-yyyy_HH-mm-ss";

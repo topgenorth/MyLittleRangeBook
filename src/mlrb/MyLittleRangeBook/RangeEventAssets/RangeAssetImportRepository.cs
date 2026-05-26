@@ -47,46 +47,53 @@ namespace MyLittleRangeBook.RangeEventAssets
         public async Task<Result<RangeAssetAggregate>> GetAsync(MlrbId id,
             CancellationToken cancellationToken = default)
         {
-            await using SqliteConnection connection =
-                await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
-            await using DbTransaction transaction =
-                await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-            var selectEvents = """
-                               select stream_id as StreamId, 
-                                      stream_type as StreamType, 
-                                      version as Version, 
-                                      event_type as EventType, 
-                                      occurred_utc as OccurredUtc,
-                                      data_json as DataJson,
-                                      metadata_json as MetadataJson
-                               from events 
-                               where stream_id = @StreamId
-                               order by version asc;
-                               """;
-            var selectEventsCmd = new DapperCommand(selectEvents, new { StreamId = id.ToString() });
-            IEnumerable<EventRow> rows = await selectEventsCmd
-                .QueryAsync<EventRow>(connection, transaction, cancellationToken)
-                .ConfigureAwait(false);
-
-            IEnumerable<EventRow> eventRows = rows as EventRow[] ?? rows.ToArray();
-            if (!eventRows.Any())
+            try
             {
+                await using SqliteConnection connection =
+                    await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+                await using DbTransaction transaction =
+                    await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+                var selectEvents = """
+                                   select stream_id as StreamId, 
+                                          stream_type as StreamType, 
+                                          version as Version, 
+                                          event_type as EventType, 
+                                          occurred_utc as OccurredUtc,
+                                          data_json as DataJson,
+                                          metadata_json as MetadataJson
+                                   from events 
+                                   where stream_id = @StreamId
+                                   order by version asc;
+                                   """;
+                var selectEventsCmd = new DapperCommand(selectEvents, new { StreamId = id.ToString() });
+                IEnumerable<EventRow> rows = await selectEventsCmd
+                    .QueryAsync<EventRow>(connection, transaction, cancellationToken)
+                    .ConfigureAwait(false);
+
+                IEnumerable<EventRow> eventRows = rows as EventRow[] ?? rows.ToArray();
+                if (!eventRows.Any())
+                {
+                    await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+
+                    return Result.Ok();
+                }
+
+                var aggregate = new RangeAssetAggregate();
+                foreach (EventRow row in eventRows)
+                {
+                    object evt = _eventSerializer.Deserialize(row.EventType, row.DataJson);
+                    aggregate.Apply((IDomainEvent)evt);
+                }
+
+                aggregate.ClearUncommittedEvents();
                 await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
 
-                return Result.Ok();
+                return Result.Ok(aggregate);
             }
-
-            var aggregate = new RangeAssetAggregate();
-            foreach (EventRow row in eventRows)
+            catch (Exception e)
             {
-                object evt = _eventSerializer.Deserialize(row.EventType, row.DataJson);
-                aggregate.Apply((IDomainEvent)evt);
+                return e.FailWithException();
             }
-
-            aggregate.ClearUncommittedEvents();
-            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
-
-            return Result.Ok(aggregate);
         }
 
         public async Task<Result> SaveAsync(RangeAssetAggregate aggregate,
