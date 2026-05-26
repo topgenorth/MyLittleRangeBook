@@ -15,11 +15,12 @@ namespace MyLittleRangeBook.Models
     public readonly record struct EntityId(string Id, long? RowId);
 
 
-    public class MlrbIdJsonConverter: JsonConverter<MlrbId>
+    public class MlrbIdJsonConverter : JsonConverter<MlrbId>
     {
         public override MlrbId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             string ulidString = reader.GetString() ?? throw new JsonException("Expected a string value for MlrbId.");
+
             return MlrbId.FromString(ulidString);
         }
 
@@ -28,6 +29,7 @@ namespace MyLittleRangeBook.Models
             writer.WriteStringValue(value.ToString());
         }
     }
+
     /// <summary>
     ///     This is a unique ID value that is sortable by time.
     /// </summary>
@@ -114,6 +116,13 @@ namespace MyLittleRangeBook.Models
         public static MlrbId From(EntityId eid)
         {
             return new MlrbId(FromString(eid.Id));
+        }
+
+        public static MlrbId FromSha256(byte[] sha256)
+        {
+            var ulid = Ulid.New(DateTimeOffset.UtcNow, sha256);
+
+            return new MlrbId(ulid);
         }
 
         /// <summary>
@@ -277,6 +286,7 @@ namespace MyLittleRangeBook.Models
         {
             return new MlrbId(FromString(ulidString));
         }
+
         public static implicit operator MlrbId(Ulid ulid)
         {
             return new MlrbId(ulid);
