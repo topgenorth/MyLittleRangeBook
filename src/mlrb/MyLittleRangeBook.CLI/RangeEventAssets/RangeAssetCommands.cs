@@ -48,18 +48,12 @@ namespace MyLittleRangeBook.RangeEventAssets
             if (string.IsNullOrWhiteSpace(rangeEventId))
             {
                 rangeEventId = MlrbId.Empty.ToString();
-                Logger.Warning("No RangeEvent specified.");
+                Logger.Verbose("No RangeEvent specified.");
                 CliDisplay.PrintWarning($"The file {file} is not assigned to any RangeEvent.");
             }
 
             var rfe = new RangeEventAssetFile(file, rangeEventId);
             Result result = await _assetPipeline.ExecuteAsync(rfe, ct).ConfigureAwait(false);
-
-            foreach (IDomainEvent x in rfe.Aggregate.DequeueUncommittedEvents())
-            {
-                Logger.Verbose("Emitted event: {EventType} with data: {@EventData}", x.GetType().Name, x);
-            }
-
 
             if (result.IsFailed)
             {

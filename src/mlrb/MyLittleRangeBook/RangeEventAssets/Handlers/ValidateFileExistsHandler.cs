@@ -60,7 +60,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                     _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
                 }
 
-                _logger.Information("File validation passed: {FilePath} ({FileSize} bytes)",
+                _logger.Verbose("File validation passed: {FilePath} ({FileSize} bytes)",
                     filePath,
                     fileInfo.Length);
 

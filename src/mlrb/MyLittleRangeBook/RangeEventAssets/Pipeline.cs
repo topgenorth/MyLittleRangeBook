@@ -141,7 +141,7 @@ namespace MyLittleRangeBook
                 chain = async context =>
                 {
                     var handler = (IPipelineHandler<TRecord>)_serviceProvider.GetRequiredService(handlerType);
-                    _logger.Information("Executing handler: {HandlerName}", handler.Name);
+                    _logger.Verbose("Executing handler: {HandlerName}", handler.Name);
 
                     try
                     {

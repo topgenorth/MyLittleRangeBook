@@ -63,7 +63,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                 {
                     await using SqliteConnection conn =
                         await _sqliteHelper.GetDatabaseConnectionAsync().ConfigureAwait(false);
-                    var v = rowResult.Value;
+                    RangeEventAssetRow v = rowResult.Value!;
                     var p = new
                     {
                         v.Id,
@@ -79,7 +79,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                     if (i == 1)
                     {
                         context.Metadata["InsertIntoSqlite"] = true;
-                        context.Record.Aggregate.StoredInDatabase(DateTimeOffset.UtcNow);
+                        context.Record.Aggregate.StoredInDatabase(v.FileContents, DateTimeOffset.UtcNow);
                     }
                     else
                     {
