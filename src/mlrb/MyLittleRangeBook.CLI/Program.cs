@@ -48,7 +48,9 @@ builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventList
 
 builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
 builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration);
-builder.Services.RegisterRangeAssetHandlers();
+builder.Services
+    .RegisterRangeAssetHandlers()
+    .RegisterRangeAssetEventSourcing();
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();

@@ -32,12 +32,12 @@ namespace MyLittleRangeBook.IO
         public static async Task<string> ComputeSha256HashAsync(string path,
             CancellationToken cancellationToken = default)
         {
-            using FileStream stream = File.OpenRead(path);
+            await using FileStream stream = File.OpenRead(path);
             using var sha256 = SHA256.Create();
 
             byte[] hashBytes = await sha256.ComputeHashAsync(stream, cancellationToken);
 
-            var sb = new StringBuilder(64);
+            StringBuilder sb = new StringBuilder(64);
             foreach (byte b in hashBytes)
             {
                 sb.Append(b.ToString("x2"));
@@ -124,6 +124,7 @@ namespace MyLittleRangeBook.IO
                 ".gif" => "image/gif",
                 ".bmp" => "image/bmp",
                 ".webp" => "image/webp",
+                ".csv" => "text/csv",
                 _ => "application/octet-stream"
             };
         }

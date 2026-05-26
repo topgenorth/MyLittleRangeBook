@@ -24,7 +24,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             PathToAsset = pathToAsset;
             RangeEventId = rangeEventId ?? MlrbId.Empty.ToString();
             Id = MlrbId.FromFile(new FileInfo(pathToAsset));
-            Aggregate = RangeAssetAggregate.Create(pathToAsset, new DateTimeOffset());
+            Aggregate = RangeAssetAggregate.Create(pathToAsset, DateTimeOffset.UtcNow);
         }
 
         public RangeAssetAggregate Aggregate { get; private set; }

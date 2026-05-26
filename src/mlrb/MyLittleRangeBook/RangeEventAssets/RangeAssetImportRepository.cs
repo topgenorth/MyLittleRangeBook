@@ -6,20 +6,41 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.RangeEventAssets
 {
+    class SqliteRangeAssetProjector : IRangeAssetProjector
+    {
+        readonly ILogger _logger;
+
+        public SqliteRangeAssetProjector(ILogger logger)
+        {
+            _logger = logger;
+        }
+
+        public Task ProjectAsync(string toString,
+            IReadOnlyList<IDomainEvent> pendingEvents,
+            SqliteConnection connection,
+            DbTransaction transaction,
+            CancellationToken cancellationToken)
+        {
+            _logger.Warning("Projecting events for RangeAssetImport with {EventCount}", pendingEvents.Count);
+
+            return Task.CompletedTask;
+        }
+    }
+
     public class SqliteRangeAssetAggregateRepository : IRangeAssetAggregateRepository
     {
-        const string StreamType = "RangeAssetImport";
+        const string StreamType = "range-asset-import";
         readonly IEventSerializer _eventSerializer;
-        readonly IImportFileProjector _importFileProjector;
+        readonly IRangeAssetProjector _rangeAssetProjector;
         readonly ISqliteHelper _sqliteHelper;
 
         public SqliteRangeAssetAggregateRepository(ISqliteHelper sqliteHelper,
             IEventSerializer eventSerializer,
-            IImportFileProjector importFileProjector)
+            IRangeAssetProjector rangeAssetProjector)
         {
             _sqliteHelper = sqliteHelper;
             _eventSerializer = eventSerializer;
-            _importFileProjector = importFileProjector;
+            _rangeAssetProjector = rangeAssetProjector;
         }
 
         public async Task<Result<RangeAssetAggregate>> GetAsync(MlrbId id,
@@ -34,7 +55,7 @@ namespace MyLittleRangeBook.RangeEventAssets
                                       stream_type as StreamType, 
                                       version as Version, 
                                       event_type as EventType, 
-                                      occured_utc as OccuredUtc,
+                                      occurred_utc as OccurredUtc,
                                       data_json as DataJson,
                                       metadata_json as MetadataJson
                                from events 
@@ -57,8 +78,8 @@ namespace MyLittleRangeBook.RangeEventAssets
             var aggregate = new RangeAssetAggregate();
             foreach (EventRow row in eventRows)
             {
-                IDomainEvent evt = _eventSerializer.Deserialize(row.EventType, row.DataJson);
-                aggregate.Apply(evt);
+                object evt = _eventSerializer.Deserialize(row.EventType, row.DataJson);
+                aggregate.Apply((IDomainEvent)evt);
             }
 
             aggregate.ClearUncommittedEvents();
@@ -76,7 +97,8 @@ namespace MyLittleRangeBook.RangeEventAssets
                 return Result.Ok();
             }
 
-            int expectedVersion = aggregate.Version - pendingEvents.Count;
+            // [TO20260525] It is non-sensical to have a negative expected version, but we can treat it as 0 to allow saving new aggregates without events.
+            int expectedVersion = Math.Max(aggregate.Version - pendingEvents.Count, 0);
             var streamId = aggregate.Id.ToString();
 
             await using SqliteConnection connection =
@@ -89,19 +111,40 @@ namespace MyLittleRangeBook.RangeEventAssets
                 (int? currentVersion, int nextVersion) = await GetNextVersionAsync(connection, transaction, streamId,
                     expectedVersion, cancellationToken);
 
+
                 foreach (IDomainEvent evt in pendingEvents)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+
+                        return Result.Fail("Operation was cancelled.");
+                    }
+
                     nextVersion++;
                     await InsertDomainEvent(connection, transaction, streamId, nextVersion, evt, cancellationToken);
                 }
 
-                await UpsertEventStreamAsync(connection, transaction, aggregate.Id.ToString(), currentVersion,
+                // [TO20260525] Order matters here - nextVersion has to be updated.
+                await UpsertEventStreamAsync(connection,
+                    transaction,
+                    aggregate.Id.ToString(),
+                    currentVersion,
                     nextVersion,
                     cancellationToken);
 
-                await _importFileProjector
+
+
+                await _rangeAssetProjector
                     .ProjectAsync(aggregate.Id.ToString(), pendingEvents, connection, transaction, cancellationToken)
                     .ConfigureAwait(false);
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+
+                    return Result.Fail("Operation was cancelled.");
+                }
 
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -128,13 +171,13 @@ namespace MyLittleRangeBook.RangeEventAssets
             if (currentVersion is null)
             {
                 sql =
-                    "insert into event_streams (stream_id, stream_type, version) values (@StreamId, @StreamType, @Version);";
+                    "insert into event_streams (id, stream_type, version) values (@StreamId, @StreamType, @Version);";
                 p = new { StreamId = streamId, StreamType, Version = nextVersion };
             }
             else
             {
                 sql =
-                    "update event_streams set version = @Version where stream_id = @StreamId   and version = @ExpectedVersion;";
+                    "update event_streams set version = @Version where id = @StreamId   and version = @ExpectedVersion;";
                 p = new { Version = nextVersion, StreamId = streamId, ExpectedVersion = currentVersion };
             }
 
@@ -180,7 +223,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             var p = new
             {
                 StreamId = streamId,
-                Id = new MlrbId(domainEvent.OccurredUtc),
+                Id = new MlrbId(domainEvent.OccurredUtc).ToString(),
                 StreamType,
                 Version = nextVersion,
                 EventType = domainEvent.GetType().Name,
@@ -189,7 +232,17 @@ namespace MyLittleRangeBook.RangeEventAssets
                 MetadataJson = "{}"
             };
             var cmd = new DapperCommand(SQL, p);
-            int x = await cmd.ExecuteAsync(connection, transaction, ct).ConfigureAwait(false);
+            int x = 0;
+            try
+            {
+                x = await cmd.ExecuteAsync(connection, transaction, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                x = -1;
+                throw new InvalidOperationException(
+                    $"Failed to insert event of type {domainEvent.GetType().Name} for stream {streamId}", ex);
+            }
 
             if (x != 1)
             {
@@ -198,15 +251,15 @@ namespace MyLittleRangeBook.RangeEventAssets
             }
         }
 
-        static async Task<(int? currentVersion, int nextVersion)> GetNextVersionAsync(SqliteConnection connection,
+        async Task<(int? currentVersion, int nextVersion)> GetNextVersionAsync(SqliteConnection connection,
             DbTransaction transaction,
             string streamId,
             int expectedVersion,
             CancellationToken cancellationToken)
         {
-            var versionCmd = new DapperCommand("SELECT version from event_streams WHERE stream_id=@StreamId;",
+            var versionCmd = new DapperCommand("SELECT version from event_streams WHERE id=@StreamId;",
                 new { StreamId = streamId });
-            int? currentVersion = await versionCmd.QuerySingleAsync<int?>(connection, transaction, cancellationToken)
+            int? currentVersion = await versionCmd.ExecuteScalarAsync<int?>(connection, transaction, cancellationToken)
                 .ConfigureAwait(false);
             int actualVersion = currentVersion ?? 0;
 

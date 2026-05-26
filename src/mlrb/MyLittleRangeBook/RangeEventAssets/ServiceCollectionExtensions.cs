@@ -10,6 +10,31 @@ namespace MyLittleRangeBook.RangeEventAssets
     /// </summary>
     public static class ServiceCollectionExtensions
     {
+        public static IServiceCollection RegisterRangeAssetEventSourcing(this IServiceCollection services)
+        {
+            Type[] supportedEvents =
+            [
+                typeof(RangeAssetAggregate.RangeAssetImportStarted),
+                typeof(RangeAssetAggregate.RangeAssetAssociateWithRangeEvent),
+                typeof(RangeAssetAggregate.RangeAssetCopied),
+                typeof(RangeAssetAggregate.RangeAssetImportFailed),
+                typeof(RangeAssetAggregate.RangeAssetStoredInDatabase),
+                typeof(RangeAssetAggregate.RangeAssetFingerprintComputed),
+                typeof(RangeAssetAggregate.RangeAssetParsed),
+                typeof(RangeAssetAggregate.RangeAssetStoredInDatabase),
+                typeof(RangeAssetAggregate.RangeAssetImportCompleted)
+            ];
+            ArgumentNullException.ThrowIfNull(services);
+            services.AddScoped<IRangeAssetAggregateRepository, SqliteRangeAssetAggregateRepository>();
+            services.AddScoped<IRangeAssetProjector, SqliteRangeAssetProjector>();
+
+
+            services.AddScoped<IEventSerializer, SystemTextJsonEventSerializer>(serviceProvider =>
+                new SystemTextJsonEventSerializer(supportedEvents));
+
+            return services;
+        }
+
         /// <summary>
         ///     Register the RangeEventAssetFile pipeline and handlers in the dependency injection container.
         ///     This registers:
@@ -27,7 +52,7 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// <example>
         ///     <code>
         /// services.RegisterRangeAssetHandlers();
-        /// 
+        ///
         /// var pipeline = serviceProvider.GetRequiredService&lt;IPipeline&lt;RangeEventAssetFile&gt;&gt;();
         /// var result = await pipeline.ExecuteAsync(assetFile);
         /// </code>

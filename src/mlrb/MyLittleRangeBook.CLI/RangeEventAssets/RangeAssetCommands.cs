@@ -12,14 +12,17 @@ namespace MyLittleRangeBook.RangeEventAssets
     [UsedImplicitly]
     public class RangeAssetCommands : MlrbCommandBase
     {
+        readonly IRangeAssetAggregateRepository _aggregateRepo;
         readonly IPipeline<RangeEventAssetFile> _assetPipeline;
 
         public RangeAssetCommands(ILogger logger,
             ICliDisplay cliDisplay,
-            IPipeline<RangeEventAssetFile> assetPipeline) : base(logger,
+            IPipeline<RangeEventAssetFile> assetPipeline,
+            IRangeAssetAggregateRepository aggregateRepo) : base(logger,
             cliDisplay)
         {
             _assetPipeline = assetPipeline;
+            _aggregateRepo = aggregateRepo;
         }
 
         /// <summary>
@@ -66,6 +69,15 @@ namespace MyLittleRangeBook.RangeEventAssets
             {
                 rfe.Aggregate.AddedToRangeEvent(rfe.RangeEventId, DateTimeOffset.UtcNow);
                 Logger.Verbose("Associated range asset with range event '{RangeEventId}'.", rangeEventId);
+            }
+
+            Result saveAggregate = await _aggregateRepo.SaveAsync(rfe.Aggregate, ct).ConfigureAwait(false);
+
+            if (saveAggregate.IsFailed)
+            {
+                CliDisplay.PrintFailure("Could not save the range event asset.");
+                Logger.Warning("There was an issue saving the event stream.");
+                return ReturnCodes.FAILURE;
             }
 
             CliDisplay.PrintSuccess(rangeEventId.Equals(MlrbId.Empty.ToString())
