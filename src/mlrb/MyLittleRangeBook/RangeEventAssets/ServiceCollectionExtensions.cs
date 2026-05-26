@@ -27,7 +27,7 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// <example>
         ///     <code>
         /// services.RegisterRangeAssetHandlers();
-        ///
+        /// 
         /// var pipeline = serviceProvider.GetRequiredService&lt;IPipeline&lt;RangeEventAssetFile&gt;&gt;();
         /// var result = await pipeline.ExecuteAsync(assetFile);
         /// </code>

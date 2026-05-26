@@ -9,10 +9,11 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
     public class ValidateFileExistsHandler : IPipelineHandler<RangeEventAssetFile>
     {
         /// <summary>
-        /// Defines the maximum file size, in bytes, that a SQLite file can have to be considered valid.
-        /// This constant is used during validation to ensure the file size does not exceed predefined limits.
+        ///     Defines the maximum file size, in bytes, that a SQLite file can have to be considered valid.
+        ///     This constant is used during validation to ensure the file size does not exceed predefined limits.
         /// </summary>
         internal const int MaxFileSizeForSqlite = 90 * 1024;
+
         readonly ILogger _logger;
 
         /// <summary>

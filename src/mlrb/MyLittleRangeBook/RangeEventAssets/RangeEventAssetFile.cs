@@ -3,6 +3,15 @@
 namespace MyLittleRangeBook.RangeEventAssets
 {
     /// <summary>
+    ///     This delegate is used to create the name of a file based asset that will be copied over to the range event
+    ///     directory.
+    /// </summary>
+    /// <param name="rangeAssetsDirectory">This is the name of directory that will hold range assets files.</param>
+    /// <param name="rangeEventAssetFile">The <c cref="RangeEventAssetFile" /> that will be processed. </param>
+    public delegate string AssetFileNameResolver(string rangeAssetsDirectory,
+        RangeEventAssetFile rangeEventAssetFile);
+
+    /// <summary>
     ///     Represents an asset file specifically associated with a range event in the context of the application.
     ///     Provides functionality to define, identify, and process assets for range events, including copying the
     ///     asset file to the asset directory for a RangeEvent.
