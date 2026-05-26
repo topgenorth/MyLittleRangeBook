@@ -6,6 +6,20 @@ namespace MyLittleRangeBook.RangeEventAssets
     {
         readonly List<IDomainEvent> _uncommitted = [];
 
+        RangeAssetAggregate(MlrbId id)
+        {
+            Id = id;
+            Version = 0;
+            StreamType = "range-asset-import";
+        }
+
+        public RangeAssetAggregate(EventStream stream)
+        {
+            Version = stream.Version;
+            Id = stream.StreamId;
+            StreamType = stream.StreamType;
+        }
+
         public MlrbId Id { get; private set; }
         public string SourcePath { get; private set; } = "";
         public string DestinationPath { get; private set; } = "";
@@ -15,8 +29,11 @@ namespace MyLittleRangeBook.RangeEventAssets
         public string? FailureReason { get; private set; }
         public int Version { get; private set; }
 
+        public string? StreamType { get; private set; }
+
         public MlrbId RangeEventId { get; private set; } = MlrbId.Empty;
 
+        /// <summary>
         ///     This factory method is used when rehydrating and existin the aggregate from persisted the event stream. The
         ///     streamId is the same as the aggregate Id, which is the same as the asset Id.
         /// </summary>
@@ -26,7 +43,7 @@ namespace MyLittleRangeBook.RangeEventAssets
         {
             // [TO20260526] No need to raise the RangeAssetImportStarted event because this implies we have an
             // existing aggregate.
-            return new RangeAssetAggregate { RangeEventId = streamId };
+            return new RangeAssetAggregate(streamId);
         }
 
         /// <summary>
@@ -39,9 +56,9 @@ namespace MyLittleRangeBook.RangeEventAssets
         public static RangeAssetAggregate Create(string sourcePath, DateTimeOffset utcNow)
         {
             var fileInfo = new FileInfo(sourcePath);
-            var agg = new RangeAssetAggregate
+            var agg = new RangeAssetAggregate(MlrbId.FromFile(fileInfo))
             {
-                Id = MlrbId.FromFile(fileInfo), SourcePath = sourcePath, Status = "New", Version = 0
+                SourcePath = sourcePath, Status = "New", Version = 0
             };
 
             agg.Raise(new RangeAssetImportStarted(agg.Id, sourcePath, utcNow));

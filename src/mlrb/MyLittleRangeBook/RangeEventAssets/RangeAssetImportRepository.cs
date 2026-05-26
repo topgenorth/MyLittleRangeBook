@@ -53,6 +53,8 @@ namespace MyLittleRangeBook.RangeEventAssets
                     await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
                 await using DbTransaction transaction =
                     await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
+                #region Load the events first
                 var selectEvents = """
                                    select stream_id as StreamId, 
                                           stream_type as StreamType, 
@@ -77,15 +79,32 @@ namespace MyLittleRangeBook.RangeEventAssets
 
                     return Result.Ok();
                 }
+                #endregion
 
-                var aggregate = new RangeAssetAggregate();
+                #region Try to load the aggregate from the database; if you can't find one, create a new one.
+                RangeAssetAggregate aggregate;
+                Result<EventStream?> r = await GetEventStreamAsync(connection, transaction, id, cancellationToken).ConfigureAwait(false);
+                if (r.IsFailed)
+                {
+                    aggregate = RangeAssetAggregate.Create(id);
+                }
+                else
+                {
+                    aggregate = r.Value.HasValue
+                        ? new RangeAssetAggregate(r.Value.Value)
+                        : RangeAssetAggregate.Create(id);
+                }
+
                 foreach (EventRow row in eventRows)
                 {
-                    object evt = _eventSerializer.Deserialize(row.EventType, row.DataJson);
-                    aggregate.Apply((IDomainEvent)evt);
+                    IDomainEvent evt = (IDomainEvent)_eventSerializer.Deserialize(row.EventType, row.DataJson);
+                    aggregate.Apply(evt);
                 }
 
                 aggregate.ClearUncommittedEvents();
+                #endregion
+
+
                 await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
 
                 return Result.Ok(aggregate);
@@ -141,7 +160,6 @@ namespace MyLittleRangeBook.RangeEventAssets
                     cancellationToken);
 
 
-
                 await _rangeAssetProjector
                     .ProjectAsync(aggregate.Id.ToString(), pendingEvents, connection, transaction, cancellationToken)
                     .ConfigureAwait(false);
@@ -164,6 +182,30 @@ namespace MyLittleRangeBook.RangeEventAssets
             }
 
             return Result.Ok();
+        }
+
+        async Task<Result<EventStream?>> GetEventStreamAsync(SqliteConnection c,
+            DbTransaction t,
+            MlrbId streamId,
+            CancellationToken ct)
+        {
+            try
+            {
+                const string SQL = """
+                                   SELECT id AS StreamId, stream_type AS StreamType, version AS Version,
+                                          created_utc as Created, modified_utc as Modified
+                                   FROM event_streams 
+                                   WHERE id = @StreamId;
+                                   """;
+                var cmd = new DapperCommand(SQL, new { StreamId = streamId.ToString() });
+                EventStream? stream = await cmd.QuerySingleAsync<EventStream>(c, t, ct).ConfigureAwait(false);
+
+                return Result.Ok(stream);
+            }
+            catch (Exception ex)
+            {
+                return ex.FailWithException();
+            }
         }
 
         async Task UpsertEventStreamAsync(SqliteConnection conn,
@@ -244,7 +286,7 @@ namespace MyLittleRangeBook.RangeEventAssets
                 MetadataJson = "{}"
             };
             var cmd = new DapperCommand(SQL, p);
-            int x = 0;
+            var x = 0;
             try
             {
                 x = await cmd.ExecuteAsync(connection, transaction, ct).ConfigureAwait(false);
@@ -252,6 +294,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             catch (Exception ex)
             {
                 x = -1;
+
                 throw new InvalidOperationException(
                     $"Failed to insert event of type {domainEvent.GetType().Name} for stream {streamId}", ex);
             }
