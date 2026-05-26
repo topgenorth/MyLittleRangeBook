@@ -168,13 +168,13 @@ namespace MyLittleRangeBook.RangeEventAssets
                     throw new InvalidOperationException($"Unknown event type `{e.GetType().Name}`.");
             }
 
-            Version++;
         }
 
-        void Raise(IDomainEvent e)
+        public void Raise(IDomainEvent e)
         {
             Apply(e);
             _uncommitted.Add(e);
+            Version++;
         }
 
         public void ClearUncommittedEvents()

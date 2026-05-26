@@ -161,15 +161,15 @@ namespace MyLittleRangeBook.RangeEventAssets
                         return Result.Fail("Operation was cancelled.");
                     }
 
-                    nextVersion++;
                     await InsertDomainEventAsync(connection, transaction, streamId, nextVersion, evt, cancellationToken);
+                    nextVersion++;
                 }
 
                 await UpsertEventStreamAsync(connection,
                     transaction,
                     aggregate.Id.ToString(),
                     currentVersion,
-                    nextVersion,
+                    nextVersion-1,
                     cancellationToken);
 
 

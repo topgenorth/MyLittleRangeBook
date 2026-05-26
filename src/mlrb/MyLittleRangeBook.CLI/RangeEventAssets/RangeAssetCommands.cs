@@ -60,8 +60,18 @@ namespace MyLittleRangeBook.RangeEventAssets
 
             Result<RangeAssetAggregate> r = await _aggregateRepo.GetAsync(id, ct).ConfigureAwait(false);
             bool isNew = r.IsFailed || r.Value is null;
-            RangeAssetAggregate aggregate = isNew ? RangeAssetAggregate.New(file, DateTimeOffset.UtcNow) : r.Value!;
-            Logger.Verbose("Event stream {id}, v{version}", aggregate.Id, aggregate.Version);
+
+            RangeAssetAggregate aggregate;
+            if (isNew)
+            {
+                aggregate = RangeAssetAggregate.New(file, DateTimeOffset.UtcNow);
+                Logger.Verbose("New file {file}", file);
+            }
+            else
+            {
+                aggregate = r.Value!;
+                Logger.Verbose("Existing file {file} with id {id}, v{version}.", file, aggregate.Id, aggregate.Version);
+            }
 
             RangeEventAssetFile rfe = new RangeEventAssetFile(file, aggregate, rangeEventId);
 
