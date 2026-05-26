@@ -256,6 +256,15 @@ namespace MyLittleRangeBook.Models
             return _id.ToString();
         }
 
+        public static implicit operator MlrbId(string ulidString)
+        {
+            return new MlrbId(FromString(ulidString));
+        }
+        public static implicit operator MlrbId(Ulid ulid)
+        {
+            return new MlrbId(ulid);
+        }
+
         public byte[] ToByteArray()
         {
             return _id.ToByteArray();

@@ -38,7 +38,12 @@ namespace MyLittleRangeBook.RangeEventAssets
             Raise(new RangeAssetCopied(Id, destinationPath, nowUtc));
         }
 
-        public void FileFingerprinted(string sha256, int fileSize, DateTimeOffset nowUtc)
+        public void StoredInDatabase(DateTimeOffset nowUtc)
+        {
+            Raise(new RangeAssetStoredInDatabase(Id, nowUtc));
+        }
+
+        public void FileFingerprinted(string sha256, long fileSize, DateTimeOffset nowUtc)
         {
             if (Status is "Completed" or "Failed")
             {
@@ -46,6 +51,11 @@ namespace MyLittleRangeBook.RangeEventAssets
             }
 
             Raise(new RangeAssetFingerprintComputed(Id, sha256, fileSize, nowUtc));
+        }
+
+        public void Fail(Exception ex, DateTimeOffset nowUtc)
+        {
+            Raise(new RangeAssetImportFailed(Id, ex.Message, nowUtc));
         }
 
         public void Fail(string reason, DateTimeOffset nowUtc)
@@ -112,6 +122,8 @@ namespace MyLittleRangeBook.RangeEventAssets
 
         internal record struct RangeAssetCopied(MlrbId StreamId, string DestinationPath, DateTimeOffset OccurredUtc)
             : IDomainEvent;
+
+        internal record struct RangeAssetStoredInDatabase(MlrbId StreamId, DateTimeOffset OccurredUtc) : IDomainEvent;
 
         internal record struct RangeAssetParsed(MlrbId StreamId, string mimeType, DateTimeOffset OccurredUtc)
             : IDomainEvent;

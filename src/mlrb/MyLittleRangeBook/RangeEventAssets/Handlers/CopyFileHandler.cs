@@ -69,13 +69,15 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                 context.Metadata["DestinationPath"] = destinationPath;
                 context.Metadata["CopySuccess"] = true;
 
-                // Call next handler
+                context.Record.Aggregate.Copied(destinationPath, DateTimeOffset.UtcNow);
+
                 return await next(context);
             }
             catch (Exception ex)
             {
                 context.Metadata["CopySuccess"] = false;
                 context.Metadata["CopyError"] = ex.Message;
+                context.Record.Aggregate.Fail(ex, DateTimeOffset.UtcNow);
 
                 return Result.Fail(new Error($"Failed to copy file '{context.Record.PathToAsset}': {ex.Message}")
                     .CausedBy(ex));

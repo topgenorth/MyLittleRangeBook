@@ -10,11 +10,11 @@ namespace MyLittleRangeBook.RangeEventAssets
     /// </summary>
     [RegisterCommands("range-assets")]
     [UsedImplicitly]
-    public class ImportRangeAssetFileCommand : MlrbCommandBase
+    public class RangeAssetCommands : MlrbCommandBase
     {
         readonly IPipeline<RangeEventAssetFile> _assetPipeline;
 
-        public ImportRangeAssetFileCommand(ILogger logger,
+        public RangeAssetCommands(ILogger logger,
             ICliDisplay cliDisplay,
             IPipeline<RangeEventAssetFile> assetPipeline) : base(logger,
             cliDisplay)
@@ -37,6 +37,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             CancellationToken ct = default)
         {
             CliDisplay.PrintCommandHeader("Add file as range asset");
+
             if (!File.Exists(file))
             {
                 CliDisplay.PrintFailure("File does not exit.");
@@ -54,12 +55,19 @@ namespace MyLittleRangeBook.RangeEventAssets
             var rfe = new RangeEventAssetFile(file, rangeEventId);
             Result result = await _assetPipeline.ExecuteAsync(rfe, ct).ConfigureAwait(false);
 
+            foreach (IDomainEvent x in rfe.Aggregate.DequeueUncommittedEvents())
+            {
+                Logger.Verbose("Emitted event: {EventType} with data: {@EventData}", x.GetType().Name, x);
+            }
+
+
             if (result.IsFailed)
             {
                 CliDisplay.PrintFailure("Could not process the file.");
 
                 return ReturnCodes.FAILURE;
             }
+
 
             CliDisplay.PrintSuccess(rangeEventId.Equals(MlrbId.Empty.ToString())
                 ? "Copied file to generic range event asset."

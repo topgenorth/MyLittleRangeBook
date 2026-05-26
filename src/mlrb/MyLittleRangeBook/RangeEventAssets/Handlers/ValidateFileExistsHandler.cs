@@ -39,6 +39,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                 _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
                 context.Metadata["FileExists"] = false;
                 context.Metadata["ValidationError"] = errorMessage;
+                context.Record.Aggregate.Fail(errorMessage, DateTimeOffset.UtcNow);
 
                 return Result.Fail(errorMessage);
             }
@@ -47,9 +48,11 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
             {
                 // Store validation result in metadata
                 var fileInfo = new FileInfo(filePath);
+                string sha256 = await fileInfo.ComputeSha256HashAsync().ConfigureAwait(false);
                 context.Metadata["FileExists"] = true;
                 context.Metadata["FileSizeBytes"] = fileInfo.Length;
                 context.Metadata["FileLastModified"] = fileInfo.LastWriteTimeUtc;
+                context.Metadata["FileSha256"] = sha256;
 
                 if (fileInfo.Length > MaxFileSizeForSqlite)
                 {
@@ -61,7 +64,8 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                     filePath,
                     fileInfo.Length);
 
-                // Call next handler
+                context.Record.Aggregate.FileFingerprinted(sha256, fileInfo.Length, DateTimeOffset.UtcNow);
+
                 return await next(context);
             }
             catch (Exception ex)
