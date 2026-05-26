@@ -95,6 +95,8 @@ namespace MyLittleRangeBook.RangeEventAssets
                 return ReturnCodes.FAILURE;
             }
 
+            Logger.Verbose("Updated the event stream {id}, v{version}", aggregate.Value.Id, aggregate.Value.Version);
+
             CliDisplay.PrintSuccess(rangeEventId.Equals(MlrbId.Empty.ToString())
                 ? "Copied file to generic range event asset."
                 : $"Copied file for range event '{rangeEventId}'.");

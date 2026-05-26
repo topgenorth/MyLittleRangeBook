@@ -125,7 +125,6 @@ namespace MyLittleRangeBook.RangeEventAssets
             }
 
             // [TO20260525] It is non-sensical to have a negative expected version, but we can treat it as 0 to allow saving new aggregates without events.
-            int expectedVersion = Math.Max(aggregate.Version - pendingEvents.Count, 0);
             var streamId = aggregate.Id.ToString();
 
             await using SqliteConnection connection =
@@ -135,8 +134,16 @@ namespace MyLittleRangeBook.RangeEventAssets
 
             try
             {
-                (int? currentVersion, int nextVersion) = await GetNextVersionAsync(connection, transaction, streamId,
-                    expectedVersion, cancellationToken);
+                int currentVersion = await GetStreamVersion(connection, transaction, streamId,cancellationToken).ConfigureAwait(false);
+                int expectedVersion = aggregate.Version - pendingEvents.Count;
+
+
+                if (currentVersion != expectedVersion)
+                {
+                    throw new InvalidOperationException($"Concurrency conflict detected for stream {streamId}. Expected version {expectedVersion}, but actual version is {currentVersion}.");
+                }
+
+                int nextVersion = currentVersion;
 
                 foreach (IDomainEvent evt in pendingEvents)
                 {
@@ -306,25 +313,18 @@ namespace MyLittleRangeBook.RangeEventAssets
             }
         }
 
-        async Task<(int? currentVersion, int nextVersion)> GetNextVersionAsync(SqliteConnection connection,
-            DbTransaction transaction,
+        async Task<int> GetStreamVersion(SqliteConnection c,
+            DbTransaction t,
             string streamId,
-            int expectedVersion,
-            CancellationToken cancellationToken)
+            CancellationToken ct)
         {
             var versionCmd = new DapperCommand("SELECT version from event_streams WHERE id=@StreamId;",
                 new { StreamId = streamId });
-            int? currentVersion = await versionCmd.ExecuteScalarAsync<int?>(connection, transaction, cancellationToken)
+            int? currentVersion = await versionCmd.ExecuteScalarAsync<int?>(c, t, ct)
                 .ConfigureAwait(false);
             int actualVersion = currentVersion ?? 0;
 
-            if (actualVersion == expectedVersion)
-            {
-                return (currentVersion, expectedVersion);
-            }
-
-            throw new InvalidOperationException(
-                $"Concurrency conflict: expected version {expectedVersion} but actual version is {actualVersion} for stream `{streamId}`.");
+            return actualVersion;
         }
     }
 }

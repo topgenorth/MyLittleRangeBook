@@ -15,7 +15,6 @@ namespace MyLittleRangeBook.RangeEventAssets
 
         public RangeAssetAggregate(EventStream stream)
         {
-            Version = stream.Version;
             Id = stream.StreamId;
             StreamType = stream.StreamType;
         }
@@ -122,7 +121,6 @@ namespace MyLittleRangeBook.RangeEventAssets
                     Id = x.StreamId;
                     SourcePath = x.SourcePath;
                     Status = "Started";
-
                     break;
                 case RangeAssetFingerprintComputed x:
                     SHA256 = x.Sha256;
@@ -155,7 +153,12 @@ namespace MyLittleRangeBook.RangeEventAssets
                     Status = "Completed";
 
                     break;
+                default:
+                    throw new InvalidOperationException($"Unknown event type `{e.GetType().Name}`.");
             }
+
+            Version++;
+
         }
 
         void Raise(IDomainEvent e)
