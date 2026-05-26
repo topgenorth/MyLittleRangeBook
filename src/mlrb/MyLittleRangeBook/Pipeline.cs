@@ -1,7 +1,75 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace MyLittleRangeBook.RangeEventAssets
+namespace MyLittleRangeBook
 {
+    /// <summary>
+    ///     Encapsulates the context passed through a pipeline.
+    ///     Carries the record being processed, metadata for inter-handler communication,
+    ///     and cancellation support.
+    /// </summary>
+    public class PipelineContext<TRecord>
+    {
+        /// <summary>
+        ///     The record being processed through the pipeline.
+        /// </summary>
+        public TRecord Record { get; set; } = default!;
+
+        /// <summary>
+        ///     Metadata dictionary for handlers to share state and information.
+        /// </summary>
+        public Dictionary<string, object> Metadata { get; } = [];
+
+        /// <summary>
+        ///     Cancellation token for the pipeline execution.
+        /// </summary>
+        public CancellationToken CancellationToken { get; set; }
+    }
+
+    /// <summary>
+    ///     Defines a pipeline that processes records through a series of handlers.
+    /// </summary>
+    /// <typeparam name="TRecord">The type of record being processed.</typeparam>
+    public interface IPipeline<TRecord>
+    {
+        /// <summary>
+        ///     Add a handler to the pipeline.
+        /// </summary>
+        /// <typeparam name="THandler">The handler type to add.</typeparam>
+        /// <returns>The pipeline for fluent chaining.</returns>
+        IPipeline<TRecord> Add<THandler>() where THandler : IPipelineHandler<TRecord>;
+
+        /// <summary>
+        ///     Execute the pipeline with the given record.
+        /// </summary>
+        /// <param name="record">The record to process through the pipeline.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>A Result indicating success or failure of the overall pipeline execution.</returns>
+        Task<Result> ExecuteAsync(TRecord record, CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>
+    ///     Defines a single handler in a pipeline that performs a discrete piece of work
+    ///     and then delegates to the next handler in the chain.
+    /// </summary>
+    /// <typeparam name="TRecord">The type of record being processed.</typeparam>
+    public interface IPipelineHandler<TRecord>
+    {
+        /// <summary>
+        ///     Gets the name of this handler for logging and debugging purposes.
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        ///     Execute this handler's work and then invoke the next handler in the pipeline.
+        /// </summary>
+        /// <param name="context">The pipeline context containing the record and metadata.</param>
+        /// <param name="next">Delegate to invoke the next handler in the chain.</param>
+        /// <returns>A Result indicating success or failure of the pipeline execution.</returns>
+        Task<Result> ExecuteAsync(
+            PipelineContext<TRecord> context,
+            Func<PipelineContext<TRecord>, Task<Result>> next);
+    }
+
     /// <summary>
     ///     Implementation of a pipeline that chains handlers together in a chain-of-responsibility pattern.
     ///     Each handler performs its work and then delegates to the next handler in the chain.
