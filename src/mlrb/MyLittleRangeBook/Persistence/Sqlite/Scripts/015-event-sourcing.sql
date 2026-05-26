@@ -1,6 +1,6 @@
 ﻿CREATE TABLE event_streams
 (
-    row_id       INTEGER PRIMARY KEY AUTOINCREMENT, -- A unique ID for one event stream (i.e importing a file, adding a range event, etc).
+    row_id       INTEGER PRIMARY KEY AUTOINCREMENT,
     id           TEXT    NOT NULL,                  -- The unique ID of the event stream. This is a ULID that is generated when the event stream is created. It is used to link events to the event stream.
     stream_type  TEXT    NOT NULL,                  -- The type of the event stream (e.g. "RangeEvent", "FileImport", etc).
     version      INTEGER NOT NULL DEFAULT 0,        -- The version of the event stream. The most recent version is is the hightest number.
@@ -13,7 +13,7 @@ CREATE INDEX IX_event_streams_stream_type_version ON event_streams (stream_type,
 
 CREATE TABLE events
 (
-    row_id        INTEGER PRIMARY KEY AUTOINCREMENT,          -- A unique ID for one event.
+    row_id        INTEGER PRIMARY KEY AUTOINCREMENT,
     id            TEXT    NOT NULL,                           -- The unique ID of the event. This is a ULID that is generated when the event is created. It is used to link events to the event stream.
     stream_id     TEXT    NOT NULL,                           -- The ID of the event stream to which the event belongs.
     stream_type   TEXT    NOT NULL,                           -- The type of the event stream to which the event belongs.
@@ -29,3 +29,4 @@ CREATE TABLE events
 
 CREATE INDEX IX_events_stream_id_id ON events (stream_id, id);
 CREATE INDEX IX_events_stream_type ON events (stream_type);
+CREATE INDEX IX_events_id_version ON events (id, version DESC);
