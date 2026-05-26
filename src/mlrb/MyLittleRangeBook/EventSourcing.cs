@@ -97,7 +97,7 @@ namespace MyLittleRangeBook
             Type[] types = eventTypes.Distinct().ToArray();
 
             _eventTypes = types.ToDictionary(
-                static t => t.Name,
+                static t => t.GetCustomAttribute<EventTypeAttribute>()?.Name ?? t.Name,
                 static t => t,
                 StringComparer.Ordinal);
 
