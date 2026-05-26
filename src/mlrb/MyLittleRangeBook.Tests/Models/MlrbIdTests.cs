@@ -5,6 +5,17 @@ namespace MyLittleRangeBook.Models
     public class MlrbIdTests
     {
         [Fact]
+        public void Can_serialize_and_deserialize_MlrbId_via_JSON()
+        {
+            var id = new MlrbId();
+            var json = System.Text.Json.JsonSerializer.Serialize(id);
+            var deserialized = System.Text.Json.JsonSerializer.Deserialize<MlrbId>(json);
+
+            Assert.Equal(id, deserialized);
+            Assert.Equal($"\"{id}\"", json);
+        }
+
+        [Fact]
         public void FromFitFile_should_create_same_MlrbId_each_time()
         {
             const string fileName = "06-21-2026_13-15-45.fit";

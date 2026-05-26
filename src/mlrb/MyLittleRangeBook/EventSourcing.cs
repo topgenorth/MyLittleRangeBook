@@ -1,4 +1,5 @@
 ﻿using System.Data.Common;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Data.Sqlite;
@@ -102,7 +103,7 @@ namespace MyLittleRangeBook
 
             _eventNames = types.ToDictionary(
                 static t => t,
-                static t => t.Name);
+                static t => t.GetCustomAttribute<EventTypeAttribute>()?.Name ?? t.Name);
 
             _jsonSerializerOptions = jsonSerializerOptions;
         }

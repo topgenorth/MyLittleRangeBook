@@ -1,4 +1,5 @@
 ﻿using System.Data.Common;
+using System.Reflection;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
@@ -111,7 +112,6 @@ namespace MyLittleRangeBook.RangeEventAssets
                 (int? currentVersion, int nextVersion) = await GetNextVersionAsync(connection, transaction, streamId,
                     expectedVersion, cancellationToken);
 
-
                 foreach (IDomainEvent evt in pendingEvents)
                 {
                     if (cancellationToken.IsCancellationRequested)
@@ -220,13 +220,18 @@ namespace MyLittleRangeBook.RangeEventAssets
                                    @MetadataJson
                                );
                                """;
+
+            // TODO [TO20260525] Kind of expensive; optimize this by caching the event type names in a dictionary
+            Type t = domainEvent.GetType();
+            string eventType = t.GetCustomAttribute<EventTypeAttribute>()?.Name ?? t.Name;
+
             var p = new
             {
                 StreamId = streamId,
                 Id = new MlrbId(domainEvent.OccurredUtc).ToString(),
                 StreamType,
                 Version = nextVersion,
-                EventType = domainEvent.GetType().Name,
+                EventType = eventType,
                 domainEvent.OccurredUtc,
                 DataJson = _eventSerializer.Serialize(domainEvent),
                 MetadataJson = "{}"

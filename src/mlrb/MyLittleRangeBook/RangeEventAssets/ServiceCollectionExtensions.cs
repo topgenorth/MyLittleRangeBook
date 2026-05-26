@@ -27,8 +27,6 @@ namespace MyLittleRangeBook.RangeEventAssets
             ArgumentNullException.ThrowIfNull(services);
             services.AddScoped<IRangeAssetAggregateRepository, SqliteRangeAssetAggregateRepository>();
             services.AddScoped<IRangeAssetProjector, SqliteRangeAssetProjector>();
-
-
             services.AddScoped<IEventSerializer, SystemTextJsonEventSerializer>(serviceProvider =>
                 new SystemTextJsonEventSerializer(supportedEvents));
 
