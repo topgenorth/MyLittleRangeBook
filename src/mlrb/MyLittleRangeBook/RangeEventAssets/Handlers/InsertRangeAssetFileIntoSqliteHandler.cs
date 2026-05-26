@@ -69,7 +69,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                         v.Id,
                         v.FileName,
                         v.MimeType,
-                        v.FileContents,
+                        Contents = v.FileContents,
                         PathToRangeAssetFile = context.Record.PathToAsset,
                         v.Created,
                         Modified = DateTimeOffset.UtcNow
