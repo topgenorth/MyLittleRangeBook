@@ -7,7 +7,6 @@ using DbUp.Engine;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Config;
-using MyLittleRangeBook.Database;
 using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Persistence.Sqlite

@@ -7,6 +7,14 @@ namespace MyLittleRangeBook
         public const string ID_KEY = "Id";
         public const string ROWID_KEY = "RowId";
 
+        public static Result FailWithException(this Exception ex)
+        {
+            Error? err = new Error($"Unexpected exception : {ex.Message}")
+                .CausedBy(ex);
+
+            return Result.Fail(err);
+        }
+
         public static Error Enrich(this Error error, MlrbId id)
         {
             return error.Enrich(id.ToString());

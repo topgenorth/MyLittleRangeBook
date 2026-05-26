@@ -37,6 +37,13 @@ namespace MyLittleRangeBook.Persistence
                 cancellationToken: cancellationToken);
         }
 
+        public async Task<T?> ExecuteScalarAsync<T>(
+            IDbConnection connection,
+            IDbTransaction? transaction = null,
+            CancellationToken cancellationToken = default)
+        {
+            return await connection.ExecuteScalarAsync<T>(ToDefinition(transaction, cancellationToken));
+        }
         public Task<int> ExecuteAsync(
             IDbConnection connection,
             IDbTransaction? transaction = null,

@@ -1,4 +1,7 @@
-﻿namespace MyLittleRangeBook.IO
+﻿using System.Security.Cryptography;
+using System.Text;
+
+namespace MyLittleRangeBook.IO
 {
     public static class FileExtensions
     {
@@ -15,6 +18,32 @@
             string filename = fitFile.FullName;
 
             return await filename.LoadFileBytesAsync(ct).ConfigureAwait(false);
+        }
+
+        public static async Task<string> ComputeSha256HashAsync(this FileInfo file, CancellationToken ct = default)
+        {
+            if (!file.Exists)
+            {
+                throw new FileNotFoundException($"File not found: {file.FullName}");
+            }
+
+            return await ComputeSha256HashAsync(file.FullName, ct).ConfigureAwait(false);
+        }
+        public static async Task<string> ComputeSha256HashAsync(string path,
+            CancellationToken cancellationToken = default)
+        {
+            await using FileStream stream = File.OpenRead(path);
+            using var sha256 = SHA256.Create();
+
+            byte[] hashBytes = await sha256.ComputeHashAsync(stream, cancellationToken);
+
+            StringBuilder sb = new StringBuilder(64);
+            foreach (byte b in hashBytes)
+            {
+                sb.Append(b.ToString("x2"));
+            }
+
+            return sb.ToString();
         }
 
         /// <summary>
@@ -95,6 +124,7 @@
                 ".gif" => "image/gif",
                 ".bmp" => "image/bmp",
                 ".webp" => "image/webp",
+                ".csv" => "text/csv",
                 _ => "application/octet-stream"
             };
         }

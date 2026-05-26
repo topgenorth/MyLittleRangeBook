@@ -9,10 +9,11 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
     public class ValidateFileExistsHandler : IPipelineHandler<RangeEventAssetFile>
     {
         /// <summary>
-        /// Defines the maximum file size, in bytes, that a SQLite file can have to be considered valid.
-        /// This constant is used during validation to ensure the file size does not exceed predefined limits.
+        ///     Defines the maximum file size, in bytes, that a SQLite file can have to be considered valid.
+        ///     This constant is used during validation to ensure the file size does not exceed predefined limits.
         /// </summary>
         internal const int MaxFileSizeForSqlite = 90 * 1024;
+
         readonly ILogger _logger;
 
         /// <summary>
@@ -39,6 +40,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                 _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
                 context.Metadata["FileExists"] = false;
                 context.Metadata["ValidationError"] = errorMessage;
+                context.Record.Aggregate.Fail(errorMessage, DateTimeOffset.UtcNow);
 
                 return Result.Fail(errorMessage);
             }
@@ -47,9 +49,11 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
             {
                 // Store validation result in metadata
                 var fileInfo = new FileInfo(filePath);
+                string sha256 = await fileInfo.ComputeSha256HashAsync().ConfigureAwait(false);
                 context.Metadata["FileExists"] = true;
                 context.Metadata["FileSizeBytes"] = fileInfo.Length;
                 context.Metadata["FileLastModified"] = fileInfo.LastWriteTimeUtc;
+                context.Metadata["FileSha256"] = sha256;
 
                 if (fileInfo.Length > MaxFileSizeForSqlite)
                 {
@@ -57,11 +61,12 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                     _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
                 }
 
-                _logger.Information("File validation passed: {FilePath} ({FileSize} bytes)",
+                _logger.Verbose("File validation passed: {FilePath} ({FileSize} bytes)",
                     filePath,
                     fileInfo.Length);
 
-                // Call next handler
+                context.Record.Aggregate.FileFingerprinted(sha256, fileInfo.Length, DateTimeOffset.UtcNow);
+
                 return await next(context);
             }
             catch (Exception ex)

@@ -52,26 +52,53 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
 
             try
             {
-                Result<RangeEventAssetRow> rowResult = await CreateRow(context)
-                    .ConfigureAwait(false);
+                Result<RangeEventAssetRow> rowResult = await CreateRow(context).ConfigureAwait(false);
                 if (rowResult.IsFailed)
                 {
                     context.Metadata["InsertIntoSqlite"] = false;
                     context.Metadata["InsertIntoSqliteError"] = rowResult.Errors[0].Message;
+                    context.Record.Aggregate.Fail(rowResult.Errors[0].Message, DateTimeOffset.UtcNow);
                 }
                 else
                 {
                     await using SqliteConnection conn =
                         await _sqliteHelper.GetDatabaseConnectionAsync().ConfigureAwait(false);
-                    var cd = new CommandDefinition(UpsertSql, rowResult.Value);
+                    RangeEventAssetRow v = rowResult.Value!;
+                    var p = new
+                    {
+                        v.Id,
+                        v.FileName,
+                        v.MimeType,
+                        Contents = v.FileContents,
+                        PathToRangeAssetFile = context.Record.PathToAsset,
+                        v.Created,
+                        Modified = DateTimeOffset.UtcNow
+                    };
+                    var cd = new CommandDefinition(UpsertSql, p);
                     int i = await conn.ExecuteAsync(cd).ConfigureAwait(false);
-                    context.Metadata["InsertIntoSqlite"] = i == 1;
+                    if (i == 1)
+                    {
+                        context.Metadata["InsertIntoSqlite"] = true;
+                        context.Record.Aggregate.StoredInDatabase(v.FileContents, DateTimeOffset.UtcNow);
+                    }
+                    else
+                    {
+                        var msg = $"Expected to affect 1 row, but affected {i} rows.";
+                        context.Metadata["InsertIntoSqlite"] = false;
+                        context.Metadata["InsertIntoSqliteError"] = msg;
+                        context.Record.Aggregate.Fail(msg, DateTimeOffset.UtcNow);
+
+                        return Result.Fail(msg);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 context.Metadata["InsertIntoSqlite"] = false;
                 context.Metadata["InsertIntoSqliteError"] = ex.Message;
+                context.Record.Aggregate.Fail(ex, DateTimeOffset.UtcNow);
+
+                return Result.Fail(ex.ToString());
             }
 
             return await next(context);

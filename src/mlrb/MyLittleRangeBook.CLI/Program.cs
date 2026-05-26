@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json;
 using ConsoleAppFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -48,7 +49,9 @@ builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventList
 
 builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
 builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration);
-builder.Services.RegisterRangeAssetHandlers();
+builder.Services
+    .RegisterRangeAssetHandlers()
+    .RegisterRangeAssetEventSourcing();
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();

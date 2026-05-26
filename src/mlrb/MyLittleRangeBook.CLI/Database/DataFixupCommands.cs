@@ -36,16 +36,6 @@ namespace MyLittleRangeBook.Database
             CliDisplay.PrintCommandHeader($"Fixing up IDs on {conn.DataSource}");
 
             Logger.Information("Skipping {tableName} - already done.", "SimpleRangeEvents");
-            // Result t1 = await ChangeSimpleRangeEventIdsToUlids(conn, trans, ct).ConfigureAwait(false);
-            // if (t1.IsFailed)
-            // {
-            //     CliDisplay.PrintFailure("There were issues fixing up ids on the Range Events.");
-            //     Logger.Warning("Could not update the IDs on range events. " + t1.Errors[0]);
-            //     await trans.RollbackAsync(ct).ConfigureAwait(false);
-            //
-            //     return ReturnCodes.FAILURE;
-            // }
-
 
             foreach (string tableName in _tablesToUpdate)
             {

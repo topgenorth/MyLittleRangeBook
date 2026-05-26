@@ -1,0 +1,121 @@
+﻿using ConsoleAppFramework;
+using FluentResults;
+using JetBrains.Annotations;
+using MyLittleRangeBook.Console;
+
+namespace MyLittleRangeBook.RangeEventAssets
+{
+    /// <summary>
+    ///     The simplest way to import - copy the file into the asset directory.
+    /// </summary>
+    [RegisterCommands("range-assets")]
+    [UsedImplicitly]
+    public class RangeAssetCommands : MlrbCommandBase
+    {
+        readonly IRangeAssetAggregateRepository _aggregateRepo;
+        readonly IPipeline<RangeEventAssetFile> _assetPipeline;
+
+        public RangeAssetCommands(ILogger logger,
+            ICliDisplay cliDisplay,
+            IPipeline<RangeEventAssetFile> assetPipeline,
+            IRangeAssetAggregateRepository aggregateRepo) : base(logger,
+            cliDisplay)
+        {
+            _assetPipeline = assetPipeline;
+            _aggregateRepo = aggregateRepo;
+        }
+
+        /// <summary>
+        ///     Copy the file to the asset directory for the range event.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="rangeEventId"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        [Command("add")]
+        [UsedImplicitly]
+        // ReSharper disable once AsyncMethodWithoutAwait
+        public async Task<int> CopyFileToAssetDirectory(string file,
+            string? rangeEventId = null,
+            CancellationToken ct = default)
+        {
+            CliDisplay.PrintCommandHeader("Add file as range asset");
+
+            if (!File.Exists(file))
+            {
+                CliDisplay.PrintFailure("File does not exit.");
+
+                return ReturnCodes.FIT_FILE_NOT_FOUND;
+            }
+
+            if (string.IsNullOrWhiteSpace(rangeEventId))
+            {
+                rangeEventId = MlrbId.Empty.ToString();
+                Logger.Verbose("No RangeEvent specified.");
+                CliDisplay.PrintWarning($"The file {file} is not assigned to any RangeEvent.");
+            }
+
+            var fileinfo = new FileInfo(file);
+            var id = MlrbId.FromFile(fileinfo);
+
+            Result<RangeAssetAggregate> r = await _aggregateRepo.GetAsync(id, ct).ConfigureAwait(false);
+            bool isNew = r.IsFailed || r.Value is null;
+
+            RangeAssetAggregate aggregate;
+            if (isNew)
+            {
+                aggregate = RangeAssetAggregate.New(file, DateTimeOffset.UtcNow);
+                Logger.Verbose("New file {file}", file);
+            }
+            else
+            {
+                aggregate = r.Value!;
+                Logger.Verbose("Existing file {file} with id {id}, v{version}.", file, aggregate.Id, aggregate.Version);
+            }
+
+            RangeEventAssetFile rfe = new RangeEventAssetFile(file, aggregate, rangeEventId);
+
+            Result result = await _assetPipeline.ExecuteAsync(rfe, ct).ConfigureAwait(false);
+
+            if (result.IsFailed)
+            {
+                CliDisplay.PrintFailure("Could not process the file.");
+
+                return ReturnCodes.FAILURE;
+            }
+
+            if (!rfe.RangeEventId.Equals(MlrbId.Empty.ToString()))
+            {
+                rfe.Aggregate.AddedToRangeEvent(rfe.RangeEventId, DateTimeOffset.UtcNow);
+                Logger.Verbose("Associated range asset with range event '{RangeEventId}'.", rangeEventId);
+            }
+
+            Result saveAggregate = await _aggregateRepo.SaveAsync(rfe.Aggregate, ct).ConfigureAwait(false);
+
+            if (saveAggregate.IsFailed)
+            {
+                IError? err = saveAggregate.Errors[0];
+                CliDisplay.PrintFailure($"Could not save the range event asset {err.Message}.");
+
+                if (err.Reasons[0] is ExceptionalError ex)
+                {
+                    Logger.Warning(ex.Exception, "There was an issue saving the event stream: {message}.", err.Message);
+                }
+                else
+                {
+                    Logger.Warning("There was an issue saving the event stream: {message}", err.Message);
+                }
+
+                return ReturnCodes.FAILURE;
+            }
+
+            Logger.Verbose("Updated the event stream {id}, v{version}", aggregate.Id, aggregate.Version);
+
+            CliDisplay.PrintSuccess(rangeEventId.Equals(MlrbId.Empty.ToString())
+                ? "Copied file to generic range event asset."
+                : $"Copied file for range event '{rangeEventId}'.");
+
+            return ReturnCodes.SUCCESS;
+        }
+    }
+}
