@@ -62,6 +62,11 @@ namespace MyLittleRangeBook.RangeEventAssets
                 return ReturnCodes.FAILURE;
             }
 
+            if (!rfe.RangeEventId.Equals(MlrbId.Empty.ToString()))
+            {
+                rfe.Aggregate.AddedToRangeEvent(rfe.RangeEventId, DateTimeOffset.UtcNow);
+                Logger.Verbose("Associated range asset with range event '{RangeEventId}'.", rangeEventId);
+            }
 
             CliDisplay.PrintSuccess(rangeEventId.Equals(MlrbId.Empty.ToString())
                 ? "Copied file to generic range event asset."

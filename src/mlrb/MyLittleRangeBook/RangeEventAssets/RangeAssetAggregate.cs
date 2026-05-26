@@ -15,6 +15,8 @@ namespace MyLittleRangeBook.RangeEventAssets
         public string? FailureReason { get; private set; }
         public int Version { get; private set; }
 
+        public MlrbId RangeEventId { get; private set; } = MlrbId.Empty;
+
         public static RangeAssetAggregate Create(string sourcePath, DateTimeOffset utcNow)
         {
             var fileInfo = new FileInfo(sourcePath);
@@ -41,6 +43,11 @@ namespace MyLittleRangeBook.RangeEventAssets
         public void StoredInDatabase(byte[] fileContents, DateTimeOffset nowUtc)
         {
             Raise(new RangeAssetStoredInDatabase(Id, fileContents, nowUtc));
+        }
+
+        public void AddedToRangeEvent(MlrbId rangeEventId, DateTimeOffset nowUtc)
+        {
+            Raise(new RangeAssetAssociateWithRangeEvent(Id, rangeEventId, nowUtc));
         }
 
         public void FileFingerprinted(string sha256, long fileSize, DateTimeOffset nowUtc)
@@ -96,6 +103,15 @@ namespace MyLittleRangeBook.RangeEventAssets
                 case RangeAssetImportFailed x:
                     FailureReason = x.Reason;
                     Status = "Failed";
+
+                    break;
+
+                case RangeAssetStoredInDatabase x:
+                    // No state change for this event, but it could be used for auditing or other purposes.
+
+                    break;
+                case RangeAssetAssociateWithRangeEvent x:
+                    RangeEventId = x.RangeEventId;
 
                     break;
 
