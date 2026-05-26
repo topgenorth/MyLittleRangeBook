@@ -107,28 +107,28 @@ namespace MyLittleRangeBook.RangeEventAssets
             _uncommitted.Clear();
         }
 
-        public record struct RangeAssetImportStarted(MlrbId StreamId, string SourcePath, DateTimeOffset OccurredUtc)
+        internal record struct RangeAssetImportStarted(MlrbId StreamId, string SourcePath, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
-        public record struct RangeAssetCopied(MlrbId StreamId, string DestinationPath, DateTimeOffset OccurredUtc)
+        internal record struct RangeAssetCopied(MlrbId StreamId, string DestinationPath, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
-        public record struct RangeAssetParsed(MlrbId StreamId, string mimeType, DateTimeOffset OccurredUtc)
+        internal record struct RangeAssetParsed(MlrbId StreamId, string mimeType, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
-        public record struct RangeAssetFingerprintComputed(
+        internal record struct RangeAssetFingerprintComputed(
             MlrbId StreamId,
             string Sha256,
             long FileSize,
             DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
-        public record struct RangeAssetImportCompleted(MlrbId StreamId, DateTimeOffset OccurredUtc) : IDomainEvent;
+        internal record struct RangeAssetImportCompleted(MlrbId StreamId, DateTimeOffset OccurredUtc) : IDomainEvent;
 
-        public record struct RangeAssetImportFailed(MlrbId StreamId, string Reason, DateTimeOffset OccurredUtc)
+        internal record struct RangeAssetImportFailed(MlrbId StreamId, string Reason, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
-        public record struct RangeAssetAssociateWithRangeEvent(
+        internal record struct RangeAssetAssociateWithRangeEvent(
             MlrbId StreamId,
             MlrbId RangeEventId,
             DateTimeOffset OccurredUtc) : IDomainEvent;
