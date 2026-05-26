@@ -178,7 +178,7 @@ namespace MyLittleRangeBook.Models
         }
 
         /// <summary>
-        ///     Create a MlrbId from a FileInfo object. We will try to use the contents of the file, otherwise use the filename.
+        ///     New a MlrbId from a FileInfo object. We will try to use the contents of the file, otherwise use the filename.
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <returns></returns>
@@ -212,7 +212,7 @@ namespace MyLittleRangeBook.Models
         }
 
         /// <summary>
-        ///     Create a MlrbId from a FIT file, using the name of the file as the creation date.
+        ///     New a MlrbId from a FIT file, using the name of the file as the creation date.
         /// </summary>
         /// <param name="fitFileName"></param>
         /// <returns></returns>

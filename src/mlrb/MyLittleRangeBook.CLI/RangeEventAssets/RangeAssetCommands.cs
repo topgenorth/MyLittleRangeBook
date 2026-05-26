@@ -55,11 +55,15 @@ namespace MyLittleRangeBook.RangeEventAssets
                 CliDisplay.PrintWarning($"The file {file} is not assigned to any RangeEvent.");
             }
 
-            var id = MlrbId.FromFile(new FileInfo(file));
-            Result<RangeAssetAggregate> aggregate = await _aggregateRepo.GetAsync(id, ct).ConfigureAwait(false);
-            RangeEventAssetFile rfe = aggregate.IsSuccess
-                ? new RangeEventAssetFile(file, aggregate.Value, rangeEventId)
-                : new RangeEventAssetFile(file, rangeEventId);
+            var fileinfo = new FileInfo(file);
+            var id = MlrbId.FromFile(fileinfo);
+
+            Result<RangeAssetAggregate> r = await _aggregateRepo.GetAsync(id, ct).ConfigureAwait(false);
+            bool isNew = r.IsFailed || r.Value is null;
+            RangeAssetAggregate aggregate = isNew ? RangeAssetAggregate.New(file, DateTimeOffset.UtcNow) : r.Value!;
+            Logger.Verbose("Event stream {id}, v{version}", aggregate.Id, aggregate.Version);
+
+            RangeEventAssetFile rfe = new RangeEventAssetFile(file, aggregate, rangeEventId);
 
             Result result = await _assetPipeline.ExecuteAsync(rfe, ct).ConfigureAwait(false);
 
@@ -95,7 +99,7 @@ namespace MyLittleRangeBook.RangeEventAssets
                 return ReturnCodes.FAILURE;
             }
 
-            Logger.Verbose("Updated the event stream {id}, v{version}", aggregate.Value.Id, aggregate.Value.Version);
+            Logger.Verbose("Updated the event stream {id}, v{version}", aggregate.Id, aggregate.Version);
 
             CliDisplay.PrintSuccess(rangeEventId.Equals(MlrbId.Empty.ToString())
                 ? "Copied file to generic range event asset."

@@ -4,45 +4,39 @@ namespace MyLittleRangeBook.RangeEventAssets
 {
     public class RangeAssetAggregate
     {
+        public const string DefaultStreamType = "range-asset-import";
         readonly List<IDomainEvent> _uncommitted = [];
 
-        RangeAssetAggregate(MlrbId id)
+        RangeAssetAggregate()
         {
-            Id = id;
-            Version = 0;
-            StreamType = "range-asset-import";
+
         }
 
-        public RangeAssetAggregate(EventStream stream)
-        {
-            Id = stream.StreamId;
-            StreamType = stream.StreamType;
-        }
 
-        public MlrbId Id { get; private set; }
-        public string SourcePath { get; private set; } = "";
-        public string DestinationPath { get; private set; } = "";
-        public string Status { get; private set; } = "New";
+        public MlrbId Id { get; private set; } = MlrbId.Empty;
+        public string SourcePath { get; private set; } = string.Empty;
+        public string DestinationPath { get; private set; }= string.Empty;
+        public string Status { get; private set; }= "Unknown";
         public string? SHA256 { get; private set; }
         public string MimeType { get; private set; } = "application/octet-stream";
         public string? FailureReason { get; private set; }
-        public int Version { get; private set; }
+        public int Version { get; private set; } = -1;
 
-        public string? StreamType { get; private set; }
+        public string StreamType { get; private set; } = DefaultStreamType;
 
         public MlrbId RangeEventId { get; private set; } = MlrbId.Empty;
 
         /// <summary>
-        ///     This factory method is used when rehydrating and existin the aggregate from persisted the event stream. The
-        ///     streamId is the same as the aggregate Id, which is the same as the asset Id.
+        ///     Createing a new RangeAssetAggregate..
         /// </summary>
         /// <param name="streamId"></param>
         /// <returns></returns>
-        public static RangeAssetAggregate Create(MlrbId streamId)
+        public static RangeAssetAggregate New(MlrbId streamId)
         {
-            // [TO20260526] No need to raise the RangeAssetImportStarted event because this implies we have an
-            // existing aggregate.
-            return new RangeAssetAggregate(streamId);
+            var agg = new RangeAssetAggregate();
+            agg.Raise(new RangeAssetCreated(streamId, DateTimeOffset.UtcNow));
+
+            return agg;
         }
 
         /// <summary>
@@ -52,15 +46,28 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// <param name="sourcePath"></param>
         /// <param name="utcNow"></param>
         /// <returns></returns>
-        public static RangeAssetAggregate Create(string sourcePath, DateTimeOffset utcNow)
+        public static RangeAssetAggregate New(string sourcePath, DateTimeOffset utcNow)
         {
+
             var fileInfo = new FileInfo(sourcePath);
-            var agg = new RangeAssetAggregate(MlrbId.FromFile(fileInfo))
-            {
-                SourcePath = sourcePath, Status = "New", Version = 0
-            };
+            var id = MlrbId.FromFile(fileInfo);
+
+            RangeAssetAggregate agg = New(id);
 
             agg.Raise(new RangeAssetImportStarted(agg.Id, sourcePath, utcNow));
+
+            return agg;
+        }
+
+        public static RangeAssetAggregate Create(EventStream stream)
+        {
+            var agg = new RangeAssetAggregate()
+            {
+                Id = stream.StreamId,
+                StreamType = stream.StreamType,
+                Version = stream.Version,
+                Status = "Unknown"
+            };
 
             return agg;
         }
@@ -117,22 +124,27 @@ namespace MyLittleRangeBook.RangeEventAssets
         {
             switch (e)
             {
+                case RangeAssetCreated x:
+                    Id = x.StreamId;
+                    Status = "Created";
+                    break;
                 case RangeAssetImportStarted x:
                     Id = x.StreamId;
                     SourcePath = x.SourcePath;
                     Status = "Started";
+
                     break;
                 case RangeAssetFingerprintComputed x:
                     SHA256 = x.Sha256;
-
+                    Status = "Fingerprinted";
                     break;
                 case RangeAssetCopied x:
                     DestinationPath = x.DestinationPath;
-
+                    Status = "FileCopied";
                     break;
                 case RangeAssetParsed x:
                     MimeType = x.mimeType;
-
+                    Status = "Parsed";
                     break;
                 case RangeAssetImportFailed x:
                     FailureReason = x.Reason;
@@ -146,19 +158,17 @@ namespace MyLittleRangeBook.RangeEventAssets
                     break;
                 case RangeAssetAssociateWithRangeEvent x:
                     RangeEventId = x.RangeEventId;
-
+                    Status = "AssociatedWithRangeEvent";
                     break;
 
                 case RangeAssetImportCompleted x:
                     Status = "Completed";
-
                     break;
                 default:
                     throw new InvalidOperationException($"Unknown event type `{e.GetType().Name}`.");
             }
 
             Version++;
-
         }
 
         void Raise(IDomainEvent e)
@@ -171,6 +181,11 @@ namespace MyLittleRangeBook.RangeEventAssets
         {
             _uncommitted.Clear();
         }
+
+        [EventType("range-asset-created")]
+        internal record struct RangeAssetCreated(MlrbId StreamId, DateTimeOffset OccurredUtc)
+            : IDomainEvent;
+
 
         [EventType("range-asset-import-started")]
         internal record struct RangeAssetImportStarted(MlrbId StreamId, string SourcePath, DateTimeOffset OccurredUtc)

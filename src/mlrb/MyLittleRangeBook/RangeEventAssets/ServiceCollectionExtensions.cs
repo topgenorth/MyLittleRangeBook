@@ -14,15 +14,15 @@ namespace MyLittleRangeBook.RangeEventAssets
         {
             Type[] supportedEvents =
             [
+                typeof(RangeAssetAggregate.RangeAssetCreated),
                 typeof(RangeAssetAggregate.RangeAssetImportStarted),
+                typeof(RangeAssetAggregate.RangeAssetImportFailed),
+                typeof(RangeAssetAggregate.RangeAssetImportCompleted),
                 typeof(RangeAssetAggregate.RangeAssetAssociateWithRangeEvent),
                 typeof(RangeAssetAggregate.RangeAssetCopied),
-                typeof(RangeAssetAggregate.RangeAssetImportFailed),
                 typeof(RangeAssetAggregate.RangeAssetStoredInDatabase),
                 typeof(RangeAssetAggregate.RangeAssetFingerprintComputed),
-                typeof(RangeAssetAggregate.RangeAssetParsed),
-                typeof(RangeAssetAggregate.RangeAssetStoredInDatabase),
-                typeof(RangeAssetAggregate.RangeAssetImportCompleted)
+                typeof(RangeAssetAggregate.RangeAssetParsed)
             ];
             ArgumentNullException.ThrowIfNull(services);
             services.AddScoped<IRangeAssetAggregateRepository, SqliteRangeAssetAggregateRepository>();
