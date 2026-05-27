@@ -42,10 +42,10 @@ namespace MyLittleRangeBook.RangeEventAssets
             _rangeAssetProjector = rangeAssetProjector;
         }
 
-        protected override Task ProjectAsync(string streamId,
-            IReadOnlyList<IDomainEvent> pendingEvents,
-            SqliteConnection connection,
+        protected override Task ProjectAsync(SqliteConnection connection,
             DbTransaction transaction,
+            string streamId,
+            IReadOnlyList<IDomainEvent> pendingEvents,
             CancellationToken cancellationToken)
         {
             return _rangeAssetProjector.ProjectAsync(streamId,
