@@ -91,6 +91,20 @@ namespace MyLittleRangeBook.RangeEventAssets
             }
         }
 
+        public async Task<Result<RangeAssetAggregate>> GetAsync(FileInfo fileInfo,
+            CancellationToken cancellationToken = default)
+        {
+            if (!fileInfo.Exists)
+            {
+                var err = new Error($"File not found: {fileInfo.FullName}").CausedBy(new FileNotFoundException());
+                return Result.Fail(err);
+            }
+
+            var id = MlrbId.FromFile(fileInfo);
+            return await GetAsync(id, cancellationToken).ConfigureAwait(false);
+        }
+
+
         public async Task<Result> SaveAsync(RangeAssetAggregate aggregate,
             CancellationToken cancellationToken = default)
         {
