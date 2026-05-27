@@ -1,9 +1,9 @@
 ﻿CREATE TABLE event_streams
 (
     row_id       INTEGER PRIMARY KEY AUTOINCREMENT,
-    id           TEXT    NOT NULL,                  -- The unique ID of the event stream. This is a ULID that is generated when the event stream is created. It is used to link events to the event stream.
-    stream_type  TEXT    NOT NULL,                  -- The type of the event stream (e.g. "RangeEvent", "FileImport", etc).
-    version      INTEGER NOT NULL DEFAULT 0,        -- The version of the event stream. The most recent version is is the hightest number.
+    id           TEXT    NOT NULL,           -- The unique ID of the event stream. This is a ULID that is generated when the event stream is created. It is used to link events to the event stream.
+    stream_type  TEXT    NOT NULL,           -- The type of the event stream (e.g. "RangeEvent", "FileImport", etc).
+    version      INTEGER NOT NULL DEFAULT 0, -- The version of the event stream. The most recent version is is the hightest number.
     created_utc  TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     modified_utc TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (id)

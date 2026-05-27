@@ -9,14 +9,13 @@ namespace MyLittleRangeBook.RangeEventAssets
 
         RangeAssetAggregate()
         {
-
         }
 
 
         public MlrbId Id { get; private set; } = MlrbId.Empty;
         public string SourcePath { get; private set; } = string.Empty;
-        public string DestinationPath { get; private set; }= string.Empty;
-        public string Status { get; private set; }= "Unknown";
+        public string DestinationPath { get; private set; } = string.Empty;
+        public string Status { get; private set; } = "Unknown";
         public string? SHA256 { get; private set; }
         public string MimeType { get; private set; } = "application/octet-stream";
         public string? FailureReason { get; private set; }
@@ -48,7 +47,6 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// <returns></returns>
         public static RangeAssetAggregate New(string sourcePath, DateTimeOffset utcNow)
         {
-
             var fileInfo = new FileInfo(sourcePath);
             var id = MlrbId.FromFile(fileInfo);
 
@@ -61,12 +59,9 @@ namespace MyLittleRangeBook.RangeEventAssets
 
         public static RangeAssetAggregate Create(EventStream stream)
         {
-            var agg = new RangeAssetAggregate()
+            var agg = new RangeAssetAggregate
             {
-                Id = stream.StreamId,
-                StreamType = stream.StreamType,
-                Version = stream.Version,
-                Status = "Unknown"
+                Id = stream.StreamId, StreamType = stream.StreamType, Version = stream.Version, Status = "Unknown"
             };
 
             return agg;
@@ -127,6 +122,7 @@ namespace MyLittleRangeBook.RangeEventAssets
                 case RangeAssetCreated x:
                     Id = x.StreamId;
                     Status = "Created";
+
                     break;
                 case RangeAssetImportStarted x:
                     Id = x.StreamId;
@@ -137,14 +133,17 @@ namespace MyLittleRangeBook.RangeEventAssets
                 case RangeAssetFingerprintComputed x:
                     SHA256 = x.Sha256;
                     Status = "Fingerprinted";
+
                     break;
                 case RangeAssetCopied x:
                     DestinationPath = x.DestinationPath;
                     Status = "FileCopied";
+
                     break;
                 case RangeAssetParsed x:
                     MimeType = x.mimeType;
                     Status = "Parsed";
+
                     break;
                 case RangeAssetImportFailed x:
                     FailureReason = x.Reason;
@@ -159,15 +158,16 @@ namespace MyLittleRangeBook.RangeEventAssets
                 case RangeAssetAssociateWithRangeEvent x:
                     RangeEventId = x.RangeEventId;
                     Status = "AssociatedWithRangeEvent";
+
                     break;
 
                 case RangeAssetImportCompleted x:
                     Status = "Completed";
+
                     break;
                 default:
                     throw new InvalidOperationException($"Unknown event type `{e.GetType().Name}`.");
             }
-
         }
 
         public void Raise(IDomainEvent e)

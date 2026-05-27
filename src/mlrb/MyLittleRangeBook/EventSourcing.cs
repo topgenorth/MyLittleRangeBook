@@ -5,78 +5,9 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
-using MyLittleRangeBook.RangeEventAssets;
 
 namespace MyLittleRangeBook
 {
-
-    [AttributeUsage(AttributeTargets.Struct)]
-    public sealed class EventTypeAttribute(string name) : Attribute
-    {
-        public string Name { get; } = name;
-    }
-
-    /// <summary>
-    /// </summary>
-    /// <param name="StreamId">A unique value that represents the event .</param>
-    /// <param name="StreamType"></param>
-    /// <param name="Version"></param>
-    /// <param name="Created"></param>
-    /// <param name="Modified"></param>
-    public record struct EventStream(
-        string StreamId,
-        string StreamType,
-        int Version,
-        DateTimeOffset Created,
-        DateTimeOffset Modified);
-
-    public record struct EventRow(
-        string StreamId,
-        string StreamType,
-        string EventType,
-        int Version,
-        string DataJson,
-        string MetadataJson,
-        DateTimeOffset OccurredUtc,
-        DateTimeOffset Created,
-        DateTimeOffset Modified);
-
-
-    /// <summary>
-    ///     Defines functionality for projecting domain events related to file imports into a storage system.
-    /// </summary>
-    public interface IRangeAssetProjector
-    {
-        Task ProjectAsync(string toString,
-            IReadOnlyList<IDomainEvent> pendingEvents,
-            SqliteConnection connection,
-            DbTransaction transaction,
-            CancellationToken cancellationToken);
-    }
-
-    public interface IDomainEvent
-    {
-        MlrbId StreamId { get; }
-        DateTimeOffset OccurredUtc { get; }
-    }
-
-    /// <summary>
-    ///     Will serialize the domain event to JSON.
-    /// </summary>
-    public interface IEventSerializer
-    {
-        string GetEventType(object @event);
-        string Serialize(object domainEvent);
-        object Deserialize(string rowEventType, string rowDataJson);
-    }
-
-    public interface IRangeAssetAggregateRepository
-    {
-        Task<Result<RangeAssetAggregate>> GetAsync(MlrbId id, CancellationToken cancellationToken = default);
-        Task<Result> SaveAsync(RangeAssetAggregate aggregate, CancellationToken cancellationToken = default);
-    }
-
-
     public sealed class SystemTextJsonEventSerializer : IEventSerializer
     {
         readonly IReadOnlyDictionary<Type, string> _eventNames;
@@ -164,12 +95,78 @@ namespace MyLittleRangeBook
                 PropertyNameCaseInsensitive = true,
                 WriteIndented = false,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                TypeInfoResolver = JsonTypeInfoResolver.Combine(MlrbJsonContext.Default, new DefaultJsonTypeInfoResolver())
+                TypeInfoResolver =
+                    JsonTypeInfoResolver.Combine(MlrbJsonContext.Default, new DefaultJsonTypeInfoResolver())
             };
 
             options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
 
             return options;
         }
+    }
+
+    /// <summary>
+    ///     Represents an attribute used to associate a name with a specific event type.
+    ///     This attribute is intended to be applied to structures that represent domain events,
+    ///     facilitating their identification and serialization.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Struct)]
+    public sealed class EventTypeAttribute(string name) : Attribute
+    {
+        public string Name { get; } = name;
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="StreamId">A unique value that represents the event .</param>
+    /// <param name="StreamType"></param>
+    /// <param name="Version"></param>
+    /// <param name="Created"></param>
+    /// <param name="Modified"></param>
+    public record struct EventStream(
+        string StreamId,
+        string StreamType,
+        int Version,
+        DateTimeOffset Created,
+        DateTimeOffset Modified);
+
+    public record struct EventRow(
+        string StreamId,
+        string StreamType,
+        string EventType,
+        int Version,
+        string DataJson,
+        string MetadataJson,
+        DateTimeOffset OccurredUtc,
+        DateTimeOffset Created,
+        DateTimeOffset Modified);
+
+
+    /// <summary>
+    ///     Defines functionality for projecting domain events related to file imports into a storage system.
+    /// </summary>
+    public interface IRangeAssetProjector
+    {
+        Task ProjectAsync(string toString,
+            IReadOnlyList<IDomainEvent> pendingEvents,
+            SqliteConnection connection,
+            DbTransaction transaction,
+            CancellationToken cancellationToken);
+    }
+
+    public interface IDomainEvent
+    {
+        MlrbId StreamId { get; }
+        DateTimeOffset OccurredUtc { get; }
+    }
+
+    /// <summary>
+    ///     Will serialize the domain event to JSON.
+    /// </summary>
+    public interface IEventSerializer
+    {
+        string GetEventType(object @event);
+        string Serialize(object domainEvent);
+        object Deserialize(string rowEventType, string rowDataJson);
     }
 }

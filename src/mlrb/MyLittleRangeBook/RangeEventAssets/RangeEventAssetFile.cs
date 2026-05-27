@@ -27,7 +27,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             Id = Aggregate.Id;
         }
 
-        public RangeAssetAggregate Aggregate { get; private set; }
+        public RangeAssetAggregate Aggregate { get; }
 
 
         /// <summary>

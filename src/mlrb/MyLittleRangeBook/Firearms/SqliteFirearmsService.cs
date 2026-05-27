@@ -126,7 +126,7 @@ namespace MyLittleRangeBook.Firearms
             IDbTransaction? transaction = null,
             CancellationToken ct = default)
         {
-                throw new NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

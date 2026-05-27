@@ -29,6 +29,7 @@ namespace MyLittleRangeBook.IO
 
             return await ComputeSha256HashAsync(file.FullName, ct).ConfigureAwait(false);
         }
+
         public static async Task<string> ComputeSha256HashAsync(string path,
             CancellationToken cancellationToken = default)
         {
@@ -37,7 +38,7 @@ namespace MyLittleRangeBook.IO
 
             byte[] hashBytes = await sha256.ComputeHashAsync(stream, cancellationToken);
 
-            StringBuilder sb = new StringBuilder(64);
+            var sb = new StringBuilder(64);
             foreach (byte b in hashBytes)
             {
                 sb.Append(b.ToString("x2"));

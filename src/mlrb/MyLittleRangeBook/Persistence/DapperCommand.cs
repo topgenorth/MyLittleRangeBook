@@ -44,6 +44,7 @@ namespace MyLittleRangeBook.Persistence
         {
             return await connection.ExecuteScalarAsync<T>(ToDefinition(transaction, cancellationToken));
         }
+
         public Task<int> ExecuteAsync(
             IDbConnection connection,
             IDbTransaction? transaction = null,

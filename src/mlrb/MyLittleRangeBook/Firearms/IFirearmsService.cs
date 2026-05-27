@@ -56,7 +56,7 @@ namespace MyLittleRangeBook.Firearms
 
 
         /// <summary>
-        /// Associate a range asset with the specified firearm.
+        ///     Associate a range asset with the specified firearm.
         /// </summary>
         /// <param name="firearmId"></param>
         /// <param name="assetId"></param>

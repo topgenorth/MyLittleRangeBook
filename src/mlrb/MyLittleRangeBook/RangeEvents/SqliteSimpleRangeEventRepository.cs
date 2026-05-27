@@ -1,5 +1,4 @@
-﻿using System.Data;
-using System.Data.Common;
+﻿using System.Data.Common;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
@@ -81,6 +80,7 @@ namespace MyLittleRangeBook.RangeEvents
                 Result<long?> sreResult = await _simpleRangeEventService
                     .UpsertAsync(conn, simpleRangeEvent, cancellationToken)
                     .ConfigureAwait(false);
+
                 return sreResult.IsFailed ? sreResult : sreResult;
 
                 ;
