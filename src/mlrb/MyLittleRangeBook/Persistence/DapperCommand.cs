@@ -21,7 +21,7 @@ namespace MyLittleRangeBook.Persistence
 
         public string Sql { get; }
         public object? Parameters { get; }
-        public CommandType? CommandType { get; }
+        public CommandType CommandType { get; }
         public int CommandTimeout { get; }
 
         public CommandDefinition ToDefinition(
