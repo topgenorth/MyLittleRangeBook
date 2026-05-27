@@ -7,27 +7,6 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.RangeEventAssets
 {
-    class SqliteRangeAssetProjector : IRangeAssetProjector
-    {
-        readonly ILogger _logger;
-
-        public SqliteRangeAssetProjector(ILogger logger)
-        {
-            _logger = logger;
-        }
-
-        public Task ProjectAsync(string toString,
-            IReadOnlyList<IDomainEvent> pendingEvents,
-            SqliteConnection connection,
-            DbTransaction transaction,
-            CancellationToken cancellationToken)
-        {
-            _logger.Warning("Projecting {EventCount} events for RangeAssetImport", pendingEvents.Count);
-
-            return Task.CompletedTask;
-        }
-    }
-
     public class SqliteRangeAssetAggregateRepository : IRangeAssetAggregateRepository
     {
         const string StreamType = "range-asset-import";
@@ -161,7 +140,8 @@ namespace MyLittleRangeBook.RangeEventAssets
                         return Result.Fail("Operation was cancelled.");
                     }
 
-                    await InsertDomainEventAsync(connection, transaction, streamId, nextVersion, evt, cancellationToken);
+                    await InsertDomainEventAsync(connection, transaction, streamId, nextVersion, evt,
+                        cancellationToken);
                     nextVersion++;
                 }
 
@@ -169,13 +149,18 @@ namespace MyLittleRangeBook.RangeEventAssets
                     transaction,
                     aggregate.Id.ToString(),
                     currentVersion,
-                    nextVersion-1,
+                    nextVersion - 1,
                     cancellationToken);
 
 
-                await _rangeAssetProjector
-                    .ProjectAsync(aggregate.Id.ToString(), pendingEvents, connection, transaction, cancellationToken)
-                    .ConfigureAwait(false);
+                var ctx = new RangeAssetProjectionContext(
+                    connection,
+                    transaction,
+                    aggregate.Id,
+                    pendingEvents,
+                    cancellationToken
+                );
+                await _rangeAssetProjector.ProjectAsync(ctx).ConfigureAwait(false);
 
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -247,7 +232,7 @@ namespace MyLittleRangeBook.RangeEventAssets
                       where id = @StreamId   
                         and version = @ExpectedVersion;
                       """;
-                p = new { Version = nextVersion, StreamId = streamId,  ExpectedVersion = currentVersion };
+                p = new { Version = nextVersion, StreamId = streamId, ExpectedVersion = currentVersion };
             }
 
             var cmd = new DapperCommand(sql, p);

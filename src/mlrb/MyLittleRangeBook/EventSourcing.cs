@@ -142,17 +142,6 @@ namespace MyLittleRangeBook
         DateTimeOffset Modified);
 
 
-    /// <summary>
-    ///     Defines functionality for projecting domain events related to file imports into a storage system.
-    /// </summary>
-    public interface IRangeAssetProjector
-    {
-        Task ProjectAsync(string toString,
-            IReadOnlyList<IDomainEvent> pendingEvents,
-            SqliteConnection connection,
-            DbTransaction transaction,
-            CancellationToken cancellationToken);
-    }
 
     public interface IDomainEvent
     {

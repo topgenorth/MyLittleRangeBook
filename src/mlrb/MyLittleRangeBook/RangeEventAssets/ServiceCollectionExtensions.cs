@@ -10,25 +10,25 @@ namespace MyLittleRangeBook.RangeEventAssets
     /// </summary>
     public static class ServiceCollectionExtensions
     {
+        static readonly Type[] SupportedDomainEvents = [
+            typeof(RangeAssetAggregate.RangeAssetCreated),
+            typeof(RangeAssetAggregate.RangeAssetImportStarted),
+            typeof(RangeAssetAggregate.RangeAssetImportFailed),
+            typeof(RangeAssetAggregate.RangeAssetImportCompleted),
+            typeof(RangeAssetAggregate.RangeAssetAssociateWithRangeEvent),
+            typeof(RangeAssetAggregate.RangeAssetCopied),
+            typeof(RangeAssetAggregate.RangeAssetStoredInDatabase),
+            typeof(RangeAssetAggregate.RangeAssetFingerprintComputed),
+            typeof(RangeAssetAggregate.RangeAssetParsed)
+        ];
+
         public static IServiceCollection RegisterRangeAssetEventSourcing(this IServiceCollection services)
         {
-            Type[] supportedEvents =
-            [
-                typeof(RangeAssetAggregate.RangeAssetCreated),
-                typeof(RangeAssetAggregate.RangeAssetImportStarted),
-                typeof(RangeAssetAggregate.RangeAssetImportFailed),
-                typeof(RangeAssetAggregate.RangeAssetImportCompleted),
-                typeof(RangeAssetAggregate.RangeAssetAssociateWithRangeEvent),
-                typeof(RangeAssetAggregate.RangeAssetCopied),
-                typeof(RangeAssetAggregate.RangeAssetStoredInDatabase),
-                typeof(RangeAssetAggregate.RangeAssetFingerprintComputed),
-                typeof(RangeAssetAggregate.RangeAssetParsed)
-            ];
             ArgumentNullException.ThrowIfNull(services);
             services.AddScoped<IRangeAssetAggregateRepository, SqliteRangeAssetAggregateRepository>();
             services.AddScoped<IRangeAssetProjector, SqliteRangeAssetProjector>();
             services.AddScoped<IEventSerializer, SystemTextJsonEventSerializer>(serviceProvider =>
-                new SystemTextJsonEventSerializer(supportedEvents));
+                new SystemTextJsonEventSerializer(SupportedDomainEvents));
 
             return services;
         }
@@ -50,7 +50,7 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// <example>
         ///     <code>
         /// services.RegisterRangeAssetHandlers();
-        /// 
+        ///
         /// var pipeline = serviceProvider.GetRequiredService&lt;IPipeline&lt;RangeEventAssetFile&gt;&gt;();
         /// var result = await pipeline.ExecuteAsync(assetFile);
         /// </code>
