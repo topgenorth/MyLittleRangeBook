@@ -1,25 +1,22 @@
 ﻿using System.Data.Common;
-using System.Reflection;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.RangeEventAssets
 {
     public class SqliteRangeAssetAggregateRepository : IRangeAssetAggregateRepository
     {
-        const string StreamType = "range-asset-import";
-        readonly IEventSerializer _eventSerializer;
         readonly IRangeAssetProjector _rangeAssetProjector;
-        readonly ISqliteHelper _sqliteHelper;
 
         public SqliteRangeAssetAggregateRepository(ISqliteHelper sqliteHelper,
             IEventSerializer eventSerializer,
             IRangeAssetProjector rangeAssetProjector)
+            : base(sqliteHelper,
+                eventSerializer,
+                RangeAssetAggregate.DEFAULT_STREAM_TYPE_NAME,
+                RangeAssetAggregate.Create)
         {
-            _sqliteHelper = sqliteHelper;
-            _eventSerializer = eventSerializer;
             _rangeAssetProjector = rangeAssetProjector;
         }
 
@@ -223,9 +220,8 @@ namespace MyLittleRangeBook.RangeEventAssets
         async Task UpsertEventStreamAsync(SqliteConnection conn,
             DbTransaction trans,
             string streamId,
-            int? currentVersion,
-            int nextVersion,
-            CancellationToken ct)
+            IReadOnlyList<IDomainEvent> pendingEvents,
+            CancellationToken cancellationToken)
         {
             string sql;
             object? p;
@@ -257,94 +253,15 @@ namespace MyLittleRangeBook.RangeEventAssets
             }
         }
 
-        async Task InsertDomainEventAsync(SqliteConnection connection,
-            DbTransaction transaction,
-            string streamId,
-            int nextVersion,
-            IDomainEvent domainEvent,
-            CancellationToken ct)
+        public async Task<Result<RangeAssetAggregate?>> GetAsync(FileInfo fileInfo, CancellationToken cancellationToken = default)
         {
-            const string SQL = """
-                               insert into events
-                               (
-                                   stream_id,
-                                   id, 
-                                   stream_type,
-                                   version,
-                                   event_type,
-                                   occurred_utc,
-                                   data_json,
-                                   metadata_json
-                               )
-                               values
-                               (
-                                   @StreamId,
-                                   @Id,
-                                   @StreamType,
-                                   @Version,
-                                   @EventType,
-                                   @OccurredUtc,
-                                   @DataJson,
-                                   @MetadataJson
-                               );
-                               """;
-
-            // TODO [TO20260525] Kind of expensive; optimize this by caching the event type names in a dictionary
-            Type t = domainEvent.GetType();
-            string eventType = t.GetCustomAttribute<EventTypeAttribute>()?.Name ?? t.Name;
-            var p = new
+            if (!fileInfo.Exists)
             {
-                StreamId = streamId,
-                Id = new MlrbId(domainEvent.OccurredUtc).ToString(),
-                StreamType,
-                Version = nextVersion,
-                EventType = eventType,
-                domainEvent.OccurredUtc,
-                DataJson = _eventSerializer.Serialize(domainEvent),
-                MetadataJson = "{}"
-            };
-            var cmd = new DapperCommand(SQL, p);
-            var x = 0;
-            try
-            {
-                x = await cmd.ExecuteAsync(connection, transaction, ct).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                x = -1;
-
-                throw new InvalidOperationException(
-                    $"Failed to insert event of type {domainEvent.GetType().Name} for stream {streamId}", ex);
+                return Result.Fail("File does not exist.");
             }
 
-            if (x != 1)
-            {
-                throw new InvalidOperationException(
-                    $"Failed to insert event of type {domainEvent.GetType().Name} for stream {streamId}");
-            }
-        }
-
-        /// <summary>
-        ///     Retrieves the current version of a stream from the event streams table.
-        /// </summary>
-        /// <param name="c">An open SqliteConnection to be used for the query.</param>
-        /// <param name="t">The transaction associated with the query execution.</param>
-        /// <param name="streamId">The unique identifier of the stream whose version is to be retrieved.</param>
-        /// <param name="ct">A CancellationToken to observe while waiting for the task to complete.</param>
-        /// <returns>
-        ///     The current version of the stream as an integer, or null if the stream does not exist.
-        /// </returns>
-        async Task<int?> GetStreamVersion(SqliteConnection c,
-            DbTransaction t,
-            string streamId,
-            CancellationToken ct)
-        {
-            var versionCmd = new DapperCommand("SELECT version from event_streams WHERE id=@StreamId;",
-                new { StreamId = streamId });
-            int? currentVersion = await versionCmd.ExecuteScalarAsync<int?>(c, t, ct)
-                .ConfigureAwait(false);
-
-            return currentVersion;
+            var streamId = MlrbId.FromFile(fileInfo);
+            return await GetAsync(streamId, cancellationToken).ConfigureAwait(false);
         }
     }
 }
