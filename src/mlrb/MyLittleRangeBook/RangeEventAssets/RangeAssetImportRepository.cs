@@ -22,7 +22,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             DbTransaction transaction,
             CancellationToken cancellationToken)
         {
-            _logger.Warning("Projecting events for RangeAssetImport with {EventCount}", pendingEvents.Count);
+            _logger.Warning("Projecting {EventCount} events for RangeAssetImport", pendingEvents.Count);
 
             return Task.CompletedTask;
         }
