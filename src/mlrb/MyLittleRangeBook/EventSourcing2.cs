@@ -233,6 +233,9 @@ namespace MyLittleRangeBook
                         cancellationToken)
                     .ConfigureAwait(false);
 
+                await ProjectAsync(streamId, pendingEvents, connection, transaction, cancellationToken)
+                    .ConfigureAwait(false);
+
                 if (cancellationToken.IsCancellationRequested)
                 {
                     await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
@@ -251,6 +254,19 @@ namespace MyLittleRangeBook
             }
 
             return Result.Ok();
+        }
+
+        /// <summary>
+        ///     Hook invoked after events are persisted but before the transaction is committed. Override
+        ///     to project the just-saved events into additional read-model tables within the same transaction.
+        /// </summary>
+        protected virtual Task ProjectAsync(string streamId,
+            IReadOnlyList<IDomainEvent> pendingEvents,
+            SqliteConnection connection,
+            DbTransaction transaction,
+            CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
         }
 
         async Task<Result<EventStream?>> GetEventStreamAsync(SqliteConnection c,
