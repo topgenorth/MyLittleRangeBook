@@ -1,5 +1,6 @@
 ﻿using System.Data.Common;
 using Microsoft.Data.Sqlite;
+using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.RangeEventAssets
@@ -52,6 +53,17 @@ namespace MyLittleRangeBook.RangeEventAssets
                 connection,
                 transaction,
                 cancellationToken);
+        }
+
+        public async Task<Result<RangeAssetAggregate?>> GetAsync(FileInfo fileInfo, CancellationToken cancellationToken = default)
+        {
+            if (!fileInfo.Exists)
+            {
+                return Result.Fail("File does not exist.");
+            }
+
+            var streamId = MlrbId.FromFile(fileInfo);
+            return await GetAsync(streamId, cancellationToken).ConfigureAwait(false);
         }
     }
 }
