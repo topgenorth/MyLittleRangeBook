@@ -2,31 +2,50 @@
 
 namespace MyLittleRangeBook.RangeEventAssets
 {
-    public class RangeAssetAggregate
+    public class RangeAssetAggregate : Aggregate
     {
-        public const string DefaultStreamType = "range-asset-import";
-        readonly List<IDomainEvent> _uncommitted = [];
+        public const string DEFAULT_STREAM_TYPE_NAME = "range-asset-import";
 
         RangeAssetAggregate()
         {
         }
 
+        public override string DefaultStreamType => DEFAULT_STREAM_TYPE_NAME;
 
-        public MlrbId Id { get; private set; } = MlrbId.Empty;
+        /// <summary>
+        ///     The path to the asset that is being imported.
+        /// </summary>
         public string SourcePath { get; private set; } = string.Empty;
+
+        /// <summary>
+        ///     The path to the asset after it was imported.
+        /// </summary>
         public string DestinationPath { get; private set; } = string.Empty;
+
+        /// <summary>
+        ///     The status of the range asset importation process.
+        /// </summary>
         public string Status { get; private set; } = "Unknown";
+
         public string? SHA256 { get; private set; }
+
+        /// <summary>
+        ///     The MIME type of the file being imported.
+        /// </summary>
         public string MimeType { get; private set; } = "application/octet-stream";
+
+        /// <summary>
+        ///     If the import process failed, this property contains the reason for the failure.
         public string? FailureReason { get; private set; }
-        public int Version { get; private set; } = -1;
 
-        public string StreamType { get; private set; } = DefaultStreamType;
-
+        /// <summary>
+        ///     The ID of the range event that this asset is associated with, if any. This will be set when the asset is added to a
+        ///     range event.
+        /// </summary>
         public MlrbId RangeEventId { get; private set; } = MlrbId.Empty;
 
         /// <summary>
-        ///     Createing a new RangeAssetAggregate..
+        ///     Creating a new RangeAssetAggregate.
         /// </summary>
         /// <param name="streamId"></param>
         /// <returns></returns>
@@ -57,13 +76,15 @@ namespace MyLittleRangeBook.RangeEventAssets
             return agg;
         }
 
+        /// <summary>
+        /// Creates a new instance of <see cref="RangeAssetAggregate"/> by hydrating it with data from the given event stream.
+        /// </summary>
+        /// <param name="stream">The event stream used to hydrate the aggregate.</param>
+        /// <returns>A new instance of <see cref="RangeAssetAggregate"/>.</returns>
         public static RangeAssetAggregate Create(EventStream stream)
         {
-            var agg = new RangeAssetAggregate
-            {
-                Id = stream.StreamId, StreamType = stream.StreamType, Version = stream.Version, Status = "Unknown"
-            };
-
+            var agg = new RangeAssetAggregate();
+            agg.Hydrate(stream);
             return agg;
         }
 
@@ -107,15 +128,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             Raise(new RangeAssetImportFailed(Id, reason, nowUtc));
         }
 
-        public IReadOnlyList<IDomainEvent> DequeueUncommittedEvents()
-        {
-            IDomainEvent[] events = _uncommitted.ToArray();
-            _uncommitted.Clear();
-
-            return events;
-        }
-
-        public void Apply(IDomainEvent e)
+        public override void Apply(IDomainEvent e)
         {
             switch (e)
             {
@@ -168,18 +181,6 @@ namespace MyLittleRangeBook.RangeEventAssets
                 default:
                     throw new InvalidOperationException($"Unknown event type `{e.GetType().Name}`.");
             }
-        }
-
-        public void Raise(IDomainEvent e)
-        {
-            Apply(e);
-            _uncommitted.Add(e);
-            Version++;
-        }
-
-        public void ClearUncommittedEvents()
-        {
-            _uncommitted.Clear();
         }
 
         [EventType("range-asset-created")]
