@@ -147,7 +147,7 @@ namespace MyLittleRangeBook
     /// </summary>
     public interface IRangeAssetProjector
     {
-        Task ProjectAsync(string toString,
+        Task ProjectAsync(string rangeAssetId,
             IReadOnlyList<IDomainEvent> pendingEvents,
             SqliteConnection connection,
             DbTransaction transaction,
