@@ -35,19 +35,11 @@ namespace MyLittleRangeBook.RangeEventAssets
         [Command("add")]
         [UsedImplicitly]
         // ReSharper disable once AsyncMethodWithoutAwait
-        public async Task<int> CopyFileToAssetDirectory(string file,
+        public async Task<int> ImportRangeAssetFile(string file,
             string? rangeEventId = null,
             CancellationToken ct = default)
         {
-            CliDisplay.PrintCommandHeader("Add file as range asset");
-
-            if (!File.Exists(file))
-            {
-                CliDisplay.PrintFailure("File does not exit.");
-
-                return ReturnCodes.FIT_FILE_NOT_FOUND;
-            }
-
+            CliDisplay.PrintCommandHeader("Import a file as a range asset.");
             if (string.IsNullOrWhiteSpace(rangeEventId))
             {
                 rangeEventId = MlrbId.Empty.ToString();
@@ -55,26 +47,28 @@ namespace MyLittleRangeBook.RangeEventAssets
                 CliDisplay.PrintWarning($"The file {file} is not assigned to any RangeEvent.");
             }
 
-            var fileinfo = new FileInfo(file);
-            var id = MlrbId.FromFile(fileinfo);
-
-            Result<RangeAssetAggregate> r = await _aggregateRepo.GetAsync(id, ct).ConfigureAwait(false);
+            var fileInfo = new FileInfo(file);
+            Result<RangeAssetAggregate?> r = await _aggregateRepo.GetAsync(fileInfo, ct).ConfigureAwait(false);
             bool isNew = r.IsFailed || r.Value is null;
 
             RangeAssetAggregate aggregate;
             if (isNew)
             {
                 aggregate = RangeAssetAggregate.New(file, DateTimeOffset.UtcNow);
-                Logger.Verbose("New file {file}", file);
+                Logger.Verbose("Import a new range asset from  {file}", file);
             }
             else
             {
                 aggregate = r.Value!;
-                Logger.Verbose("Existing file {file} with id {id}, v{version}.", file, aggregate.Id, aggregate.Version);
+                Logger.Verbose("Update an existing range asset {id} from  {file}, v{version}.",
+                    file,
+                    aggregate.Id,
+                    aggregate.Version);;
             }
 
             RangeEventAssetFile rfe = new RangeEventAssetFile(file, aggregate, rangeEventId);
 
+            // TODO [TO20260527] Have to update the pipeline to create the events rather than doing things.
             Result result = await _assetPipeline.ExecuteAsync(rfe, ct).ConfigureAwait(false);
 
             if (result.IsFailed)
@@ -90,6 +84,7 @@ namespace MyLittleRangeBook.RangeEventAssets
                 Logger.Verbose("Associated range asset with range event '{RangeEventId}'.", rangeEventId);
             }
 
+            // TODO [TO20260527] Need to create a projector that will update the read-model from the events.
             Result saveAggregate = await _aggregateRepo.SaveAsync(rfe.Aggregate, ct).ConfigureAwait(false);
 
             if (saveAggregate.IsFailed)
