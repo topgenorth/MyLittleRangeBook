@@ -36,7 +36,6 @@ namespace MyLittleRangeBook.RangeEventAssets
             : base(sqliteHelper,
                 eventSerializer,
                 RangeAssetAggregate.DEFAULT_STREAM_TYPE_NAME,
-                RangeAssetAggregate.New,
                 RangeAssetAggregate.Create)
         {
             _rangeAssetProjector = rangeAssetProjector;

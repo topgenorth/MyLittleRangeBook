@@ -58,7 +58,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             var fileinfo = new FileInfo(file);
             var id = MlrbId.FromFile(fileinfo);
 
-            Result<RangeAssetAggregate> r = await _aggregateRepo.GetAsync(id, ct).ConfigureAwait(false);
+            Result<RangeAssetAggregate?> r = await _aggregateRepo.GetAsync(id, ct).ConfigureAwait(false);
             bool isNew = r.IsFailed || r.Value is null;
 
             RangeAssetAggregate aggregate;

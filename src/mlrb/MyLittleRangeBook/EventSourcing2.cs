@@ -74,6 +74,19 @@ namespace MyLittleRangeBook
             StreamType = stream.StreamType;
             Version = stream.Version;
         }
+
+        /// <summary>
+        ///     Replays a sequence of historical events against the aggregate via <see cref="Apply" />,
+        ///     without enqueueing them as uncommitted. The aggregate's <see cref="Version" /> is expected
+        ///     to have been set via <see cref="Hydrate" /> from the corresponding <see cref="EventStream" />.
+        /// </summary>
+        protected internal void LoadFromHistory(IEnumerable<IDomainEvent> events)
+        {
+            foreach (IDomainEvent e in events)
+            {
+                Apply(e);
+            }
+        }
     }
 
     /// <summary>
@@ -84,7 +97,26 @@ namespace MyLittleRangeBook
     /// <typeparam name="TAggregate">The concrete aggregate type.</typeparam>
     public class SqliteAggregateRepository<TAggregate> where TAggregate : Aggregate
     {
-        readonly Func<MlrbId, TAggregate> _createNew;
+        const string SelectStreamSql = """
+                                       SELECT id AS StreamId, stream_type AS StreamType, version AS Version,
+                                              created_utc as Created, modified_utc as Modified
+                                       FROM event_streams
+                                       WHERE id = @StreamId;
+                                       """;
+
+        const string SelectEventsSql = """
+                                       select stream_id as StreamId,
+                                              stream_type as StreamType,
+                                              version as Version,
+                                              event_type as EventType,
+                                              occurred_utc as OccurredUtc,
+                                              data_json as DataJson,
+                                              metadata_json as MetadataJson
+                                       from events
+                                       where stream_id = @StreamId
+                                       order by version asc;
+                                       """;
+
         readonly Func<EventStream, TAggregate> _createFromStream;
         readonly IEventSerializer _eventSerializer;
         readonly ISqliteHelper _sqliteHelper;
@@ -93,80 +125,80 @@ namespace MyLittleRangeBook
         /// <param name="sqliteHelper">SQLite connection factory.</param>
         /// <param name="eventSerializer">Serializer used to (de)serialize <see cref="IDomainEvent" /> instances.</param>
         /// <param name="streamType">The stream type identifier used in the <c>event_streams</c>/<c>events</c> tables.</param>
-        /// <param name="createNew">Factory invoked when a stream does not exist and a brand-new aggregate must be constructed for the supplied id.</param>
         /// <param name="createFromStream">Factory invoked when rehydrating an aggregate from an existing event stream.</param>
         public SqliteAggregateRepository(ISqliteHelper sqliteHelper,
             IEventSerializer eventSerializer,
             string streamType,
-            Func<MlrbId, TAggregate> createNew,
             Func<EventStream, TAggregate> createFromStream)
         {
             _sqliteHelper = sqliteHelper;
             _eventSerializer = eventSerializer;
             _streamType = streamType;
-            _createNew = createNew;
             _createFromStream = createFromStream;
         }
 
-        public async Task<Result<TAggregate>> GetAsync(MlrbId id, CancellationToken cancellationToken = default)
+        public async Task<Result<TAggregate?>> GetAsync(MlrbId id, CancellationToken cancellationToken = default)
         {
             try
             {
                 await using SqliteConnection connection =
                     await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
-                await using DbTransaction transaction =
-                    await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
-                const string selectEvents = """
-                                            select stream_id as StreamId,
-                                                   stream_type as StreamType,
-                                                   version as Version,
-                                                   event_type as EventType,
-                                                   occurred_utc as OccurredUtc,
-                                                   data_json as DataJson,
-                                                   metadata_json as MetadataJson
-                                            from events
-                                            where stream_id = @StreamId
-                                            order by version asc;
-                                            """;
-                var selectEventsCmd = new DapperCommand(selectEvents, new { StreamId = id.ToString() });
-                IEnumerable<EventRow> rows = await selectEventsCmd
-                    .QueryAsync<EventRow>(connection, transaction, cancellationToken)
-                    .ConfigureAwait(false);
-
-                EventRow[] eventRows = rows as EventRow[] ?? rows.ToArray();
-                if (eventRows.Length == 0)
+                EventStream? stream = await LoadStreamAsync(connection, id, cancellationToken).ConfigureAwait(false);
+                if (stream is null)
                 {
-                    await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
-
-                    return Result.Ok();
+                    return Result.Ok<TAggregate?>(null);
                 }
 
-                Result<EventStream?> r = await GetEventStreamAsync(connection, transaction, id, cancellationToken)
-                    .ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
 
-                bool isNew = r.IsFailed || r.Value is null;
-
-                TAggregate aggregate = isNew
-                    ? _createNew(id)
-                    : _createFromStream(r.Value!.Value);
-
-                foreach (EventRow row in eventRows)
+                IReadOnlyList<EventRow> eventRows =
+                    await LoadEventRowsAsync(connection, id, cancellationToken).ConfigureAwait(false);
+                if (eventRows.Count == 0)
                 {
-                    var evt = (IDomainEvent)_eventSerializer.Deserialize(row.EventType, row.DataJson);
-                    aggregate.Apply(evt);
+                    return Result.Ok<TAggregate?>(null);
                 }
 
-                aggregate.ClearUncommittedEvents();
+                TAggregate aggregate = _createFromStream(stream.Value);
+                Replay(aggregate, eventRows);
 
-                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
-
-                return Result.Ok(aggregate);
+                return Result.Ok<TAggregate?>(aggregate);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception e)
             {
                 return e.FailWithException();
             }
+        }
+
+        async Task<EventStream?> LoadStreamAsync(SqliteConnection connection,
+            MlrbId streamId,
+            CancellationToken ct)
+        {
+            var cmd = new DapperCommand(SelectStreamSql, new { StreamId = streamId.ToString() });
+
+            return await cmd.QuerySingleAsync<EventStream>(connection, null, ct).ConfigureAwait(false);
+        }
+
+        async Task<IReadOnlyList<EventRow>> LoadEventRowsAsync(SqliteConnection connection,
+            MlrbId streamId,
+            CancellationToken ct)
+        {
+            var cmd = new DapperCommand(SelectEventsSql, new { StreamId = streamId.ToString() });
+            IEnumerable<EventRow> rows =
+                await cmd.QueryAsync<EventRow>(connection, null, ct).ConfigureAwait(false);
+
+            return rows as EventRow[] ?? rows.ToArray();
+        }
+
+        void Replay(TAggregate aggregate, IReadOnlyList<EventRow> rows)
+        {
+            IEnumerable<IDomainEvent> events = rows.Select(row =>
+                (IDomainEvent)_eventSerializer.Deserialize(row.EventType, row.DataJson));
+            aggregate.LoadFromHistory(events);
         }
 
         public async Task<Result> SaveAsync(TAggregate aggregate, CancellationToken cancellationToken = default)
@@ -267,30 +299,6 @@ namespace MyLittleRangeBook
             CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
-        }
-
-        async Task<Result<EventStream?>> GetEventStreamAsync(SqliteConnection c,
-            DbTransaction t,
-            MlrbId streamId,
-            CancellationToken ct)
-        {
-            try
-            {
-                const string SQL = """
-                                   SELECT id AS StreamId, stream_type AS StreamType, version AS Version,
-                                          created_utc as Created, modified_utc as Modified
-                                   FROM event_streams
-                                   WHERE id = @StreamId;
-                                   """;
-                var cmd = new DapperCommand(SQL, new { StreamId = streamId.ToString() });
-                EventStream? stream = await cmd.QuerySingleAsync<EventStream>(c, t, ct).ConfigureAwait(false);
-
-                return Result.Ok(stream);
-            }
-            catch (Exception ex)
-            {
-                return ex.FailWithException();
-            }
         }
 
         async Task UpsertEventStreamAsync(SqliteConnection conn,
