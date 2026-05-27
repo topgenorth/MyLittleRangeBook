@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.RangeEventAssets;
 
 namespace MyLittleRangeBook
 {
@@ -142,16 +143,20 @@ namespace MyLittleRangeBook
         DateTimeOffset Modified);
 
 
+    public record RangeAssetProjectorContext(
+        SqliteConnection Connection,
+        DbTransaction Transaction,
+        MlrbId RangeAssetId,
+        IReadOnlyList<IDomainEvent> PendingEvents,
+        CancellationToken CancellationToken = default);
+
+
     /// <summary>
     ///     Defines functionality for projecting domain events related to file imports into a storage system.
     /// </summary>
     public interface IRangeAssetProjector
     {
-        Task ProjectAsync(string rangeAssetId,
-            IReadOnlyList<IDomainEvent> pendingEvents,
-            SqliteConnection connection,
-            DbTransaction transaction,
-            CancellationToken cancellationToken);
+        Task ProjectAsync(RangeAssetProjectorContext context);
     }
 
     public interface IDomainEvent

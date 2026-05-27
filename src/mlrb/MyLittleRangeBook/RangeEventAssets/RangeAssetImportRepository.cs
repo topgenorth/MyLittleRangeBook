@@ -1,18 +1,12 @@
 ﻿using System.Data.Common;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 using static MyLittleRangeBook.RangeEventAssets.RangeAssetAggregate;
 
 namespace MyLittleRangeBook.RangeEventAssets
 {
-    record RangeAssetProjectorContext(
-        SqliteConnection connection,
-        DbTransaction Transaction,
-        MlrbId RangeAssetId,
-        IReadOnlyList<IDomainEvent> PendingEvents,
-        CancellationToken CancellationToken = default);
-
     class SqliteRangeAssetProjector : IRangeAssetProjector
     {
         readonly ILogger _logger;
@@ -22,19 +16,11 @@ namespace MyLittleRangeBook.RangeEventAssets
             _logger = logger;
         }
 
-        public async Task ProjectAsync(string rangeAssetId,
-            IReadOnlyList<IDomainEvent> pendingEvents,
-            SqliteConnection connection,
-            DbTransaction transaction,
-            CancellationToken cancellationToken)
+        public async Task ProjectAsync(RangeAssetProjectorContext context)
         {
-            _logger.Verbose("Projecting {EventCount} events for RangeAssetImport", pendingEvents.Count);
+            _logger.Verbose("Projecting {EventCount} events for RangeAssetImport", context.PendingEvents.Count);
 
-            var r = await AssociateRangeAssetToRangeEvent(new RangeAssetProjectorContext(connection,
-                transaction,
-                MlrbId.FromString(rangeAssetId),
-                pendingEvents,
-                cancellationToken));
+            Result r = await AssociateRangeAssetToRangeEvent(context);
         }
 
         async Task<Result> AssociateRangeAssetToRangeEvent(RangeAssetProjectorContext context)
@@ -49,8 +35,10 @@ namespace MyLittleRangeBook.RangeEventAssets
             {
                 _logger.Verbose(e, "Could not find a RangeAssetAssociatedWithRangeEvent: {errorMessage}.", e.Message);
                 Error err = new Error(e.Message).CausedBy(e).Enrich(context.RangeAssetId);
+
                 return Result.Fail(err);
             }
+
             _logger.Verbose("Associating RangeAsset {RangeAssetId} to RangeEvent", context.RangeAssetId);
 
             var p = new { RangeEventId = rangeEventId, context.RangeAssetId };
@@ -58,7 +46,7 @@ namespace MyLittleRangeBook.RangeEventAssets
                 "INSERT INTO SimpleRangeEvent_RangeAssets (SimpleRangeEventId, RangeAssetFilesId) VALUES (@RangeEventId, @RangeAssetId)",
                 p);
 
-            int r = await cmd.ExecuteAsync(context.connection, context.Transaction, context.CancellationToken)
+            int r = await cmd.ExecuteAsync(context.Connection, context.Transaction, context.CancellationToken)
                 .ConfigureAwait(false);
             if (r != 1)
             {
@@ -104,11 +92,9 @@ namespace MyLittleRangeBook.RangeEventAssets
             IReadOnlyList<IDomainEvent> pendingEvents,
             CancellationToken cancellationToken)
         {
-            return _rangeAssetProjector.ProjectAsync(streamId,
-                pendingEvents,
-                connection,
-                transaction,
-                cancellationToken);
+            var ctx = new RangeAssetProjectorContext(connection, transaction, streamId, pendingEvents, cancellationToken);
+
+            return _rangeAssetProjector.ProjectAsync(ctx);
         }
     }
 }

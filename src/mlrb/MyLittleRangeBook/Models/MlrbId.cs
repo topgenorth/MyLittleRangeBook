@@ -239,6 +239,7 @@ namespace MyLittleRangeBook.Models
             return new MlrbId(ulid);
         }
 
+
         /// <summary>
         ///     Converts the provided string value into an instance of <see cref="MlrbId" />.
         ///     If the string is determined to be a valid ULID, it is directly converted.
