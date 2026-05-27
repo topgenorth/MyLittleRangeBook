@@ -7,6 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>MyLittleRangeBook.Tests</_Parameter1>
+        </AssemblyAttribute>
         <PackageReference Include="ByteAether.Ulid" Version="1.3.7"/>
         <PackageReference Include="Dapper" Version="2.1.79"/>
         <PackageReference Include="dbup-core" Version="6.1.1"/>
