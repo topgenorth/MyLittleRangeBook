@@ -9,10 +9,17 @@ namespace MyLittleRangeBook.Cartridges
             Id = new MlrbId().ToString();
         }
 
+        public Cartridge(string uniqueName)
+        {
+           ArgumentException.ThrowIfNullOrWhiteSpace(uniqueName);
+           Name = uniqueName;
+           Id = MlrbId.FromString(uniqueName).ToString();
+        }
+
         /// <summary>
-        ///     A Nanoid to uniquely identify the Cartridge. Will be null for a new entity.
+        ///     An ID to uniquely identify the Cartridge.
         /// </summary>
-        public string? Id { get; set; }
+        public string Id { get; set; }
 
         /// <summary>
         ///     The database row ID of the Cartridge. Will be null for a new record.
@@ -20,7 +27,7 @@ namespace MyLittleRangeBook.Cartridges
         public long? RowId { get; set; }
 
         /// <summary>
-        ///     The name of the Cartridge.
+        ///     The name of the Cartridge. This must be unique across all cartridges.
         /// </summary>
         public string Name { get; set; } = string.Empty;
 
