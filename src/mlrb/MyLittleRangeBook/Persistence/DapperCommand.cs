@@ -3,12 +3,63 @@ using Dapper;
 
 namespace MyLittleRangeBook.Persistence
 {
+    public interface IDapperCommand
+    {
+        object? Parameters { get; }
+        string Sql { get; }
+        CommandType CommandType { get; }
+        int CommandTimeout { get; }
+
+        /// <summary>
+        ///     Sets the parameters for the command. This can be used to provide parameters after the command has been created,
+        ///     allowing for more flexible command construction.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        DapperCommand Arguments(object? p);
+
+        CommandDefinition ToDefinition(DapperCommandContext context)
+        {
+            return ToDefinition(context.Transaction, context.CancellationToken);
+        }
+
+        CommandDefinition ToDefinition(
+            IDbTransaction? transaction = null,
+            CancellationToken cancellationToken = default);
+
+
+        Task<T?> ExecuteScalarAsync<T>(
+            IDbConnection connection,
+            IDbTransaction? transaction = null,
+            CancellationToken cancellationToken = default);
+
+        Task<int> ExecuteAsync(
+            IDbConnection connection,
+            IDbTransaction? transaction = null,
+            CancellationToken cancellationToken = default);
+
+        Task<T?> QuerySingleOrDefaultAsync<T>(
+            IDbConnection connection,
+            IDbTransaction? transaction = null,
+            CancellationToken cancellationToken = default);
+
+        Task<T> QuerySingleAsync<T>(
+            IDbConnection connection,
+            IDbTransaction? transaction = null,
+            CancellationToken cancellationToken = default);
+
+        Task<IEnumerable<T>> QueryAsync<T>(
+            IDbConnection connection,
+            IDbTransaction? transaction = null,
+            CancellationToken cancellationToken = default);
+    }
+
     /// <summary>
     ///     Encapsulates a SQL command to be executed using Dapper, including the command text, parameters, and execution
     ///     settings.
     ///     Used for simplifying the creation and execution of SQL commands.
     /// </summary>
-    public class DapperCommand
+    public class DapperCommand : IDapperCommand
     {
         public DapperCommand(string sql, object? parameters = null)
         {

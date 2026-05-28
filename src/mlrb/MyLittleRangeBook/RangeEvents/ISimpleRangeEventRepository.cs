@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.RangeEvent
+﻿namespace MyLittleRangeBook.RangeEvents
 {
     /// <summary>
     ///     Provides an interface for managing and performing operations on simple range events

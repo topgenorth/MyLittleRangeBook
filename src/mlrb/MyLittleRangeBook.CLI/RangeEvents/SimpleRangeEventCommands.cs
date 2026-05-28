@@ -3,7 +3,6 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.RangeEvent;
 using static MyLittleRangeBook.ReturnCodes;
 using static MyLittleRangeBook.Persistence.Sqlite.SqliteHelperExtensions;
 

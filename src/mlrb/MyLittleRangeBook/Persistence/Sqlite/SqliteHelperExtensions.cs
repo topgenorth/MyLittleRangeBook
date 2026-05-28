@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Cartridges;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
-using MyLittleRangeBook.RangeEvent;
 using MyLittleRangeBook.RangeEvents;
 using SQLitePCL;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;

@@ -3,7 +3,6 @@ using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Persistence.Sqlite;
-using MyLittleRangeBook.RangeEvent;
 using static MyLittleRangeBook.Persistence.Sqlite.SqliteHelperExtensions;
 
 namespace MyLittleRangeBook.RangeEvents

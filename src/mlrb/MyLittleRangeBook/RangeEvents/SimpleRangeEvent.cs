@@ -1,6 +1,6 @@
 ﻿using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.RangeEvent
+namespace MyLittleRangeBook.RangeEvents
 {
     public record SimpleRangeEvent
     {

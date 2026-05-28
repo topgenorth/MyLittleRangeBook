@@ -2,7 +2,6 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
-using MyLittleRangeBook.RangeEvent;
 
 namespace MyLittleRangeBook.RangeEvents
 {
