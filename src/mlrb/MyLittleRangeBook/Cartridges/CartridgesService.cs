@@ -2,6 +2,7 @@ using System.Data;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.Cartridges
 {
@@ -12,16 +13,37 @@ namespace MyLittleRangeBook.Cartridges
         const string SelectActiveSql = "SELECT * FROM Cartridges WHERE IsActive=1 ORDER BY Name;";
         const string DeleteSql = "DELETE FROM Cartridges WHERE Id = @Id";
 
-        const string InsertSql = """
-                                 INSERT INTO Cartridges (Id, Name, CommonName, ProjectileDiameterMetric, ProjectileDiameterImperial, SuitableForRifle, SuitableForPistol, IsActive) 
-                                 VALUES (@Id, @Name, @CommonName, @ProjectileDiameterMetric, @ProjectileDiameterImperial, @SuitableForRifle, @SuitableForPistol, @IsActive) 
-                                 RETURNING RowId
-                                 """;
+        // const string InsertSql = """
+        //                          INSERT INTO Cartridges (Id,
+        //                                                  Name,
+        //                                                  CommonName,
+        //                                                  ProjectileDiameterMetric,
+        //                                                  ProjectileDiameterImperial,
+        //                                                  SuitableForRifle,
+        //                                                  SuitableForPistol,
+        //                                                  IsActive)
+        //                          VALUES (@Id, @Name, @CommonName, @ProjectileDiameterMetric, @ProjectileDiameterImperial, @SuitableForRifle, @SuitableForPistol, @IsActive)
+        //                          RETURNING RowId
+        //                          """;
 
-        const string UpdateSql = """
-                                 INSERT INTO Cartridges (Id, Name, CommonName, ProjectileDiameterMetric, ProjectileDiameterImperial, SuitableForRifle, SuitableForPistol, IsActive) 
+        const string UpsertSql = """
+                                 INSERT INTO Cartridges (Id, 
+                                                         Name, 
+                                                         CommonName, 
+                                                         ProjectileDiameterMetric, 
+                                                         ProjectileDiameterImperial, 
+                                                         SuitableForRifle, 
+                                                         SuitableForPistol, 
+                                                         IsActive) 
                                  VALUES (@Id, @Name, @CommonName, @ProjectileDiameterMetric, @ProjectileDiameterImperial, @SuitableForRifle, @SuitableForPistol, @IsActive) 
-                                 ON CONFLICT(Name) DO UPDATE SET CommonName = @CommonName, ProjectileDiameterMetric = @ProjectileDiameterMetric, ProjectileDiameterImperial = @ProjectileDiameterImperial, SuitableForRifle = @SuitableForRifle, SuitableForPistol = @SuitableForPistol, IsActive = @IsActive, Modified = utcnow()
+                                 ON CONFLICT(Name) DO 
+                                     UPDATE SET CommonName = @CommonName, 
+                                     ProjectileDiameterMetric = @ProjectileDiameterMetric, 
+                                     ProjectileDiameterImperial = @ProjectileDiameterImperial, 
+                                     SuitableForRifle = @SuitableForRifle, 
+                                     SuitableForPistol = @SuitableForPistol, 
+                                     IsActive = @IsActive, 
+                                     Modified = utcnow()
                                  RETURNING RowId
                                  """;
 
@@ -71,13 +93,15 @@ namespace MyLittleRangeBook.Cartridges
                 cartridge.SuitableForPistol,
                 cartridge.IsActive
             };
+            var cmd = new DapperCommand(UpsertSql, valuesToInsert);
             try
             {
-                string sql = cartridge.RowId is null ? InsertSql : UpdateSql;
-                var command = new CommandDefinition(sql, valuesToInsert, cancellationToken: cancellationToken);
-                long l = await connection.ExecuteScalarAsync<long>(command);
+                long l = await cmd.ExecuteScalarAsync<long>(connection, null, cancellationToken)
+                    .ConfigureAwait(false);
+
                 var upsertId = new EntityId(cartridge.Id!, l);
                 cartridge.RowId = l;
+
                 var success = new Success($"Cartridge `{cartridge.Id}` saved.");
                 success.WithMetadata("Id", upsertId.Id);
                 success.WithMetadata("RowId", upsertId.RowId);
