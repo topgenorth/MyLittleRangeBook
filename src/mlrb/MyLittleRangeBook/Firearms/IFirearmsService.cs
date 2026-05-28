@@ -9,6 +9,7 @@ namespace MyLittleRangeBook.Firearms
     /// </summary>
     public interface IFirearmsService
     {
+        // TODO [TO20260528] Allow for an IDbTransaction.
         /// <summary>
         ///     Delete a firearm from the database.
         /// </summary>

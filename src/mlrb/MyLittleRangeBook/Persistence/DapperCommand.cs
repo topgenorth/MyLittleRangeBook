@@ -13,21 +13,40 @@ namespace MyLittleRangeBook.Persistence
         public DapperCommand(string sql, object? parameters = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(sql);
-            CommandType = System.Data.CommandType.Text;
+            CommandType = CommandType.Text;
             CommandTimeout = 15;
             Sql = sql;
             Parameters = parameters;
         }
 
+        public object? Parameters { get; private set; }
+
         public string Sql { get; }
-        public object? Parameters { get; }
+
+
         public CommandType CommandType { get; }
         public int CommandTimeout { get; }
+
+        /// <summary>
+        ///     Sets the parameters for the command. This can be used to provide parameters after the command has been created,
+        ///     allowing for more flexible command construction.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public DapperCommand Arguments(object? p)
+        {
+            ArgumentNullException.ThrowIfNull(p);
+            Parameters = p;
+
+            return this;
+        }
 
         public CommandDefinition ToDefinition(
             IDbTransaction? transaction = null,
             CancellationToken cancellationToken = default)
         {
+            ArgumentNullException.ThrowIfNull(Parameters);
+
             return new CommandDefinition(
                 Sql,
                 Parameters,

@@ -11,7 +11,7 @@ namespace MyLittleRangeBook.Sqlite
         public async Task Show_update_row()
         {
             await using SqliteConnection conn = await GetSqliteConnectionAsync();
-            var sut = new SqliteFirearmsService();
+            var sut = new FirearmsService();
             var f0 = new Firearm { Name = "Unit test", Notes = "Inserting" };
 
             //Insert
@@ -31,7 +31,7 @@ namespace MyLittleRangeBook.Sqlite
         public async Task Should_insert_row()
         {
             await using SqliteConnection conn = await GetSqliteConnectionAsync();
-            var sut = new SqliteFirearmsService();
+            var sut = new FirearmsService();
 
             var f = new Firearm { Name = "Unit test", Notes = "Inserting" };
 
