@@ -14,7 +14,8 @@ namespace MyLittleRangeBook.Sqlite
             await using SqliteConnection conn = await GetSqliteConnectionAsync();
             var sut = new FirearmsService();
 
-            var f0 = new Firearm("Unit test") { Notes = "Inserting" };
+            Firearm f0 = Firearm.New("Unit test");
+            f0.Notes = "Inserting";
             var ctx0 = new DapperCommandContext(conn);
 
             //Insert
@@ -23,7 +24,8 @@ namespace MyLittleRangeBook.Sqlite
             result1.Value.Id.ShouldNotBeNullOrWhiteSpace();
 
             // Update
-            var f1 = new Firearm("Unit test") { RowId = f0.RowId, Id = f0.Id, Notes = "Updating" };
+            Firearm f1 = Firearm.New("Unit test");
+            f1.Notes = "Updating";
             var ctx1 = new DapperCommandContext(conn);
             Result<EntityId> result2 = await sut.UpsertAsync(ctx1, f1);
             result2.IsSuccess.ShouldBeTrue();

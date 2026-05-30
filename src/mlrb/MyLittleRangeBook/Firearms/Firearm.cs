@@ -8,11 +8,10 @@ namespace MyLittleRangeBook.Firearms
         {
             Id = new MlrbId().ToString();
         }
-        public Firearm(string name)
+        public static Firearm New(string name)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
-            Name = name;
-            Id = MlrbId.FromString(name).ToString();
+            return new Firearm { Id = MlrbId.FromString(name).ToString(), Name = name };
         }
 
         /// <summary>
@@ -30,6 +29,7 @@ namespace MyLittleRangeBook.Firearms
         /// </summary>
         public string Name { get; set; } = string.Empty;
 
+        public int RoundsFired { get; set; } = 0;
         public string? Notes { get; set; }
 
         /// <summary>

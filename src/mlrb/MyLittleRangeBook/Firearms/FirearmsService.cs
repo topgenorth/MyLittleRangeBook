@@ -36,7 +36,11 @@ namespace MyLittleRangeBook.Firearms
 
         public async Task<Result<EntityId>> UpsertAsync(DapperCommandContext context, Firearm firearm)
         {
-            DapperCommandContext ctx = context with { Arguments = new { firearm.Id, firearm.Name, firearm.Notes } };
+            DapperCommandContext ctx = context with
+            {
+                Arguments =
+                new { firearm.Id, firearm.Name, firearm.Notes, firearm.RoundsFired }
+            };
 
             try
             {
@@ -97,19 +101,78 @@ namespace MyLittleRangeBook.Firearms
         {
             try
             {
-                IEnumerable<string> firearms = await Commands.GetNewFirearmsFromRangeEvents
-                    .QueryAsync<string>(context)
+                Result r1 = await AddNewFirearmsFromSimpleRangeEvents(context);
+                Result r2 = await AssociateRangeEventsWithFirearm(context);
+
+                return Result.Merge(r1, r2);
+            }
+            catch (Exception e)
+            {
+                var err = new Error($"Could not update Firearms from Range Events: {e.Message}");
+                err.CausedBy(e);
+
+                return Result.Fail(err);
+            }
+        }
+
+        async Task<Result> AssociateRangeEventsWithFirearm(DapperCommandContext ctx)
+        {
+            try
+            {
+                IEnumerable<Commands.RangeEventForFirearm> rangeEvents = await Commands.RangeEventsByFirearmName
+                    .QueryAsync<Commands.RangeEventForFirearm>(ctx)
+                    .ConfigureAwait(false);
+
+                var reasons = new List<IReason>();
+                foreach (Commands.RangeEventForFirearm row in rangeEvents)
+                {
+                    try
+                    {
+                        DapperCommandContext c = ctx with
+                        {
+                            Arguments = new { FirearmsId = row.FirearmName, SimpleRangeEventId = row.SimpleRangeId }
+                        };
+                        int l = await Commands.AssociateFirearmWithRangeEvent.ExecuteAsync(c).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        var reason = new Success(
+                            $"Failed to associate firearm {row.FirearmName} with range event {row.SimpleRangeId}: {e.Message}");
+                        reasons.Add(reason);
+                    }
+                }
+
+                return Result.Ok().WithReasons(reasons);
+            }
+            catch (Exception e)
+            {
+                Error? err = new Error(e.Message).CausedBy(e);
+
+                return Result.Fail(err);
+            }
+        }
+
+        async Task<Result> AddNewFirearmsFromSimpleRangeEvents(DapperCommandContext ctx)
+        {
+            try
+            {
+                IEnumerable<Commands.NewFirearmWithRoundCountRow> firearms = await Commands
+                    .GetNewFirearmsFromRangeEvents
+                    .QueryAsync<Commands.NewFirearmWithRoundCountRow>(ctx)
                     .ConfigureAwait(false);
 
                 var result = Result.Ok();
-                foreach (string firearmName in firearms)
+                foreach (Commands.NewFirearmWithRoundCountRow row in firearms)
                 {
-                    var f = new Firearm(firearmName);
-                    Result<EntityId> l = await UpsertAsync(context, f).ConfigureAwait(false);
+                    var f = Firearm.New(row.FirearmName);
+                    f.RoundsFired = row.TotalRoundsFired;
+                    f.Notes = "Imported from range events";
+                    Result<EntityId> l = await UpsertAsync(ctx, f).ConfigureAwait(false);
+                    // [TO20260529] we don't want to fail things because we couldn't add a named firearm, just pass it on as an IReason.
                     if (l.IsFailed)
                     {
-                        // [TO20260529] we don't want to fail things because we couldn't add a named firearm, just pass it on as an IReason.
-                        result.Reasons.Add(new Success($"Failed to add firearm {firearmName} from SimpleRangeEvents."));
+                        result.Reasons.Add(
+                            new Success($"Failed to add firearm {row.FirearmName} from SimpleRangeEvents."));
                     }
                 }
 
@@ -117,8 +180,7 @@ namespace MyLittleRangeBook.Firearms
             }
             catch (Exception e)
             {
-                var err = new Error($"Could not update Firearms from Range Events: {e.Message}");
-                err.CausedBy(e);
+                Error? err = new Error(e.Message).CausedBy(e);
 
                 return Result.Fail(err);
             }
@@ -135,25 +197,54 @@ namespace MyLittleRangeBook.Firearms
             const string DeleteSql = "DELETE FROM Firearms WHERE Id = @Id";
 
             const string UpsertSql = """
-                                     INSERT INTO Firearms (Id,Name, Notes, Modified, Created) 
-                                     VALUES (@Id, @Name, @Notes, utcnow(), utcnow()) 
-                                     ON CONFLICT(Name) DO UPDATE SET Notes = @Notes, Modified = utcnow()
+                                     INSERT INTO Firearms (Id,Name, Notes, Modified, Created, RoundsFired) 
+                                     VALUES (@Id, @Name, @Notes, utcnow(), utcnow(), @RoundsFired) 
+                                     ON CONFLICT(Name) DO UPDATE SET Notes = @Notes, Modified = utcnow(), RoundsFired=@RoundsFired
                                      RETURNING RowId
                                      """;
 
+            const string AssociateFirearmWithRangeEventSql = """
+                                                             INSERT INTO Firearms_SimpleRangeEvents (FirearmsId, SimpleRangeEventId) 
+                                                             VALUES (@FirearmsId, @SimpleRangeEventId);
+                                                             """;
+
             const string GetNewFirearmNamesFromRangeEventsSql = """
-                                                                SELECT DISTINCT SimpleRangeEvents.FirearmName 
-                                                                FROM SimpleRangeEvents 
-                                                                    WHERE SimpleRangeEvents.FirearmName NOT IN (SELECT Name FROM Firearms)
-                                                                ORDER BY SimpleRangeEvents.FirearmName; 
+                                                                SELECT 
+                                                                    SimpleRangeEvents.FirearmName,
+                                                                    COALESCE(SUM(SimpleRangeEvents.RoundsFired), 0) AS TotalRoundsFired
+                                                                FROM SimpleRangeEvents
+                                                                WHERE SimpleRangeEvents.FirearmName NOT IN (SELECT Name FROM Firearms)
+                                                                GROUP BY SimpleRangeEvents.FirearmName
+                                                                ORDER BY SimpleRangeEvents.FirearmName;
                                                                 """;
 
-            internal static DapperCommand GetNewFirearmsFromRangeEvents = new(GetNewFirearmNamesFromRangeEventsSql);
-            public static DapperCommand SelectAll => new(SelectSql);
-            public static DapperCommand SelectActive => new(SelectActiveSql);
-            public static DapperCommand SelectById => new(SelectByIdSql);
-            public static DapperCommand DeleteById => new(DeleteSql);
-            public static DapperCommand Upsert => new(UpsertSql);
+            const string RangeEventsByFirearmNameSql = """
+                                                        SELECT 
+                                                            s.FirearmName,
+                                                            s.Id AS SimpleRangeEventId
+                                                        FROM SimpleRangeEvents AS s
+                                                        LEFT JOIN Firearms AS f ON f.Name = s.FirearmName
+                                                        WHERE f.Name IS NULL
+                                                        ORDER BY s.FirearmName;                                                       
+                                                       """;
+
+            internal static readonly DapperCommand GetNewFirearmsFromRangeEvents =
+                new(GetNewFirearmNamesFromRangeEventsSql);
+
+
+            internal static readonly DapperCommand AssociateFirearmWithRangeEvent =
+                new(AssociateFirearmWithRangeEventSql);
+
+            internal static readonly DapperCommand RangeEventsByFirearmName = new(RangeEventsByFirearmNameSql);
+            internal static DapperCommand SelectAll => new(SelectSql);
+            internal static DapperCommand SelectActive => new(SelectActiveSql);
+            internal static DapperCommand SelectById => new(SelectByIdSql);
+            internal static DapperCommand DeleteById => new(DeleteSql);
+            internal static DapperCommand Upsert => new(UpsertSql);
+
+            internal record struct RangeEventForFirearm(string FirearmName, string SimpleRangeId);
+
+            internal record struct NewFirearmWithRoundCountRow(string FirearmName, int TotalRoundsFired);
         }
     }
 }
