@@ -30,6 +30,7 @@ namespace MyLittleRangeBook.Firearms
         /// </summary>
         public string Name { get; set; } = string.Empty;
 
+        public int RoundsFired { get; set; } = 0;
         public string? Notes { get; set; }
 
         /// <summary>
