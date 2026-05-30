@@ -1,5 +1,4 @@
-﻿using System.Data;
-using MyLittleRangeBook.Models;
+﻿using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.Firearms
@@ -41,9 +40,10 @@ namespace MyLittleRangeBook.Firearms
 
             try
             {
-                long l = await  Commands.Upsert.ExecuteScalarAsync<long>(ctx).ConfigureAwait(false);
+                long l = await Commands.Upsert.ExecuteScalarAsync<long>(ctx).ConfigureAwait(false);
                 firearm.RowId = l;
                 var upsertId = new EntityId(firearm.Id!, l);
+
                 return new Result<EntityId>().WithValue(upsertId);
             }
             catch (Exception e)
@@ -122,11 +122,10 @@ namespace MyLittleRangeBook.Firearms
 
                 return Result.Fail(err);
             }
-
         }
 
         /// <summary>
-        /// The SQL and commands we can perform on the database
+        ///     The SQL and commands we can perform on the database
         /// </summary>
         public static class Commands
         {
@@ -143,13 +142,13 @@ namespace MyLittleRangeBook.Firearms
                                      """;
 
             const string GetNewFirearmNamesFromRangeEventsSql = """
-                                                        SELECT DISTINCT SimpleRangeEvents.FirearmName 
-                                                        FROM SimpleRangeEvents 
-                                                            WHERE SimpleRangeEvents.FirearmName NOT IN (SELECT Name FROM Firearms)
-                                                        ORDER BY SimpleRangeEvents.FirearmName; 
-                                                        """;
+                                                                SELECT DISTINCT SimpleRangeEvents.FirearmName 
+                                                                FROM SimpleRangeEvents 
+                                                                    WHERE SimpleRangeEvents.FirearmName NOT IN (SELECT Name FROM Firearms)
+                                                                ORDER BY SimpleRangeEvents.FirearmName; 
+                                                                """;
 
-            internal static DapperCommand GetNewFirearmsFromRangeEvents = new (GetNewFirearmNamesFromRangeEventsSql);
+            internal static DapperCommand GetNewFirearmsFromRangeEvents = new(GetNewFirearmNamesFromRangeEventsSql);
             public static DapperCommand SelectAll => new(SelectSql);
             public static DapperCommand SelectActive => new(SelectActiveSql);
             public static DapperCommand SelectById => new(SelectByIdSql);
