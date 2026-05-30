@@ -36,13 +36,13 @@ namespace MyLittleRangeBook
         /// <returns></returns>
         [Command("update-from-rangeevents")]
         [UsedImplicitly]
-        public async Task<int> X(CancellationToken cancellationToken = default)
+        public async Task<int> UpdateFirearmsFromRangeEvents(CancellationToken cancellationToken = default)
         {
             AnsiConsole.Console.PrintAppInfo();
             AnsiConsole.Console.WriteLine("Updating firearms from range events...");
 
-            await using SqliteConnection conn =
-                await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken)
+                .ConfigureAwait(false);
             await using DbTransaction trans = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
             try
