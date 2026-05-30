@@ -49,8 +49,9 @@ namespace MyLittleRangeBook.RangeEvents
             try
             {
                 var p = new { Id = simpleRangeEvent.Id! };
-                int result = await DeleteCommand.Arguments(p)
-                    .ExecuteAsync(connection, transaction, cancellationToken)
+                DapperCommandContext ctx = new DapperCommandContext(connection, transaction, cancellationToken, p);
+                int result = await DeleteCommand
+                    .ExecuteAsync(ctx)
                     .ConfigureAwait(false);
             }
             catch (Exception e)
@@ -70,8 +71,9 @@ namespace MyLittleRangeBook.RangeEvents
         {
             try
             {
+                var ctx = new DapperCommandContext(connection, transaction, cancellationToken);
                 IEnumerable<SimpleRangeEvent> rangeEvents = await SelectAll
-                    .QueryAsync<SimpleRangeEvent>(connection, transaction, cancellationToken)
+                    .QueryAsync<SimpleRangeEvent>(ctx)
                     .ConfigureAwait(false);
 
                 return Result.Ok(rangeEvents);
@@ -107,9 +109,8 @@ namespace MyLittleRangeBook.RangeEvents
                     Created = simpleRangeEvent.Created,
                     Modified = simpleRangeEvent.Modified
                 };
-                long result = await UpsertCommand.Arguments(p)
-                    .ExecuteScalarAsync<long>(connection, transaction, cancellationToken)
-                    .ConfigureAwait(false);
+                var ctx = new DapperCommandContext(connection, transaction, cancellationToken, p);
+                long result = await UpsertCommand.ExecuteScalarAsync<long>(ctx).ConfigureAwait(false);
 
                 simpleRangeEvent.RowId = result;
 

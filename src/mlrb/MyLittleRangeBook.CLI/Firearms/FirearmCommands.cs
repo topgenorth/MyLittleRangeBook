@@ -1,10 +1,12 @@
-﻿using ConsoleAppFramework;
+﻿using System.Data.Common;
+using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Firearms;
+using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook
@@ -26,6 +28,56 @@ namespace MyLittleRangeBook
             _printer = new FirearmsTablePrinter();
         }
 
+
+        /// <summary>
+        /// This is a care taker task. It will update the Firearms table based on what is in the SimpleRangeEvents table.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [Command("update-from-rangeevents")]
+        [UsedImplicitly]
+        public async Task<int> X(CancellationToken cancellationToken = default)
+        {
+            AnsiConsole.Console.PrintAppInfo();
+            AnsiConsole.Console.WriteLine("Updating firearms from range events...");
+
+            await using SqliteConnection conn =
+                await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+            await using DbTransaction trans = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
+            try
+            {
+                var ctx = new DapperCommandContext(conn, trans, cancellationToken);
+                Result r = await _firearmsService.UpdateFirearmsFromRangeEventsAsync(ctx).ConfigureAwait(false);
+
+                if (r.IsFailed)
+                {
+                    CliDisplay.PrintFailure("Failed to update firearms from range events.");
+                }
+                else
+                {
+                    CliDisplay.PrintSuccess("Updated firearms from range events.");
+                }
+
+                foreach (IReason reason in r.Reasons)
+                {
+                    CliDisplay.Console.WriteLine($"* {reason.Message}");
+                }
+
+                await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
+                PressAnyKeyToContinue();
+                return ReturnCodes.SUCCESS;
+            }
+            catch (Exception ex)
+            {
+                CliDisplay.PrintFailure("something bad happened.");
+                Logger.Error(ex, "Failed to update firearms from range events");
+                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
+
+                PressAnyKeyToContinue();
+                return ReturnCodes.FAILURE;
+            }
+        }
 
         /// <summary>
         ///     List all the active firearms.

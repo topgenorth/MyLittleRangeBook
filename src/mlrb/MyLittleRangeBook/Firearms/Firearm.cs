@@ -8,6 +8,12 @@ namespace MyLittleRangeBook.Firearms
         {
             Id = new MlrbId().ToString();
         }
+        public Firearm(string name)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
+            Name = name;
+            Id = MlrbId.FromString(name).ToString();
+        }
 
         /// <summary>
         ///     A Nanoid to uniquely identify the Firearm. Will be null for a new entity.

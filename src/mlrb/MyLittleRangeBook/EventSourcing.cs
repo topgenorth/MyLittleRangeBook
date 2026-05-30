@@ -7,7 +7,6 @@ using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
-using MyLittleRangeBook.RangeEventAssets;
 
 namespace MyLittleRangeBook
 {
@@ -100,18 +99,20 @@ namespace MyLittleRangeBook
             MlrbId streamId,
             CancellationToken ct)
         {
-            var cmd = new DapperCommand(SelectStreamSql, new { StreamId = streamId.ToString() });
+            var ctx = new DapperCommandContext(connection, null, ct, new { StreamId = streamId.ToString() });
 
-            return await cmd.QuerySingleAsync<EventStream>(connection, null, ct).ConfigureAwait(false);
+            var cmd = new DapperCommand(SelectStreamSql);
+
+            return await cmd.QuerySingleAsync<EventStream>(ctx).ConfigureAwait(false);
         }
 
         async Task<IReadOnlyList<EventRow>> LoadEventRowsAsync(SqliteConnection connection,
             MlrbId streamId,
             CancellationToken ct)
         {
-            var cmd = new DapperCommand(SelectEventsSql, new { StreamId = streamId.ToString() });
-            IEnumerable<EventRow> rows =
-                await cmd.QueryAsync<EventRow>(connection, null, ct).ConfigureAwait(false);
+            var ctx = new DapperCommandContext(connection, null, ct, new { StreamId = streamId.ToString() });
+            var cmd = new DapperCommand(SelectEventsSql);
+            IEnumerable<EventRow> rows = await cmd.QueryAsync<EventRow>(ctx).ConfigureAwait(false);
 
             return rows as EventRow[] ?? rows.ToArray();
         }
@@ -252,8 +253,9 @@ namespace MyLittleRangeBook
                 p = new { Version = nextVersion, StreamId = streamId, ExpectedVersion = currentVersion };
             }
 
-            var cmd = new DapperCommand(sql, p);
-            int i = await cmd.ExecuteAsync(conn, trans, ct).ConfigureAwait(false);
+            var ctx = new DapperCommandContext(conn, trans, ct, p);
+            var cmd = new DapperCommand(sql);
+            int i = await cmd.ExecuteAsync(ctx).ConfigureAwait(false);
             if (i != 1)
             {
                 throw new InvalidOperationException($"Failed to update event stream version for {streamId}");
@@ -305,11 +307,12 @@ namespace MyLittleRangeBook
                 DataJson = _eventSerializer.Serialize(domainEvent),
                 MetadataJson = "{}"
             };
-            var cmd = new DapperCommand(SQL, p);
+            var cmd = new DapperCommand(SQL);
+            var ctx = new DapperCommandContext(connection, transaction, ct, p);
             int x;
             try
             {
-                x = await cmd.ExecuteAsync(connection, transaction, ct).ConfigureAwait(false);
+                x = await cmd.ExecuteAsync(ctx).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -330,9 +333,9 @@ namespace MyLittleRangeBook
             string streamId,
             CancellationToken ct)
         {
-            var versionCmd = new DapperCommand("SELECT version from event_streams WHERE id=@StreamId;",
-                new { StreamId = streamId });
-            int? currentVersion = await versionCmd.ExecuteScalarAsync<int?>(c, t, ct).ConfigureAwait(false);
+            var ctx = new DapperCommandContext(c, t, ct, new { StreamId = streamId });
+            var versionCmd = new DapperCommand("SELECT version from event_streams WHERE id=@StreamId;");
+            int? currentVersion = await versionCmd.ExecuteScalarAsync<int?>(ctx).ConfigureAwait(false);
 
             return currentVersion;
         }
