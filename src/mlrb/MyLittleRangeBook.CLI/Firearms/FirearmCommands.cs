@@ -29,6 +29,11 @@ namespace MyLittleRangeBook
         }
 
 
+        /// <summary>
+        /// This is a care taker task. It will update the Firearms table based on what is in the SimpleRangeEvents table.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [Command("update-from-rangeevents")]
         [UsedImplicitly]
         public async Task<int> X(CancellationToken cancellationToken = default)
@@ -54,6 +59,13 @@ namespace MyLittleRangeBook
                     CliDisplay.PrintSuccess("Updated firearms from range events.");
                 }
 
+                foreach (IReason reason in r.Reasons)
+                {
+                    CliDisplay.Console.WriteLine($"* {reason.Message}");
+                }
+
+                await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
+                PressAnyKeyToContinue();
                 return ReturnCodes.SUCCESS;
             }
             catch (Exception ex)
@@ -62,6 +74,7 @@ namespace MyLittleRangeBook
                 Logger.Error(ex, "Failed to update firearms from range events");
                 await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
 
+                PressAnyKeyToContinue();
                 return ReturnCodes.FAILURE;
             }
         }
