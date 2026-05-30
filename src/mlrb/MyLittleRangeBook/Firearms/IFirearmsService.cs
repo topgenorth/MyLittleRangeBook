@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.Firearms
 {
@@ -70,5 +71,12 @@ namespace MyLittleRangeBook.Firearms
             IDbConnection connection,
             IDbTransaction? transaction = null,
             CancellationToken ct = default);
+
+        /// <summary>
+        /// Copies new firearm names from the SimpleRangeEvent table into the Firearms table.
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <returns></returns>
+        Task<Result> UpdateFirearmsFromRangeEventsAsync(DapperCommandContext ctx);
     }
 }

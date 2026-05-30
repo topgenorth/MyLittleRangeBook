@@ -116,6 +116,11 @@ namespace MyLittleRangeBook.Firearms
             throw new NotImplementedException();
         }
 
+        public Task<Result> UpdateFirearmsFromRangeEventsAsync(DapperCommandContext ctx)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// The SQL and commands we can perform on the database
         /// </summary>
