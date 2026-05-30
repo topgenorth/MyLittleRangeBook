@@ -42,12 +42,14 @@ namespace MyLittleRangeBook.RangeEventAssets
             _logger.Verbose("Associating RangeAsset {RangeAssetId} to RangeEvent", context.RangeAssetId);
 
             var p = new { RangeEventId = rangeEventId, context.RangeAssetId };
-            var cmd = new DapperCommand(
-                "INSERT INTO SimpleRangeEvent_RangeAssets (SimpleRangeEventId, RangeAssetFilesId) VALUES (@RangeEventId, @RangeAssetId)",
-                p);
+            var cmd = new DapperCommand("""
+                                        INSERT INTO SimpleRangeEvent_RangeAssets (SimpleRangeEventId, RangeAssetFilesId) 
+                                        VALUES (@RangeEventId, @RangeAssetId)
+                                        """);
 
-            int r = await cmd.ExecuteAsync(context.Connection, context.Transaction, context.CancellationToken)
-                .ConfigureAwait(false);
+            var dapperCtx =
+                new DapperCommandContext(context.Connection, context.Transaction, context.CancellationToken, p);
+            int r = await cmd.ExecuteAsync(dapperCtx).ConfigureAwait(false);
             if (r != 1)
             {
                 return Result.Fail("Could not associate range asset to the range event.");
@@ -92,7 +94,8 @@ namespace MyLittleRangeBook.RangeEventAssets
             IReadOnlyList<IDomainEvent> pendingEvents,
             CancellationToken cancellationToken)
         {
-            var ctx = new RangeAssetProjectorContext(connection, transaction, streamId, pendingEvents, cancellationToken);
+            var ctx = new RangeAssetProjectorContext(connection, transaction, streamId, pendingEvents,
+                cancellationToken);
 
             return _rangeAssetProjector.ProjectAsync(ctx);
         }

@@ -80,8 +80,10 @@ namespace MyLittleRangeBook.Database
                 }
 
                 Logger.Verbose("Converting {tableName} ID from {oldId}, {newId}.", tableName, row.OldId, row.NewId);
-                var cmd = new DapperCommand(update, new { oldId = row.OldId, newId = row.NewId });
-                int i = await cmd.ExecuteAsync(conn, trans, ct).ConfigureAwait(false);
+
+                var ctx = new DapperCommandContext(conn, trans, ct, new { oldId = row.OldId, newId = row.NewId });
+                var cmd = new DapperCommand(update);
+                int i = await cmd.ExecuteAsync(ctx).ConfigureAwait(false);
                 if (i < 1)
                 {
                     Logger.Warning("Did not convert old {tableName} ID {oldId}  to new ID {newId}", tableName,
@@ -127,11 +129,11 @@ namespace MyLittleRangeBook.Database
                     Logger.Verbose("Skipping {tableName} ID {id} - already a MrlbId.", TABLENAME, row.OldId);
                     continue;
                 }
-
                 Logger.Verbose("Converting {tableName} ID from {oldId}, {newId}.", TABLENAME, row.OldId, row.NewId);
 
-                var cmd = new DapperCommand(UPDATE, new { oldId = row.OldId, newId = row.NewId });
-                int i = await cmd.ExecuteAsync(conn, trans, ct).ConfigureAwait(false);
+                var ctx = new DapperCommandContext(conn, trans, ct, new { oldId = row.OldId, newId = row.NewId });
+                var cmd = new DapperCommand(UPDATE );
+                int i = await cmd.ExecuteAsync(ctx).ConfigureAwait(false);
                 if (i < 1)
                 {
                     Logger.Warning("Did not convert old {tableName} ID {oldId}  to new ID {newId}", TABLENAME,

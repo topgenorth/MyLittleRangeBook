@@ -93,10 +93,11 @@ namespace MyLittleRangeBook.Cartridges
                 cartridge.SuitableForPistol,
                 cartridge.IsActive
             };
-            var cmd = new DapperCommand(UpsertSql, valuesToInsert);
+            var ctx = new DapperCommandContext(connection, null, cancellationToken, valuesToInsert);
+            var cmd = new DapperCommand(UpsertSql);
             try
             {
-                long l = await cmd.ExecuteScalarAsync<long>(connection, null, cancellationToken)
+                long l = await cmd.ExecuteScalarAsync<long>(ctx)
                     .ConfigureAwait(false);
 
                 var upsertId = new EntityId(cartridge.Id!, l);

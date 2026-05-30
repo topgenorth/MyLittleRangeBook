@@ -18,40 +18,101 @@ namespace MyLittleRangeBook.Persistence
         /// <returns></returns>
         DapperCommand Arguments(object? p);
 
+        /// <summary>
+        ///     Converts the current DapperCommand instance into a Dapper CommandDefinition object using the provided context.
+        /// </summary>
+        /// <param name="context">
+        ///     The context containing details such as the database connection, transaction, and cancellation token.
+        /// </param>
+        /// <returns>
+        ///     A CommandDefinition object representing the current command with the information derived from the context.
+        /// </returns>
         CommandDefinition ToDefinition(DapperCommandContext context)
         {
             return ToDefinition(context.Transaction, context.CancellationToken);
         }
 
+        /// <summary>
+        ///     Converts the current DapperCommand instance into a Dapper CommandDefinition object using the provided transaction
+        ///     and cancellation token.
+        /// </summary>
+        /// <param name="transaction"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         CommandDefinition ToDefinition(
             IDbTransaction? transaction = null,
             CancellationToken cancellationToken = default);
 
+        /// <summary>
+        ///     Executes the command as a scalar query, returning a single value of type T. The execution is performed using the
+        ///     provided context, which includes the database connection, transaction, and cancellation token.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        Task<T?> ExecuteScalarAsync<T>(DapperCommandContext context);
 
-        Task<T?> ExecuteScalarAsync<T>(
-            IDbConnection connection,
+        [Obsolete("Prefer the DapperCommandContext overload")]
+        Task<T?> ExecuteScalarAsync<T>(IDbConnection connection,
             IDbTransaction? transaction = null,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default)
+        {
+            var ctx = new DapperCommandContext(connection, transaction, cancellationToken);
 
+            return ExecuteScalarAsync<T>(ctx);
+        }
+
+        Task<int> ExecuteAsync(DapperCommandContext ctx);
+
+        [Obsolete("Prefer the DapperCommandContext overload")]
         Task<int> ExecuteAsync(
             IDbConnection connection,
             IDbTransaction? transaction = null,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default)
+        {
+            var ctx = new DapperCommandContext(connection, transaction, cancellationToken);
 
+            return ExecuteAsync(ctx);
+        }
+
+        Task<T?> QuerySingleOrDefaultAsync<T>(DapperCommandContext ctx);
+
+        [Obsolete("Prefer the DapperCommandContext overload")]
         Task<T?> QuerySingleOrDefaultAsync<T>(
             IDbConnection connection,
             IDbTransaction? transaction = null,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default)
+        {
+            var ctx = new DapperCommandContext(connection, transaction, cancellationToken);
 
+            return QuerySingleOrDefaultAsync<T>(ctx);
+        }
+
+        Task<T> QuerySingleAsync<T>(DapperCommandContext ctx);
+
+        [Obsolete("Prefer the DapperCommandContext overload")]
         Task<T> QuerySingleAsync<T>(
             IDbConnection connection,
             IDbTransaction? transaction = null,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default)
+        {
+            var ctx = new DapperCommandContext(connection, transaction, cancellationToken);
 
+            return QuerySingleAsync<T>(ctx);
+        }
+
+        Task<IEnumerable<T>> QueryAsync<T>(DapperCommandContext ctx);
+
+        [Obsolete("Prefer the DapperCommandContext overload")]
         Task<IEnumerable<T>> QueryAsync<T>(
             IDbConnection connection,
             IDbTransaction? transaction = null,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default)
+        {
+            var ctx = new DapperCommandContext(connection, transaction, cancellationToken);
+
+            return QueryAsync<T>(ctx);
+        }
     }
 
     /// <summary>
@@ -61,6 +122,14 @@ namespace MyLittleRangeBook.Persistence
     /// </summary>
     public class DapperCommand : IDapperCommand
     {
+        public DapperCommand(string sql)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(sql);
+            CommandType = CommandType.Text;
+            CommandTimeout = 15;
+            Sql = sql;
+        }
+        [Obsolete("Pass the parameters in using DapperCommandContext")]
         public DapperCommand(string sql, object? parameters = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(sql);
@@ -70,6 +139,7 @@ namespace MyLittleRangeBook.Persistence
             Parameters = parameters;
         }
 
+        [Obsolete("Pass in the arguments using the DapperCommandContext.")]
         public object? Parameters { get; private set; }
 
         public string Sql { get; }
@@ -84,6 +154,7 @@ namespace MyLittleRangeBook.Persistence
         /// </summary>
         /// <param name="p"></param>
         /// <returns></returns>
+        [Obsolete("Pass in the arguments using the DapperCommandContext.")]
         public DapperCommand Arguments(object? p)
         {
             ArgumentNullException.ThrowIfNull(p);
@@ -92,6 +163,16 @@ namespace MyLittleRangeBook.Persistence
             return this;
         }
 
+        public CommandDefinition ToDefinition(DapperCommandContext ctx)
+        {
+            return new CommandDefinition(
+                Sql,
+                ctx.Arguments?? new { },
+                ctx.Transaction,
+                CommandTimeout,
+                CommandType,
+                cancellationToken: ctx.CancellationToken);
+        }
         public CommandDefinition ToDefinition(
             IDbTransaction? transaction = null,
             CancellationToken cancellationToken = default)
@@ -105,44 +186,29 @@ namespace MyLittleRangeBook.Persistence
                 cancellationToken: cancellationToken);
         }
 
-        public async Task<T?> ExecuteScalarAsync<T>(
-            IDbConnection connection,
-            IDbTransaction? transaction = null,
-            CancellationToken cancellationToken = default)
+        public async Task<T?> ExecuteScalarAsync<T>(DapperCommandContext ctx)
         {
-            return await connection.ExecuteScalarAsync<T>(ToDefinition(transaction, cancellationToken));
+            return await ctx.Connection.ExecuteScalarAsync<T>(ToDefinition(ctx));
         }
 
-        public Task<int> ExecuteAsync(
-            IDbConnection connection,
-            IDbTransaction? transaction = null,
-            CancellationToken cancellationToken = default)
+        public Task<int> ExecuteAsync(DapperCommandContext ctx)
         {
-            return connection.ExecuteAsync(ToDefinition(transaction, cancellationToken));
+            return ctx.Connection.ExecuteAsync(ToDefinition(ctx));
         }
 
-        public Task<T?> QuerySingleOrDefaultAsync<T>(
-            IDbConnection connection,
-            IDbTransaction? transaction = null,
-            CancellationToken cancellationToken = default)
+        public Task<T?> QuerySingleOrDefaultAsync<T>(DapperCommandContext ctx)
         {
-            return connection.QuerySingleOrDefaultAsync<T>(ToDefinition(transaction, cancellationToken));
+            return ctx.Connection.QuerySingleOrDefaultAsync<T>(ToDefinition(ctx));
         }
 
-        public Task<T> QuerySingleAsync<T>(
-            IDbConnection connection,
-            IDbTransaction? transaction = null,
-            CancellationToken cancellationToken = default)
+        public Task<T> QuerySingleAsync<T>(DapperCommandContext ctx)
         {
-            return connection.QuerySingleAsync<T>(ToDefinition(transaction, cancellationToken));
+            return ctx.Connection.QuerySingleAsync<T>(ToDefinition(ctx));
         }
 
-        public Task<IEnumerable<T>> QueryAsync<T>(
-            IDbConnection connection,
-            IDbTransaction? transaction = null,
-            CancellationToken cancellationToken = default)
+        public Task<IEnumerable<T>> QueryAsync<T>(DapperCommandContext ctx)
         {
-            return connection.QueryAsync<T>(ToDefinition(transaction, cancellationToken));
+            return ctx.Connection.QueryAsync<T>(ToDefinition(ctx));
         }
     }
 }
