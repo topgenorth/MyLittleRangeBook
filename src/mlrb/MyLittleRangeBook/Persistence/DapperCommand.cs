@@ -96,11 +96,9 @@ namespace MyLittleRangeBook.Persistence
             IDbTransaction? transaction = null,
             CancellationToken cancellationToken = default)
         {
-            ArgumentNullException.ThrowIfNull(Parameters);
-
             return new CommandDefinition(
                 Sql,
-                Parameters,
+                Parameters ?? new { },
                 transaction,
                 CommandTimeout,
                 CommandType,

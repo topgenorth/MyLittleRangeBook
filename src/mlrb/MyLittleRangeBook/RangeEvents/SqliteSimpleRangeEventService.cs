@@ -1,12 +1,34 @@
 ﻿using System.Data;
 using Dapper;
-using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.RangeEvents
 {
+    /// <summary>
+    /// Provides SQLite-specific implementation for managing SimpleRangeEvent data.
+    /// </summary>
+    /// <remarks>
+    /// This service offers functionalities for creating, updating, deleting, and retrieving
+    /// SimpleRangeEvent records from a SQLite database. It interacts with the database using
+    /// provided connection and transaction parameters, supporting asynchronous operations.
+    /// </remarks>
     public class SqliteSimpleRangeEventService : ISimpleRangeEventService
     {
+        const string UpsertSql = """
+                                 INSERT INTO SimpleRangeEvents (Id, EventDate, FirearmName, RangeName, RoundsFired, AmmoDescription, Notes, Created, Modified)
+                                 VALUES (@Id, @EventDate, @FirearmName, @RangeName, @RoundsFired, @AmmoDescription, @Notes, @Created, @Modified)
+                                 ON CONFLICT(Id) DO UPDATE SET
+                                   EventDate = excluded.EventDate,
+                                   FirearmName = excluded.FirearmName,
+                                   RangeName = excluded.RangeName,
+                                   RoundsFired = excluded.RoundsFired,
+                                   AmmoDescription = excluded.AmmoDescription,
+                                   Notes = excluded.Notes,
+                                   Modified = excluded.Modified
+                                 RETURNING RowId;
+                                 """;
+
         const string SelectSql = """
                                  SELECT *
                                  FROM SimpleRangeEvents 
@@ -15,96 +37,42 @@ namespace MyLittleRangeBook.RangeEvents
 
         const string DeleteSql = "DELETE FROM SimpleRangeEvents WHERE Id = @Id;";
 
-        const string InsertSql = """
-                                 INSERT INTO SimpleRangeEvents (Id, EventDate, FirearmName, RangeName, RoundsFired, AmmoDescription, Notes, Created, Modified)
-                                 VALUES (@Id, @EventDate, @FirearmName, @RangeName, @RoundsFired, @AmmoDescription, @Notes, @Created, @Modified)
-                                 RETURNING RowId;
-                                 """;
+        static DapperCommand UpsertCommand => new(UpsertSql);
+        static DapperCommand DeleteCommand => new(DeleteSql);
+        static DapperCommand SelectAll => new(SelectSql, new { });
 
-        const string UpdateSql = """
-                                 UPDATE SimpleRangeEvents 
-                                 SET EventDate = @EventDate, FirearmName = @FirearmName, RangeName = @RangeName, 
-                                     RoundsFired = @RoundsFired, AmmoDescription = @AmmoDescription, Notes = @Notes, 
-                                     Modified = @Modified
-                                 WHERE Id = @Id;
-                                 """;
-
-        public async Task<Result<bool>> DeleteAsync(IDbConnection connection,
+        public async Task<Result> DeleteAsync(IDbConnection connection,
             SimpleRangeEvent simpleRangeEvent,
+            IDbTransaction? transaction = null,
             CancellationToken cancellationToken = default)
         {
-            if (simpleRangeEvent.RowId is null)
-            {
-                var reason = new Success($"SimpleRangeEvent `{simpleRangeEvent.Id}` does not exist.");
-                reason.WithMetadata("Id", simpleRangeEvent.Id);
-                reason.WithMetadata("RowId", simpleRangeEvent.RowId);
-
-                return Result.Ok().WithSuccess(reason);
-            }
-
             try
             {
-                var cmd = new SqliteCommand(DeleteSql, (SqliteConnection)connection);
-                cmd.Parameters.AddWithValue("@Id", simpleRangeEvent.Id);
-                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                var p = new { Id = simpleRangeEvent.Id! };
+                int result = await DeleteCommand.Arguments(p)
+                    .ExecuteAsync(connection, transaction, cancellationToken)
+                    .ConfigureAwait(false);
             }
             catch (Exception e)
             {
                 var err = new Error($"Could not delete SimpleRangeEvent `{simpleRangeEvent.Id}`: {e.Message}");
-                err.CausedBy(e);
-                EnrichError(err, simpleRangeEvent);
+                err.CausedBy(e).Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId);
 
                 return Result.Fail(err);
             }
 
-            return Result.Ok(true);
-        }
-
-        public async Task<Result<long?>> UpsertAsync(IDbConnection connection,
-            SimpleRangeEvent simpleRangeEvent,
-            CancellationToken cancellationToken = default)
-        {
-            simpleRangeEvent.Modified = DateTimeOffset.UtcNow;
-            try
-            {
-                simpleRangeEvent.Id ??= new MlrbId().ToString();
-
-                if (simpleRangeEvent.RowId is null)
-                {
-                    long? rowId = await connection.QuerySingleAsync<long>(InsertSql, simpleRangeEvent);
-                    simpleRangeEvent.RowId = rowId;
-                }
-                else
-                {
-                    await connection.ExecuteAsync(UpdateSql, simpleRangeEvent);
-                }
-
-                var reason = new Success($"SimpleRangeEvent `{simpleRangeEvent.Id}` saved.");
-                reason.WithMetadata("Id", simpleRangeEvent.Id);
-                reason.WithMetadata("RowId", simpleRangeEvent.RowId);
-
-                return Result.Ok(simpleRangeEvent.RowId).WithSuccess(reason);
-            }
-            catch (Exception e)
-            {
-                var err = new Error($"Could not save SimpleRangeEvent `{simpleRangeEvent.Id}`: {e.Message}");
-                err.CausedBy(e);
-                EnrichError(err, simpleRangeEvent);
-
-                return Result.Fail(err);
-            }
+            return Result.Ok();
         }
 
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(IDbConnection connection,
+            IDbTransaction? transaction = null,
             CancellationToken cancellationToken = default)
         {
-            var conn = (SqliteConnection)connection;
-
-
             try
             {
-                IEnumerable<SimpleRangeEvent> rangeEvents =
-                    await conn.QueryAsync<SimpleRangeEvent>(SelectSql, cancellationToken);
+                IEnumerable<SimpleRangeEvent> rangeEvents = await SelectAll
+                    .QueryAsync<SimpleRangeEvent>(connection, transaction, cancellationToken)
+                    .ConfigureAwait(false);
 
                 return Result.Ok(rangeEvents);
             }
@@ -117,10 +85,49 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
-        static void EnrichError(Error error, SimpleRangeEvent simpleRangeEvent)
+        public async Task<Result<long?>> UpsertAsync(IDbConnection connection,
+            SimpleRangeEvent simpleRangeEvent,
+            IDbTransaction? transaction = null,
+            CancellationToken cancellationToken = default)
         {
-            error.WithMetadata("Id", simpleRangeEvent.Id);
-            error.WithMetadata("RowId", simpleRangeEvent.RowId);
+            simpleRangeEvent.Modified = DateTimeOffset.UtcNow;
+            simpleRangeEvent.Id ??= MlrbId.From(simpleRangeEvent.EventDate);
+
+            try
+            {
+                var p = new
+                {
+                    Id = simpleRangeEvent.Id!,
+                    EventDate = simpleRangeEvent.EventDate,
+                    FirearmName = simpleRangeEvent.FirearmName,
+                    RangeName = simpleRangeEvent.RangeName,
+                    RoundsFired = simpleRangeEvent.RoundsFired,
+                    AmmoDescription = simpleRangeEvent.AmmoDescription,
+                    Notes = simpleRangeEvent.Notes,
+                    Created = simpleRangeEvent.Created,
+                    Modified = simpleRangeEvent.Modified
+                };
+                long result = await UpsertCommand.Arguments(p)
+                    .ExecuteScalarAsync<long>(connection, transaction, cancellationToken)
+                    .ConfigureAwait(false);
+
+                simpleRangeEvent.RowId = result;
+
+                var reason = new Success($"SimpleRangeEvent `{simpleRangeEvent.Id}` saved.");
+                reason.WithMetadata("Id", simpleRangeEvent.Id);
+                reason.WithMetadata("RowId", simpleRangeEvent.RowId);
+                reason.WithMetadata("Database", connection.Database);
+
+
+                return Result.Ok(simpleRangeEvent.RowId).WithSuccess(reason);
+            }
+            catch (Exception e)
+            {
+                var err = new Error($"Could not save SimpleRangeEvent `{simpleRangeEvent.Id}`: {e.Message}");
+                err.CausedBy(e).Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId);
+
+                return Result.Fail(err);
+            }
         }
     }
 }

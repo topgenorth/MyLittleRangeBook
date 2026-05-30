@@ -28,8 +28,27 @@ namespace MyLittleRangeBook.RangeEvents
             CancellationToken cancellationToken = default)
         {
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+            await using DbTransaction t = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                Result<IEnumerable<SimpleRangeEvent>> result =
+                    await _simpleRangeEventService.GetSimpleRangeEventsAsync(conn, t, cancellationToken);
+                if (!result.IsFailed)
+                {
+                    return result;
+                }
 
-            return await _simpleRangeEventService.GetSimpleRangeEventsAsync(conn, cancellationToken);
+                await t.RollbackAsync(cancellationToken).ConfigureAwait(false);
+
+                return Result.Fail(result.Errors);
+            }
+            catch (Exception e)
+            {
+                await t.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                Error err = new Error("Failed to retrieve simple range events.").CausedBy(e);
+
+                return Result.Fail(err);
+            }
         }
 
         public async Task<Result<SimpleRangeEvent>> GetAsync(string id, CancellationToken cancellationToken)
@@ -59,12 +78,26 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
-        public async Task<Result<bool>> DeleteAsync(SimpleRangeEvent simpleRangeEvent,
+        public async Task<Result> DeleteAsync(SimpleRangeEvent simpleRangeEvent,
             CancellationToken cancellationToken = default)
         {
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+            await using DbTransaction trans = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
-            return await _simpleRangeEventService.DeleteAsync(conn, simpleRangeEvent, cancellationToken);
+            try
+            {
+                return await _simpleRangeEventService.DeleteAsync(conn, simpleRangeEvent, trans, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                Error? err = new Error("Failed to delete simple range event.")
+                    .Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId)
+                    .CausedBy(e);
+
+                return Result.Fail(err);
+            }
         }
 
 
@@ -77,15 +110,23 @@ namespace MyLittleRangeBook.RangeEvents
             try
             {
                 Result<long?> sreResult = await _simpleRangeEventService
-                    .UpsertAsync(conn, simpleRangeEvent, cancellationToken)
+                    .UpsertAsync(conn, simpleRangeEvent, trans, cancellationToken)
                     .ConfigureAwait(false);
+                if (sreResult.IsSuccess)
+                {
+                    finalResult = Result.Ok(sreResult.Value);
+                    await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
 
-                return sreResult.IsFailed ? sreResult : sreResult;
+                    return Result.Ok(finalResult.Value);
+                }
 
-                ;
+                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
+
+                return sreResult;
             }
             catch (Exception e)
             {
+                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
                 Error? err = new Error("Failed to upsert simple range event with file contents.")
                     .Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId)
                     .CausedBy(e);
