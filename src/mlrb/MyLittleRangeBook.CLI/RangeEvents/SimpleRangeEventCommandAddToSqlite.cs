@@ -148,6 +148,8 @@ namespace MyLittleRangeBook.RangeEvents
             range = await AskUserForRangeAsync(range, ranges, cancellationToken).ConfigureAwait(false);
             ammo = await AskUserForAmmoAsync(firearm, ammo, cancellationToken).ConfigureAwait(false);
             notes = await AskUserForNotesAsync(notes, cancellationToken).ConfigureAwait(false);
+
+
             var sre = SimpleRangeEvent.New(
                 RemoveSurroundingQuotes(firearm),
                 rounds,

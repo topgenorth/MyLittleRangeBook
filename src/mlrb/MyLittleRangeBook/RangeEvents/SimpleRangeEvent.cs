@@ -80,6 +80,19 @@ namespace MyLittleRangeBook.RangeEvents
 
         public bool IsActive { get; set; } = true;
 
+        /// <summary>
+        ///     Creates a new instance of the <see cref="SimpleRangeEvent" /> class with the specified parameters.
+        /// </summary>
+        /// <param name="firearm">The name of the firearm used in the event.</param>
+        /// <param name="rounds">The number of rounds fired during the event.</param>
+        /// <param name="range">The name of the range where the event took place.</param>
+        /// <param name="ammo">The description of the ammunition used in the event.</param>
+        /// <param name="notes">Additional notes related to the event.</param>
+        /// <param name="date">
+        ///     The date of the event. If not provided, the current date is used. This is always assumed to be in
+        ///     the local timezone.
+        /// </param>
+        /// <returns>A new instance of the <see cref="SimpleRangeEvent" /> class with the provided details.</returns>
         public static SimpleRangeEvent New(string firearm,
             int rounds,
             string range,
@@ -87,9 +100,8 @@ namespace MyLittleRangeBook.RangeEvents
             string notes,
             DateOnly date = default)
         {
-            var id = MlrbId.From(date);
-
-            DateTime eventdate = date == default ? DateTime.Now.Date : date.ToDateTime(TimeOnly.MinValue).Date;
+            DateOnly eventDate = date == default ? DateOnly.FromDateTime(DateTime.Now) : date;
+            var id = MlrbId.From(eventDate);
             var sre = new SimpleRangeEvent
             {
                 Id = id.ToString(),
@@ -98,7 +110,7 @@ namespace MyLittleRangeBook.RangeEvents
                 RangeName = range,
                 AmmoDescription = ammo,
                 Notes = notes,
-                EventDate = eventdate
+                EventDate = eventDate.ToDateTime(TimeOnly.MinValue)
             };
 
             return sre;
