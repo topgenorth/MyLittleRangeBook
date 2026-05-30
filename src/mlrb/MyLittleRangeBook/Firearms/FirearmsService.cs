@@ -139,8 +139,8 @@ namespace MyLittleRangeBook.Firearms
                                      RETURNING RowId
                                      """;
 
-            public static readonly DapperCommand SelectAll = new(SelectSql);
-            public static readonly DapperCommand SelectActive = new(SelectActiveSql);
+            public static DapperCommand SelectAll => new(SelectSql);
+            public static DapperCommand SelectActive => new(SelectActiveSql);
             public static DapperCommand SelectById => new(SelectByIdSql);
             public static DapperCommand DeleteById => new(DeleteSql);
             public static DapperCommand Insert => new(InsertSql);

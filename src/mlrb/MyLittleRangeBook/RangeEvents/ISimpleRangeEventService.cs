@@ -4,16 +4,18 @@ namespace MyLittleRangeBook.RangeEvents
 {
     public interface ISimpleRangeEventService
     {
-        // TODO [TO20260528] These methods need to accept an IDbTransaction.
-        Task<Result<bool>> DeleteAsync(IDbConnection connection,
+        Task<Result> DeleteAsync(IDbConnection connection,
             SimpleRangeEvent simpleRangeEvent,
+            IDbTransaction? transaction = null,
             CancellationToken cancellationToken = default);
 
         Task<Result<long?>> UpsertAsync(IDbConnection connection,
             SimpleRangeEvent simpleRangeEvent,
+            IDbTransaction? transaction = null,
             CancellationToken cancellationToken = default);
 
         Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(IDbConnection connection,
+            IDbTransaction? transaction = null,
             CancellationToken cancellationToken = default);
     }
 }

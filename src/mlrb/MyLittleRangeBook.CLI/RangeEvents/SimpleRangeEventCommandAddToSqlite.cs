@@ -56,6 +56,7 @@ namespace MyLittleRangeBook.RangeEvents
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
+            int returnValue=-1;
             CliDisplay.PrintCommandHeader("Add range event");
             Result<(List<string>, List<string>)> r1 = await _rangeEventHelper
                 .GetFirearmsAndRangesAsync(cancellationToken)
@@ -91,7 +92,8 @@ namespace MyLittleRangeBook.RangeEvents
                     Logger.Warning("Operation cancelled by user.");
                     CliDisplay.PrintFailure("Operation cancelled.");
 
-                    return COMMAND_CANCELLED;
+                    returnValue= COMMAND_CANCELLED;
+                    goto ExitFunction;
                 }
 
                 Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
@@ -101,27 +103,33 @@ namespace MyLittleRangeBook.RangeEvents
                     _simpleRangeEventPrinter.Print(CliDisplay.Console, sre, quiet);
                     CliDisplay.PrintSuccess("Range trip added successfully.");
 
-                    return SUCCESS;
+                    returnValue =  SUCCESS;
+                    goto ExitFunction;
                 }
 
                 CliDisplay.PrintFailure("Failed to add range trip.");
 
-                return RANGE_EVENT_FAILED_TO_CREATE;
+                returnValue=  RANGE_EVENT_FAILED_TO_CREATE;
             }
             catch (TaskCanceledException tce)
             {
                 Logger.Warning(tce, "AddSimpleRangeEventAsync was cancelled.s");
                 CliDisplay.PrintFailure("AddSimpleRangeEventAsync was cancelled.");
 
-                return COMMAND_CANCELLED;
+                returnValue =  COMMAND_CANCELLED;
             }
             catch (Exception e)
             {
                 Logger.Error(e, "Unexpected error trying to add SimpleRangeEvent");
                 CliDisplay.PrintFailure($"Unexpected error trying to add SimpleRangeEvent: {e.Message}");
 
-                return RANGE_EVENT_FAILED_TO_CREATE;
+                returnValue= RANGE_EVENT_FAILED_TO_CREATE;
             }
+
+            // [TO20260529] This makes me vomit; but works for now.
+            ExitFunction:
+            PressAnyKeyToContinue();
+            return returnValue;
         }
 
 

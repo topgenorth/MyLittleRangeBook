@@ -13,7 +13,7 @@
         /// <param name="simpleRangeEvent">The simple range event to be deleted.</param>
         /// <param name="cancellationToken">A token to cancel the operation if required.</param>
         /// <returns>A result indicating whether the deletion was successful.</returns>
-        Task<Result<bool>> DeleteAsync(SimpleRangeEvent simpleRangeEvent,
+        Task<Result> DeleteAsync(SimpleRangeEvent simpleRangeEvent,
             CancellationToken cancellationToken = default);
 
         /// <summary>
