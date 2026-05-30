@@ -4,7 +4,7 @@ namespace MyLittleRangeBook.RangeEventAssets
 {
     public class RangeAssetAggregate : Aggregate
     {
-        public const string DEFAULT_STREAM_TYPE_NAME = "range-asset-import";
+        public const string DEFAULT_STREAM_TYPE_NAME = "range-asset";
 
         RangeAssetAggregate()
         {
