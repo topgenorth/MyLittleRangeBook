@@ -7,6 +7,8 @@ namespace MyLittleRangeBook.Firearms
     {
         Task<Result<FirearmAggregate>> GetByNameAsync(string firearmName,
             CancellationToken cancellationToken = default);
+
+        Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default);
     }
 
     public class SqliteFirearmAggregateRepository : SqliteAggregateRepository<FirearmAggregate>,

@@ -92,13 +92,6 @@ namespace MyLittleRangeBook.Firearms
             string assetId);
 
         /// <summary>
-        /// Copies new firearm names from the SimpleRangeEvent table into the Firearms table.
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        Task<Result> UpdateFirearmsFromRangeEventsAsync(DapperCommandContext context);
-
-        /// <summary>
         ///     Add a firearm to the database.
         /// </summary>
         /// <param name="firearm"></param>

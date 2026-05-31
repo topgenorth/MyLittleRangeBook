@@ -13,8 +13,6 @@ namespace MyLittleRangeBook.Firearms
 
         public override string DefaultStreamType { get; } = "firearm";
 
-        public MlrbId Id { get; private set; } = MlrbId.Empty;
-
         public string Name { get; private set; } = string.Empty;
 
         public int RoundCount { get; private set; }
