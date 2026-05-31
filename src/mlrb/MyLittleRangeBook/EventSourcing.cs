@@ -617,4 +617,12 @@ namespace MyLittleRangeBook
         string Serialize(object domainEvent);
         object Deserialize(string rowEventType, string rowDataJson);
     }
+
+    /// <summary>
+    ///     Defines functionality for projecting domain events related to file imports into a storage system.
+    /// </summary>
+    public interface IProjector
+    {
+            Task ProjectAsync(DapperCommandContext context, IEnumerable<IDomainEvent> domainEvents);
+    }
 }

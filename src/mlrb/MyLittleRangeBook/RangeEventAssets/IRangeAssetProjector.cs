@@ -5,6 +5,7 @@
     /// </summary>
     public interface IRangeAssetProjector
     {
-        Task ProjectAsync(RangeAssetProjectorContext context);
+        // TODO [TO20260531] Make this IProjector.
+        Task ProjectAsync(RangeAssetProjectorContext context, IEnumerable<IDomainEvent> domainEvents);
     }
 }
