@@ -5,7 +5,7 @@ namespace MyLittleRangeBook.Firearms
 {
     public interface IFirearmAggregateRepository
     {
-        Task<Result<FirearmAggregate>> GetByNameAsync(string firearmName,
+        Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(string firearmName,
             CancellationToken cancellationToken = default);
 
         Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default);
@@ -22,7 +22,7 @@ namespace MyLittleRangeBook.Firearms
         {
         }
 
-        public async Task<Result<FirearmAggregate>> GetByNameAsync(string firearmName,
+        public async Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(string firearmName,
             CancellationToken cancellationToken = default)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);

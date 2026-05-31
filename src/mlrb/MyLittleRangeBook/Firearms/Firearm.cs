@@ -2,6 +2,7 @@
 
 namespace MyLittleRangeBook.Firearms
 {
+
     public record Firearm
     {
         public Firearm()
@@ -15,7 +16,7 @@ namespace MyLittleRangeBook.Firearms
         }
 
         /// <summary>
-        ///     A Nanoid to uniquely identify the Firearm. Will be null for a new entity.
+        ///     An id to uniquely identify the Firearm. Will be null for a new entity. Should be same as stream id.
         /// </summary>
         public string? Id { get; set; }
 

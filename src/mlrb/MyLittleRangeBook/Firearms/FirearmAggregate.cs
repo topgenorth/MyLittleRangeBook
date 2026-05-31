@@ -5,19 +5,23 @@ namespace MyLittleRangeBook.Firearms
 {
     public class FirearmAggregate : Aggregate
     {
+
         internal const string STREAM_TYPE = "firearm";
 
         FirearmAggregate()
         {
+
         }
 
-        public override string DefaultStreamType { get; } = "firearm";
+        public override string DefaultStreamType => STREAM_TYPE;
+        public long? RowId { get; set; }
+        public string Name { get; set; }
+        public int RoundsFired { get; set; }
+        public string? Notes { get; set; }
+        public DateTimeOffset Created { get; set; }
+        public DateTimeOffset Modified { get; set; }
+        public bool IsActive { get; set; }
 
-        public string Name { get; private set; } = string.Empty;
-
-        public int RoundCount { get; private set; }
-
-        public string Notes { get; private set; } = string.Empty;
 
         public static FirearmAggregate Create(EventStream stream)
         {
@@ -41,6 +45,20 @@ namespace MyLittleRangeBook.Firearms
             return agg;
         }
 
+        public Firearm ToFirearm()
+        {
+            var f = new Firearm {
+                Id = Id.ToString(),
+                RoundsFired = RoundsFired,
+                IsActive = IsActive,
+                Name = Name,
+                Notes = Notes,
+                Modified = DateTimeOffset.UtcNow
+            };
+
+            return f;
+        }
+
         public override void Apply(IDomainEvent e)
         {
             switch (e)
@@ -55,6 +73,10 @@ namespace MyLittleRangeBook.Firearms
                     AppendToNotes(sbBarrelChange.ToString());
 
                     break;
+                case FirearmActive x:
+                    IsActive = true;
+
+                    break;
                 case FirearmCleaned x:
                     AppendToNotes($"Cleaned on {x.OccurredUtc.ToString()}.");
 
@@ -62,14 +84,18 @@ namespace MyLittleRangeBook.Firearms
                 case FirearmCreated x:
                     Id = x.StreamId;
                     Name = x.Name;
-                    RoundCount = x.TotalRoundsFired;
+                    RoundsFired = x.TotalRoundsFired;
                     if (x.Notes is not null)
                     {
                         Notes = x.Notes;
                     }
 
                     break;
-                case Modified x:
+                case FirearmInactive x:
+                    IsActive = false;
+
+                    break;
+                case FirearmModified x:
                     StringBuilder sbModified = new StringBuilder("Firearm modified on ")
                         .Append(x.OccurredUtc.ToString())
                         .AppendLine()
@@ -81,8 +107,8 @@ namespace MyLittleRangeBook.Firearms
                     AppendToNotes(x.NewNote);
 
                     break;
-                case RoundsFired x:
-                    RoundCount += x.Rounds;
+                case FiredMoreBullets x:
+                    RoundsFired += x.Rounds;
 
                     break;
 
@@ -98,7 +124,7 @@ namespace MyLittleRangeBook.Firearms
                     break;
 
                 case UsedInRangeEvent x:
-                    RoundCount += x.RoundCount ?? 0;
+                    RoundsFired += x.RoundCount ?? 0;
 
                     break;
             }
@@ -138,12 +164,24 @@ namespace MyLittleRangeBook.Firearms
                 throw new ArgumentException("Round count must be > 0.");
             }
 
-            Raise(new RoundsFired(Id, roundCount, utcNow));
+            Raise(new FiredMoreBullets(Id, roundCount, utcNow));
         }
 
         public void AppendToNotes(string newNote, DateTimeOffset utcNow)
         {
             Raise(new NewNoteAdded(Id, newNote, utcNow));
+        }
+
+        public void IsInactive(bool inactive, DateTimeOffset utcNow)
+        {
+            if (inactive)
+            {
+                Raise(new FirearmInactive(Id, utcNow));
+            }
+            else
+            {
+                Raise(new FirearmActive(Id, utcNow));
+            }
         }
 
         public void AssociateWithRangeEvent(MlrbId rangeEventId, int? roundCount, DateTimeOffset utcNow)
@@ -156,7 +194,7 @@ namespace MyLittleRangeBook.Firearms
             Raise(new UsedInRangeEvent(Id, rangeEventId, roundCount, utcNow));
             if (roundCount is not null)
             {
-                Raise(new RoundsFired(Id, roundCount.Value, utcNow));
+                Raise(new FiredMoreBullets(Id, roundCount.Value, utcNow));
             }
         }
 
@@ -167,6 +205,12 @@ namespace MyLittleRangeBook.Firearms
             string OldBarrel,
             string NewBarrel,
             DateTimeOffset OccurredUtc) : IDomainEvent;
+
+        [EventType("firearm-active")]
+        internal record struct FirearmActive(
+            MlrbId StreamId,
+            DateTimeOffset OccurredUtc)
+            : IDomainEvent;
 
         [EventType("firearm-created")]
         internal record struct FirearmCreated(
@@ -179,14 +223,20 @@ namespace MyLittleRangeBook.Firearms
         [EventType("firearm-cleaned")]
         internal record struct FirearmCleaned(MlrbId StreamId, DateTimeOffset OccurredUtc) : IDomainEvent;
 
+        [EventType("firearm-inactive")]
+        internal record struct FirearmInactive(
+            MlrbId StreamId,
+            DateTimeOffset OccurredUtc)
+            : IDomainEvent;
+
         [EventType("firearm-modification")]
-        internal record struct Modified(MlrbId StreamId, string Description, DateTimeOffset OccurredUtc) : IDomainEvent;
+        internal record struct FirearmModified(MlrbId StreamId, string Description, DateTimeOffset OccurredUtc) : IDomainEvent;
+
+        [EventType("firearm-discharged-rounds")]
+        internal record struct FiredMoreBullets(MlrbId StreamId, int Rounds, DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-note-added")]
         internal record struct NewNoteAdded(MlrbId StreamId, string NewNote, DateTimeOffset OccurredUtc) : IDomainEvent;
-
-        [EventType("firearm-rounds-fired")]
-        internal record struct RoundsFired(MlrbId StreamId, int Rounds, DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-sights-changed")]
         internal record struct SightingSystemChanged(

@@ -462,6 +462,7 @@ namespace MyLittleRangeBook
 
     public sealed class SystemTextJsonEventSerializer : IEventSerializer
     {
+        // TODO [TO20260531] Need to consolidate this with MlrbJsonSerializerContext.
         readonly IReadOnlyDictionary<Type, string> _eventNames;
         readonly IReadOnlyDictionary<string, Type> _eventTypes;
         readonly JsonSerializerOptions _jsonSerializerOptions;
@@ -548,7 +549,7 @@ namespace MyLittleRangeBook
                 WriteIndented = false,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 TypeInfoResolver =
-                    JsonTypeInfoResolver.Combine(MlrbJsonContext.Default, new DefaultJsonTypeInfoResolver())
+                    JsonTypeInfoResolver.Combine(MlrbJsonSerializerContext.Default, new DefaultJsonTypeInfoResolver())
             };
 
             options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
@@ -623,6 +624,6 @@ namespace MyLittleRangeBook
     /// </summary>
     public interface IProjector
     {
-            Task ProjectAsync(DapperCommandContext context, IEnumerable<IDomainEvent> domainEvents);
+            Task<Result> ProjectAsync(DapperCommandContext context, MlrbId streamId,  IEnumerable<IDomainEvent> domainEvents);
     }
 }

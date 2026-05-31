@@ -30,8 +30,6 @@ namespace MyLittleRangeBook
         }
 
 
-
-
         /// <summary>
         ///     List all the active firearms.
         /// </summary>

@@ -154,7 +154,7 @@ namespace MyLittleRangeBook.RangeEventAssets
 
                     break;
                 case RangeAssetParsed x:
-                    MimeType = x.mimeType;
+                    MimeType = x.MimeType;
                     Status = "Parsed";
 
                     break;
@@ -184,30 +184,30 @@ namespace MyLittleRangeBook.RangeEventAssets
         }
 
         [EventType("range-asset-created")]
-        internal record struct RangeAssetCreated(MlrbId StreamId, DateTimeOffset OccurredUtc)
+        public record struct RangeAssetCreated(MlrbId StreamId, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
 
         [EventType("range-asset-import-started")]
-        internal record struct RangeAssetImportStarted(MlrbId StreamId, string SourcePath, DateTimeOffset OccurredUtc)
+        public record struct RangeAssetImportStarted(MlrbId StreamId, string SourcePath, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
         [EventType("range-asset-copied")]
-        internal record struct RangeAssetCopied(MlrbId StreamId, string DestinationPath, DateTimeOffset OccurredUtc)
+        public record struct RangeAssetCopied(MlrbId StreamId, string DestinationPath, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
         [EventType("range-asset-stored-in-database")]
-        internal record struct RangeAssetStoredInDatabase(
+        public record struct RangeAssetStoredInDatabase(
             MlrbId StreamId,
             byte[] FileContents,
             DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("range-asset-parsed")]
-        internal record struct RangeAssetParsed(MlrbId StreamId, string mimeType, DateTimeOffset OccurredUtc)
+        public record struct RangeAssetParsed(MlrbId StreamId, string MimeType, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
         [EventType("range-asset-fingerprint-computed")]
-        internal record struct RangeAssetFingerprintComputed(
+        public record struct RangeAssetFingerprintComputed(
             MlrbId StreamId,
             string Sha256,
             long FileSize,
@@ -215,14 +215,14 @@ namespace MyLittleRangeBook.RangeEventAssets
             : IDomainEvent;
 
         [EventType("range-asset-import-completed")]
-        internal record struct RangeAssetImportCompleted(MlrbId StreamId, DateTimeOffset OccurredUtc) : IDomainEvent;
+        public record struct RangeAssetImportCompleted(MlrbId StreamId, DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("range-asset-import-failed")]
-        internal record struct RangeAssetImportFailed(MlrbId StreamId, string Reason, DateTimeOffset OccurredUtc)
+        public record struct RangeAssetImportFailed(MlrbId StreamId, string Reason, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
         [EventType("range-asset-associated-with-range-event")]
-        internal record struct RangeAssetAssociateWithRangeEvent(
+        public record struct RangeAssetAssociateWithRangeEvent(
             MlrbId StreamId,
             MlrbId RangeEventId,
             DateTimeOffset OccurredUtc) : IDomainEvent;

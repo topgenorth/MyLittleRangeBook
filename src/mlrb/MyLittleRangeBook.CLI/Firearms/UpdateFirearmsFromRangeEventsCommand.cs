@@ -13,6 +13,7 @@ namespace MyLittleRangeBook
     [RegisterCommands("firearms")]
     public class UpdateFirearmsFromRangeEventsCommand : MlrbSqliteCommandBase
     {
+
         readonly IFirearmAggregateRepository _firearmAggregateRepo;
         readonly IFirearmsService _firearmsService;
 
@@ -22,7 +23,9 @@ namespace MyLittleRangeBook
             IFirearmsService firearmsService,
             IFirearmAggregateRepository firearmAggregateRepo) : base(logger, display, sqliteHelper)
         {
+            ArgumentNullException.ThrowIfNull(firearmsService);
             _firearmsService = firearmsService;
+            ArgumentNullException.ThrowIfNull(firearmAggregateRepo);
             _firearmAggregateRepo = firearmAggregateRepo;
         }
 
@@ -53,17 +56,18 @@ namespace MyLittleRangeBook
             }
             catch (Exception ex)
             {
-                CliDisplay.PrintFailure("something bad happened.");
+                CliDisplay.PrintFailure("something bad happened trying to figure out new firearms.");
                 Logger.Error(ex, "Failed to update firearms from range events");
                 returnCode = ReturnCodes.FAILURE;
 
                 goto ExitFunction;
             }
 
-            int importCount = 0;
+            var importCount = 0;
+            int totalCount = firearms.Count();
             foreach (NewFirearmWithRoundCountRow row in firearms)
             {
-                Result<FirearmAggregate> fa = await _firearmAggregateRepo.GetByNameAsync(row.FirearmName, cancellationToken).ConfigureAwait(false);
+                Result<FirearmAggregate> fa = await _firearmAggregateRepo.GetOrCreateByNameAsync(row.FirearmName, cancellationToken).ConfigureAwait(false);
                 if (fa.IsFailed)
                 {
                     CliDisplay.PrintFailure($"Could not import firearm {row.FirearmName}");
@@ -77,15 +81,44 @@ namespace MyLittleRangeBook
                 }
 
                 Result x = await _firearmAggregateRepo.SaveAsync(fa.Value, cancellationToken).ConfigureAwait(false);
-                if (x.IsSuccess)
+                if (!x.IsSuccess)
                 {
-                    importCount++;
+                    Logger.Warning("Failed to save event stream for firearm '{firearm}'.", row.FirearmName);
+                    continue;
                 }
+
+                try
+                {
+                    Firearm f = fa.Value!.ToFirearm();
+                    await using SqliteConnection conn = await SqliteHelper.GetDatabaseConnectionAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                    await using DbTransaction trans =
+                        await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+                    var ctx = new DapperCommandContext(conn, trans, cancellationToken);
+                    Result<EntityId> y = await _firearmsService.UpsertAsync(ctx, f).ConfigureAwait(false);
+
+                    if (y.IsFailed)
+                    {
+                        Logger.Warning("Failed to add '{firearm}' to Firearms table.", f.Name);
+                        await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
+                        importCount++;
+                    }
+
+                }
+                catch (Exception e2)
+                {
+                    Logger.Warning(e2, "Failed to update the firearms table!");
+                }
+
 
             }
 
             returnCode = ReturnCodes.SUCCESS;
-            CliDisplay.PrintSuccess($"Imported {importCount} firearms from range events.");
+            CliDisplay.PrintSuccess($"Imported {importCount}/{totalCount} firearms from range events.");
 
             ExitFunction:
             PressAnyKeyToContinue();
