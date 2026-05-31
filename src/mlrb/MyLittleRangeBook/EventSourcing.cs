@@ -4,12 +4,31 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook
 {
+    public static partial class ServiceCollectionExtensions
+    {
+        public static IServiceCollection RegisterDomainEventSerializers(this IServiceCollection services)
+        {
+
+            services.AddScoped<IEventSerializer, SystemTextJsonEventSerializer>(serviceProvider =>
+            {
+                var l = new List<Type>();
+                l.AddRange(SupportedRangeAssetEvents);
+                l.AddRange(SupportedFirearmsEvents);
+
+                return new SystemTextJsonEventSerializer(l);
+            });
+
+            return services;
+        }
+    }
+
     /// <summary>
     ///     Generic SQLite-backed repository for any <see cref="Aggregate" /> subclass. It persists
     ///     uncommitted events to the <c>events</c> table and upserts the corresponding row in the
@@ -564,14 +583,6 @@ namespace MyLittleRangeBook
         IReadOnlyList<IDomainEvent> PendingEvents,
         CancellationToken CancellationToken = default);
 
-
-    /// <summary>
-    ///     Defines functionality for projecting domain events related to file imports into a storage system.
-    /// </summary>
-    public interface IRangeAssetProjector
-    {
-        Task ProjectAsync(RangeAssetProjectorContext context);
-    }
 
     public interface IDomainEvent
     {

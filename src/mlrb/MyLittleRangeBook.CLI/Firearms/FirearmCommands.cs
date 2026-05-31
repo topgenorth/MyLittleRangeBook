@@ -30,7 +30,7 @@ namespace MyLittleRangeBook
 
 
         /// <summary>
-        /// This is a care taker task. It will update the Firearms table based on what is in the SimpleRangeEvents table.
+        /// This is a maintenance task. It will update the Firearms table based on what is in the SimpleRangeEvents table.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -40,6 +40,7 @@ namespace MyLittleRangeBook
         {
             AnsiConsole.Console.PrintAppInfo();
             AnsiConsole.Console.WriteLine("Updating firearms from range events...");
+
 
             await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken)
                 .ConfigureAwait(false);

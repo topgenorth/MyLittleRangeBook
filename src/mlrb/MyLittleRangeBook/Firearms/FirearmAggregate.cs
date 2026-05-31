@@ -5,6 +5,8 @@ namespace MyLittleRangeBook.Firearms
 {
     public class FirearmAggregate : Aggregate
     {
+        internal const string STREAM_TYPE = "firearm";
+
         FirearmAggregate()
         {
         }
@@ -27,7 +29,7 @@ namespace MyLittleRangeBook.Firearms
             return agg;
         }
 
-        public static FirearmAggregate New(string name, int roundsCount, string notes, DateTimeOffset utcNow)
+        public static FirearmAggregate New(string name, int roundsCount, string? notes, DateTimeOffset utcNow)
         {
             if (roundsCount < 0)
             {
@@ -63,7 +65,10 @@ namespace MyLittleRangeBook.Firearms
                     Id = x.StreamId;
                     Name = x.Name;
                     RoundCount = x.TotalRoundsFired;
-                    Notes = x.Notes;
+                    if (x.Notes is not null)
+                    {
+                        Notes = x.Notes;
+                    }
 
                     break;
                 case Modified x:
@@ -170,7 +175,7 @@ namespace MyLittleRangeBook.Firearms
             MlrbId StreamId,
             string Name,
             int TotalRoundsFired,
-            string Notes,
+            string? Notes,
             DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-cleaned")]

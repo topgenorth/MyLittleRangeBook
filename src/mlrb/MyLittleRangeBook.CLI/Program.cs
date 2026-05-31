@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using MyLittleRangeBook;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Persistence.Sqlite;
@@ -51,7 +52,10 @@ builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
 builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration);
 builder.Services
     .RegisterRangeAssetHandlers()
-    .RegisterRangeAssetEventSourcing();
+    .RegisterDomainEventSerializers()
+    .RegisterRangeAssetEventSourcing()
+    .RegisterFirearmEventSourcing()
+    ;
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
