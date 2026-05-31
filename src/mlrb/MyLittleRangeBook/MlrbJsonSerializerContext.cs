@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using MyLittleRangeBook.Models;
-using MyLittleRangeBook.RangeEventAssets;
+using static MyLittleRangeBook.RangeEventAssets.RangeAssetAggregate;
 
 namespace MyLittleRangeBook
 {
@@ -19,17 +19,18 @@ namespace MyLittleRangeBook
         DictionaryKeyPolicy = JsonKnownNamingPolicy.CamelCase,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         PropertyNameCaseInsensitive = true)]
-    [JsonSerializable(typeof(RangeAssetAggregate.RangeAssetCreated))]
-    [JsonSerializable(typeof(RangeAssetAggregate.RangeAssetImportStarted))]
-    [JsonSerializable(typeof(RangeAssetAggregate.RangeAssetCopied))]
-    [JsonSerializable(typeof(RangeAssetAggregate.RangeAssetStoredInDatabase))]
-    [JsonSerializable(typeof(RangeAssetAggregate.RangeAssetParsed))]
-    [JsonSerializable(typeof(RangeAssetAggregate.RangeAssetFingerprintComputed))]
-    [JsonSerializable(typeof(RangeAssetAggregate.RangeAssetImportCompleted))]
-    [JsonSerializable(typeof(RangeAssetAggregate.RangeAssetImportFailed))]
-    [JsonSerializable(typeof(RangeAssetAggregate.RangeAssetAssociateWithRangeEvent))]
+    [JsonSerializable(typeof(RangeAssetCreated))]
+    [JsonSerializable(typeof(RangeAssetImportStarted))]
+    [JsonSerializable(typeof(RangeAssetCopied))]
+    [JsonSerializable(typeof(RangeAssetStoredInDatabase))]
+    [JsonSerializable(typeof(RangeAssetParsed))]
+    [JsonSerializable(typeof(RangeAssetFingerprintComputed))]
+    [JsonSerializable(typeof(RangeAssetImportCompleted))]
+    [JsonSerializable(typeof(RangeAssetImportFailed))]
+    [JsonSerializable(typeof(RangeAssetAssociateWithRangeEvent))]
     [JsonSerializable(typeof(MlrbId))]
-    partial class MlrbJsonContext : JsonSerializerContext
+    public partial class MlrbJsonSerializerContext : JsonSerializerContext
     {
+        // TODO [TO20260531] Need to consolidate this with SystemTextJsonSerializer.
     }
 }

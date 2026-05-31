@@ -4,12 +4,30 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook
 {
+    public static partial class ServiceCollectionExtensions
+    {
+        public static IServiceCollection RegisterDomainEventSerializers(this IServiceCollection services)
+        {
+            services.AddScoped<IEventSerializer, SystemTextJsonEventSerializer>(serviceProvider =>
+            {
+                var l = new List<Type>();
+                l.AddRange(SupportedRangeAssetEvents);
+                l.AddRange(SupportedFirearmsEvents);
+
+                return new SystemTextJsonEventSerializer(l);
+            });
+
+            return services;
+        }
+    }
+
     /// <summary>
     ///     Generic SQLite-backed repository for any <see cref="Aggregate" /> subclass. It persists
     ///     uncommitted events to the <c>events</c> table and upserts the corresponding row in the
@@ -65,20 +83,21 @@ namespace MyLittleRangeBook
                 await using SqliteConnection connection =
                     await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
 
+                IReadOnlyList<EventRow> eventRows = await LoadEventRowsAsync(connection, id, cancellationToken)
+                    .ConfigureAwait(false);
+                if (eventRows.Count == 0)
+                {
+                    // [TO20260530] No events; this is okay because it means this is a new thing.
+                    return Result.Ok<TAggregate?>(null);
+                }
+
                 EventStream? stream = await LoadStreamAsync(connection, id, cancellationToken).ConfigureAwait(false);
                 if (stream is null)
                 {
+                    // [TO20260530] We couldn't find the stream; this is okay because it means this is a new thing.
                     return Result.Ok<TAggregate?>(null);
                 }
 
-                cancellationToken.ThrowIfCancellationRequested();
-
-                IReadOnlyList<EventRow> eventRows =
-                    await LoadEventRowsAsync(connection, id, cancellationToken).ConfigureAwait(false);
-                if (eventRows.Count == 0)
-                {
-                    return Result.Ok<TAggregate?>(null);
-                }
 
                 TAggregate aggregate = _createFromStream(stream.Value);
                 Replay(aggregate, eventRows);
@@ -103,7 +122,25 @@ namespace MyLittleRangeBook
 
             var cmd = new DapperCommand(SelectStreamSql);
 
-            return await cmd.QuerySingleAsync<EventStream>(ctx).ConfigureAwait(false);
+            EventStream? es;
+            try
+            {
+                es = await cmd.QuerySingleAsync<EventStream>(ctx).ConfigureAwait(false);
+            }
+            catch (InvalidOperationException ioex)
+            {
+                // [TO20260530] This means that the stream doesn't existing in the database; return null.
+                if ("Sequence contains no elements".Equals(ioex.Message, StringComparison.OrdinalIgnoreCase))
+                {
+                    es = null;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return es;
         }
 
         async Task<IReadOnlyList<EventRow>> LoadEventRowsAsync(SqliteConnection connection,
@@ -425,6 +462,7 @@ namespace MyLittleRangeBook
 
     public sealed class SystemTextJsonEventSerializer : IEventSerializer
     {
+        // TODO [TO20260531] Need to consolidate this with MlrbJsonSerializerContext.
         readonly IReadOnlyDictionary<Type, string> _eventNames;
         readonly IReadOnlyDictionary<string, Type> _eventTypes;
         readonly JsonSerializerOptions _jsonSerializerOptions;
@@ -511,7 +549,7 @@ namespace MyLittleRangeBook
                 WriteIndented = false,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 TypeInfoResolver =
-                    JsonTypeInfoResolver.Combine(MlrbJsonContext.Default, new DefaultJsonTypeInfoResolver())
+                    JsonTypeInfoResolver.Combine(MlrbJsonSerializerContext.Default, new DefaultJsonTypeInfoResolver())
             };
 
             options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
@@ -565,14 +603,6 @@ namespace MyLittleRangeBook
         CancellationToken CancellationToken = default);
 
 
-    /// <summary>
-    ///     Defines functionality for projecting domain events related to file imports into a storage system.
-    /// </summary>
-    public interface IRangeAssetProjector
-    {
-        Task ProjectAsync(RangeAssetProjectorContext context);
-    }
-
     public interface IDomainEvent
     {
         MlrbId StreamId { get; }
@@ -587,5 +617,13 @@ namespace MyLittleRangeBook
         string GetEventType(object @event);
         string Serialize(object domainEvent);
         object Deserialize(string rowEventType, string rowDataJson);
+    }
+
+    /// <summary>
+    ///     Defines functionality for projecting domain events related to file imports into a storage system.
+    /// </summary>
+    public interface IProjector
+    {
+            Task<Result> ProjectAsync(DapperCommandContext context, MlrbId streamId,  IEnumerable<IDomainEvent> domainEvents);
     }
 }

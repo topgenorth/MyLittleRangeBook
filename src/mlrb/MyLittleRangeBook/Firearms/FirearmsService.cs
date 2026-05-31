@@ -97,23 +97,6 @@ namespace MyLittleRangeBook.Firearms
             throw new NotImplementedException();
         }
 
-        public async Task<Result> UpdateFirearmsFromRangeEventsAsync(DapperCommandContext context)
-        {
-            try
-            {
-                Result r1 = await AddNewFirearmsFromSimpleRangeEvents(context);
-                Result r2 = await AssociateRangeEventsWithFirearm(context);
-
-                return Result.Merge(r1, r2);
-            }
-            catch (Exception e)
-            {
-                var err = new Error($"Could not update Firearms from Range Events: {e.Message}");
-                err.CausedBy(e);
-
-                return Result.Fail(err);
-            }
-        }
 
         async Task<Result> AssociateRangeEventsWithFirearm(DapperCommandContext ctx)
         {
@@ -152,39 +135,7 @@ namespace MyLittleRangeBook.Firearms
             }
         }
 
-        async Task<Result> AddNewFirearmsFromSimpleRangeEvents(DapperCommandContext ctx)
-        {
-            try
-            {
-                IEnumerable<Commands.NewFirearmWithRoundCountRow> firearms = await Commands
-                    .GetNewFirearmsFromRangeEvents
-                    .QueryAsync<Commands.NewFirearmWithRoundCountRow>(ctx)
-                    .ConfigureAwait(false);
 
-                var result = Result.Ok();
-                foreach (Commands.NewFirearmWithRoundCountRow row in firearms)
-                {
-                    var f = Firearm.New(row.FirearmName);
-                    f.RoundsFired = row.TotalRoundsFired;
-                    f.Notes = "Imported from range events";
-                    Result<EntityId> l = await UpsertAsync(ctx, f).ConfigureAwait(false);
-                    // [TO20260529] we don't want to fail things because we couldn't add a named firearm, just pass it on as an IReason.
-                    if (l.IsFailed)
-                    {
-                        result.Reasons.Add(
-                            new Success($"Failed to add firearm {row.FirearmName} from SimpleRangeEvents."));
-                    }
-                }
-
-                return result;
-            }
-            catch (Exception e)
-            {
-                Error? err = new Error(e.Message).CausedBy(e);
-
-                return Result.Fail(err);
-            }
-        }
 
         /// <summary>
         ///     The SQL and commands we can perform on the database
@@ -208,15 +159,6 @@ namespace MyLittleRangeBook.Firearms
                                                              VALUES (@FirearmsId, @SimpleRangeEventId);
                                                              """;
 
-            const string GetNewFirearmNamesFromRangeEventsSql = """
-                                                                SELECT 
-                                                                    SimpleRangeEvents.FirearmName,
-                                                                    COALESCE(SUM(SimpleRangeEvents.RoundsFired), 0) AS TotalRoundsFired
-                                                                FROM SimpleRangeEvents
-                                                                WHERE SimpleRangeEvents.FirearmName NOT IN (SELECT Name FROM Firearms)
-                                                                GROUP BY SimpleRangeEvents.FirearmName
-                                                                ORDER BY SimpleRangeEvents.FirearmName;
-                                                                """;
 
             const string RangeEventsByFirearmNameSql = """
                                                         SELECT 
@@ -228,8 +170,6 @@ namespace MyLittleRangeBook.Firearms
                                                         ORDER BY s.FirearmName;                                                       
                                                        """;
 
-            internal static readonly DapperCommand GetNewFirearmsFromRangeEvents =
-                new(GetNewFirearmNamesFromRangeEventsSql);
 
 
             internal static readonly DapperCommand AssociateFirearmWithRangeEvent =
@@ -244,7 +184,6 @@ namespace MyLittleRangeBook.Firearms
 
             internal record struct RangeEventForFirearm(string FirearmName, string SimpleRangeId);
 
-            internal record struct NewFirearmWithRoundCountRow(string FirearmName, int TotalRoundsFired);
         }
     }
 }

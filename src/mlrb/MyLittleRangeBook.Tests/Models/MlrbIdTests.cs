@@ -10,8 +10,8 @@ namespace MyLittleRangeBook.Models
         public void Can_serialize_and_deserialize_MlrbId_via_JSON()
         {
             var id = new MlrbId();
-            var json = System.Text.Json.JsonSerializer.Serialize(id, MlrbJsonContext.Default.MlrbId);
-            var deserialized = System.Text.Json.JsonSerializer.Deserialize(json, MlrbJsonContext.Default.MlrbId);
+            var json = System.Text.Json.JsonSerializer.Serialize(id, MlrbJsonSerializerContext.Default.MlrbId);
+            var deserialized = System.Text.Json.JsonSerializer.Deserialize(json, MlrbJsonSerializerContext.Default.MlrbId);
 
             Assert.Equal(id, deserialized);
             Assert.Equal($"\"{id}\"", json);

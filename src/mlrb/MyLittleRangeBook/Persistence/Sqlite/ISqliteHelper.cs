@@ -41,5 +41,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task<Result> RunSqlOnDatabaseAsync(string sqlFile, CancellationToken cancellationToken = default);
+
     }
 }
