@@ -2,11 +2,11 @@
 
 namespace MyLittleRangeBook.RangeEventAssets
 {
-    public class RangeAssetAggregate : Aggregate
+    public class MlrbAssetAggregate : Aggregate
     {
         public const string DEFAULT_STREAM_TYPE_NAME = "range-asset";
 
-        RangeAssetAggregate()
+        MlrbAssetAggregate()
         {
         }
 
@@ -45,13 +45,13 @@ namespace MyLittleRangeBook.RangeEventAssets
         public MlrbId RangeEventId { get; private set; } = MlrbId.Empty;
 
         /// <summary>
-        ///     Creating a new RangeAssetAggregate.
+        ///     Creating a new MlrbAssetAggregate.
         /// </summary>
         /// <param name="streamId"></param>
         /// <returns></returns>
-        public static RangeAssetAggregate New(MlrbId streamId)
+        public static MlrbAssetAggregate New(MlrbId streamId)
         {
-            var agg = new RangeAssetAggregate();
+            var agg = new MlrbAssetAggregate();
             agg.Raise(new RangeAssetCreated(streamId, DateTimeOffset.UtcNow));
 
             return agg;
@@ -64,12 +64,12 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// <param name="sourcePath"></param>
         /// <param name="utcNow"></param>
         /// <returns></returns>
-        public static RangeAssetAggregate New(string sourcePath, DateTimeOffset utcNow)
+        public static MlrbAssetAggregate New(string sourcePath, DateTimeOffset utcNow)
         {
             var fileInfo = new FileInfo(sourcePath);
             var id = MlrbId.FromFile(fileInfo);
 
-            RangeAssetAggregate agg = New(id);
+            MlrbAssetAggregate agg = New(id);
 
             agg.Raise(new RangeAssetImportStarted(agg.Id, sourcePath, utcNow));
 
@@ -77,13 +77,13 @@ namespace MyLittleRangeBook.RangeEventAssets
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="RangeAssetAggregate"/> by hydrating it with data from the given event stream.
+        /// Creates a new instance of <see cref="MlrbAssetAggregate"/> by hydrating it with data from the given event stream.
         /// </summary>
         /// <param name="stream">The event stream used to hydrate the aggregate.</param>
-        /// <returns>A new instance of <see cref="RangeAssetAggregate"/>.</returns>
-        public static RangeAssetAggregate Create(EventStream stream)
+        /// <returns>A new instance of <see cref="MlrbAssetAggregate"/>.</returns>
+        public static MlrbAssetAggregate Create(EventStream stream)
         {
-            var agg = new RangeAssetAggregate();
+            var agg = new MlrbAssetAggregate();
             agg.Hydrate(stream);
             return agg;
         }

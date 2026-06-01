@@ -8,17 +8,17 @@ namespace MyLittleRangeBook.RangeEventAssets
     /// <summary>
     ///     The simplest way to import - copy the file into the asset directory.
     /// </summary>
-    [RegisterCommands("range-assets")]
+    [RegisterCommands("assets")]
     [UsedImplicitly]
-    public class RangeAssetCommands : MlrbCommandBase
+    public class MlrbAssetCommands : MlrbCommandBase
     {
-        readonly IRangeAssetAggregateRepository _aggregateRepo;
-        readonly IPipeline<RangeEventAssetFile> _assetPipeline;
+        readonly IMlrbAssetAggregateRepository _aggregateRepo;
+        readonly IPipeline<MlrbAssetFile> _assetPipeline;
 
-        public RangeAssetCommands(ILogger logger,
+        public MlrbAssetCommands(ILogger logger,
             ICliDisplay cliDisplay,
-            IPipeline<RangeEventAssetFile> assetPipeline,
-            IRangeAssetAggregateRepository aggregateRepo) : base(logger,
+            IPipeline<MlrbAssetFile> assetPipeline,
+            IMlrbAssetAggregateRepository aggregateRepo) : base(logger,
             cliDisplay)
         {
             _assetPipeline = assetPipeline;
@@ -29,10 +29,10 @@ namespace MyLittleRangeBook.RangeEventAssets
         ///     Copy the file to the asset directory for the range event.
         /// </summary>
         /// <param name="file"></param>
-        /// <param name="rangeEventId"></param>
+        /// <param name="rangeEventId">The ID of a range event to associate the asset with.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        [Command("add")]
+        [Command("import")]
         [UsedImplicitly]
         // ReSharper disable once AsyncMethodWithoutAwait
         public async Task<int> ImportRangeAssetFile(string file,
@@ -48,13 +48,13 @@ namespace MyLittleRangeBook.RangeEventAssets
             }
 
             var fileInfo = new FileInfo(file);
-            Result<RangeAssetAggregate?> r = await _aggregateRepo.GetAsync(fileInfo, ct).ConfigureAwait(false);
+            Result<MlrbAssetAggregate?> r = await _aggregateRepo.GetAsync(fileInfo, ct).ConfigureAwait(false);
             bool isNew = r.IsFailed || r.Value is null;
 
-            RangeAssetAggregate aggregate;
+            MlrbAssetAggregate aggregate;
             if (isNew)
             {
-                aggregate = RangeAssetAggregate.New(file, DateTimeOffset.UtcNow);
+                aggregate = MlrbAssetAggregate.New(file, DateTimeOffset.UtcNow);
                 Logger.Verbose("Import a new range asset from  {file}", file);
             }
             else
@@ -66,10 +66,10 @@ namespace MyLittleRangeBook.RangeEventAssets
                     aggregate.Version);;
             }
 
-            RangeEventAssetFile rfe = new RangeEventAssetFile(file, aggregate, rangeEventId);
+            MlrbAssetFile assetFile = new MlrbAssetFile(file, aggregate, rangeEventId);
 
             // TODO [TO20260527] Have to update the pipeline to create the events rather than doing things.
-            Result result = await _assetPipeline.ExecuteAsync(rfe, ct).ConfigureAwait(false);
+            Result result = await _assetPipeline.ExecuteAsync(assetFile, ct).ConfigureAwait(false);
 
             if (result.IsFailed)
             {
@@ -78,14 +78,14 @@ namespace MyLittleRangeBook.RangeEventAssets
                 return ReturnCodes.FAILURE;
             }
 
-            if (!rfe.RangeEventId.Equals(MlrbId.Empty.ToString()))
+            if (!assetFile.RangeEventId.Equals(MlrbId.Empty.ToString()))
             {
-                rfe.Aggregate.AddedToRangeEvent(rfe.RangeEventId, DateTimeOffset.UtcNow);
+                assetFile.Aggregate.AddedToRangeEvent(assetFile.RangeEventId, DateTimeOffset.UtcNow);
                 Logger.Verbose("Associated range asset with range event '{RangeEventId}'.", rangeEventId);
             }
 
             // TODO [TO20260527] Need to create a projector that will update the read-model from the events.
-            Result saveAggregate = await _aggregateRepo.SaveAsync(rfe.Aggregate, ct).ConfigureAwait(false);
+            Result saveAggregate = await _aggregateRepo.SaveAsync(assetFile.Aggregate, ct).ConfigureAwait(false);
 
             if (saveAggregate.IsFailed)
             {

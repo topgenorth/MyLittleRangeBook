@@ -7,18 +7,18 @@ namespace MyLittleRangeBook.RangeEventAssets
     ///     directory.
     /// </summary>
     /// <param name="rangeAssetsDirectory">This is the name of directory that will hold range assets files.</param>
-    /// <param name="rangeEventAssetFile">The <c cref="RangeEventAssetFile" /> that will be processed. </param>
+    /// <param name="rangeEventAssetFile">The <c cref="MlrbAssetFile" /> that will be processed. </param>
     public delegate string AssetFileNameResolver(string rangeAssetsDirectory,
-        RangeEventAssetFile rangeEventAssetFile);
+        MlrbAssetFile mlrbAssetFile);
 
     /// <summary>
     ///     Represents an asset file specifically associated with a range event in the context of the application.
     ///     Provides functionality to define, identify, and process assets for range events, including copying the
     ///     asset file to the asset directory for a RangeEvent.
     /// </summary>
-    public record RangeEventAssetFile
+    public record MlrbAssetFile
     {
-        public RangeEventAssetFile(string pathToAsset, RangeAssetAggregate agg, string? rangeEventId = null)
+        public MlrbAssetFile(string pathToAsset, MlrbAssetAggregate agg, string? rangeEventId = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(pathToAsset);
             PathToAsset = pathToAsset;
@@ -27,7 +27,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             Id = Aggregate.Id;
         }
 
-        public RangeAssetAggregate Aggregate { get; }
+        public MlrbAssetAggregate Aggregate { get; }
 
 
         /// <summary>
@@ -53,25 +53,25 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// <param name="rangeAssetsDirectory">
         ///     The base directory path where range event assets are stored.
         /// </param>
-        /// <param name="rangeEventAssetFile">
-        ///     An instance of <see cref="RangeEventAssetFile" /> representing the asset file and its associated details.
+        /// <param name="mlrbAssetFile">
+        ///     An instance of <see cref="MlrbAssetFile" /> representing the asset file and its associated details.
         /// </param>
         /// <returns>
         ///     A string representing the full destination path for the specified range event asset file.
         /// </returns>
         public static string DefaultRangeEventAssetFileDestination(string rangeAssetsDirectory,
-            RangeEventAssetFile rangeEventAssetFile)
+            MlrbAssetFile mlrbAssetFile)
         {
-            string rangeEventAssetDir = Path.Combine(rangeAssetsDirectory, rangeEventAssetFile.RangeEventId);
+            string rangeEventAssetDir = Path.Combine(rangeAssetsDirectory, mlrbAssetFile.RangeEventId);
             // [TO20260521] Handle both Windows and Linux separators.
-            string assetFileName = Path.GetFileName(rangeEventAssetFile.PathToAsset.Replace('\\', '/'));
+            string assetFileName = Path.GetFileName(mlrbAssetFile.PathToAsset.Replace('\\', '/'));
             string rangeEventAssetFileName = Path.Combine(rangeEventAssetDir, assetFileName);
 
             return rangeEventAssetFileName;
         }
 
 
-        public RangeEventAssetFile ForRangeEvent(string rangeEventId)
+        public MlrbAssetFile ForRangeEvent(string rangeEventId)
         {
             RangeEventId = rangeEventId;
 

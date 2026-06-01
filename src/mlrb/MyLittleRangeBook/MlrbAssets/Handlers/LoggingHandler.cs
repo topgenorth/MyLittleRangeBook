@@ -4,7 +4,7 @@
     ///     Handler that logs the actions taken by the pipeline and their results.
     ///     This handler should be placed last in the pipeline to capture all metadata from previous handlers.
     /// </summary>
-    public class LoggingHandler : IPipelineHandler<RangeEventAssetFile>
+    public class LoggingHandler : IPipelineHandler<MlrbAssetFile>
     {
         readonly ILogger _logger;
 
@@ -21,8 +21,8 @@
         public string Name => "Logging";
 
         public async Task<Result> ExecuteAsync(
-            PipelineContext<RangeEventAssetFile> context,
-            Func<PipelineContext<RangeEventAssetFile>, Task<Result>> next)
+            PipelineContext<MlrbAssetFile> context,
+            Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
         {
             // Call next handler (in case there are handlers after this one)
             Result result = await next(context);
@@ -40,7 +40,7 @@
             return result;
         }
 
-        void LogSuccessfulExecution(PipelineContext<RangeEventAssetFile> context)
+        void LogSuccessfulExecution(PipelineContext<MlrbAssetFile> context)
         {
             var logContext = new Dictionary<string, string>
             {
@@ -61,10 +61,10 @@
             }
 
             var logMessage = string.Join(" | ", logContext.Select(kvp => $"{kvp.Key}={kvp.Value}"));
-            _logger.Information("Pipeline completed successfully for RangeEventAssetFile: {LogDetails}", logMessage);
+            _logger.Information("Pipeline completed successfully for MlrbAssetFile: {LogDetails}", logMessage);
         }
 
-        void LogFailedExecution(PipelineContext<RangeEventAssetFile> context, Result result)
+        void LogFailedExecution(PipelineContext<MlrbAssetFile> context, Result result)
         {
             var logContext = new Dictionary<string, string>
             {
@@ -87,7 +87,7 @@
             var errors = string.Join(" | ", result.Errors.Select(e => e.Message));
             var logMessage = string.Join(" | ", logContext.Select(kvp => $"{kvp.Key}={kvp.Value}"));
 
-            _logger.Error("Pipeline failed for RangeEventAssetFile: {LogDetails} | Errors: {Errors}",
+            _logger.Error("Pipeline failed for MlrbAssetFile: {LogDetails} | Errors: {Errors}",
                 logMessage,
                 errors);
         }

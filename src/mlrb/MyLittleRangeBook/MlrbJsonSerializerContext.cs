@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using MyLittleRangeBook.Models;
-using static MyLittleRangeBook.RangeEventAssets.RangeAssetAggregate;
+using static MyLittleRangeBook.RangeEventAssets.MlrbAssetAggregate;
 
 namespace MyLittleRangeBook
 {

@@ -6,7 +6,7 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.RangeEventAssets.Handlers
 {
-    public class InsertAssetFileSqliteHandler : IPipelineHandler<RangeEventAssetFile>
+    public class InsertAssetFileSqliteHandler : IPipelineHandler<MlrbAssetFile>
     {
         static class Commands
         {
@@ -50,8 +50,8 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
 
         public string Name => "Import a file as MLRB asset.";
 
-        public async Task<Result> ExecuteAsync(PipelineContext<RangeEventAssetFile> context,
-            Func<PipelineContext<RangeEventAssetFile>, Task<Result>> next)
+        public async Task<Result> ExecuteAsync(PipelineContext<MlrbAssetFile> context,
+            Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
         {
             string fileExtension = Path.GetExtension(context.Record.PathToAsset);
             context.Metadata["FileExtension"] = fileExtension;
@@ -111,7 +111,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
             return await next(context);
         }
 
-        async Task<Result<RangeEventAssetRow>> CreateRow(PipelineContext<RangeEventAssetFile> context)
+        async Task<Result<RangeEventAssetRow>> CreateRow(PipelineContext<MlrbAssetFile> context)
         {
             Result<ReadOnlyMemory<byte>> fileContents = await context.Record.PathToAsset
                 .LoadFileBytesAsync(CancellationToken.None)

@@ -12,33 +12,33 @@ namespace MyLittleRangeBook
     public static partial class ServiceCollectionExtensions
     {
         static readonly Type[] SupportedRangeAssetEvents = [
-            typeof(RangeAssetAggregate.RangeAssetCreated),
-            typeof(RangeAssetAggregate.RangeAssetImportStarted),
-            typeof(RangeAssetAggregate.RangeAssetImportFailed),
-            typeof(RangeAssetAggregate.RangeAssetImportCompleted),
-            typeof(RangeAssetAggregate.RangeAssetAssociateWithRangeEvent),
-            typeof(RangeAssetAggregate.RangeAssetCopied),
-            typeof(RangeAssetAggregate.RangeAssetStoredInDatabase),
-            typeof(RangeAssetAggregate.RangeAssetFingerprintComputed),
-            typeof(RangeAssetAggregate.RangeAssetParsed)
+            typeof(MlrbAssetAggregate.RangeAssetCreated),
+            typeof(MlrbAssetAggregate.RangeAssetImportStarted),
+            typeof(MlrbAssetAggregate.RangeAssetImportFailed),
+            typeof(MlrbAssetAggregate.RangeAssetImportCompleted),
+            typeof(MlrbAssetAggregate.RangeAssetAssociateWithRangeEvent),
+            typeof(MlrbAssetAggregate.RangeAssetCopied),
+            typeof(MlrbAssetAggregate.RangeAssetStoredInDatabase),
+            typeof(MlrbAssetAggregate.RangeAssetFingerprintComputed),
+            typeof(MlrbAssetAggregate.RangeAssetParsed)
         ];
 
         public static IServiceCollection RegisterRangeAssetEventSourcing(this IServiceCollection services)
         {
             ArgumentNullException.ThrowIfNull(services);
-            services.AddScoped<IRangeAssetAggregateRepository, SqliteRangeAssetAggregateRepository>();
-            services.AddScoped<IRangeAssetProjector, AssociateRangeAssetToRangeEventProjector>();
+            services.AddScoped<IMlrbAssetAggregateRepository, MlrbAssetAggregateSqliteRepository>();
+            services.AddScoped<IRangeAssetProjector, AssociateMlrbAssetToRangeEventProjector>();
 
             return services;
         }
 
         /// <summary>
-        ///     Register the RangeEventAssetFile pipeline and handlers in the dependency injection container.
+        ///     Register the MlrbAssetFile pipeline and handlers in the dependency injection container.
         ///     This registers:
         ///     - <see cref="ValidateFileExistsHandler" /> for validating files exist on disk
         ///     - <see cref="CopyFileHandler" /> for copying files to the range asset directory
         ///     - <see cref="LoggingHandler" /> for logging pipeline execution and results
-        ///     - <see cref="IPipeline{RangeEventAssetFile}" /> for executing the pipeline
+        ///     - <see cref="IPipeline{MlrbAssetFile}" /> for executing the pipeline
         ///     Handler execution order:
         ///     1. ValidateFileExistsHandler - fails fast if file doesn't exist
         ///     2. CopyFileHandler - copies file to range asset directory
@@ -50,7 +50,7 @@ namespace MyLittleRangeBook
         ///     <code>
         /// services.RegisterRangeAssetHandlers();
         /// 
-        /// var pipeline = serviceProvider.GetRequiredService&lt;IPipeline&lt;RangeEventAssetFile&gt;&gt;();
+        /// var pipeline = serviceProvider.GetRequiredService&lt;IPipeline&lt;MlrbAssetFile&gt;&gt;();
         /// var result = await pipeline.ExecuteAsync(assetFile);
         /// </code>
         /// </example>
@@ -72,19 +72,19 @@ namespace MyLittleRangeBook
 
 
             // Register handlers by concrete type for the pipeline
-            services.AddScoped<IPipelineHandler<RangeEventAssetFile>>(sp =>
+            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
                 sp.GetRequiredService<ValidateFileExistsHandler>());
-            services.AddScoped<IPipelineHandler<RangeEventAssetFile>>(sp =>
+            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
                 sp.GetRequiredService<CopyFileHandler>());
-            services.AddScoped<IPipelineHandler<RangeEventAssetFile>>(sp =>
+            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
                 sp.GetRequiredService<InsertAssetFileSqliteHandler>());
-            services.AddScoped<IPipelineHandler<RangeEventAssetFile>>(sp =>
+            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
                 sp.GetRequiredService<LoggingHandler>());
 
             // Register the pipeline with handlers in order
-            services.AddScoped<IPipeline<RangeEventAssetFile>>(serviceProvider =>
+            services.AddScoped<IPipeline<MlrbAssetFile>>(serviceProvider =>
             {
-                var pipeline = new Pipeline<RangeEventAssetFile>(serviceProvider,
+                var pipeline = new Pipeline<MlrbAssetFile>(serviceProvider,
                     serviceProvider.GetRequiredService<ILogger>());
 
                 return pipeline

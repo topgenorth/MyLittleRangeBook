@@ -2,16 +2,16 @@
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence.Sqlite;
-using static MyLittleRangeBook.RangeEventAssets.RangeAssetAggregate;
+using static MyLittleRangeBook.RangeEventAssets.MlrbAssetAggregate;
 
 namespace MyLittleRangeBook.RangeEventAssets
 {
-    public class SqliteRangeAssetAggregateRepository
-        : SqliteAggregateRepository<RangeAssetAggregate>, IRangeAssetAggregateRepository
+    public class MlrbAssetAggregateSqliteRepository
+        : SqliteAggregateRepository<MlrbAssetAggregate>, IMlrbAssetAggregateRepository
     {
         readonly IRangeAssetProjector _rangeAssetProjector;
 
-        public SqliteRangeAssetAggregateRepository(ISqliteHelper sqliteHelper,
+        public MlrbAssetAggregateSqliteRepository(ISqliteHelper sqliteHelper,
             IEventSerializer eventSerializer,
             IRangeAssetProjector rangeAssetProjector)
             : base(sqliteHelper,
@@ -22,7 +22,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             _rangeAssetProjector = rangeAssetProjector;
         }
 
-        public async Task<Result<RangeAssetAggregate?>> GetAsync(FileInfo fileInfo,
+        public async Task<Result<MlrbAssetAggregate?>> GetAsync(FileInfo fileInfo,
             CancellationToken cancellationToken = default)
         {
             if (!fileInfo.Exists)

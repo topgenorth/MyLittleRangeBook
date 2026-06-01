@@ -3,16 +3,16 @@
 namespace MyLittleRangeBook.RangeEventAssets.Handlers
 {
     /// <summary>
-    ///     Handler that validates that a RangeEventAssetFile exists on disk.
+    ///     Handler that validates that a MlrbAssetFile exists on disk.
     ///     This handler should typically be placed early in the pipeline to fail fast if the file is missing.
     /// </summary>
-    public class ValidateFileExistsHandler : IPipelineHandler<RangeEventAssetFile>
+    public class ValidateFileExistsHandler : IPipelineHandler<MlrbAssetFile>
     {
         /// <summary>
         ///     Defines the maximum file size, in bytes, that a SQLite file can have to be considered valid.
         ///     This constant is used during validation to ensure the file size does not exceed predefined limits.
         /// </summary>
-        internal const int MaxFileSizeForSqlite = 90 * 1024;
+        internal const int MAX_FILE_SIZE_FOR_SQLITE = 90 * 1024;
 
         readonly ILogger _logger;
 
@@ -29,8 +29,8 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
         public string Name => "Validate File Exists";
 
         public async Task<Result> ExecuteAsync(
-            PipelineContext<RangeEventAssetFile> context,
-            Func<PipelineContext<RangeEventAssetFile>, Task<Result>> next)
+            PipelineContext<MlrbAssetFile> context,
+            Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
         {
             string filePath = context.Record.PathToAsset;
 
@@ -55,7 +55,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                 context.Metadata["FileLastModified"] = fileInfo.LastWriteTimeUtc;
                 context.Metadata["FileSha256"] = sha256;
 
-                if (fileInfo.Length > MaxFileSizeForSqlite)
+                if (fileInfo.Length > MAX_FILE_SIZE_FOR_SQLITE)
                 {
                     var errorMessage = $"File size exceeds limit: '{filePath}' is {fileInfo.Length} bytes";
                     _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);

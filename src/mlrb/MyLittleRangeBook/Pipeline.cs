@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace MyLittleRangeBook.RangeEventAssets
+namespace MyLittleRangeBook
 {
     /// <summary>
     ///     Encapsulates the context passed through a pipeline.

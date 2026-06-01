@@ -3,11 +3,11 @@ using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.RangeEventAssets
 {
-    class AssociateRangeAssetToRangeEventProjector : IRangeAssetProjector
+    class AssociateMlrbAssetToRangeEventProjector : IRangeAssetProjector
     {
         readonly ILogger _logger;
 
-        public AssociateRangeAssetToRangeEventProjector(ILogger logger)
+        public AssociateMlrbAssetToRangeEventProjector(ILogger logger)
         {
             _logger = logger;
         }
@@ -24,8 +24,8 @@ namespace MyLittleRangeBook.RangeEventAssets
             MlrbId rangeEventId;
             try
             {
-                (_, rangeEventId, _) = (RangeAssetAggregate.RangeAssetAssociateWithRangeEvent)context.PendingEvents.First(domainEvent =>
-                    domainEvent is RangeAssetAggregate.RangeAssetAssociateWithRangeEvent);
+                (_, rangeEventId, _) = (MlrbAssetAggregate.RangeAssetAssociateWithRangeEvent)context.PendingEvents.First(domainEvent =>
+                    domainEvent is MlrbAssetAggregate.RangeAssetAssociateWithRangeEvent);
             }
             catch (Exception e)
             {

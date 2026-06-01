@@ -4,9 +4,9 @@ using MyLittleRangeBook.Config;
 namespace MyLittleRangeBook.RangeEventAssets.Handlers
 {
     /// <summary>
-    ///     Handler that copies a RangeEventAssetFile to the range asset directory.
+    ///     Handler that copies a MlrbAssetFile to the range asset directory.
     /// </summary>
-    public class CopyFileHandler : IPipelineHandler<RangeEventAssetFile>
+    public class CopyFileHandler : IPipelineHandler<MlrbAssetFile>
     {
         const int BufferSize = 81920;
         readonly AssetFileNameResolver _assetNamer;
@@ -40,8 +40,8 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
 
 
         public async Task<Result> ExecuteAsync(
-            PipelineContext<RangeEventAssetFile> context,
-            Func<PipelineContext<RangeEventAssetFile>, Task<Result>> next)
+            PipelineContext<MlrbAssetFile> context,
+            Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
         {
             try
             {
@@ -85,13 +85,13 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
         }
 
         public static string GetRangeEventAssetFilename(string rangeAssetDirectory,
-            RangeEventAssetFile rangeEventAssetFile)
+            MlrbAssetFile mlrbAssetFile)
         {
-            string rangeEventAssetDir = Path.Combine(rangeAssetDirectory, rangeEventAssetFile.RangeEventId);
+            string rangeEventAssetDir = Path.Combine(rangeAssetDirectory, mlrbAssetFile.RangeEventId);
             Directory.CreateDirectory(rangeEventAssetDir);
 
             // [TO20260521] Handle both Windows and Linux separators.
-            string filename = Path.GetFileName(rangeEventAssetFile.PathToAsset.Replace('\\', '/'));
+            string filename = Path.GetFileName(mlrbAssetFile.PathToAsset.Replace('\\', '/'));
 
             string rangeEventAssetFilename = Path.Combine(rangeEventAssetDir, filename);
 
