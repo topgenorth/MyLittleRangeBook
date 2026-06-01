@@ -67,8 +67,8 @@ namespace MyLittleRangeBook
             services.AddScoped<LoggingHandler>(serviceProvider =>
                 new LoggingHandler(serviceProvider.GetRequiredService<ILogger>()));
 
-            services.AddScoped<InsertRangeAssetFileIntoSqliteHandler>(serviceProvider =>
-                new InsertRangeAssetFileIntoSqliteHandler(serviceProvider.GetRequiredService<ISqliteHelper>()));
+            services.AddScoped<InsertAssetFileSqliteHandler>(serviceProvider =>
+                new InsertAssetFileSqliteHandler(serviceProvider.GetRequiredService<ISqliteHelper>()));
 
 
             // Register handlers by concrete type for the pipeline
@@ -77,7 +77,7 @@ namespace MyLittleRangeBook
             services.AddScoped<IPipelineHandler<RangeEventAssetFile>>(sp =>
                 sp.GetRequiredService<CopyFileHandler>());
             services.AddScoped<IPipelineHandler<RangeEventAssetFile>>(sp =>
-                sp.GetRequiredService<InsertRangeAssetFileIntoSqliteHandler>());
+                sp.GetRequiredService<InsertAssetFileSqliteHandler>());
             services.AddScoped<IPipelineHandler<RangeEventAssetFile>>(sp =>
                 sp.GetRequiredService<LoggingHandler>());
 
@@ -90,7 +90,7 @@ namespace MyLittleRangeBook
                 return pipeline
                     .Add<ValidateFileExistsHandler>()
                     .Add<CopyFileHandler>()
-                    .Add<InsertRangeAssetFileIntoSqliteHandler>()
+                    .Add<InsertAssetFileSqliteHandler>()
                     .Add<LoggingHandler>(); // [TO20260525] Keep the logging handler for last.
             });
 

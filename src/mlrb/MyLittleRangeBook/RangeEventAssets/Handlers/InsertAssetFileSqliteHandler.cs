@@ -1,48 +1,54 @@
 ﻿using Dapper;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.IO;
+using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.RangeEventAssets.Handlers
 {
-    public class InsertRangeAssetFileIntoSqliteHandler : IPipelineHandler<RangeEventAssetFile>
+    public class InsertAssetFileSqliteHandler : IPipelineHandler<RangeEventAssetFile>
     {
-        const string UpsertSql = """
-                                 INSERT INTO RangeAssetFiles (
-                                     Id,
-                                     FileName,
-                                     MimeType,
-                                     Contents,
-                                     PathToRangeAssetFile,
-                                     Created,
-                                     Modified
-                                 )
-                                 VALUES (
-                                     @Id,
-                                     @FileName,
-                                     @MimeType,
-                                     @Contents,
-                                     @PathToRangeAssetFile,
-                                     @Created,
-                                     @Modified
-                                 )
-                                 ON CONFLICT (Id) DO UPDATE SET
-                                     FileName             = @FileName,
-                                     MimeType             = @MimeType,
-                                     Contents             = @Contents,
-                                     PathToRangeAssetFile = @PathToRangeAssetFile,
-                                     Modified             = @Modified
-                                 ;
-                                 """;
+        static class Commands
+        {
+            internal static readonly DapperCommand UpsertCommand = new DapperCommand(UpsertSql);
+            const string UpsertSql = """
+                                     INSERT INTO asset_files (
+                                         id,
+                                         original_file_name,
+                                         mime_type,
+                                         file_content_bytes,
+                                         path_to_asset_file,
+                                         created,
+                                         modified
+                                     )
+                                     VALUES (
+                                         @Id,
+                                         @FileName,
+                                         @MimeType,
+                                         @Contents,
+                                         @PathToRangeAssetFile,
+                                         @Created,
+                                         @Modified
+                                     )
+                                     ON CONFLICT (id) DO UPDATE SET
+                                         original_file_name             = @FileName,
+                                         mime_type             = @MimeType,
+                                         contents                = @Contents,
+                                         path_to_asset_file = @PathToRangeAssetFile,
+                                         modified             = @Modified
+                                     ;
+                                     """;
+        }
+
 
         readonly ISqliteHelper _sqliteHelper;
 
-        public InsertRangeAssetFileIntoSqliteHandler(ISqliteHelper sqliteHelper)
+        public InsertAssetFileSqliteHandler(ISqliteHelper sqliteHelper)
         {
             _sqliteHelper = sqliteHelper;
         }
 
-        public string Name => "Store Garmin FIT file in Sqlite database";
+        public string Name => "Import a file as MLRB asset.";
 
         public async Task<Result> ExecuteAsync(PipelineContext<RangeEventAssetFile> context,
             Func<PipelineContext<RangeEventAssetFile>, Task<Result>> next)
@@ -74,8 +80,9 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                         v.Created,
                         Modified = DateTimeOffset.UtcNow
                     };
-                    var cd = new CommandDefinition(UpsertSql, p);
-                    int i = await conn.ExecuteAsync(cd).ConfigureAwait(false);
+
+                    var dapperCtx = new DapperCommandContext(conn, null, context.CancellationToken);
+                    int i = await Commands.UpsertCommand.ExecuteAsync(dapperCtx).ConfigureAwait(false);
                     if (i == 1)
                     {
                         context.Metadata["InsertIntoSqlite"] = true;
@@ -140,7 +147,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
         /// <param name="FileContents">The contents of the file.</param>
         /// <param name="Created">The date and time when the file was created.</param>
         /// <param name="Modified">The date and time when the file was last modified.</param>
-        internal record RangeEventAssetRow(
+        record RangeEventAssetRow(
             long? RowId,
             string Id,
             string FileName,

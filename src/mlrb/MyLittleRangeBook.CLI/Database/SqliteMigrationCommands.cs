@@ -143,13 +143,14 @@ namespace MyLittleRangeBook.Database
         public async Task<int> MigrateSchemaAsync(CancellationToken ct = default)
         {
             CliDisplay.PrintCommandHeader("Applying Migrations");
-
+            int returnCode = -1;
             if (!File.Exists(_sqliteHelper.DatabaseFile))
             {
                 Logger.Warning("SQLite database {file} not found.", _sqliteHelper.DatabaseFile);
                 CliDisplay.PrintFailure($"Could not find the SQLite database '{_sqliteHelper.DatabaseFile}'.");
 
-                return SQL_FAILED_TO_APPLY_MIGRATIONS;
+                returnCode = SQL_FAILED_TO_APPLY_MIGRATIONS;
+                goto ExitMethod;
             }
 
             Result<bool> migrationResult = await _sqliteHelper.ApplyDbupMigrationsAsync(ct).ConfigureAwait(false);
@@ -158,14 +159,23 @@ namespace MyLittleRangeBook.Database
                 Logger.Information("Migrations applied.");
                 CliDisplay.PrintSuccess("Migrations applied.");
 
-                return SUCCESS;
+                returnCode= SUCCESS;
+                goto ExitMethod;
             }
 
             string? msg = migrationResult.Errors.FirstOrDefault()?.Message;
             Logger.Error("Failed to apply migrations: {Error}", msg);
             CliDisplay.PrintFailure($"Failed to apply migrations: {msg}");
 
-            return SQL_FAILED_TO_APPLY_MIGRATIONS;
+            returnCode= SQL_FAILED_TO_APPLY_MIGRATIONS;
+
+            ExitMethod:
+            if (returnCode != SUCCESS)
+            {
+                PressAnyKeyToContinue();
+            }
+
+            return returnCode;
         }
     }
 }

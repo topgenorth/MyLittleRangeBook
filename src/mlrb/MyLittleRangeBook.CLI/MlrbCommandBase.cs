@@ -7,8 +7,8 @@ namespace MyLittleRangeBook
     /// </summary>
     public abstract class MlrbCommandBase
     {
-        protected ICliDisplay CliDisplay;
-        protected ILogger Logger;
+        protected readonly ICliDisplay CliDisplay;
+        protected readonly ILogger Logger;
 
         protected MlrbCommandBase(ILogger logger, ICliDisplay cliDisplay)
         {
@@ -28,7 +28,6 @@ namespace MyLittleRangeBook
             CliDisplay.Console.Write("Press any key to continue...");
             System.Console.ReadKey();
 #endif
-
         }
     }
 }
