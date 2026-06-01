@@ -5,8 +5,10 @@ namespace MyLittleRangeBook.IO
 {
     public static class FileExtensions
     {
-        public const string MIME_TYPE_GARMIN_FIT_FILE = "application/vnd.mlrb.fit";
-        public const string MIME_TYPE_GORDONS_RELOADING_TOOL_FILE = "application/vnd.grt.xml";
+        public const string MIME_TYPE_GARMIN_FIT_FILE = "application/vnd.mlrb.garmin-fit";
+        public const string MIME_TYPE_GARMIN_SHOTVIEW_FILE = "application/vnd.mlrb.garmin-shotview+csv";
+        public const string MIME_TYPE_GORDONS_RELOADING_TOOL_LOAD_FILE = "application/vnd.mlrb.grt-load+xml";
+        public const string MIME_TYPE_QUICKLOAD_DATA_FILE = "application/vnd.quickload.dat";
         public static async Task<Result<ReadOnlyMemory<byte>>> LoadFileBytesAsync(this FileInfo fitFile,
             CancellationToken ct = default)
         {
@@ -121,7 +123,6 @@ namespace MyLittleRangeBook.IO
         public static string GetMimeType(string extension)
         {
             // TODO [TO20260601] Maybe this should be a MimeTypeService and a config file/embedded resource?
-            // TODO [TO20260601] How do we identify Gord's Reloading Tool files?
             return extension.ToLowerInvariant() switch
             {
                 ".jpg" or ".jpeg" => "image/jpeg",
@@ -129,10 +130,11 @@ namespace MyLittleRangeBook.IO
                 ".gif" => "image/gif",
                 ".bmp" => "image/bmp",
                 ".webp" => "image/webp",
-                ".csv" => "text/csv",
-                ".fit" => MIME_TYPE_GARMIN_FIT_FILE,
+                ".csv" => "text/csv", // [TO20260601] Might also be MIME_TYPE_GARMIN_SHOTVIEW_FILE
                 ".xml" => "application/xml",
-                ".grtload" => MIME_TYPE_GORDONS_RELOADING_TOOL_FILE,
+                ".grtload" => MIME_TYPE_GORDONS_RELOADING_TOOL_LOAD_FILE,
+                ".fit" => MIME_TYPE_GARMIN_FIT_FILE,
+                ".dat" => MIME_TYPE_QUICKLOAD_DATA_FILE,
                 _ => "application/octet-stream"
             };
         }
