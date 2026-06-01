@@ -39,7 +39,7 @@ namespace MyLittleRangeBook.RangeEventAssets
 
             var p = new { RangeEventId = rangeEventId, context.RangeAssetId };
             var cmd = new DapperCommand("""
-                                        INSERT INTO SimpleRangeEvent_RangeAssets (SimpleRangeEventId, RangeAssetFilesId) 
+                                        INSERT INTO asset_files_simple_range_events (simple_range_event_id, asset_file_id) 
                                         VALUES (@RangeEventId, @RangeAssetId)
                                         """);
 
