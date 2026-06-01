@@ -34,7 +34,7 @@ namespace MyLittleRangeBook
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("update-from-rangeevents")]
+        [Command("import-from-range-events")]
         [UsedImplicitly]
         public async Task<int> UpdateFirearmsFromRangeEvents(CancellationToken cancellationToken = default)
         {
