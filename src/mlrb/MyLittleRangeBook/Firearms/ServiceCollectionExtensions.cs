@@ -16,7 +16,8 @@ namespace MyLittleRangeBook
             typeof(FiredMoreBullets),
             typeof(NewNoteAdded),
             typeof(SightingSystemChanged),
-            typeof(UsedInRangeEvent)
+            typeof(RangeEventAssociatedWithFirearm),
+            typeof(AssetAssociatedWithFirearm)
         ];
 
         public static IServiceCollection RegisterFirearmEventSourcing(this IServiceCollection services)

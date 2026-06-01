@@ -123,7 +123,7 @@ namespace MyLittleRangeBook.Firearms
 
                     break;
 
-                case UsedInRangeEvent x:
+                case RangeEventAssociatedWithFirearm x:
                     RoundsFired += x.RoundCount ?? 0;
 
                     break;
@@ -191,7 +191,7 @@ namespace MyLittleRangeBook.Firearms
                 throw new ArgumentException("Round count must be > 0.");
             }
 
-            Raise(new UsedInRangeEvent(Id, rangeEventId, roundCount, utcNow));
+            Raise(new RangeEventAssociatedWithFirearm(Id, rangeEventId, roundCount, utcNow));
             if (roundCount is not null)
             {
                 Raise(new FiredMoreBullets(Id, roundCount.Value, utcNow));
@@ -245,13 +245,16 @@ namespace MyLittleRangeBook.Firearms
             string NewSystem,
             DateTimeOffset OccurredUtc) : IDomainEvent;
 
-        [EventType("firearm-associated-with-range-event")]
-        internal record struct UsedInRangeEvent(
+        [EventType("range-event-associated-with-firearm")]
+        internal record struct RangeEventAssociatedWithFirearm(
             MlrbId StreamId,
             MlrbId RangeEventId,
             int? RoundCount,
             DateTimeOffset OccurredUtc)
             : IDomainEvent;
+
+        [EventType("asset-associated-with-firearm")]
+        internal record struct AssetAssociatedWithFirearm(MlrbId StreamId, MlrbId AssetId, DateTimeOffset OccurredUtc) : IDomainEvent;
         #endregion
     }
 }
