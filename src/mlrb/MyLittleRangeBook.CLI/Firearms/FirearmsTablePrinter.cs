@@ -21,7 +21,7 @@ namespace MyLittleRangeBook
                 .BorderColor(Color.White)
                 .AddColumn("Name", col => col.Alignment(Justify.Left))
                 .AddColumn("Notes", col => col.Alignment(Justify.Left))
-                .AddColumn("Id", col => col.Alignment(Justify.Center).Width(21))
+                .AddColumn("Id", col => col.Alignment(Justify.Center).Width(26))
                 .AddColumn("Row Id", col => col.Alignment(Justify.Center).Width(6));
 
             foreach (Firearm firearm in _firearms)

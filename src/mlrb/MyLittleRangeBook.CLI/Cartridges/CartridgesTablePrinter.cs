@@ -24,7 +24,7 @@ namespace MyLittleRangeBook.Cartridges
                 .AddColumn("Diameter (in)", col => col.Alignment(Justify.Right))
                 .AddColumn("Rifle", col => col.Alignment(Justify.Center))
                 .AddColumn("Pistol", col => col.Alignment(Justify.Center))
-                .AddColumn("Id", col => col.Alignment(Justify.Center).Width(21));
+                .AddColumn("Id", col => col.Alignment(Justify.Center).Width(26));
             foreach (Cartridge cartridge in _cartridges)
             {
                 table.AddRow(cartridge.Name, cartridge.CommonName ?? string.Empty,

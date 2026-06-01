@@ -2,20 +2,21 @@
 using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.RangeEventAssets;
 
-namespace MyLittleRangeBook.RangeEventAssets
+namespace MyLittleRangeBook.MlrbAssets
 {
     /// <summary>
     ///     The simplest way to import - copy the file into the asset directory.
     /// </summary>
     [RegisterCommands("assets")]
     [UsedImplicitly]
-    public class MlrbAssetCommands : MlrbCommandBase
+    public class MlrbAssetImportCommand : MlrbCommandBase
     {
         readonly IMlrbAssetAggregateRepository _aggregateRepo;
         readonly IPipeline<MlrbAssetFile> _assetPipeline;
 
-        public MlrbAssetCommands(ILogger logger,
+        public MlrbAssetImportCommand(ILogger logger,
             ICliDisplay cliDisplay,
             IPipeline<MlrbAssetFile> assetPipeline,
             IMlrbAssetAggregateRepository aggregateRepo) : base(logger,
@@ -24,6 +25,7 @@ namespace MyLittleRangeBook.RangeEventAssets
             _assetPipeline = assetPipeline;
             _aggregateRepo = aggregateRepo;
         }
+
 
         /// <summary>
         ///     Copy the file to the asset directory for the range event.

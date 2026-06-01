@@ -12,5 +12,7 @@ namespace MyLittleRangeBook
         {
             SqliteHelper = sqliteHelper;
         }
+
+
     }
 }
