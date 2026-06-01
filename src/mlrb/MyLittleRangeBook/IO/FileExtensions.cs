@@ -132,6 +132,7 @@ namespace MyLittleRangeBook.IO
                 ".csv" => "text/csv",
                 ".fit" => MIME_TYPE_GARMIN_FIT_FILE,
                 ".xml" => "application/xml",
+                ".grtload" => MIME_TYPE_GORDONS_RELOADING_TOOL_FILE,
                 _ => "application/octet-stream"
             };
         }
