@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Config;
+using MyLittleRangeBook.IO;
 
 namespace MyLittleRangeBook.RangeEventAssets.Handlers
 {
@@ -8,7 +9,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
     /// </summary>
     public class CopyFileHandler : IPipelineHandler<MlrbAssetFile>
     {
-        const int BufferSize = 81920;
+
         readonly AssetFileNameResolver _assetNamer;
 
         readonly string _rangeAssetsDirectory;
@@ -45,25 +46,8 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
         {
             try
             {
-                // Copy the file
-                await using var source = new FileStream(
-                    context.Record.PathToAsset,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.Read,
-                    BufferSize,
-                    FileOptions.Asynchronous);
-
                 string destinationPath = _assetNamer(_rangeAssetsDirectory, context.Record);
-                await using var destination = new FileStream(
-                    destinationPath,
-                    FileMode.Create,
-                    FileAccess.Write,
-                    FileShare.None,
-                    BufferSize,
-                    FileOptions.Asynchronous);
-
-                await source.CopyToAsync(destination, context.CancellationToken);
+                await FileExtensions.CopyFileAsync(context.Record.PathToAsset, destinationPath, context.CancellationToken).ConfigureAwait(false);
 
                 // Store the destination path in metadata for downstream handlers
                 context.Metadata["DestinationPath"] = destinationPath;
