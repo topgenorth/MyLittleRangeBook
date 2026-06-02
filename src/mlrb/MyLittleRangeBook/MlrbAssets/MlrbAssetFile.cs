@@ -16,6 +16,7 @@ namespace MyLittleRangeBook.RangeEventAssets
     ///     Provides functionality to define, identify, and process assets for range events, including copying the
     ///     asset file to the asset directory for a RangeEvent.
     /// </summary>
+    [Obsolete("This record is deprecated and will be removed in a future release. Use MlrbAssetAggregate instead.")]
     public record MlrbAssetFile
     {
         // TODO [TO20260602] Maybe this should all move into the MlrbAssetAggregate?
