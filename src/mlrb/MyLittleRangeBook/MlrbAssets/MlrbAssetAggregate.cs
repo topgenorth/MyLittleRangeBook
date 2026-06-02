@@ -1,7 +1,17 @@
-﻿using MyLittleRangeBook.Models;
+﻿using MyLittleRangeBook.MlrbAssets;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.RangeEventAssets
 {
+    /// <summary>
+    /// Represents the aggregate for managing and tracking the lifecycle of assets in My Little Range Book.
+    /// </summary>
+    /// <remarks>
+    /// <para>This class provides methods to handle asset operations such as creation, copying, fingerprinting,
+    /// parsing, and associating with range events. It also manages the internal state of the asset and
+    /// ensures the integrity of domain events related to asset operations.</para>
+    /// <para>The stream ID is based on the name of the original source file.</para>
+    /// </remarks>
     public class MlrbAssetAggregate : Aggregate
     {
         public const string DEFAULT_STREAM_TYPE_NAME = "mlrb-asset";
@@ -12,37 +22,40 @@ namespace MyLittleRangeBook.RangeEventAssets
 
         public override string DefaultStreamType => DEFAULT_STREAM_TYPE_NAME;
 
-        /// <summary>
-        ///     The path to the asset that is being imported.
-        /// </summary>
-        public string SourcePath { get; private set; } = string.Empty;
-
+        public DateTimeOffset Created { get; private set; }
         /// <summary>
         ///     The path to the asset after it was imported.
         /// </summary>
         public string DestinationPath { get; private set; } = string.Empty;
 
         /// <summary>
-        ///     The status of the range asset importation process.
+        ///     If the import process failed, this property contains the reason for the failure.
         /// </summary>
-        public string Status { get; private set; } = "Unknown";
+        public string? FailureReason { get; private set; }
 
-        public string? SHA256 { get; private set; }
+        /// <summary>
+        /// The content of the file.
+        /// </summary>
+        public byte[] FileContents { get; private set; } = [];
 
         /// <summary>
         ///     The MIME type of the file being imported.
         /// </summary>
         public string MimeType { get; private set; } = "application/octet-stream";
 
-        /// <summary>
-        ///     If the import process failed, this property contains the reason for the failure.
-        public string? FailureReason { get; private set; }
+        public DateTimeOffset Modified { get; set; }
+        public string? SHA256 { get; private set; }
 
         /// <summary>
-        ///     The ID of the range event that this asset is associated with, if any. This will be set when the asset is added to a
-        ///     range event.
+        ///     The path to the asset that is being imported.
         /// </summary>
-        public MlrbId RangeEventId { get; private set; } = MlrbId.Empty;
+        public string SourceFile { get; private set; } = string.Empty;
+
+        /// <summary>
+        ///     The status of the range asset importation process.
+        /// </summary>
+        public string Status { get; private set; } = "Unknown";
+
 
         /// <summary>
         ///     Creating a new MlrbAssetAggregate.
@@ -93,70 +106,65 @@ namespace MyLittleRangeBook.RangeEventAssets
             switch (e)
             {
                 case MlrbAssetCreated x:
+                    Modified = x.OccurredUtc;
                     Id = x.StreamId;
                     Status = "Created";
-
+                    Created = x.OccurredUtc;
                     break;
                 case MlrbAssetImportStarted x:
+                    Modified = x.OccurredUtc;
                     Id = x.StreamId;
-                    SourcePath = x.SourcePath;
+                    SourceFile = x.SourcePath;
                     Status = "Started";
 
                     break;
                 case MlrbAssetFingerprintComputed x:
+                    Modified = x.OccurredUtc;
                     SHA256 = x.Sha256;
                     Status = "Fingerprinted";
-
                     break;
                 case MlrbAssetFileCopied x:
+                    Modified = x.OccurredUtc;
                     DestinationPath = x.DestinationPath;
                     Status = "FileCopied";
-
+                    FileContents = x.FileContents;
                     break;
                 case MlrbAssetParsed x:
+                    Modified = x.OccurredUtc;
                     MimeType = x.MimeType;
                     Status = "Parsed";
-
                     break;
                 case MlrbAssetImportFailed x:
+                    Modified = x.OccurredUtc;
                     FailureReason = x.Reason;
                     Status = "Failed";
-
                     break;
 
                 case MlrbAssetStoredInDatabase x:
                     // No state change for this event, but it could be used for auditing or other purposes.
-
-                    break;
-                case MlrbAssetAssociateWithRangeEvent x:
-                    RangeEventId = x.RangeEventId;
-                    Status = "AssociatedWithRangeEvent";
+                    Modified = x.OccurredUtc;
 
                     break;
 
                 case MlrbAssetImportCompleted x:
+                    Modified = x.OccurredUtc;
                     Status = "Completed";
-
                     break;
 
                 case MlrbAssetUpdatedFromFile x :
+                    Modified = x.OccurredUtc;
                     Status = $"Updated";
-                    SourcePath = x.FileName;
-
+                    SourceFile = x.FileName;
+                    FileContents = x.FileContents;
                     break;
                 default:
                     throw new InvalidOperationException($"Unknown event type `{e.GetType().Name}`.");
             }
         }
 
-        public void AddedToRangeEvent(MlrbId rangeEventId, DateTimeOffset nowUtc)
+        public void Copied(string destinationPath, byte[] contents, DateTimeOffset nowUtc)
         {
-            Raise(new MlrbAssetAssociateWithRangeEvent(Id, rangeEventId, nowUtc));
-        }
-
-        public void Copied(string destinationPath, DateTimeOffset nowUtc)
-        {
-            Raise(new MlrbAssetFileCopied(Id, destinationPath, nowUtc));
+            Raise(new MlrbAssetFileCopied(Id, destinationPath, contents, nowUtc));
         }
 
         public void Fail(Exception ex, DateTimeOffset nowUtc)
@@ -189,22 +197,52 @@ namespace MyLittleRangeBook.RangeEventAssets
             Raise(new MlrbAssetStoredInDatabase(Id, fileContents, nowUtc));
         }
 
-        public void Update(string fileName, DateTimeOffset nowUtc)
+        public MlrbAssetRow ToMlrbAssetRow()
         {
-            Raise(new MlrbAssetUpdatedFromFile(Id, fileName, nowUtc));
+            var row = new MlrbAssetRow(Id,
+                SourceFile,
+                this.DestinationPath,
+                this.MimeType,
+                this.FileContents,
+                this.Created,
+                this.Modified);
+
+            return row;
         }
 
+        /// <summary>
+        /// Updates the MlrbAssetAggregate with a new file's data.
+        /// </summary>
+        /// <param name="fromFile">The path of the source file being used for the update.</param>
+        /// <param name="fileContents">The binary content of the file used for the update.</param>
+        /// <param name="nowUtc">The timestamp representing when the update occurred, in UTC.</param>
+        public void Update(string fromFile, byte[] fileContents, DateTimeOffset nowUtc)
+        {
+            Raise(new MlrbAssetUpdatedFromFile(Id, fromFile, fileContents, nowUtc));
+        }
+
+        /// <summary>
+        /// Raise when we create the asset.
+        /// </summary>
+        /// <param name="StreamId"></param>
+        /// <param name="OccurredUtc"></param>
         [EventType("mlrb-asset-created")]
         public record struct MlrbAssetCreated(MlrbId StreamId, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
 
+        /// <summary>
+        /// We started importing the asset (a file).
+        /// </summary>
+        /// <param name="StreamId"></param>
+        /// <param name="SourcePath"></param>
+        /// <param name="OccurredUtc"></param>
         [EventType("mlrb-asset-import-started")]
         public record struct MlrbAssetImportStarted(MlrbId StreamId, string SourcePath, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
         [EventType("mlrb-asset-copied")]
-        public record struct MlrbAssetFileCopied(MlrbId StreamId, string DestinationPath, DateTimeOffset OccurredUtc)
+        public record struct MlrbAssetFileCopied(MlrbId StreamId, string DestinationPath, byte[] FileContents, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
         [EventType("mlrb-asset-stored-in-database")]
@@ -232,16 +270,11 @@ namespace MyLittleRangeBook.RangeEventAssets
         public record struct MlrbAssetImportFailed(MlrbId StreamId, string Reason, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
-        [EventType("mlrb-asset-associated-with-range-event")]
-        public record struct MlrbAssetAssociateWithRangeEvent(
-            MlrbId StreamId,
-            MlrbId RangeEventId,
-            DateTimeOffset OccurredUtc) : IDomainEvent;
-
         [EventType("mlrb-asset-updated-from-file")]
         public record struct MlrbAssetUpdatedFromFile(
             MlrbId StreamId,
             string FileName,
+            byte[] FileContents,
             DateTimeOffset OccurredUtc) : IDomainEvent;
     }
 }

@@ -37,11 +37,10 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
             if (!File.Exists(filePath))
             {
                 var errorMessage = $"Asset file does not exist: '{filePath}'";
-                _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
                 context.Metadata["FileExists"] = false;
                 context.Metadata["ValidationError"] = errorMessage;
                 context.Record.Aggregate.Fail(errorMessage, DateTimeOffset.UtcNow);
-
+                _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
                 return Result.Fail(errorMessage);
             }
 

@@ -141,7 +141,6 @@ namespace MyLittleRangeBook.IO
                 _ => "application/octet-stream"
             };
         }
-
         public static async Task CopyFileAsync(string sourceFile,
             string destinationFile,
             CancellationToken cancellationToken)
@@ -163,6 +162,7 @@ namespace MyLittleRangeBook.IO
                 FileOptions.Asynchronous);
 
             await source.CopyToAsync(destination, cancellationToken).ConfigureAwait(false);
+            await destination.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

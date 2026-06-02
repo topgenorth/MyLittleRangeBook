@@ -17,7 +17,6 @@ namespace MyLittleRangeBook
             typeof(MlrbAssetImportStarted),
             typeof(MlrbAssetImportFailed),
             typeof(MlrbAssetImportCompleted),
-            typeof(MlrbAssetAssociateWithRangeEvent),
             typeof(MlrbAssetFileCopied),
             typeof(MlrbAssetStoredInDatabase),
             typeof(MlrbAssetFingerprintComputed),
@@ -38,12 +37,12 @@ namespace MyLittleRangeBook
         ///     Register the MlrbAssetFile pipeline and handlers in the dependency injection container.
         ///     This registers:
         ///     - <see cref="ValidateFileExistsHandler" /> for validating files exist on disk
-        ///     - <see cref="CopyMlrbAssetToDataDirectory" /> for copying files to the range asset directory
+        ///     - <see cref="CopyMlrbAssetHandler" /> for copying files to the range asset directory
         ///     - <see cref="LoggingHandler" /> for logging pipeline execution and results
         ///     - <see cref="IPipeline{MlrbAssetFile}" /> for executing the pipeline
         ///     Handler execution order:
         ///     1. ValidateFileExistsHandler - fails fast if file doesn't exist
-        ///     2. CopyMlrbAssetToDataDirectory - copies file to range asset directory
+        ///     2. CopyMlrbAssetHandler - copies file to range asset directory
         ///     3. LoggingHandler - logs all actions and results
         /// </summary>
         /// <param name="services">The service collection to register handlers with.</param>
@@ -63,8 +62,8 @@ namespace MyLittleRangeBook
             services.AddScoped<ValidateFileExistsHandler>(serviceProvider =>
                 new ValidateFileExistsHandler(serviceProvider.GetRequiredService<ILogger>()));
 
-            services.AddScoped<CopyMlrbAssetToDataDirectory>(serviceProvider =>
-                new CopyMlrbAssetToDataDirectory(serviceProvider.GetRequiredService<IConfiguration>()));
+            services.AddScoped<CopyMlrbAssetHandler>(serviceProvider =>
+                new CopyMlrbAssetHandler(serviceProvider.GetRequiredService<IConfiguration>()));
 
             services.AddScoped<LoggingHandler>(serviceProvider =>
                 new LoggingHandler(serviceProvider.GetRequiredService<ILogger>()));
@@ -77,7 +76,7 @@ namespace MyLittleRangeBook
             services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
                 sp.GetRequiredService<ValidateFileExistsHandler>());
             services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
-                sp.GetRequiredService<CopyMlrbAssetToDataDirectory>());
+                sp.GetRequiredService<CopyMlrbAssetHandler>());
             services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
                 sp.GetRequiredService<InsertAssetFileSqliteHandler>());
             services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
@@ -91,7 +90,7 @@ namespace MyLittleRangeBook
 
                 return pipeline
                     .Add<ValidateFileExistsHandler>()
-                    .Add<CopyMlrbAssetToDataDirectory>()
+                    .Add<CopyMlrbAssetHandler>()
                     .Add<InsertAssetFileSqliteHandler>()
                     .Add<LoggingHandler>(); // [TO20260525] Keep the logging handler for last.
             });

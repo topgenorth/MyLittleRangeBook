@@ -44,7 +44,7 @@
         {
             var logContext = new Dictionary<string, string>
             {
-                ["AssetFile"] = context.Record.PathToAsset,
+                ["AssetFile"] = context.Record.FileToImport,
                 ["AssetId"] = context.Record.Id.ToString()
             };
 
@@ -67,7 +67,7 @@
         {
             var logContext = new Dictionary<string, string>
             {
-                ["AssetFile"] = context.Record.PathToAsset,
+                ["AssetFile"] = context.Record.FileToImport,
                 ["AssetId"] = context.Record.Id.ToString()
             };
 

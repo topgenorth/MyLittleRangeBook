@@ -30,7 +30,6 @@ namespace MyLittleRangeBook.Persistence
     [JsonSerializable(typeof(MlrbAssetFingerprintComputed))]
     [JsonSerializable(typeof(MlrbAssetImportCompleted))]
     [JsonSerializable(typeof(MlrbAssetImportFailed))]
-    [JsonSerializable(typeof(MlrbAssetAssociateWithRangeEvent))]
     [JsonSerializable(typeof(MlrbAssetUpdatedFromFile))]
     #endregion
 

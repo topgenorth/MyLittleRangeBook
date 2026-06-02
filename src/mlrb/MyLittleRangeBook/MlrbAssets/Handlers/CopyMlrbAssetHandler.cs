@@ -1,13 +1,14 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Security.Cryptography;
+using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.IO;
 
 namespace MyLittleRangeBook.RangeEventAssets.Handlers
 {
     /// <summary>
-    ///     Handler that copies a MlrbAssetFile to the range asset directory.
+    ///     Handler that copies a MlrbAssetFile to the MLRB asset directory.
     /// </summary>
-    public class CopyMlrbAssetToDataDirectory : IPipelineHandler<MlrbAssetFile>
+    public class CopyMlrbAssetHandler : IPipelineHandler<MlrbAssetFile>
     {
         /// <summary>
         ///     The folder name used to store range event assets, with platform-specific naming
@@ -32,10 +33,10 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
         readonly string _dataDirectory;
 
         /// <summary>
-        ///     Initializes a new instance of the CopyMlrbAssetToDataDirectory using configuration.
+        ///     Initializes a new instance of the CopyMlrbAssetHandler using configuration.
         /// </summary>
         /// <param name="config">Configuration containing range asset directory path.</param>
-        public CopyMlrbAssetToDataDirectory(IConfiguration config)
+        public CopyMlrbAssetHandler(IConfiguration config)
         {
             ArgumentNullException.ThrowIfNull(config);
             _dataDirectory = config.GetSqliteDatabaseDirectory();
@@ -46,21 +47,33 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
 
         public string Name => "Copy File to Range Asset";
 
-        public async Task<Result> ExecuteAsync(
-            PipelineContext<MlrbAssetFile> context,
+        public async Task<Result> ExecuteAsync(PipelineContext<MlrbAssetFile> context,
             Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
         {
             try
             {
+                string sourcePath = context.Record.FileToImport;
+                Result<ReadOnlyMemory<byte>> fileContents = await sourcePath
+                    .LoadFileBytesAsync(context.CancellationToken)
+                    .ConfigureAwait(false);
+
                 string destinationPath = _assetNamer(_dataDirectory, context.Record);
-                await FileExtensions.CopyFileAsync(context.Record.PathToAsset, destinationPath, context.CancellationToken).ConfigureAwait(false);
+                await File.WriteAllBytesAsync(destinationPath, fileContents.Value.ToArray(), context.CancellationToken)
+                    .ConfigureAwait(false);
+
+                context.Record.Aggregate.Copied(destinationPath, fileContents.Value.ToArray(), DateTimeOffset.UtcNow);
+
+                byte[] fingerprint =SHA256.HashData(fileContents.Value.ToArray());
+                string fingerprintString = Convert.ToHexString(fingerprint);
+                context.Record.Aggregate.FileFingerprinted(fingerprintString, fileContents.Value.ToArray().Length, DateTimeOffset.UtcNow);
+
+                // TODO [TO20260602] Not sure if this belongs here - maybe the MimeType is set in a different handler that is more sophisticated?
+                string mimeType = FileExtensions.GetMimeType(Path.GetExtension(sourcePath));
+                context.Record.Aggregate.Parsed(mimeType, DateTimeOffset.UtcNow);
 
                 // Store the destination path in metadata for downstream handlers
                 context.Metadata["DestinationPath"] = destinationPath;
                 context.Metadata["CopySuccess"] = true;
-
-                context.Record.Aggregate.Copied(destinationPath, DateTimeOffset.UtcNow);
-
                 return await next(context);
             }
             catch (Exception ex)
@@ -69,7 +82,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                 context.Metadata["CopyError"] = ex.Message;
                 context.Record.Aggregate.Fail(ex, DateTimeOffset.UtcNow);
 
-                return Result.Fail(new Error($"Failed to copy file '{context.Record.PathToAsset}': {ex.Message}")
+                return Result.Fail(new Error($"Failed to copy file '{context.Record.FileToImport}': {ex.Message}")
                     .CausedBy(ex));
             }
         }
@@ -82,10 +95,12 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
         /// <returns></returns>
         public static string GetMlrbAssetFileNameForDataDirectory(string dataDirectory, MlrbAssetFile mlrbAssetFile)
         {
-            string dir = Path.Combine(dataDirectory, mlrbAssetFile.Id);
+            string dir = Path.Combine(dataDirectory, MlrbAssetsFolderName);
             Directory.CreateDirectory(dir);
-            // [TO20260521] Handle both Windows and Linux separators.
-            string filename = Path.GetFileName(mlrbAssetFile.PathToAsset.Replace('\\', '/'));
+
+            // [TO20260521] Prefix the original filename with the asset Id; handle both Windows and Linux separators.
+            string filename = mlrbAssetFile.Id + "-" + Path.GetFileName(mlrbAssetFile.FileToImport.Replace('\\', '/'));
+
             string mlrbAssetFileName = Path.Combine(dir, filename);
             return mlrbAssetFileName;
         }
