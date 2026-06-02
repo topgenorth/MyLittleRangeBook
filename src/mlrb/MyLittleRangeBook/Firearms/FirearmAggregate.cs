@@ -200,20 +200,20 @@ namespace MyLittleRangeBook.Firearms
 
         #region Domain Events
         [EventType("firearm-barrel-changed")]
-        internal record struct FirearmBarrelChanged(
+        public record struct FirearmBarrelChanged(
             MlrbId StreamId,
             string OldBarrel,
             string NewBarrel,
             DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-active")]
-        internal record struct FirearmActive(
+        public record struct FirearmActive(
             MlrbId StreamId,
             DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
         [EventType("firearm-created")]
-        internal record struct FirearmCreated(
+        public record struct FirearmCreated(
             MlrbId StreamId,
             string Name,
             int TotalRoundsFired,
@@ -221,32 +221,32 @@ namespace MyLittleRangeBook.Firearms
             DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-cleaned")]
-        internal record struct FirearmCleaned(MlrbId StreamId, DateTimeOffset OccurredUtc) : IDomainEvent;
+        public record struct FirearmCleaned(MlrbId StreamId, DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-inactive")]
-        internal record struct FirearmInactive(
+        public record struct FirearmInactive(
             MlrbId StreamId,
             DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
         [EventType("firearm-modification")]
-        internal record struct FirearmModified(MlrbId StreamId, string Description, DateTimeOffset OccurredUtc) : IDomainEvent;
+        public record struct FirearmModified(MlrbId StreamId, string Description, DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-discharged-rounds")]
-        internal record struct FirearmDischargeMoreRounds(MlrbId StreamId, int Rounds, DateTimeOffset OccurredUtc) : IDomainEvent;
+        public record struct FirearmDischargeMoreRounds(MlrbId StreamId, int Rounds, DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-note-added")]
-        internal record struct FirearmNoteAdded(MlrbId StreamId, string NewNote, DateTimeOffset OccurredUtc) : IDomainEvent;
+        public record struct FirearmNoteAdded(MlrbId StreamId, string NewNote, DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-sights-changed")]
-        internal record struct FirearmSightingSystemChanged(
+        public record struct FirearmSightingSystemChanged(
             MlrbId StreamId,
             string OldSystem,
             string NewSystem,
             DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("range-event-associated-with-firearm")]
-        internal record struct RangeEventAssociatedWithFirearm(
+        public record struct RangeEventAssociatedWithFirearm(
             MlrbId StreamId,
             MlrbId RangeEventId,
             int? RoundCount,
@@ -254,7 +254,7 @@ namespace MyLittleRangeBook.Firearms
             : IDomainEvent;
 
         [EventType("asset-associated-with-firearm")]
-        internal record struct AssetAssociatedWithFirearm(MlrbId StreamId, MlrbId AssetId, DateTimeOffset OccurredUtc) : IDomainEvent;
+        public record struct AssetAssociatedWithFirearm(MlrbId StreamId, MlrbId AssetId, DateTimeOffset OccurredUtc) : IDomainEvent;
         #endregion
     }
 }
