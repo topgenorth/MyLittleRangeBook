@@ -187,6 +187,11 @@ namespace MyLittleRangeBook.RangeEventAssets
             Raise(new MlrbAssetFingerprintComputed(Id, sha256, fileSize, nowUtc));
         }
 
+        public void ImportComplete(DateTimeOffset nowUtc)
+        {
+            Raise(new MlrbAssetImportCompleted(Id, nowUtc));
+        }
+
         public void Parsed(string mimeType, DateTimeOffset nowUtc)
         {
             Raise(new MlrbAssetParsed(Id, mimeType, nowUtc));

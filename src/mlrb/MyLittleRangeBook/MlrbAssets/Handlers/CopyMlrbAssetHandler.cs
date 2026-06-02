@@ -23,7 +23,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
         /// adhering to platform-specific naming conventions. On Windows, it is "MlrbAssets", and
         /// on non-Windows platforms, it is "mlrb-assets".
         /// </summary>
-        public static readonly string MlrbAssetsFolderName = OperatingSystem.IsWindows() ? "MlrbAssets" : "mlrb-assets";
+        public static readonly string MlrbAssetsFolderName = OperatingSystem.IsWindows() ? "Assets" : "assets";
 
         /// <summary>
         /// A delegate that will resolve the file name for an MlrbAssetFile.
@@ -45,7 +45,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
             _assetNamer = GetMlrbAssetFileNameForDataDirectory;
         }
 
-        public string Name => "Copy File to Range Asset";
+        public string Name => "Copy file to asset folder";
 
         public async Task<Result> ExecuteAsync(PipelineContext<MlrbAssetFile> context,
             Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
@@ -62,14 +62,6 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                     .ConfigureAwait(false);
 
                 context.Record.Aggregate.Copied(destinationPath, fileContents.Value.ToArray(), DateTimeOffset.UtcNow);
-
-                byte[] fingerprint =SHA256.HashData(fileContents.Value.ToArray());
-                string fingerprintString = Convert.ToHexString(fingerprint);
-                context.Record.Aggregate.FileFingerprinted(fingerprintString, fileContents.Value.ToArray().Length, DateTimeOffset.UtcNow);
-
-                // TODO [TO20260602] Not sure if this belongs here - maybe the MimeType is set in a different handler that is more sophisticated?
-                string mimeType = FileExtensions.GetMimeType(Path.GetExtension(sourcePath));
-                context.Record.Aggregate.Parsed(mimeType, DateTimeOffset.UtcNow);
 
                 // Store the destination path in metadata for downstream handlers
                 context.Metadata["DestinationPath"] = destinationPath;

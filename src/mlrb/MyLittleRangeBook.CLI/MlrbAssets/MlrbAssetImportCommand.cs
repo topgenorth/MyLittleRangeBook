@@ -93,16 +93,20 @@ namespace MyLittleRangeBook.MlrbAssets
                     Logger.Warning("There was an issue saving the event stream: {message}", err.Message);
                 }
 
-                returnCode = ReturnCodes.FAILURE;
+                assetFile.Aggregate.Fail(saveAggregate.Errors[0].Message, DateTimeOffset.UtcNow);
+                await _aggregateRepo.SaveAsync(assetFile.Aggregate, ct).ConfigureAwait(false);                returnCode = ReturnCodes.FAILURE;
                 goto ExitMethod;
             }
 
+            assetFile.Aggregate.ImportComplete(DateTimeOffset.UtcNow);
+            await _aggregateRepo.SaveAsync(assetFile.Aggregate, ct).ConfigureAwait(false);
             Logger.Verbose("Updated the event stream {id}, v{version}", aggregate.Id, aggregate.Version);
 
             CliDisplay.PrintSuccess($"{file} was imported to assets.");
             returnCode = ReturnCodes.SUCCESS;
 
             ExitMethod:
+
             PressAnyKeyToContinue();
             return returnCode;
         }
