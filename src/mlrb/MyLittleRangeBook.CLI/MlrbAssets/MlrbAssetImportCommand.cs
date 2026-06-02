@@ -30,45 +30,42 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <summary>
         ///     Copy the file to the asset directory for the range event.
         /// </summary>
-        /// <param name="file"></param>
-        /// <param name="rangeEventId">The ID of a range event to associate the asset with.</param>
+        /// <param name="file">The name of the file to import into the MLRB assets.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
         [Command("import")]
         [UsedImplicitly]
         // ReSharper disable once AsyncMethodWithoutAwait
         public async Task<int> ImportRangeAssetFile(string file,
-            string? rangeEventId = null,
             CancellationToken ct = default)
         {
-            CliDisplay.PrintCommandHeader("Import a file as a range asset.");
-            if (string.IsNullOrWhiteSpace(rangeEventId))
+            int returnCode = -1;
+            var fileInfo = new FileInfo(file);
+            if (!fileInfo.Exists)
             {
-                rangeEventId = MlrbId.Empty.ToString();
-                Logger.Verbose("No RangeEvent specified.");
-                CliDisplay.PrintWarning($"The file {file} is not assigned to any RangeEvent.");
+                CliDisplay.PrintCommandHeader("Copy file into MLRB assets.");
+                CliDisplay.PrintFailure($"'{file}' does not exist.");
+                returnCode = ReturnCodes.FIT_FILE_NOT_FOUND;
+                goto ExitMethod;
             }
 
-            var fileInfo = new FileInfo(file);
             Result<MlrbAssetAggregate?> r = await _aggregateRepo.GetAsync(fileInfo, ct).ConfigureAwait(false);
             bool isNew = r.IsFailed || r.Value is null;
 
             MlrbAssetAggregate aggregate;
             if (isNew)
             {
+                CliDisplay.PrintCommandHeader("Copy file into MLRB assets.");
                 aggregate = MlrbAssetAggregate.New(file, DateTimeOffset.UtcNow);
-                Logger.Verbose("Import a new range asset from  {file}", file);
             }
             else
             {
                 aggregate = r.Value!;
-                Logger.Verbose("Update an existing range asset {id} from  {file}, v{version}.",
-                    file,
-                    aggregate.Id,
-                    aggregate.Version);;
+                CliDisplay.PrintCommandHeader($"Copy file and update MLRB asset {aggregate.Id}.");
+                // TODO [TO20260602] Maybe we want to have a "refresh" or a different type of "update" event?
             }
 
-            MlrbAssetFile assetFile = new MlrbAssetFile(file, aggregate, rangeEventId);
+            MlrbAssetFile assetFile = new MlrbAssetFile(aggregate);
 
             // TODO [TO20260527] Have to update the pipeline to create the events rather than doing things.
             Result result = await _assetPipeline.ExecuteAsync(assetFile, ct).ConfigureAwait(false);
@@ -76,14 +73,8 @@ namespace MyLittleRangeBook.MlrbAssets
             if (result.IsFailed)
             {
                 CliDisplay.PrintFailure("Could not process the file.");
-
-                return ReturnCodes.FAILURE;
-            }
-
-            if (!assetFile.RangeEventId.Equals(MlrbId.Empty.ToString()))
-            {
-                assetFile.Aggregate.AddedToRangeEvent(assetFile.RangeEventId, DateTimeOffset.UtcNow);
-                Logger.Verbose("Associated range asset with range event '{RangeEventId}'.", rangeEventId);
+                returnCode = ReturnCodes.FAILURE;
+                goto ExitMethod;
             }
 
             // TODO [TO20260527] Need to create a projector that will update the read-model from the events.
@@ -103,16 +94,22 @@ namespace MyLittleRangeBook.MlrbAssets
                     Logger.Warning("There was an issue saving the event stream: {message}", err.Message);
                 }
 
-                return ReturnCodes.FAILURE;
+                assetFile.Aggregate.Fail(saveAggregate.Errors[0].Message, DateTimeOffset.UtcNow);
+                await _aggregateRepo.SaveAsync(assetFile.Aggregate, ct).ConfigureAwait(false);                returnCode = ReturnCodes.FAILURE;
+                goto ExitMethod;
             }
 
+            assetFile.Aggregate.ImportComplete(DateTimeOffset.UtcNow);
+            await _aggregateRepo.SaveAsync(assetFile.Aggregate, ct).ConfigureAwait(false);
             Logger.Verbose("Updated the event stream {id}, v{version}", aggregate.Id, aggregate.Version);
 
-            CliDisplay.PrintSuccess(rangeEventId.Equals(MlrbId.Empty.ToString())
-                ? "Copied file to generic range event asset."
-                : $"Copied file for range event '{rangeEventId}'.");
+            CliDisplay.PrintSuccess($"{file} was imported to assets.");
+            returnCode = ReturnCodes.SUCCESS;
 
-            return ReturnCodes.SUCCESS;
+            ExitMethod:
+
+            PressAnyKeyToContinue();
+            return returnCode;
         }
     }
 }

@@ -26,22 +26,21 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
             _logger = logger;
         }
 
-        public string Name => "Validate File Exists";
+        public string Name => "Validate file exists";
 
         public async Task<Result> ExecuteAsync(
             PipelineContext<MlrbAssetFile> context,
             Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
         {
-            string filePath = context.Record.PathToAsset;
+            string filePath = context.Record.FileToImport;
 
             if (!File.Exists(filePath))
             {
                 var errorMessage = $"Asset file does not exist: '{filePath}'";
-                _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
                 context.Metadata["FileExists"] = false;
                 context.Metadata["ValidationError"] = errorMessage;
                 context.Record.Aggregate.Fail(errorMessage, DateTimeOffset.UtcNow);
-
+                _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
                 return Result.Fail(errorMessage);
             }
 
@@ -61,12 +60,15 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
                     _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
                 }
 
+                context.Record.Aggregate.FileFingerprinted(sha256, fileInfo.Length, DateTimeOffset.UtcNow);
+
+                // TODO [TO20260602] Not sure if this belongs here - maybe the MimeType is set in a different handler that is more sophisticated?
+                string mimeType = FileExtensions.GetMimeType(Path.GetExtension(filePath));
+                context.Record.Aggregate.Parsed(mimeType, DateTimeOffset.UtcNow);
+
                 _logger.Verbose("File validation passed: {FilePath} ({FileSize} bytes)",
                     filePath,
                     fileInfo.Length);
-
-                context.Record.Aggregate.FileFingerprinted(sha256, fileInfo.Length, DateTimeOffset.UtcNow);
-
                 return await next(context);
             }
             catch (Exception ex)

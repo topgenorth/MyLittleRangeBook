@@ -5,11 +5,13 @@ namespace MyLittleRangeBook.IO
 {
     public static class FileExtensions
     {
+        const int CopyFileBufferSize = 81920;
         public const string MIME_TYPE_GARMIN_FIT_FILE = "application/vnd.mlrb.garmin-fit";
         public const string MIME_TYPE_GARMIN_SHOTVIEW_FILE = "application/vnd.mlrb.garmin-shotview+csv";
         public const string MIME_TYPE_GORDONS_RELOADING_TOOL_LOAD_FILE = "application/vnd.mlrb.grt-load+xml";
         public const string MIME_TYPE_QUICKLOAD_DATA_FILE = "application/vnd.quickload.dat";
         public const string MIME_TYPE_LABRADAR_SERIES_FILE = "application/vnd.labradar.series+csv";
+
         public static async Task<Result<ReadOnlyMemory<byte>>> LoadFileBytesAsync(this FileInfo fitFile,
             CancellationToken ct = default)
         {
@@ -138,6 +140,29 @@ namespace MyLittleRangeBook.IO
                 ".dat" => MIME_TYPE_QUICKLOAD_DATA_FILE,
                 _ => "application/octet-stream"
             };
+        }
+        public static async Task CopyFileAsync(string sourceFile,
+            string destinationFile,
+            CancellationToken cancellationToken)
+        {
+            await using var source = new FileStream(
+                sourceFile,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                CopyFileBufferSize,
+                FileOptions.Asynchronous);
+
+            await using var destination = new FileStream(
+                destinationFile,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                CopyFileBufferSize,
+                FileOptions.Asynchronous);
+
+            await source.CopyToAsync(destination, cancellationToken).ConfigureAwait(false);
+            await destination.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }
