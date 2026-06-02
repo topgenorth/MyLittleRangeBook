@@ -19,14 +19,14 @@ namespace MyLittleRangeBook.RangeEventAssets
     public record MlrbAssetFile
     {
         // TODO [TO20260602] Maybe this should all move into the MlrbAssetAggregate?
-        public MlrbAssetFile(string pathToAsset, MlrbAssetAggregate agg)
+        public MlrbAssetFile(string fileToImport, MlrbAssetAggregate agg)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(pathToAsset);
-            if (!Path.Exists(pathToAsset))
+            ArgumentException.ThrowIfNullOrWhiteSpace(fileToImport);
+            if (!Path.Exists(fileToImport))
             {
                 throw new FileNotFoundException("Cannot import asset file; does not exist.");
             }
-            PathToAsset = pathToAsset;
+            FileToImport = fileToImport;
             Aggregate = agg;
             Id = Aggregate.Id;
         }
@@ -41,11 +41,11 @@ namespace MyLittleRangeBook.RangeEventAssets
         /// <summary>
         ///     Path to the asset that is to be copied over to the range event asset directory.
         /// </summary>
-        public string PathToAsset { get; }
+        public string FileToImport { get; }
 
         public override string ToString()
         {
-            return PathToAsset;
+            return FileToImport;
         }
     }
 }

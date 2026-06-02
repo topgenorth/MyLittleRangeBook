@@ -32,7 +32,7 @@ namespace MyLittleRangeBook.RangeEventAssets.Handlers
             PipelineContext<MlrbAssetFile> context,
             Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
         {
-            string filePath = context.Record.PathToAsset;
+            string filePath = context.Record.FileToImport;
 
             if (!File.Exists(filePath))
             {
