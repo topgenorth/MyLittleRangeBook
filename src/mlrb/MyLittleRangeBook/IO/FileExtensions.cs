@@ -9,6 +9,7 @@ namespace MyLittleRangeBook.IO
         public const string MIME_TYPE_GARMIN_SHOTVIEW_FILE = "application/vnd.mlrb.garmin-shotview+csv";
         public const string MIME_TYPE_GORDONS_RELOADING_TOOL_LOAD_FILE = "application/vnd.mlrb.grt-load+xml";
         public const string MIME_TYPE_QUICKLOAD_DATA_FILE = "application/vnd.quickload.dat";
+        public const string MIME_TYPE_LABRADAR_SERIES_FILE = "application/vnd.labradar.series+csv";
         public static async Task<Result<ReadOnlyMemory<byte>>> LoadFileBytesAsync(this FileInfo fitFile,
             CancellationToken ct = default)
         {
@@ -130,7 +131,7 @@ namespace MyLittleRangeBook.IO
                 ".gif" => "image/gif",
                 ".bmp" => "image/bmp",
                 ".webp" => "image/webp",
-                ".csv" => "text/csv", // [TO20260601] Might also be MIME_TYPE_GARMIN_SHOTVIEW_FILE
+                ".csv" => "text/csv", // [TO20260601] Might also be MIME_TYPE_GARMIN_SHOTVIEW_FILE or MIME_TYPE_LABRADAR_SERIES_FILE
                 ".xml" => "application/xml",
                 ".grtload" => MIME_TYPE_GORDONS_RELOADING_TOOL_LOAD_FILE,
                 ".fit" => MIME_TYPE_GARMIN_FIT_FILE,
