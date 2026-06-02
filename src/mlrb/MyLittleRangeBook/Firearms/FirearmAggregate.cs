@@ -63,7 +63,7 @@ namespace MyLittleRangeBook.Firearms
         {
             switch (e)
             {
-                case BarrelChanged x:
+                case FirearmBarrelChanged x:
                     StringBuilder sbBarrelChange = new StringBuilder("Barrel changed from ")
                         .Append(x.OldBarrel)
                         .Append(" to ")
@@ -103,16 +103,16 @@ namespace MyLittleRangeBook.Firearms
                     AppendToNotes(sbModified.ToString());
 
                     break;
-                case NewNoteAdded x:
+                case FirearmNoteAdded x:
                     AppendToNotes(x.NewNote);
 
                     break;
-                case FiredMoreBullets x:
+                case FirearmDischargeMoreRounds x:
                     RoundsFired += x.Rounds;
 
                     break;
 
-                case SightingSystemChanged x:
+                case FirearmSightingSystemChanged x:
                     StringBuilder sbSightsChanged = new StringBuilder("Changed sights from ")
                         .Append(x.OldSystem)
                         .Append(" to ")
@@ -164,12 +164,12 @@ namespace MyLittleRangeBook.Firearms
                 throw new ArgumentException("Round count must be > 0.");
             }
 
-            Raise(new FiredMoreBullets(Id, roundCount, utcNow));
+            Raise(new FirearmDischargeMoreRounds(Id, roundCount, utcNow));
         }
 
         public void AppendToNotes(string newNote, DateTimeOffset utcNow)
         {
-            Raise(new NewNoteAdded(Id, newNote, utcNow));
+            Raise(new FirearmNoteAdded(Id, newNote, utcNow));
         }
 
         public void IsInactive(bool inactive, DateTimeOffset utcNow)
@@ -194,13 +194,13 @@ namespace MyLittleRangeBook.Firearms
             Raise(new RangeEventAssociatedWithFirearm(Id, rangeEventId, roundCount, utcNow));
             if (roundCount is not null)
             {
-                Raise(new FiredMoreBullets(Id, roundCount.Value, utcNow));
+                Raise(new FirearmDischargeMoreRounds(Id, roundCount.Value, utcNow));
             }
         }
 
         #region Domain Events
         [EventType("firearm-barrel-changed")]
-        internal record struct BarrelChanged(
+        internal record struct FirearmBarrelChanged(
             MlrbId StreamId,
             string OldBarrel,
             string NewBarrel,
@@ -233,13 +233,13 @@ namespace MyLittleRangeBook.Firearms
         internal record struct FirearmModified(MlrbId StreamId, string Description, DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-discharged-rounds")]
-        internal record struct FiredMoreBullets(MlrbId StreamId, int Rounds, DateTimeOffset OccurredUtc) : IDomainEvent;
+        internal record struct FirearmDischargeMoreRounds(MlrbId StreamId, int Rounds, DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-note-added")]
-        internal record struct NewNoteAdded(MlrbId StreamId, string NewNote, DateTimeOffset OccurredUtc) : IDomainEvent;
+        internal record struct FirearmNoteAdded(MlrbId StreamId, string NewNote, DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-sights-changed")]
-        internal record struct SightingSystemChanged(
+        internal record struct FirearmSightingSystemChanged(
             MlrbId StreamId,
             string OldSystem,
             string NewSystem,

@@ -7,17 +7,17 @@ namespace MyLittleRangeBook
     public static partial class ServiceCollectionExtensions
     {
         static readonly Type[] SupportedFirearmsEvents = [
-            typeof(BarrelChanged),
+            typeof(AssetAssociatedWithFirearm),
             typeof(FirearmActive),
+            typeof(FirearmBarrelChanged),
             typeof(FirearmCleaned),
             typeof(FirearmCreated),
+            typeof(FirearmDischargeMoreRounds),
             typeof(FirearmInactive),
             typeof(FirearmModified),
-            typeof(FiredMoreBullets),
-            typeof(NewNoteAdded),
-            typeof(SightingSystemChanged),
+            typeof(FirearmNoteAdded),
+            typeof(FirearmSightingSystemChanged),
             typeof(RangeEventAssociatedWithFirearm),
-            typeof(AssetAssociatedWithFirearm)
         ];
 
         public static IServiceCollection RegisterFirearmEventSourcing(this IServiceCollection services)

@@ -12,13 +12,6 @@ namespace MyLittleRangeBook.Config
     /// </summary>
     public static class ConfigurationExtensions
     {
-        /// <summary>
-        ///     The folder name used to store range event assets, with platform-specific naming
-        ///     conventions. On Windows, it is "RangeEventAssets", and on non-Windows platforms,
-        ///     it is "range-event-assets".
-        /// </summary>
-        public static readonly string RangeAssetsFolderName =
-            OperatingSystem.IsWindows() ? "RangeEventAssets" : "range-event-assets";
 
         /// <summary>
         ///     The name of the default database.
@@ -147,28 +140,31 @@ namespace MyLittleRangeBook.Config
         }
 
         /// <summary>
-        ///     Retrieves the directory path where range asset files are stored. This directory is determined
-        ///     by appending the 'RangeAssetsFolderName' value to the directory path of the SQLite connection string
-        ///     specified in the configuration.
+        ///     Retrieves the directory path where the SQLite database is stored.
         /// </summary>
         /// <param name="config">The application configuration object that provides access to the SQLite connection string.</param>
         /// <returns>
-        ///     The fully qualified directory path for the range asset files.
+        ///     The fully qualified directory path for the SQLite database.
         /// </returns>
         /// <exception cref="InvalidOperationException">
         ///     Thrown if the SQLite connection string ('SqliteConnection') is not configured
         ///     in the application settings.
         /// </exception>
-        public static string GetRangeAssetDirectory(this IConfiguration config)
+        public static string GetSqliteDatabaseDirectory(this IConfiguration config)
         {
             string connectionString = config.GetSqliteConnectionString();
+
             var sb = new SqliteConnectionStringBuilder(connectionString);
             string db = sb.DataSource;
             string? dir = Path.GetDirectoryName(db);
-            string rangeAssetsDir = Path.Combine(dir!, RangeAssetsFolderName);
-            Directory.CreateDirectory(rangeAssetsDir);
 
-            return rangeAssetsDir;
+            if (dir is null)
+            {
+                throw new InvalidOperationException("SQLite connection string does not specify a valid database file path.");
+            }
+            Directory.CreateDirectory(dir!);
+
+            return dir!;
         }
 
         /// <summary>

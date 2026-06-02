@@ -24,8 +24,8 @@ namespace MyLittleRangeBook.RangeEventAssets
             MlrbId rangeEventId;
             try
             {
-                (_, rangeEventId, _) = (MlrbAssetAggregate.RangeAssetAssociateWithRangeEvent)context.PendingEvents.First(domainEvent =>
-                    domainEvent is MlrbAssetAggregate.RangeAssetAssociateWithRangeEvent);
+                (_, rangeEventId, _) = (MlrbAssetAggregate.MlrbAssetAssociateWithRangeEvent)context.PendingEvents.First(domainEvent =>
+                    domainEvent is MlrbAssetAggregate.MlrbAssetAssociateWithRangeEvent);
             }
             catch (Exception e)
             {

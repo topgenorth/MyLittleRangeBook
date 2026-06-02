@@ -62,13 +62,15 @@ namespace MyLittleRangeBook.MlrbAssets
             else
             {
                 aggregate = r.Value!;
-                Logger.Verbose("Update an existing range asset {id} from  {file}, v{version}.",
+                aggregate.Update(file, DateTime.UtcNow);
+                Logger.Verbose(
+                    "Changed the existing asset {id} from {file}, v{version}.",
                     file,
                     aggregate.Id,
                     aggregate.Version);;
             }
 
-            MlrbAssetFile assetFile = new MlrbAssetFile(file, aggregate, rangeEventId);
+            MlrbAssetFile assetFile = new MlrbAssetFile(file, aggregate);
 
             // TODO [TO20260527] Have to update the pipeline to create the events rather than doing things.
             Result result = await _assetPipeline.ExecuteAsync(assetFile, ct).ConfigureAwait(false);
@@ -78,12 +80,6 @@ namespace MyLittleRangeBook.MlrbAssets
                 CliDisplay.PrintFailure("Could not process the file.");
 
                 return ReturnCodes.FAILURE;
-            }
-
-            if (!assetFile.RangeEventId.Equals(MlrbId.Empty.ToString()))
-            {
-                assetFile.Aggregate.AddedToRangeEvent(assetFile.RangeEventId, DateTimeOffset.UtcNow);
-                Logger.Verbose("Associated range asset with range event '{RangeEventId}'.", rangeEventId);
             }
 
             // TODO [TO20260527] Need to create a projector that will update the read-model from the events.

@@ -45,7 +45,6 @@
             var logContext = new Dictionary<string, string>
             {
                 ["AssetFile"] = context.Record.PathToAsset,
-                ["RangeEventId"] = context.Record.RangeEventId,
                 ["AssetId"] = context.Record.Id.ToString()
             };
 
@@ -69,7 +68,6 @@
             var logContext = new Dictionary<string, string>
             {
                 ["AssetFile"] = context.Record.PathToAsset,
-                ["RangeEventId"] = context.Record.RangeEventId,
                 ["AssetId"] = context.Record.Id.ToString()
             };
 
