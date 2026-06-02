@@ -179,11 +179,6 @@ namespace MyLittleRangeBook.RangeEventAssets
 
         public void FileFingerprinted(string sha256, long fileSize, DateTimeOffset nowUtc)
         {
-            if (Status is "Completed" or "Failed")
-            {
-                throw new InvalidOperationException($"Cannot compute fingerprint for asset in status `{Status}`.");
-            }
-
             Raise(new MlrbAssetFingerprintComputed(Id, sha256, fileSize, nowUtc));
         }
 

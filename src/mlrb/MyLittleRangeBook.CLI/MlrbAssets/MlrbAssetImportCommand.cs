@@ -62,6 +62,7 @@ namespace MyLittleRangeBook.MlrbAssets
             {
                 aggregate = r.Value!;
                 CliDisplay.PrintCommandHeader($"Copy file and update MLRB asset {aggregate.Id}.");
+                // TODO [TO20260602] Maybe we want to have a "refresh" or a different type of "update" event?
             }
 
             MlrbAssetFile assetFile = new MlrbAssetFile(aggregate);
