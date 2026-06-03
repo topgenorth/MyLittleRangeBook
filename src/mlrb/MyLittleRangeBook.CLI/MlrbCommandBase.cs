@@ -25,7 +25,7 @@ namespace MyLittleRangeBook
         {
 #if DEBUG
             // [TO20260507] Need this when testing in Rider.  Without it the console window closes too fast.
-            CliDisplay.Console.WriteLine("Press any key to continue...");
+            CliDisplay.Console.WriteLine("Press ENTER to continue...");
             System.Console.Read();
 #endif
         }

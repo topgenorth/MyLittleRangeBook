@@ -51,7 +51,7 @@ namespace MyLittleRangeBook.MlrbAssets
                                SELECT id as Id, 
                                       row_id as RowId, 
                                       mime_type AS MimeType,
-                                      path_to_asset_file AS FileToImport
+                                      path_to_asset_file AS PathToAsset
                                FROM asset_files 
                                ORDER BY id;
                                """;

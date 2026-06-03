@@ -3,6 +3,12 @@ using Spectre.Console.Rendering;
 
 namespace MyLittleRangeBook.MlrbAssets
 {
+    /// <summary>
+    /// The AssetsTablePrinter class is responsible for generating and printing
+    /// a tabular representation of asset data to the console.
+    /// Implements the <see cref="IConsolePrinter"/> interface to provide
+    /// mechanisms for building and printing renderable console content.
+    /// </summary>
     class AssetsTablePrinter : IConsolePrinter
     {
         IEnumerable<MlrbAssetListCommand.AssetRow> _assets = [];
@@ -26,7 +32,7 @@ namespace MyLittleRangeBook.MlrbAssets
 
             foreach (MlrbAssetListCommand.AssetRow asset in _assets)
             {
-                table.AddRow(asset.Id, asset.PathToAsset, asset.MimeType, asset.RowId.ToString());
+                table.AddRow(asset.Id, asset.PathToAsset ?? string.Empty, asset.MimeType, asset.RowId.ToString());
             }
 
             Panel p = new Panel(table).Expand().Border(BoxBorder.None);
