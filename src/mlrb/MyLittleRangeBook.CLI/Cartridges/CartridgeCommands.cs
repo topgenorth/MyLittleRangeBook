@@ -36,9 +36,10 @@ namespace MyLittleRangeBook.Cartridges
         {
             AnsiConsole.Console.PrintAppInfo();
             AnsiConsole.Console.WriteLine("Retrieving cartridges...");
-            await using SqliteConnection conn = await _sqliteHelper
-                .GetDatabaseConnectionAsync(cancellationToken)
-                .ConfigureAwait(false);
+
+            await using ScopedSqliteConnection scoped =
+                await _sqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+            await using SqliteConnection conn = scoped.Connection;
             Result<IEnumerable<Cartridge>> cartridges = await _cartridgesService
                 .GetCartridgesAsync(conn, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
@@ -95,9 +96,9 @@ namespace MyLittleRangeBook.Cartridges
                 SuitableForRifle = rifle,
                 SuitableForPistol = pistol
             };
-            await using SqliteConnection conn = await _sqliteHelper
-                .GetDatabaseConnectionAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await using ScopedSqliteConnection scoped =
+                await _sqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+            await using SqliteConnection conn = scoped.Connection;
             Result<EntityId> result = await _cartridgesService
                 .UpsertAsync(conn, cartridge, cancellationToken)
                 .ConfigureAwait(false);
