@@ -43,11 +43,11 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
                 {
                     assetRow.Id,
                     OriginalFilename = assetRow.OriginalFileName,
-                    PathToRangeAssetFile = context.Record.FileToImport,
+                    PathToRangeAssetFile = assetRow.PathToAssetFile,
                     assetRow.MimeType,
                     assetRow.FileContentBytes,
                     assetRow.Created,
-                    Modified = context.Record.Aggregate.Modified
+                    Modified = assetRow.Modified
                 };
 
                 var dapperCtx = new DapperCommandContext(conn, trans, context.CancellationToken) { Arguments = p };
