@@ -1,6 +1,6 @@
 ﻿using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.RangeEventAssets
+namespace MyLittleRangeBook.MlrbAssets
 {
     public interface IMlrbAssetAggregateRepository
     {

@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
-namespace MyLittleRangeBook.RangeEventAssets.Handlers
+namespace MyLittleRangeBook.MlrbAssets.Handlers
 {
     public class InsertAssetFileSqliteHandler : IPipelineHandler<MlrbAssetFile>
     {

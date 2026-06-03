@@ -2,9 +2,9 @@
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence.Sqlite;
-using static MyLittleRangeBook.RangeEventAssets.MlrbAssetAggregate;
+using static MyLittleRangeBook.MlrbAssets.MlrbAssetAggregate;
 
-namespace MyLittleRangeBook.RangeEventAssets
+namespace MyLittleRangeBook.MlrbAssets
 {
     public class MlrbAssetAggregateSqliteRepository
         : SqliteAggregateRepository<MlrbAssetAggregate>, IMlrbAssetAggregateRepository

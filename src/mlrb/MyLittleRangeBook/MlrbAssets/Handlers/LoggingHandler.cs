@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.RangeEventAssets.Handlers
+﻿namespace MyLittleRangeBook.MlrbAssets.Handlers
 {
     /// <summary>
     ///     Handler that logs the actions taken by the pipeline and their results.
