@@ -14,6 +14,7 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
         ///     conventions. On Windows, it is "RangeEventAssets", and on non-Windows platforms,
         ///     it is "range-event-assets".
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public static readonly string RangeEventAssetsFolderName =
             OperatingSystem.IsWindows() ? "RangeEventAssets" : "range-event-assets";
 
@@ -49,15 +50,14 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
         public async Task<Result> ExecuteAsync(PipelineContext<MlrbAssetFile> context,
             Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
         {
+            string sourcePath = context.Record.FileToImport;
+            context.Metadata["SourcesPath"] = sourcePath;
             try
             {
-                string sourcePath = context.Record.FileToImport;
+                string destinationPath = _assetNamer(_dataDirectory, context.Record);
+                File.Copy(sourcePath, destinationPath, true);
                 Result<ReadOnlyMemory<byte>> fileContents = await sourcePath
                     .LoadFileBytesAsync(context.CancellationToken)
-                    .ConfigureAwait(false);
-
-                string destinationPath = _assetNamer(_dataDirectory, context.Record);
-                await File.WriteAllBytesAsync(destinationPath, fileContents.Value.ToArray(), context.CancellationToken)
                     .ConfigureAwait(false);
 
                 context.Record.Aggregate.Copied(destinationPath, fileContents.Value.ToArray(), DateTimeOffset.UtcNow);
