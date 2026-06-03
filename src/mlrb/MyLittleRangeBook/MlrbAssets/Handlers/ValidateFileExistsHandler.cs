@@ -1,6 +1,6 @@
 ﻿using MyLittleRangeBook.IO;
 
-namespace MyLittleRangeBook.RangeEventAssets.Handlers
+namespace MyLittleRangeBook.MlrbAssets.Handlers
 {
     /// <summary>
     ///     Handler that validates that a MlrbAssetFile exists on disk.

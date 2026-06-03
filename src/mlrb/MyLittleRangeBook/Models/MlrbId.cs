@@ -184,31 +184,32 @@ namespace MyLittleRangeBook.Models
         /// <returns></returns>
         public static MlrbId FromFile(FileInfo fileInfo)
         {
-            if (!fileInfo.Exists)
-            {
-                throw new FileNotFoundException("File does not exist on disk: " + fileInfo.FullName);
-            }
-
-            Ulid ulid;
-            var dto = new DateTimeOffset(fileInfo.LastWriteTimeUtc);
-            try
-            {
-                // [TO20260521] This is a bit of a hack to get the file bytes synchronously.  We need the file bytes to create the hash, and we don't want to change the method signature to be async.
-                Result<ReadOnlyMemory<byte>> fileContents = fileInfo.LoadFileBytesAsync().GetAwaiter().GetResult();
-                bool useFileContents = fileContents.IsSuccess && fileContents.Value.Length > 0;
-
-                ulid = useFileContents
-                    ? Ulid.New(dto, fileContents.Value.ToArray())
-                    : CreateFileUlid(fileInfo.FullName, dto);
-            }
-            catch (Exception ex)
-            {
-                Log.Logger.Error(ex, "Using the file name and last write time to generate the ID for {filename}.",
-                    fileInfo.FullName);
-                ulid = CreateFileUlid(fileInfo.FullName, dto);
-            }
-
-            return new MlrbId(ulid);
+            return new MlrbId();
+            // [TO20260602] This was an experiment to try and relate/influence MrlbId with the contents of the file.
+            // Ulid ulid;
+            // try
+            // {
+            //     if (fileInfo.Exists)
+            //     {
+            //         var dto = new DateTimeOffset(fileInfo.LastWriteTimeUtc);
+            //         // [TO20260521] This is a bit of a hack to get the file bytes synchronously.  We need the file bytes to create the hash, and we don't want to change the method signature to be async.
+            //         Result<ReadOnlyMemory<byte>> fileContents = fileInfo.LoadFileBytesAsync().GetAwaiter().GetResult();
+            //         bool useFileContents = fileContents is { IsSuccess: true, Value.Length: > 0 };
+            //         ulid = useFileContents
+            //             ? Ulid.New(dto, fileContents.Value.ToArray())
+            //             : Ulid.New(DateTimeOffset.UtcNow, DefaultOptions);
+            //     }
+            //     else
+            //     {
+            //         ulid = Ulid.New(DateTimeOffset.UtcNow, DefaultOptions);
+            //     }
+            // }
+            // catch (Exception)
+            // {
+            //     ulid = Ulid.New(DateTimeOffset.UtcNow, DefaultOptions);
+            // }
+            //
+            // return new MlrbId(ulid);
         }
 
         /// <summary>

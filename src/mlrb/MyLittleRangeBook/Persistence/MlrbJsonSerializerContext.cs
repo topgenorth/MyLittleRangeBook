@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using MyLittleRangeBook.Models;
 using static MyLittleRangeBook.Firearms.FirearmAggregate;
-using static MyLittleRangeBook.RangeEventAssets.MlrbAssetAggregate;
+using static MyLittleRangeBook.MlrbAssets.MlrbAssetAggregate;
 
 namespace MyLittleRangeBook.Persistence
 {

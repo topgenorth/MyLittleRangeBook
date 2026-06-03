@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.RangeEventAssets
+﻿namespace MyLittleRangeBook.MlrbAssets
 {
     /// <summary>
     ///     Defines functionality for projecting domain events related to file imports into a storage system.

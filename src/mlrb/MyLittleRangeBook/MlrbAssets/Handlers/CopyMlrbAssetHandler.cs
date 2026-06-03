@@ -1,9 +1,8 @@
-﻿using System.Security.Cryptography;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.IO;
 
-namespace MyLittleRangeBook.RangeEventAssets.Handlers
+namespace MyLittleRangeBook.MlrbAssets.Handlers
 {
     /// <summary>
     ///     Handler that copies a MlrbAssetFile to the MLRB asset directory.
