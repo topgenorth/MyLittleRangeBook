@@ -128,6 +128,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
 
             services.TryAddSingleton(configuration);
+
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
 
             services.TryAddKeyedScoped<ISimpleRangeEventService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
@@ -137,6 +138,8 @@ namespace MyLittleRangeBook.Persistence.Sqlite
 
             services.AddKeyedScoped<IFirearmsService, FirearmsService>(DI_KEYS_SQLITE);
             services.AddKeyedScoped<ICartridgesService, CartridgesService>(DI_KEYS_SQLITE);
+
+
 
             return services;
         }

@@ -37,6 +37,11 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         readonly string _connectionString;
         readonly ILogger _logger;
 
+        public SqliteHelper(ILogger logger, IConfiguration configuration) :
+            this(logger, configuration.GetSqliteConnectionString())
+        {
+        }
+
         public SqliteHelper(ILogger logger, string connectionString)
         {
             _logger = logger;
@@ -51,21 +56,25 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             {
                 var builder = new SqliteConnectionStringBuilder(connectionString)
                 {
-                    Mode = SqliteOpenMode.ReadWriteCreate
+                    Mode = SqliteOpenMode.ReadWriteCreate, ForeignKeys = true
                 };
                 _connectionString = builder.ConnectionString;
                 DatabaseFile = builder.DataSource;
             }
         }
 
-        public SqliteHelper(ILogger logger, IConfiguration configuration) :
-            this(logger, configuration.GetSqliteConnectionString())
-        {
-        }
-
         async Task<IDbConnection> IDatabaseHelper.GetDatabaseConnectionAsync(CancellationToken cancellationToken)
         {
-            return await GetDatabaseConnectionAsync(cancellationToken);
+            return await GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<ScopedSqliteConnection> GetScopedDatabaseConnectionAsync(CancellationToken cancellationToken =
+            default)
+        {
+            SqliteConnection conn = await GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+            var scoped = new ScopedSqliteConnection(conn);
+
+            return scoped;
         }
 
 
@@ -80,12 +89,14 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// </remarks>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         /// <returns>The opened connection.</returns>
+        [Obsolete("Maybe use the GetScopedDatabaseConnectionAsync?")]
         public async Task<SqliteConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
         {
             var connection = new SqliteConnection(_connectionString);
             connection.AddFunctions();
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await connection.ExecuteAsync("PRAGMA foreign_keys = ON;").ConfigureAwait(false);
+
+            await InitializeConnectionAsync(connection).ConfigureAwait(false);
 
             return connection;
         }
@@ -177,6 +188,29 @@ namespace MyLittleRangeBook.Persistence.Sqlite
 
                 return Result.Fail(err);
             }
+        }
+
+        public async Task OptimizeAsync(SqliteConnection connection)
+        {
+            ArgumentNullException.ThrowIfNull(connection);
+
+            await connection.ExecuteAsync("PRAGMA optimize;");
+        }
+
+        public async Task<IReadOnlyList<string>> IntegrityCheckAsync(SqliteConnection connection)
+        {
+            ArgumentNullException.ThrowIfNull(connection);
+
+            IEnumerable<string> rows = await connection.QueryAsync<string>("PRAGMA integrity_check;");
+
+            return rows.AsList();
+        }
+
+        public async Task CheckpointWalAsync(SqliteConnection connection)
+        {
+            ArgumentNullException.ThrowIfNull(connection);
+
+            await connection.ExecuteAsync("PRAGMA wal_checkpoint(TRUNCATE);");
         }
 
         public async Task<Result<(string id, long rowId)>> WriteFileToTableAsync(SqliteConnection conn,
@@ -348,6 +382,14 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         public override string ToString()
         {
             return _connectionString;
+        }
+
+        static async Task InitializeConnectionAsync(SqliteConnection connection)
+        {
+            await connection.ExecuteAsync("PRAGMA journal_mode = WAL;");
+            await connection.ExecuteAsync("PRAGMA synchronous = NORMAL;");
+            await connection.ExecuteAsync("PRAGMA busy_timeout = 5000;");
+            await connection.ExecuteAsync("PRAGMA optimize = 0x10002;");
         }
     }
 }

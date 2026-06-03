@@ -2,7 +2,7 @@
 
 namespace MyLittleRangeBook.Persistence.Sqlite
 {
-    public interface ISqliteHelper
+    public interface ISqliteHelper : ISqliteDatabaseInitializer
     {
         /// <summary>
         ///     Gets the path to the SQLite database file.
@@ -20,19 +20,15 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         /// <returns>The opened connection.</returns>
         Task<SqliteConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default);
-
         /// <summary>
-        ///     Applies the required database migrations to the SQLite database using DbUp.
+        ///     Creates a new <see cref="SqliteConnection" /> and opens it for usage.
         /// </summary>
-        /// <param name="cancellationToken">
-        ///     A token to observe while waiting for the task to complete, allowing the operation to be canceled.
-        /// </param>
-        /// <returns>
-        ///     A result indicating the success or failure of applying the migrations. The result contains a boolean,
-        ///     where true indicates the migrations were successfully applied, and false indicates a failure.
-        /// </returns>
-        Task<Result> ApplyDbupMigrationsAsync(CancellationToken cancellationToken = default);
-
+        /// <remarks>
+        ///     Ensure that the connection is disposed of after use.
+        /// </remarks>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+        /// <returns>The opened connection.</returns>
+        Task<ScopedSqliteConnection> GetScopedDatabaseConnectionAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Runs a SQL script on the database.
@@ -42,5 +38,40 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <returns></returns>
         Task<Result> RunSqlOnDatabaseAsync(string sqlFile, CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Optimizes the SQLite database for improved performance by running the "PRAGMA optimize;" command.
+        /// </summary>
+        /// <param name="connection">
+        /// An open <see cref="SqliteConnection" /> instance to the database on which the optimization will be applied.
+        /// Ensure the connection is valid and properly initialized before invoking this method.
+        /// </param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task OptimizeAsync(SqliteConnection connection);
+
+        /// <summary>
+        /// Performs an integrity check on the SQLite database using the PRAGMA integrity_check command.
+        /// </summary>
+        /// <param name="connection">The open SQLite connection used to perform the integrity check.</param>
+        /// <returns>
+        /// A read-only list of strings containing the results of the integrity check.
+        /// If the database is consistent, the result will contain only "ok".
+        /// </returns>
+        Task<IReadOnlyList<string>> IntegrityCheckAsync(SqliteConnection connection);
+
+        /// <summary>
+        /// Performs a write-ahead logging (WAL) checkpoint operation on the SQLite database.
+        /// </summary>
+        /// <remarks>
+        /// This method issues a checkpoint command to the SQLite database, ensuring that all
+        /// changes in the WAL file are merged into the main database file. The WAL file is truncated as part of
+        /// the operation to reclaim disk space.
+        /// </remarks>
+        /// <param name="connection">
+        /// The active <see cref="SqliteConnection" /> instance to execute the checkpoint command on.
+        /// </param>
+        /// <returns>
+        /// A task representing the asynchronous operation.
+        /// </returns>
+        Task CheckpointWalAsync(SqliteConnection connection);
     }
 }
