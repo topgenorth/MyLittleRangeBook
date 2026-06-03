@@ -1,6 +1,6 @@
 ﻿using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.RangeEventAssets
+namespace MyLittleRangeBook.MlrbAssets
 {
     /// <summary>
     ///     This delegate is used to create the name of a file based asset that will be copied over to the range event

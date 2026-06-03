@@ -1,7 +1,4 @@
-﻿using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Persistence;
-
-namespace MyLittleRangeBook.RangeEventAssets
+﻿namespace MyLittleRangeBook.MlrbAssets
 {
     class AssociateMlrbAssetToRangeEventProjector : IRangeAssetProjector
     {

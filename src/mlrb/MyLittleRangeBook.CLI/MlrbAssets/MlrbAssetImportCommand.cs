@@ -2,7 +2,6 @@
 using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.RangeEventAssets;
 
 namespace MyLittleRangeBook.MlrbAssets
 {

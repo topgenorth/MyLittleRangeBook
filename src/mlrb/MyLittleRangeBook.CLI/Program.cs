@@ -11,7 +11,6 @@ using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Persistence.Sqlite;
-using MyLittleRangeBook.RangeEventAssets;
 using MyLittleRangeBook.RangeEvents;
 using Serilog.Exceptions;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;

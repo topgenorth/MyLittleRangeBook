@@ -1,7 +1,6 @@
-﻿using MyLittleRangeBook.MlrbAssets;
-using MyLittleRangeBook.Models;
+﻿using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.RangeEventAssets
+namespace MyLittleRangeBook.MlrbAssets
 {
     /// <summary>
     /// Represents the aggregate for managing and tracking the lifecycle of assets in My Little Range Book.

@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Persistence.Sqlite;
-using MyLittleRangeBook.RangeEventAssets;
-using MyLittleRangeBook.RangeEventAssets.Handlers;
-using static MyLittleRangeBook.RangeEventAssets.MlrbAssetAggregate;
+using MyLittleRangeBook.MlrbAssets;
+using MyLittleRangeBook.MlrbAssets.Handlers;
+using static MyLittleRangeBook.MlrbAssets.MlrbAssetAggregate;
 
 namespace MyLittleRangeBook
 {
