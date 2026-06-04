@@ -50,7 +50,7 @@ namespace MyLittleRangeBook.Sqlite
             var connectionString = helper.ToString();
 
             connectionString.ShouldNotBeNullOrWhiteSpace();
-            connectionString.ShouldBe("Data Source=:memory:;Mode=ReadWriteCreate");
+            connectionString.ShouldBe("Data Source=:memory:;Mode=ReadWriteCreate;Foreign Keys=True");
         }
 
         [Fact]
