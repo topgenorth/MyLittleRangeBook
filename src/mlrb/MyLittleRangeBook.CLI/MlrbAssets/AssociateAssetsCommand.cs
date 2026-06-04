@@ -1,7 +1,10 @@
-﻿using ConsoleAppFramework;
+﻿using System.Data.Common;
+using ConsoleAppFramework;
+using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
@@ -10,12 +13,22 @@ namespace MyLittleRangeBook.MlrbAssets
     /// <summary>
     ///     This command will associate a firearm and/or a simple range event with an asset.
     /// </summary>
-    [RegisterCommands("assets"), UsedImplicitly]
+    [RegisterCommands("assets")]
+    [UsedImplicitly]
     public class AssociateAssetsCommand : MlrbSqliteCommandBase
     {
-        public AssociateAssetsCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper) : base(logger,
+        readonly IMlrbAssetAggregateRepository _assetAggregateRepository;
+        readonly IFirearmAggregateRepository _firearmAggregateRepository;
+
+        public AssociateAssetsCommand(ILogger logger,
+            ICliDisplay display,
+            ISqliteHelper sqliteHelper,
+            IFirearmAggregateRepository firearmAggregateRepository,
+            IMlrbAssetAggregateRepository assetAggregateRepository) : base(logger,
             display, sqliteHelper)
         {
+            _firearmAggregateRepository = firearmAggregateRepository;
+            _assetAggregateRepository = assetAggregateRepository;
         }
 
         /// <summary>
@@ -45,6 +58,7 @@ namespace MyLittleRangeBook.MlrbAssets
                 .ConfigureAwait(false);
 
             CliDisplay.PrintSuccess("Finished with associations.");
+
             return ReturnCodes.SUCCESS;
         }
 
@@ -58,22 +72,52 @@ namespace MyLittleRangeBook.MlrbAssets
                 return;
             }
 
+            await using DbTransaction trans = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
             try
             {
+                Result<FirearmAggregate> f = await _firearmAggregateRepository.GetAsync(firearmId, cancellationToken)
+                    .ConfigureAwait(false);
+                 if (f.IsFailed)
+                {
+                    Logger.Warning("The firearm {firearmId} does not exist. Nothing to do.", firearmId);
+
+                    return;
+                }
+                Result<MlrbAssetAggregate?> a = await _assetAggregateRepository.GetAsync(assetId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (a.IsFailed ||  a.Value is null)
+                {
+                    Logger.Warning("The asset {assetId} does not exist.  Nothing to do.", assetId);
+
+                    return;
+                }
+
+
                 var p = new { FirearmId = firearmId, AssetId = assetId };
-                var ctx = new DapperCommandContext(conn, null, cancellationToken) { Arguments = p };
+                var ctx = new DapperCommandContext(conn, null, cancellationToken, p);
                 long? l = await Commands.AssociateWithFirearm.ExecuteScalarAsync<long?>(ctx).ConfigureAwait(false);
                 if (l is null)
                 {
                     Logger.Warning("Failed to associate the firearm {firearmId} with the asset {assetId}.", firearmId,
                         assetId);
                 }
+
+                a.Value.AssociateWithFirearm(firearmId);
+                f.Value.AssociatedWithAsset(assetId);
+
+                await _firearmAggregateRepository.SaveAsync(f.Value, cancellationToken).ConfigureAwait(false);
+                await _assetAggregateRepository.SaveAsync(a.Value, cancellationToken).ConfigureAwait(false);
+
+                await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception e)
             {
                 CliDisplay.PrintFailure("Failed to associate firearm. " + e.Message);
                 Logger.Error(e, "Failed to associate the firearm {firearmId} with the asset {assetId}.", firearmId,
                     assetId);
+                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -82,21 +126,35 @@ namespace MyLittleRangeBook.MlrbAssets
             string? simpleRangeEventId,
             CancellationToken cancellationToken)
         {
+            await using var trans = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 if (simpleRangeEventId is null)
                 {
                     return;
                 }
+                Result<MlrbAssetAggregate?> a = await _assetAggregateRepository.GetAsync(assetId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (a.IsFailed ||  a.Value is null)
+                {
+                    Logger.Warning("The asset {assetId} does not exist.  Nothing to do.", assetId);
+
+                    return;
+                }
+
+                // TODO [TO20260604] We don't have an aggregate for a simple range event.
+
 
                 var p = new { SimpleRangeEventId = simpleRangeEventId, AssetId = assetId };
-                var ctx = new DapperCommandContext(conn, null, cancellationToken) { Arguments = p };
+                var ctx = new DapperCommandContext(conn, null, cancellationToken, p);
                 long? l = await Commands.AssociateWithRangeEvent.ExecuteScalarAsync<long?>(ctx).ConfigureAwait(false);
                 if (l is null)
                 {
                     Logger.Warning("Failed to associate the firearm {simpleRangeEventId} with the asset {assetId}.",
                         simpleRangeEventId, assetId);
                 }
+                await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -104,6 +162,7 @@ namespace MyLittleRangeBook.MlrbAssets
                 Logger.Error(e,
                     "Failed to associate the simple range event {simpleRangeEventId} with the asset {assetId}.",
                     simpleRangeEventId, assetId);
+                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
