@@ -21,7 +21,7 @@ namespace MyLittleRangeBook
         ///     This method is only active in debug builds and is primarily intended for use during testing
         ///     to prevent the console window from closing too quickly after program execution.
         /// </summary>
-        protected void PressAnyKeyToContinue()
+        protected void PressEnterToContinue()
         {
 #if DEBUG
             // [TO20260507] Need this when testing in Rider.  Without it the console window closes too fast.

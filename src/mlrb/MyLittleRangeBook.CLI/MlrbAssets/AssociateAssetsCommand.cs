@@ -48,22 +48,45 @@ namespace MyLittleRangeBook.MlrbAssets
             CancellationToken cancellationToken = default)
         {
             CliDisplay.PrintCommandHeader("Associate asset");
+
+            Result<MlrbAssetAggregate?> a = await _assetAggregateRepository.GetAsync(assetId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (a.IsFailed || a.Value is null)
+            {
+                if (a.Errors.Any())
+                {
+                    Logger.Error("Could not load Asset {assetId}: {reason}", assetId, a.Errors[0].Message);
+                }
+                else
+                {
+                    Logger.Warning("Could not load Asset {assetId}.", assetId);
+                }
+
+                CliDisplay.PrintFailure($"Failed to load asset {assetId}.");
+
+                PressEnterToContinue();
+                return ReturnCodes.FAILURE;
+            }
+
             await using ScopedSqliteConnection scope = await SqliteHelper
                 .GetScopedDatabaseConnectionAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            await AssociateFirearmAsync(scope.Connection, assetId, firearmId, cancellationToken)
+            await AssociateFirearmAsync(scope.Connection, a.Value, firearmId, cancellationToken)
                 .ConfigureAwait(false);
-            await AssociateSimpleRangeEventAsync(scope.Connection, assetId, simpleRangeEventId, cancellationToken)
+            await AssociateSimpleRangeEventAsync(scope.Connection, a.Value, simpleRangeEventId, cancellationToken)
                 .ConfigureAwait(false);
 
             CliDisplay.PrintSuccess("Finished with associations.");
+
+            PressEnterToContinue();
 
             return ReturnCodes.SUCCESS;
         }
 
         async Task AssociateFirearmAsync(SqliteConnection conn,
-            string assetId,
+            MlrbAssetAggregate asset,
             string? firearmId,
             CancellationToken cancellationToken)
         {
@@ -72,96 +95,84 @@ namespace MyLittleRangeBook.MlrbAssets
                 return;
             }
 
-            await using DbTransaction trans = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
                 Result<FirearmAggregate> f = await _firearmAggregateRepository.GetAsync(firearmId, cancellationToken)
                     .ConfigureAwait(false);
-                 if (f.IsFailed)
+                if (f.IsFailed)
                 {
-                    Logger.Warning("The firearm {firearmId} does not exist. Nothing to do.", firearmId);
-
-                    return;
-                }
-                Result<MlrbAssetAggregate?> a = await _assetAggregateRepository.GetAsync(assetId, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (a.IsFailed ||  a.Value is null)
-                {
-                    Logger.Warning("The asset {assetId} does not exist.  Nothing to do.", assetId);
+                    Logger.Warning(
+                        "Failed to create the association between {assetId}:{asset} and firearm {firearmId}, {reason}.",
+                        asset.Id, asset.DestinationPath, firearmId, f.Errors[0].Message);
 
                     return;
                 }
 
-
-                var p = new { FirearmId = firearmId, AssetId = assetId };
+                var p = new { FirearmId = firearmId, AssetId = asset.Id.ToString() };
                 var ctx = new DapperCommandContext(conn, null, cancellationToken, p);
-                long? l = await Commands.AssociateWithFirearm.ExecuteScalarAsync<long?>(ctx).ConfigureAwait(false);
-                if (l is null)
-                {
-                    Logger.Warning("Failed to associate the firearm {firearmId} with the asset {assetId}.", firearmId,
-                        assetId);
-                }
+                await Commands.AssociateWithFirearm.ExecuteScalarAsync<long?>(ctx).ConfigureAwait(false);
 
-                a.Value.AssociateWithFirearm(firearmId);
-                f.Value.AssociatedWithAsset(assetId);
+                DateTimeOffset dto = DateTimeOffset.UtcNow;
+                asset.AssociatedWithFirearm(firearmId, dto);
+                f.Value.AssociatedWithAsset(asset.Id, dto);
 
                 await _firearmAggregateRepository.SaveAsync(f.Value, cancellationToken).ConfigureAwait(false);
-                await _assetAggregateRepository.SaveAsync(a.Value, cancellationToken).ConfigureAwait(false);
+                await _assetAggregateRepository.SaveAsync(asset, cancellationToken).ConfigureAwait(false);
 
-                await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
+                CliDisplay.PrintSuccess(
+                    $"Associated firearm {firearmId}:{f.Value.Name} with asset {asset.Id}:{asset.DestinationPath}");
+                Logger.Information("Associated firearm {firearmId} with asset {assetId}", firearmId, asset.Id);
             }
             catch (Exception e)
             {
                 CliDisplay.PrintFailure("Failed to associate firearm. " + e.Message);
                 Logger.Error(e, "Failed to associate the firearm {firearmId} with the asset {assetId}.", firearmId,
-                    assetId);
-                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                    asset.ToString());
             }
         }
 
         async Task AssociateSimpleRangeEventAsync(SqliteConnection conn,
-            string assetId,
+            MlrbAssetAggregate asset,
             string? simpleRangeEventId,
             CancellationToken cancellationToken)
         {
-            await using var trans = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+            Logger.Warning("AssociateSimpleRangeEventAsync is not implemented.");
+
+            return;
+
+            await using DbTransaction trans = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 if (simpleRangeEventId is null)
                 {
                     return;
                 }
-                Result<MlrbAssetAggregate?> a = await _assetAggregateRepository.GetAsync(assetId, cancellationToken)
-                    .ConfigureAwait(false);
 
-                if (a.IsFailed ||  a.Value is null)
-                {
-                    Logger.Warning("The asset {assetId} does not exist.  Nothing to do.", assetId);
-
-                    return;
-                }
 
                 // TODO [TO20260604] We don't have an aggregate for a simple range event.
 
 
-                var p = new { SimpleRangeEventId = simpleRangeEventId, AssetId = assetId };
+                var p = new { SimpleRangeEventId = simpleRangeEventId, AssetId = asset.Id.ToString() };
                 var ctx = new DapperCommandContext(conn, null, cancellationToken, p);
                 long? l = await Commands.AssociateWithRangeEvent.ExecuteScalarAsync<long?>(ctx).ConfigureAwait(false);
                 if (l is null)
                 {
                     Logger.Warning("Failed to associate the firearm {simpleRangeEventId} with the asset {assetId}.",
-                        simpleRangeEventId, assetId);
+                        simpleRangeEventId, asset.Id);
                 }
+
                 await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
+                CliDisplay.PrintSuccess($"Associated simple range event {simpleRangeEventId} with asset {asset.Id}.");
+                Logger.Information("Associated simple range event {simpleRangeEventId} with asset {assetId}.",
+                    simpleRangeEventId, asset.Id);
             }
             catch (Exception e)
             {
                 CliDisplay.PrintFailure("Failed to associate simple range event. " + e.Message);
                 Logger.Error(e,
                     "Failed to associate the simple range event {simpleRangeEventId} with the asset {assetId}.",
-                    simpleRangeEventId, assetId);
+                    simpleRangeEventId, asset.Id);
                 await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
             }
         }

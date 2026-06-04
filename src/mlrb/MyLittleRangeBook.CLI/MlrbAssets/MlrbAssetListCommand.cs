@@ -39,7 +39,7 @@ namespace MyLittleRangeBook.MlrbAssets
                 returnCode = ReturnCodes.FAILURE;
             }
 
-            PressAnyKeyToContinue();
+            PressEnterToContinue();
 
             return returnCode;
         }

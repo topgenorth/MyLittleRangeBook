@@ -121,7 +121,7 @@ namespace MyLittleRangeBook
             CliDisplay.PrintSuccess($"Imported {importCount}/{totalCount} firearms from range events.");
 
             ExitFunction:
-            PressAnyKeyToContinue();
+            PressEnterToContinue();
 
             return returnCode;
         }

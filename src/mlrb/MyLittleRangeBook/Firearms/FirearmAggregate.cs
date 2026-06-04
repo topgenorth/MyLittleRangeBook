@@ -10,7 +10,7 @@ namespace MyLittleRangeBook.Firearms
 
         FirearmAggregate()
         {
-
+            Name = "";
         }
 
         public override string DefaultStreamType => STREAM_TYPE;
@@ -61,8 +61,12 @@ namespace MyLittleRangeBook.Firearms
 
         public override void Apply(IDomainEvent e)
         {
+            Modified = e.OccurredUtc;
             switch (e)
             {
+                case AssetAssociatedWithFirearm x:
+                    // [TO20260604] NOOP
+                    break;
                 case FirearmBarrelChanged x:
                     StringBuilder sbBarrelChange = new StringBuilder("Barrel changed from ")
                         .Append(x.OldBarrel)
@@ -75,7 +79,6 @@ namespace MyLittleRangeBook.Firearms
                     break;
                 case FirearmActive x:
                     IsActive = true;
-
                     break;
                 case FirearmCleaned x:
                     AppendToNotes($"Cleaned on {x.OccurredUtc.ToString()}.");
@@ -85,6 +88,7 @@ namespace MyLittleRangeBook.Firearms
                     Id = x.StreamId;
                     Name = x.Name;
                     RoundsFired = x.TotalRoundsFired;
+                    Created = x.OccurredUtc;
                     if (x.Notes is not null)
                     {
                         Notes = x.Notes;
@@ -151,7 +155,10 @@ namespace MyLittleRangeBook.Firearms
                 Notes = newNotes.ToString();
             }
         }
-
+        public void AssociatedWithAsset(MlrbId assetId, DateTimeOffset dto)
+        {
+            Raise(new AssetAssociatedWithFirearm(Id, assetId, dto));
+        }
         public void Cleaned(DateTimeOffset utcNow)
         {
             Raise(new FirearmCleaned(Id, utcNow));
@@ -256,5 +263,7 @@ namespace MyLittleRangeBook.Firearms
         [EventType("asset-associated-with-firearm")]
         public record struct AssetAssociatedWithFirearm(MlrbId StreamId, MlrbId AssetId, DateTimeOffset OccurredUtc) : IDomainEvent;
         #endregion
+
+
     }
 }

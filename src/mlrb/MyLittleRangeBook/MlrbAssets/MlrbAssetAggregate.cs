@@ -3,13 +3,15 @@
 namespace MyLittleRangeBook.MlrbAssets
 {
     /// <summary>
-    /// Represents the aggregate for managing and tracking the lifecycle of assets in My Little Range Book.
+    ///     Represents the aggregate for managing and tracking the lifecycle of assets in My Little Range Book.
     /// </summary>
     /// <remarks>
-    /// <para>This class provides methods to handle asset operations such as creation, copying, fingerprinting,
-    /// parsing, and associating with range events. It also manages the internal state of the asset and
-    /// ensures the integrity of domain events related to asset operations.</para>
-    /// <para>The stream ID is based on the name of the original source file.</para>
+    ///     <para>
+    ///         This class provides methods to handle asset operations such as creation, copying, fingerprinting,
+    ///         parsing, and associating with range events. It also manages the internal state of the asset and
+    ///         ensures the integrity of domain events related to asset operations.
+    ///     </para>
+    ///     <para>The stream ID is based on the name of the original source file.</para>
     /// </remarks>
     public class MlrbAssetAggregate : Aggregate
     {
@@ -22,6 +24,7 @@ namespace MyLittleRangeBook.MlrbAssets
         public override string DefaultStreamType => DEFAULT_STREAM_TYPE_NAME;
 
         public DateTimeOffset Created { get; private set; }
+
         /// <summary>
         ///     The path to the asset after it was imported.
         /// </summary>
@@ -33,7 +36,7 @@ namespace MyLittleRangeBook.MlrbAssets
         public string? FailureReason { get; private set; }
 
         /// <summary>
-        /// The content of the file.
+        ///     The content of the file.
         /// </summary>
         public byte[] FileContents { get; private set; } = [];
 
@@ -89,72 +92,76 @@ namespace MyLittleRangeBook.MlrbAssets
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="MlrbAssetAggregate"/> by hydrating it with data from the given event stream.
+        ///     Creates a new instance of <see cref="MlrbAssetAggregate" /> by hydrating it with data from the given event stream.
         /// </summary>
         /// <param name="stream">The event stream used to hydrate the aggregate.</param>
-        /// <returns>A new instance of <see cref="MlrbAssetAggregate"/>.</returns>
+        /// <returns>A new instance of <see cref="MlrbAssetAggregate" />.</returns>
         public static MlrbAssetAggregate Create(EventStream stream)
         {
             var agg = new MlrbAssetAggregate();
             agg.Hydrate(stream);
+
             return agg;
         }
 
         public override void Apply(IDomainEvent e)
         {
+            Modified = e.OccurredUtc;
             switch (e)
             {
+                case MrlbAssetAssociatedWithFirearm x:
+                    // [TO20260604] Do we need this?
+                    break;
                 case MlrbAssetCreated x:
-                    Modified = x.OccurredUtc;
                     Id = x.StreamId;
                     Status = "Created";
                     Created = x.OccurredUtc;
+
                     break;
                 case MlrbAssetImportStarted x:
-                    Modified = x.OccurredUtc;
                     Id = x.StreamId;
                     SourceFile = x.SourcePath;
                     Status = "Started";
 
                     break;
                 case MlrbAssetFingerprintComputed x:
-                    Modified = x.OccurredUtc;
                     SHA256 = x.Sha256;
                     Status = "Fingerprinted";
+
                     break;
                 case MlrbAssetFileCopied x:
-                    Modified = x.OccurredUtc;
                     DestinationPath = x.DestinationPath;
                     Status = "FileCopied";
                     FileContents = x.FileContents;
+
                     break;
                 case MlrbAssetParsed x:
-                    Modified = x.OccurredUtc;
                     MimeType = x.MimeType;
                     Status = "Parsed";
+
                     break;
                 case MlrbAssetImportFailed x:
-                    Modified = x.OccurredUtc;
                     FailureReason = x.Reason;
                     Status = "Failed";
+
                     break;
 
                 case MlrbAssetStoredInDatabase x:
-                    // No state change for this event, but it could be used for auditing or other purposes.
-                    Modified = x.OccurredUtc;
-
+                    // [TO20260604] Do we need this?
                     break;
 
                 case MlrbAssetImportCompleted x:
                     Modified = x.OccurredUtc;
                     Status = "Completed";
+
                     break;
 
-                case MlrbAssetUpdatedFromFile x :
+                case MlrbAssetUpdatedFromFile x:
                     Modified = x.OccurredUtc;
-                    Status = $"Updated";
+                    Status = "Updated";
                     SourceFile = x.FileName;
                     FileContents = x.FileContents;
+
                     break;
                 default:
                     throw new InvalidOperationException($"Unknown event type `{e.GetType().Name}`.");
@@ -200,28 +207,23 @@ namespace MyLittleRangeBook.MlrbAssets
         {
             var row = new MlrbAssetRow(Id,
                 SourceFile,
-                this.DestinationPath,
-                this.MimeType,
-                this.FileContents,
-                this.Created,
-                this.Modified);
+                DestinationPath,
+                MimeType,
+                FileContents,
+                Created,
+                Modified);
 
             return row;
         }
 
-        /// <summary>
-        /// Updates the MlrbAssetAggregate with a new file's data.
-        /// </summary>
-        /// <param name="fromFile">The path of the source file being used for the update.</param>
-        /// <param name="fileContents">The binary content of the file used for the update.</param>
-        /// <param name="nowUtc">The timestamp representing when the update occurred, in UTC.</param>
-        public void Update(string fromFile, byte[] fileContents, DateTimeOffset nowUtc)
+        public void AssociatedWithFirearm(string firearmId, DateTimeOffset occurredUtc)
         {
-            Raise(new MlrbAssetUpdatedFromFile(Id, fromFile, fileContents, nowUtc));
+            Raise(new MrlbAssetAssociatedWithFirearm(Id, firearmId, occurredUtc));
         }
 
+
         /// <summary>
-        /// Raise when we create the asset.
+        ///     Raise when we create the asset.
         /// </summary>
         /// <param name="StreamId"></param>
         /// <param name="OccurredUtc"></param>
@@ -229,9 +231,8 @@ namespace MyLittleRangeBook.MlrbAssets
         public record struct MlrbAssetCreated(MlrbId StreamId, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
-
         /// <summary>
-        /// We started importing the asset (a file).
+        ///     We started importing the asset (a file).
         /// </summary>
         /// <param name="StreamId"></param>
         /// <param name="SourcePath"></param>
@@ -241,7 +242,11 @@ namespace MyLittleRangeBook.MlrbAssets
             : IDomainEvent;
 
         [EventType("mlrb-asset-copied")]
-        public record struct MlrbAssetFileCopied(MlrbId StreamId, string DestinationPath, byte[] FileContents, DateTimeOffset OccurredUtc)
+        public record struct MlrbAssetFileCopied(
+            MlrbId StreamId,
+            string DestinationPath,
+            byte[] FileContents,
+            DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
         [EventType("mlrb-asset-stored-in-database")]
@@ -261,6 +266,12 @@ namespace MyLittleRangeBook.MlrbAssets
             long FileSize,
             DateTimeOffset OccurredUtc)
             : IDomainEvent;
+
+        [EventType("mlrb-asset-associated-with-firearm")]
+        public record struct MrlbAssetAssociatedWithFirearm(
+            MlrbId StreamId,
+            MlrbId FirearmId,
+            DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("mlrb-asset-import-completed")]
         public record struct MlrbAssetImportCompleted(MlrbId StreamId, DateTimeOffset OccurredUtc) : IDomainEvent;

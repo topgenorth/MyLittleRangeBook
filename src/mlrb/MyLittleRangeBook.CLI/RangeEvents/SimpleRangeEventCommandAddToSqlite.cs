@@ -127,7 +127,7 @@ namespace MyLittleRangeBook.RangeEvents
 
             // [TO20260529] This makes me vomit; but works for now.
             ExitFunction:
-            PressAnyKeyToContinue();
+            PressEnterToContinue();
             return returnValue;
         }
 
