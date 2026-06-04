@@ -105,7 +105,7 @@ namespace MyLittleRangeBook.MlrbAssets
 
             ExitMethod:
 
-            PressAnyKeyToContinue();
+            PressEnterToContinue();
             return returnCode;
         }
     }

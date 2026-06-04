@@ -172,7 +172,7 @@ namespace MyLittleRangeBook.Database
             ExitMethod:
             if (returnCode != SUCCESS)
             {
-                PressAnyKeyToContinue();
+                PressEnterToContinue();
             }
 
             return returnCode;

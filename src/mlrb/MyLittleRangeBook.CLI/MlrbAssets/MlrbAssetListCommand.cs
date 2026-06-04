@@ -15,13 +15,15 @@ namespace MyLittleRangeBook.MlrbAssets
         {
         }
 
-        [Command("list")]
-        [UsedImplicitly]
+        [Command("list"), UsedImplicitly]
         public async Task<int> ListRangeAssets(CancellationToken ct = default)
         {
             CliDisplay.PrintCommandHeader("List range assets.");
             int returnCode = -1;
-            await using SqliteConnection conn = await SqliteHelper.GetDatabaseConnectionAsync(ct).ConfigureAwait(false);
+            await using ScopedSqliteConnection scope = await SqliteHelper.GetScopedDatabaseConnectionAsync(ct)
+                .ConfigureAwait(false);
+            await using SqliteConnection conn = scope.Connection;
+
             try
             {
                 var ctx = new DapperCommandContext(conn, CancellationToken: ct);
@@ -37,7 +39,7 @@ namespace MyLittleRangeBook.MlrbAssets
                 returnCode = ReturnCodes.FAILURE;
             }
 
-            PressAnyKeyToContinue();
+            PressEnterToContinue();
 
             return returnCode;
         }
