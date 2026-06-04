@@ -20,7 +20,7 @@
         {
             if (!string.IsNullOrWhiteSpace(_action))
             {
-                _logger.Information(_action!);
+                _logger.Debug(_action!);
             }
 
             _inner.Print(console);
