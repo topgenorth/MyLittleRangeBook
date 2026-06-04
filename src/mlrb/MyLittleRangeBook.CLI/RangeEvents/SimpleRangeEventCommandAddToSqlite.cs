@@ -11,8 +11,7 @@ namespace MyLittleRangeBook.RangeEvents
     /// <summary>
     ///     Allows us to create a new Range Event from the CLI, and optionally the FIT file that goes with it.
     /// </summary>
-    [RegisterCommands("rangeevent")]
-    [UsedImplicitly]
+    [RegisterCommands("rangeevent"), UsedImplicitly]
     public class SimpleRangeEventCommandAddToSqlite : MlrbCommandBase
     {
         readonly ISimpleRangeEventHelper _rangeEventHelper;

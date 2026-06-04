@@ -11,8 +11,7 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Database
 {
-    [RegisterCommands("db")]
-    [UsedImplicitly]
+    [RegisterCommands("db"), UsedImplicitly]
     public class DataFixupCommands : MlrbSqliteCommandBase
     {
         readonly string[] _tablesToUpdate = ["Cartridges", "Firearms"];
@@ -21,13 +20,29 @@ namespace MyLittleRangeBook.Database
         {
         }
 
+        [Command("maintenance"), UsedImplicitly]
+        public async Task<int> SqliteMainteance(CancellationToken cancellationToken)
+        {
+            CliDisplay.PrintCommandHeader("SQLite Maintenance.");
+            await using ScopedSqliteConnection scope = await SqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+
+            CliDisplay.Console.WriteLine("WAL checkpoint stuff");
+            await SqliteHelper.CheckpointWalAsync(scope.Connection).ConfigureAwait(false);
+
+            CliDisplay.Console.WriteLine("Integrity check stuff");
+            var x  = await SqliteHelper.IntegrityCheckAsync(scope.Connection).ConfigureAwait(false);
+            Logger.Information("Database integrity check passed with result: {result}", x);
+
+            CliDisplay.PrintSuccess("SQLite maintenance finished.");
+            return ReturnCodes.SUCCESS;
+        }
+
         /// <summary>
         ///     Migrates SimpleRangeEventRow IDs to ULID format in the database.
         /// </summary>
         /// <param name="ct">A token to monitor for cancellation requests.</param>
         /// <returns>An integer representing the success or failure of the operation.</returns>
-        [Command("fix-pk-ids")]
-        [UsedImplicitly]
+        [Command("fix-pk-ids"), UsedImplicitly]
         public async Task<int> MigrateNanoidsToUlids(CancellationToken ct)
         {
             await using SqliteConnection conn = await SqliteHelper.GetDatabaseConnectionAsync(ct).ConfigureAwait(false);

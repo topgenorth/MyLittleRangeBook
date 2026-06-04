@@ -39,8 +39,7 @@ namespace MyLittleRangeBook
         [UsedImplicitly]
         public async Task<int> PrintFirearmsToConsole(CancellationToken cancellationToken = default)
         {
-            AnsiConsole.Console.PrintAppInfo();
-            AnsiConsole.Console.WriteLine("Retrieving firearms...");
+            CliDisplay.PrintCommandHeader("List firearms");
 
             await using SqliteConnection conn = await _sqliteHelper
                 .GetDatabaseConnectionAsync(cancellationToken)
@@ -52,20 +51,20 @@ namespace MyLittleRangeBook
             if (firearms.IsFailed)
             {
                 Logger.Warning("Failed to retrieve firearms.");
-                AnsiConsole.Console.PrintProblem("Failed to retrieve firearms.");
+                CliDisplay.PrintFailure("Failed to retrieve list of firearms.");
 
                 return ReturnCodes.FAILURE;
             }
 
             if (!firearms.Value.Any())
             {
-                AnsiConsole.Console.PrintWarning("No firearms found.");
+                CliDisplay.PrintWarning("No firearms to list.");
 
                 return ReturnCodes.SUCCESS;
             }
 
             _printer.SetFirearms(firearms.Value).Print(AnsiConsole.Console);
-            AnsiConsole.Console.PrintSuccess("Firearms retrieved.");
+            CliDisplay.PrintSuccess("Firearms listed.");
 
             return ReturnCodes.SUCCESS;
         }

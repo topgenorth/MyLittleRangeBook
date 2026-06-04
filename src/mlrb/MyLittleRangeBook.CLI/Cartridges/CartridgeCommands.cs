@@ -30,15 +30,14 @@ namespace MyLittleRangeBook.Cartridges
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("list")]
-        [UsedImplicitly]
+        [Command("list"), UsedImplicitly]
         public async Task<int> PrintCartridgesToConsole(CancellationToken cancellationToken = default)
         {
-            AnsiConsole.Console.PrintAppInfo();
-            AnsiConsole.Console.WriteLine("Retrieving cartridges...");
-            await using SqliteConnection conn = await _sqliteHelper
-                .GetDatabaseConnectionAsync(cancellationToken)
-                .ConfigureAwait(false);
+            CliDisplay.PrintCommandHeader("List cartridges");
+
+            await using ScopedSqliteConnection scoped =
+                await _sqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+            await using SqliteConnection conn = scoped.Connection;
             Result<IEnumerable<Cartridge>> cartridges = await _cartridgesService
                 .GetCartridgesAsync(conn, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
@@ -74,8 +73,7 @@ namespace MyLittleRangeBook.Cartridges
         /// <param name="pistol">Suitable for pistols (true/false).</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("add")]
-        [UsedImplicitly]
+        [Command("add"), UsedImplicitly]
         public async Task<int> AddCartridge(string name,
             string? commonName = null,
             double diameterMetric = 0,
@@ -84,8 +82,7 @@ namespace MyLittleRangeBook.Cartridges
             bool pistol = false,
             CancellationToken cancellationToken = default)
         {
-            AnsiConsole.Console.PrintAppInfo();
-            AnsiConsole.Console.WriteLine("Adding cartridge...");
+            CliDisplay.PrintCommandHeader("Add cartridge");
             var cartridge = new Cartridge
             {
                 Name = name,
@@ -95,21 +92,21 @@ namespace MyLittleRangeBook.Cartridges
                 SuitableForRifle = rifle,
                 SuitableForPistol = pistol
             };
-            await using SqliteConnection conn = await _sqliteHelper
-                .GetDatabaseConnectionAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await using ScopedSqliteConnection scoped =
+                await _sqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+            await using SqliteConnection conn = scoped.Connection;
             Result<EntityId> result = await _cartridgesService
                 .UpsertAsync(conn, cartridge, cancellationToken)
                 .ConfigureAwait(false);
             if (result.IsFailed)
             {
                 Logger.Warning("Failed to add cartridge.");
-                AnsiConsole.Console.PrintProblem("Failed to add cartridge.");
+                CliDisplay.PrintFailure("Failed to add cartridge.");
 
                 return ReturnCodes.FAILURE;
             }
 
-            AnsiConsole.Console.PrintSuccess($"Cartridge '{name}' added with ID {result.Value.Id}.");
+            CliDisplay.PrintSuccess($"Cartridge '{name}' added with ID {result.Value.Id}.");
 
             return ReturnCodes.SUCCESS;
         }

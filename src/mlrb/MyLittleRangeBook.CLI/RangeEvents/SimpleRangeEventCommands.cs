@@ -72,9 +72,8 @@ namespace MyLittleRangeBook.RangeEvents
                 CliDisplay.PrintFailure("An error occurred while displaying the range event.");
             }
 
-#if DEBUG
             System.Console.ReadKey();
-#endif
+
             return returnCode;
         }
 
@@ -115,10 +114,7 @@ namespace MyLittleRangeBook.RangeEvents
 
             await _printer.Finish().ConfigureAwait(false);
 
-#if DEBUG
-            // [TO20260507] Need this when testing in Rider.  Without it the console window closes too fast.
             System.Console.ReadKey();
-#endif
 
             return SUCCESS;
         }
@@ -177,9 +173,8 @@ namespace MyLittleRangeBook.RangeEvents
                 CliDisplay.PrintFailure("An error occurred while deleting the range event.");
             }
 
-#if DEBUG
             System.Console.ReadKey();
-#endif
+
             return returnCode;
         }
     }
