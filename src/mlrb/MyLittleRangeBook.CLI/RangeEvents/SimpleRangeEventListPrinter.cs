@@ -33,14 +33,15 @@ namespace MyLittleRangeBook.RangeEvents
                 .BorderColor(Color.White)
                 .AddColumn("Id", col => col
                     .Alignment(Justify.Center)
-                    .Width(21)
+                    .Width(26)
                 )
                 .AddColumn("Date", col => col.Alignment(Justify.Center))
                 .AddColumn("Firearm", col => col.Alignment(Justify.Left))
                 .AddColumn("Range", col => col.Alignment(Justify.Center))
                 .AddColumn("Rounds", col => col.Alignment(Justify.Center))
                 .AddColumn("Ammo", col => col.Alignment(Justify.Left))
-                .AddColumn("Notes", col => col.Alignment(Justify.Left));
+                .AddColumn("Notes", col => col.Alignment(Justify.Left))
+                .AddColumn("RowId", col => col.Alignment(Justify.Center));
 
 
             return this;
@@ -60,7 +61,8 @@ namespace MyLittleRangeBook.RangeEvents
                 simpleRangeEvent.RangeName,
                 simpleRangeEvent.RoundsFired.ToString(),
                 simpleRangeEvent.AmmoDescription ?? string.Empty,
-                simpleRangeEvent.Notes ?? string.Empty
+                simpleRangeEvent.Notes ?? string.Empty,
+                simpleRangeEvent.RowId?.ToString() ?? string.Empty
             );
 
             return this;
