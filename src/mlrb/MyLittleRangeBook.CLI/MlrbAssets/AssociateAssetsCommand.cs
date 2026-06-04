@@ -26,6 +26,7 @@ namespace MyLittleRangeBook.MlrbAssets
         // ReSharper disable once AsyncMethodWithoutAwait
         public async Task<int> ImportRangeAssetFile(string assetId, string? firearmId = null, string? rangeEventId = null)
         {
+            CliDisplay.PrintCommandHeader("Associate asset");
             throw new NotImplementedException();
         }
     }

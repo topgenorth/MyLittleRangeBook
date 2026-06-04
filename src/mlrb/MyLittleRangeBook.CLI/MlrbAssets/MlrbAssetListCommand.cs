@@ -7,8 +7,7 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.MlrbAssets
 {
-    [RegisterCommands("assets")]
-    [UsedImplicitly]
+    [RegisterCommands("assets"), UsedImplicitly]
     public class MlrbAssetListCommand : MlrbSqliteCommandBase
     {
         public MlrbAssetListCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper) : base(logger,

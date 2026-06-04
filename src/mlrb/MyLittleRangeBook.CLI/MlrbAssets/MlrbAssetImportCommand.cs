@@ -8,8 +8,7 @@ namespace MyLittleRangeBook.MlrbAssets
     /// <summary>
     ///     The simplest way to import - copy the file into the asset directory.
     /// </summary>
-    [RegisterCommands("assets")]
-    [UsedImplicitly]
+    [RegisterCommands("assets"), UsedImplicitly]
     public class MlrbAssetImportCommand : MlrbCommandBase
     {
         readonly IMlrbAssetAggregateRepository _aggregateRepo;
@@ -32,8 +31,7 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <param name="file">The name of the file to import into the MLRB assets.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        [Command("import")]
-        [UsedImplicitly]
+        [Command("import"), UsedImplicitly]
         // ReSharper disable once AsyncMethodWithoutAwait
         public async Task<int> ImportRangeAssetFile(string file,
             CancellationToken ct = default)

@@ -26,7 +26,6 @@ namespace MyLittleRangeBook.Database
             CliDisplay.PrintCommandHeader("SQLite Maintenance.");
             await using ScopedSqliteConnection scope = await SqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
 
-
             CliDisplay.Console.WriteLine("WAL checkpoint stuff");
             await SqliteHelper.CheckpointWalAsync(scope.Connection).ConfigureAwait(false);
 
