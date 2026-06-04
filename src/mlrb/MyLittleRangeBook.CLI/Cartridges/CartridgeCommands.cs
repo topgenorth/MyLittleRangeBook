@@ -30,12 +30,10 @@ namespace MyLittleRangeBook.Cartridges
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("list")]
-        [UsedImplicitly]
+        [Command("list"), UsedImplicitly]
         public async Task<int> PrintCartridgesToConsole(CancellationToken cancellationToken = default)
         {
-            AnsiConsole.Console.PrintAppInfo();
-            AnsiConsole.Console.WriteLine("Retrieving cartridges...");
+            CliDisplay.PrintCommandHeader("List cartridges");
 
             await using ScopedSqliteConnection scoped =
                 await _sqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
@@ -75,8 +73,7 @@ namespace MyLittleRangeBook.Cartridges
         /// <param name="pistol">Suitable for pistols (true/false).</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("add")]
-        [UsedImplicitly]
+        [Command("add"), UsedImplicitly]
         public async Task<int> AddCartridge(string name,
             string? commonName = null,
             double diameterMetric = 0,
@@ -85,8 +82,7 @@ namespace MyLittleRangeBook.Cartridges
             bool pistol = false,
             CancellationToken cancellationToken = default)
         {
-            AnsiConsole.Console.PrintAppInfo();
-            AnsiConsole.Console.WriteLine("Adding cartridge...");
+            CliDisplay.PrintCommandHeader("Add cartridge");
             var cartridge = new Cartridge
             {
                 Name = name,
@@ -105,12 +101,12 @@ namespace MyLittleRangeBook.Cartridges
             if (result.IsFailed)
             {
                 Logger.Warning("Failed to add cartridge.");
-                AnsiConsole.Console.PrintProblem("Failed to add cartridge.");
+                CliDisplay.PrintFailure("Failed to add cartridge.");
 
                 return ReturnCodes.FAILURE;
             }
 
-            AnsiConsole.Console.PrintSuccess($"Cartridge '{name}' added with ID {result.Value.Id}.");
+            CliDisplay.PrintSuccess($"Cartridge '{name}' added with ID {result.Value.Id}.");
 
             return ReturnCodes.SUCCESS;
         }

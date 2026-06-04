@@ -25,12 +25,12 @@ namespace MyLittleRangeBook.Console
         {
             string v = AppVersion ?? GetType().Assembly.GetAssemblyVersionInformation();
 
-            var grid = new Grid();
+            var grid = new Grid().Expand();
             grid.AddColumn();
-            grid.AddRow($"[bold white]{Markup.Escape(AnsiConsoleExtensions.AppName)} {v}[/]");
+            grid.AddRow($"[bold deepskyblue3]{Markup.Escape(AnsiConsoleExtensions.AppName)} {v}[/]");
             if (!string.IsNullOrEmpty(Action))
             {
-                grid.AddRow($"[bold white]{Markup.Escape(Action)}[/]");
+                grid.AddRow($"[bold cadetblue_1]{Markup.Escape(Action)}[/]");
             }
 
 
