@@ -1,6 +1,7 @@
 ﻿using ConsoleAppFramework;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.MlrbAssets
@@ -11,6 +12,21 @@ namespace MyLittleRangeBook.MlrbAssets
     [RegisterCommands("assets"), UsedImplicitly]
     public class AssociateAssetsCommand: MlrbSqliteCommandBase
     {
+        static class Command
+        {
+            const string AssociateWithFirearmSql = """
+
+                                             """;
+
+            const string AssociateWithRangeEventSql = """
+                                                
+
+                                                """;
+
+            internal static readonly DapperCommand AssociateWithRangeEvent =
+                new DapperCommand(AssociateWithRangeEventSql);
+            internal static readonly DapperCommand AssociateWithFirearm = new DapperCommand(AssociateWithFirearmSql);
+        }
         public AssociateAssetsCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper) : base(logger, display, sqliteHelper)
         {
         }
