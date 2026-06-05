@@ -1,12 +1,13 @@
-﻿using System.Data.Common;
-using ConsoleAppFramework;
+﻿using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.RangeEvents;
 
 namespace MyLittleRangeBook.MlrbAssets
 {
@@ -19,16 +20,24 @@ namespace MyLittleRangeBook.MlrbAssets
     {
         readonly IMlrbAssetAggregateRepository _assetAggregateRepository;
         readonly IFirearmAggregateRepository _firearmAggregateRepository;
+        readonly ISimpleRangeEventRepository _simpleRangeEventRepository;
 
         public AssociateAssetsCommand(ILogger logger,
             ICliDisplay display,
             ISqliteHelper sqliteHelper,
             IFirearmAggregateRepository firearmAggregateRepository,
-            IMlrbAssetAggregateRepository assetAggregateRepository) : base(logger,
-            display, sqliteHelper)
+            IMlrbAssetAggregateRepository assetAggregateRepository,
+            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)]
+            ISimpleRangeEventRepository simpleRangeEventRepository) :
+            base(logger, display, sqliteHelper)
         {
+            ArgumentNullException.ThrowIfNull(firearmAggregateRepository);
+            ArgumentNullException.ThrowIfNull(assetAggregateRepository);
+            ArgumentNullException.ThrowIfNull(simpleRangeEventRepository);
+
             _firearmAggregateRepository = firearmAggregateRepository;
             _assetAggregateRepository = assetAggregateRepository;
+            _simpleRangeEventRepository = simpleRangeEventRepository;
         }
 
         /// <summary>
@@ -47,42 +56,56 @@ namespace MyLittleRangeBook.MlrbAssets
             string? simpleRangeEventId = null,
             CancellationToken cancellationToken = default)
         {
+            int returnCode = -1;
+
             CliDisplay.PrintCommandHeader("Associate asset");
 
-            Result<MlrbAssetAggregate?> a = await _assetAggregateRepository.GetAsync(assetId, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (a.IsFailed || a.Value is null)
+            try
             {
-                if (a.Errors.Any())
+                FluentResults.Result<MlrbAssetAggregate?> a = await _assetAggregateRepository
+                    .GetAsync(assetId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (a.IsFailed || a.Value is null)
                 {
-                    Logger.Error("Could not load Asset {assetId}: {reason}", assetId, a.Errors[0].Message);
-                }
-                else
-                {
-                    Logger.Warning("Could not load Asset {assetId}.", assetId);
+                    if (a.Errors.Any())
+                    {
+                        Logger.Error("Could not load Asset {assetId}: {reason}", assetId, a.Errors[0].Message);
+                    }
+                    else
+                    {
+                        Logger.Warning("Could not load Asset {assetId}.", assetId);
+                    }
+
+                    CliDisplay.PrintFailure($"Failed to load asset {assetId}.");
+
+                    PressEnterToContinue();
+
+                    return ReturnCodes.FAILURE;
                 }
 
-                CliDisplay.PrintFailure($"Failed to load asset {assetId}.");
+                await using ScopedSqliteConnection scope = await SqliteHelper
+                    .GetScopedDatabaseConnectionAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
-                PressEnterToContinue();
-                return ReturnCodes.FAILURE;
+                await AssociateFirearmAsync(scope.Connection, a.Value, firearmId, cancellationToken)
+                    .ConfigureAwait(false);
+                await AssociateSimpleRangeEventAsync(scope.Connection, a.Value, simpleRangeEventId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                CliDisplay.PrintSuccess("Finished with associations.");
+                returnCode = ReturnCodes.SUCCESS;
             }
-
-            await using ScopedSqliteConnection scope = await SqliteHelper
-                .GetScopedDatabaseConnectionAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            await AssociateFirearmAsync(scope.Connection, a.Value, firearmId, cancellationToken)
-                .ConfigureAwait(false);
-            await AssociateSimpleRangeEventAsync(scope.Connection, a.Value, simpleRangeEventId, cancellationToken)
-                .ConfigureAwait(false);
-
-            CliDisplay.PrintSuccess("Finished with associations.");
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to make associations.");
+                CliDisplay.PrintFailure("Failed to make associations. " + e.Message);
+                returnCode = ReturnCodes.FAILURE;
+            }
 
             PressEnterToContinue();
 
-            return ReturnCodes.SUCCESS;
+            return returnCode;
         }
 
         async Task AssociateFirearmAsync(SqliteConnection conn,
@@ -137,11 +160,7 @@ namespace MyLittleRangeBook.MlrbAssets
             string? simpleRangeEventId,
             CancellationToken cancellationToken)
         {
-            Logger.Warning("AssociateSimpleRangeEventAsync is not implemented.");
-
-            return;
-
-            await using DbTransaction trans = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+            // TODO [TO20260604] We don't have an aggregate for a simple range event.
             try
             {
                 if (simpleRangeEventId is null)
@@ -149,22 +168,29 @@ namespace MyLittleRangeBook.MlrbAssets
                     return;
                 }
 
+                Result<SimpleRangeEvent> r = await _simpleRangeEventRepository
+                    .GetAsync(simpleRangeEventId, cancellationToken)
+                    .ConfigureAwait(false);
+                if (r.IsFailed)
+                {
+                    Logger.Warning(
+                        "Failed to create the association between {assetId}:{asset} and firearm {firearmId}, {reason}.",
+                        asset.Id, asset.DestinationPath, simpleRangeEventId, r.Errors[0].Message);
 
-                // TODO [TO20260604] We don't have an aggregate for a simple range event.
-
+                    return;
+                }
 
                 var p = new { SimpleRangeEventId = simpleRangeEventId, AssetId = asset.Id.ToString() };
                 var ctx = new DapperCommandContext(conn, null, cancellationToken, p);
-                long? l = await Commands.AssociateWithRangeEvent.ExecuteScalarAsync<long?>(ctx).ConfigureAwait(false);
-                if (l is null)
-                {
-                    Logger.Warning("Failed to associate the firearm {simpleRangeEventId} with the asset {assetId}.",
-                        simpleRangeEventId, asset.Id);
-                }
+                await Commands.AssociateWithRangeEvent.ExecuteScalarAsync<long?>(ctx).ConfigureAwait(false);
 
-                await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
-                CliDisplay.PrintSuccess($"Associated simple range event {simpleRangeEventId} with asset {asset.Id}.");
-                Logger.Information("Associated simple range event {simpleRangeEventId} with asset {assetId}.",
+                DateTimeOffset utcNow = DateTimeOffset.UtcNow;
+                asset.AssociatedWithSimpleRangeEvent(simpleRangeEventId, utcNow);
+                await _assetAggregateRepository.SaveAsync(asset, cancellationToken).ConfigureAwait(false);
+
+                CliDisplay.PrintSuccess(
+                    $"Associated simple range event {simpleRangeEventId} with asset {asset.Id}:{asset.DestinationPath}");
+                Logger.Information("Associated simple range event {simpleRangeEventId} with {assetId}",
                     simpleRangeEventId, asset.Id);
             }
             catch (Exception e)
@@ -173,7 +199,6 @@ namespace MyLittleRangeBook.MlrbAssets
                 Logger.Error(e,
                     "Failed to associate the simple range event {simpleRangeEventId} with the asset {assetId}.",
                     simpleRangeEventId, asset.Id);
-                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 

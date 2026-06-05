@@ -15,6 +15,7 @@ namespace MyLittleRangeBook
         static readonly Type[] SupportedRangeAssetEvents = [
             typeof(MlrbAssetCreated),
             typeof(MrlbAssetAssociatedWithFirearm),
+            typeof(MlrbAssetAssociatedWithSimpleRangeEvent),
             typeof(MlrbAssetImportStarted),
             typeof(MlrbAssetImportFailed),
             typeof(MlrbAssetImportCompleted),
