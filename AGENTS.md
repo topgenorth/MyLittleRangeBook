@@ -21,7 +21,8 @@ This file gives actionable, repository-specific guidance for AI coding agents wo
   const string DeleteSql = "DELETE FROM SimpleRangeEvents WHERE Id = @Id;";
   cmd.Parameters.AddWithValue("@Id", evt.Id);
   ```
-- Custom SQL functions registered in SQLite provider: `nanoid()` and `utcnow()` (see `SqliteHelperExtensions.AddFunctions()`).
+- When making SQL connections use the `ScopedSqliteConnection` from `ISqliteHelper.GetScopedSqliteConnection`.
+- Custom SQL functions registered in SQLite provider: `nanoid()` (which will actually create a ULID as a string) and `utcnow()` (with will be a .NET `DateTimeOffset`) (see `SqliteHelperExtensions.AddFunctions()`).
 
 4) Build / test / debug workflows (must-do steps)
 - Always run `dotnet restore` from repository root before builds to avoid Dapper.AOT generator errors.
