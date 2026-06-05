@@ -112,6 +112,9 @@ namespace MyLittleRangeBook.MlrbAssets
                 case MrlbAssetAssociatedWithFirearm x:
                     // [TO20260604] Do we need this?
                     break;
+                case MlrbAssetAssociatedWithSimpleRangeEvent x:
+                    // [TO20260604] Do we need this?
+                    break;
                 case MlrbAssetCreated x:
                     Id = x.StreamId;
                     Status = "Created";
@@ -273,6 +276,12 @@ namespace MyLittleRangeBook.MlrbAssets
             MlrbId FirearmId,
             DateTimeOffset OccurredUtc) : IDomainEvent;
 
+        [EventType("mlrb-asset-associated-with-simple-range-event")]
+        public record struct MlrbAssetAssociatedWithSimpleRangeEvent(
+            MlrbId StreamId,
+            MlrbId SimpleRangEventId,
+            DateTimeOffset OccurredUtc) : IDomainEvent;
+
         [EventType("mlrb-asset-import-completed")]
         public record struct MlrbAssetImportCompleted(MlrbId StreamId, DateTimeOffset OccurredUtc) : IDomainEvent;
 
@@ -286,5 +295,10 @@ namespace MyLittleRangeBook.MlrbAssets
             string FileName,
             byte[] FileContents,
             DateTimeOffset OccurredUtc) : IDomainEvent;
+
+        public void AssociatedWithSimpleRangeEvent(MlrbId simpleRangeEventId, DateTimeOffset utcNow)
+        {
+            Raise(new MlrbAssetAssociatedWithSimpleRangeEvent(Id, simpleRangeEventId, utcNow));
+        }
     }
 }

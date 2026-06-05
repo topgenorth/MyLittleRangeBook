@@ -23,6 +23,7 @@ namespace MyLittleRangeBook.Persistence
 
     #region Domain Events: MrlbAsset
     [JsonSerializable(typeof(MrlbAssetAssociatedWithFirearm))]
+    [JsonSerializable(typeof(MlrbAssetAssociatedWithSimpleRangeEvent))]
     [JsonSerializable(typeof(MlrbAssetCreated))]
     [JsonSerializable(typeof(MlrbAssetImportStarted))]
     [JsonSerializable(typeof(MlrbAssetFileCopied))]

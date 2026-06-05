@@ -12,7 +12,6 @@ namespace MyLittleRangeBook.RangeEvents
     /// </summary>
     public class SqliteSimpleRangeEventRepository : ISimpleRangeEventRepository
     {
-        // TODO [TO20260505] Introduce SQLite transactions.
         readonly ISimpleRangeEventService _simpleRangeEventService;
         readonly ISqliteHelper _sqliteHelper;
 
