@@ -213,6 +213,17 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             await connection.ExecuteAsync("PRAGMA wal_checkpoint(TRUNCATE);");
         }
 
+        public async Task VacuumAync(SqliteConnection connection)
+        {
+            ArgumentNullException.ThrowIfNull(connection);
+            // VACUUM must run outside an explicit transaction.
+            await using (var vacuum = connection.CreateCommand())
+            {
+                vacuum.CommandText = "VACUUM;";
+                vacuum.ExecuteNonQuery();
+            }
+        }
+
         public async Task<Result<(string id, long rowId)>> WriteFileToTableAsync(SqliteConnection conn,
             SqliteFileTable table,
             string fileName,

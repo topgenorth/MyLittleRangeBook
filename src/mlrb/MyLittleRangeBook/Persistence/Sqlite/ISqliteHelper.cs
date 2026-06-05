@@ -73,5 +73,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// A task representing the asynchronous operation.
         /// </returns>
         Task CheckpointWalAsync(SqliteConnection connection);
+
+        Task VacuumAync(SqliteConnection connection);
     }
 }

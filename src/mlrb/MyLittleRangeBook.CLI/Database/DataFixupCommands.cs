@@ -29,6 +29,9 @@ namespace MyLittleRangeBook.Database
             CliDisplay.Console.WriteLine("WAL checkpoint stuff");
             await SqliteHelper.CheckpointWalAsync(scope.Connection).ConfigureAwait(false);
 
+            CliDisplay.Console.WriteLine("Vacuum ");
+            await SqliteHelper.VacuumAync(scope.Connection).ConfigureAwait(false);
+
             CliDisplay.Console.WriteLine("Integrity check stuff");
             var x  = await SqliteHelper.IntegrityCheckAsync(scope.Connection).ConfigureAwait(false);
             Logger.Information("Database integrity check passed with result: {result}", x);
