@@ -1,6 +1,4 @@
 using System.Data;
-using Dapper;
-using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
@@ -8,46 +6,7 @@ namespace MyLittleRangeBook.Cartridges
 {
     public class CartridgesService : ICartridgesService
     {
-        const string SelectSql = "SELECT * FROM Cartridges ORDER BY Name;";
-        const string SelectByIdSql = "SELECT * FROM Cartridges WHERE Id=@Id;";
-        const string SelectActiveSql = "SELECT * FROM Cartridges WHERE IsActive=1 ORDER BY Name;";
-        const string DeleteSql = "DELETE FROM Cartridges WHERE Id = @Id";
-
-        // const string InsertSql = """
-        //                          INSERT INTO Cartridges (Id,
-        //                                                  Name,
-        //                                                  CommonName,
-        //                                                  ProjectileDiameterMetric,
-        //                                                  ProjectileDiameterImperial,
-        //                                                  SuitableForRifle,
-        //                                                  SuitableForPistol,
-        //                                                  IsActive)
-        //                          VALUES (@Id, @Name, @CommonName, @ProjectileDiameterMetric, @ProjectileDiameterImperial, @SuitableForRifle, @SuitableForPistol, @IsActive)
-        //                          RETURNING RowId
-        //                          """;
-
-        const string UpsertSql = """
-                                 INSERT INTO Cartridges (Id, 
-                                                         Name, 
-                                                         CommonName, 
-                                                         ProjectileDiameterMetric, 
-                                                         ProjectileDiameterImperial, 
-                                                         SuitableForRifle, 
-                                                         SuitableForPistol, 
-                                                         IsActive) 
-                                 VALUES (@Id, @Name, @CommonName, @ProjectileDiameterMetric, @ProjectileDiameterImperial, @SuitableForRifle, @SuitableForPistol, @IsActive) 
-                                 ON CONFLICT(Name) DO 
-                                     UPDATE SET CommonName = @CommonName, 
-                                     ProjectileDiameterMetric = @ProjectileDiameterMetric, 
-                                     ProjectileDiameterImperial = @ProjectileDiameterImperial, 
-                                     SuitableForRifle = @SuitableForRifle, 
-                                     SuitableForPistol = @SuitableForPistol, 
-                                     IsActive = @IsActive, 
-                                     Modified = utcnow()
-                                 RETURNING RowId
-                                 """;
-
-        public async Task<Result<bool>> DeleteAsync(IDbConnection connection,
+        public async Task<Result> DeleteAsync(IDbConnection connection,
             Cartridge cartridge,
             CancellationToken cancellationToken = default)
         {
@@ -61,10 +20,12 @@ namespace MyLittleRangeBook.Cartridges
 
             try
             {
-                var cmd = new SqliteCommand(DeleteSql, (SqliteConnection)connection);
-                cmd.Parameters.AddWithValue("@Id", cartridge.Id);
-                cmd.CommandType = CommandType.Text;
-                await cmd.ExecuteNonQueryAsync(cancellationToken);
+                if (cartridge.Id != null || cartridge.Id != MlrbId.Empty)
+                {
+                    var ctx = new DapperCommandContext(connection, CancellationToken: cancellationToken,
+                        Arguments: new { cartridge.Id });
+                    await Commands.DeleteCommand.ExecuteAsync(ctx).ConfigureAwait(false);
+                }
             }
             catch (Exception e)
             {
@@ -75,7 +36,7 @@ namespace MyLittleRangeBook.Cartridges
                 return Result.Fail(err);
             }
 
-            return Result.Ok(true);
+            return Result.Ok();
         }
 
         public async Task<Result<EntityId>> UpsertAsync(IDbConnection connection,
@@ -94,7 +55,7 @@ namespace MyLittleRangeBook.Cartridges
                 cartridge.IsActive
             };
             var ctx = new DapperCommandContext(connection, null, cancellationToken, valuesToInsert);
-            var cmd = new DapperCommand(UpsertSql);
+            DapperCommand cmd = Commands.UpsertCommand;
             try
             {
                 long l = await cmd.ExecuteScalarAsync<long>(ctx)
@@ -126,8 +87,9 @@ namespace MyLittleRangeBook.Cartridges
         {
             try
             {
-                string sql = activeOnly ? SelectActiveSql : SelectSql;
-                IEnumerable<Cartridge> cartridges = await connection.QueryAsync<Cartridge>(sql, cancellationToken);
+                var ctx = new DapperCommandContext(connection, CancellationToken: cancellationToken);
+                DapperCommand cmd = activeOnly ? Commands.SelectActiveCommand : Commands.SelectCommand;
+                IEnumerable<Cartridge> cartridges = await cmd.QueryAsync<Cartridge>(ctx).ConfigureAwait(false);
 
                 return Result.Ok(cartridges);
             }
@@ -144,12 +106,99 @@ namespace MyLittleRangeBook.Cartridges
             string id,
             CancellationToken cancellationToken = default)
         {
-            var command = new CommandDefinition(SelectByIdSql, new { Id = id }, cancellationToken: cancellationToken);
-            Cartridge? c = await connection.QueryFirstOrDefaultAsync<Cartridge>(command);
+            var ctx = new DapperCommandContext(connection, Arguments: new { Id = id },
+                CancellationToken: cancellationToken);
+            Cartridge? c = await Commands.SelectByIdCommand.QuerySingleOrDefaultAsync<Cartridge>(ctx)
+                .ConfigureAwait(false);
 
             return c is null
                 ? Result.Fail<Cartridge>(new Error($"Cartridge with id `{id}` not found").Enrich(id, null))
                 : Result.Ok(c);
+        }
+
+         static class Commands
+        {
+            const string DeleteSql = "DELETE FROM cartridges WHERE Id = @Id";
+
+            const string SelectSql = """
+                                     SELECT
+                                         row_id As RowId,
+                                         id AS Id,
+                                         name AS Name, 
+                                         common_name AS CommonName,
+                                         diameter_metric as ProjectileDiameterMetric,
+                                         diameter_imperial as ProjectileDiameterImperial,
+                                         suitable_for_rifle as SuitableForRifle,
+                                         suitable_for_pistol as SuitableForPistol,
+                                         is_active as IsActive,
+                                         created AS Created,
+                                         modified AS Modified
+                                     FROM cartridges 
+                                     ORDER BY name;
+                                     """;
+
+            const string SelectByIdSql = """
+                                         SELECT
+                                             row_id As RowId,
+                                             id AS Id,
+                                             name AS Name, 
+                                             common_name AS CommonName,
+                                             diameter_metric as ProjectileDiameterMetric,
+                                             diameter_imperial as ProjectileDiameterImperial,
+                                             suitable_for_rifle as SuitableForRifle,
+                                             suitable_for_pistol as SuitableForPistol,
+                                             is_active as IsActive,
+                                             created AS Created,
+                                             modified AS Modified
+                                         FROM cartridges 
+                                         WHERE id=@Id
+                                         ORDER BY name;
+                                         """;
+
+            const string SelectActiveSql = """
+                                           SELECT
+                                               row_id As RowId,
+                                               id AS Id,
+                                               name AS Name, 
+                                               common_name AS CommonName,
+                                               diameter_metric as ProjectileDiameterMetric,
+                                               diameter_imperial as ProjectileDiameterImperial,
+                                               suitable_for_rifle as SuitableForRifle,
+                                               suitable_for_pistol as SuitableForPistol,
+                                               is_active as IsActive,
+                                               created AS Created,
+                                               modified AS Modified
+                                           FROM cartridges 
+                                           WHERE is_active=1 
+                                           ORDER BY name;
+                                           """;
+
+            const string UpsertSql = """
+                                     INSERT INTO cartridges (id , 
+                                                             name , 
+                                                             common_name, 
+                                                             diameter_metric, 
+                                                             diameter_imperial, 
+                                                             suitable_for_rifle, 
+                                                             suitable_for_pistol, 
+                                                             is_active) 
+                                     VALUES (@Id, @Name, @CommonName, @ProjectileDiameterMetric, @ProjectileDiameterImperial, @SuitableForRifle, @SuitableForPistol, @IsActive) 
+                                     ON CONFLICT(name) DO 
+                                         UPDATE SET common_name = @CommonName, 
+                                         diameter_metric = @ProjectileDiameterMetric, 
+                                         diameter_imperial = @ProjectileDiameterImperial, 
+                                         suitable_for_rifle = @SuitableForRifle, 
+                                         suitable_for_pistol = @SuitableForPistol, 
+                                         is_active = @IsActive, 
+                                         modified = utcnow()
+                                     RETURNING row_id
+                                     """;
+
+            internal static readonly DapperCommand DeleteCommand = new(DeleteSql);
+            internal static readonly DapperCommand UpsertCommand = new(UpsertSql);
+            internal static readonly DapperCommand SelectActiveCommand = new(SelectActiveSql);
+            internal static readonly DapperCommand SelectCommand = new(SelectSql);
+            internal static readonly DapperCommand SelectByIdCommand = new(SelectByIdSql);
         }
     }
 }

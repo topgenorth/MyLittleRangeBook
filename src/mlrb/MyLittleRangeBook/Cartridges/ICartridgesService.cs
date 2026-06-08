@@ -5,7 +5,7 @@ namespace MyLittleRangeBook.Cartridges
 {
     public interface ICartridgesService
     {
-        Task<Result<bool>> DeleteAsync(IDbConnection connection,
+        Task<Result> DeleteAsync(IDbConnection connection,
             Cartridge cartridge,
             CancellationToken cancellationToken = default);
 
