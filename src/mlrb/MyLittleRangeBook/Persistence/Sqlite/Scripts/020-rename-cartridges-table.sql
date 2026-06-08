@@ -20,4 +20,17 @@ CREATE TABLE IF NOT EXISTS cartridges
 CREATE UNIQUE INDEX IF NOT EXISTS IX_cartridges_id
     ON Cartridges (id);
 CREATE UNIQUE INDEX IF NOT EXISTS IX_cartridges_name
-    ON Cartridges (name)
+    ON Cartridges (name);
+
+BEGIN TRANSACTION;
+INSERT INTO Cartridges (Id, Name, common_name, diameter_metric, diameter_imperial, suitable_for_rifle, suitable_for_pistol, Created, Modified, is_active) VALUES ('7B3Z9WQFBC9VV7QBBR6DTDHSJX', '.22 Long Rifle', '.22LR', 5.5, 0.22, 1, 1, '2026-05-12 03:17:41', '2026-05-12 03:17:41', 1);
+INSERT INTO Cartridges (Id, Name, common_name, diameter_metric, diameter_imperial, suitable_for_rifle, suitable_for_pistol, Created, Modified, is_active) VALUES ('4SZ006CWE5WXBGSB9V7VFGY4H0', '.308 Winchester', '.308Win', 7.62, 0.3, 1, 0, '2026-05-12 03:20:38', '2026-05-12 03:20:38', 1);
+INSERT INTO Cartridges (Id, Name, common_name, diameter_metric, diameter_imperial, suitable_for_rifle, suitable_for_pistol, Created, Modified, is_active) VALUES ('0AB8B8Z49GEKX2CAVR8AAGNSB2', '7.92x57', '8mm Mauser', 7.92, 0.323, 1, 0, '2026-05-12 03:21:15', '2026-05-12 03:21:15', 1);
+INSERT INTO Cartridges (Id, Name, common_name, diameter_metric, diameter_imperial, suitable_for_rifle, suitable_for_pistol, Created, Modified, is_active) VALUES ('6GQNHKKMYDHFB74NN4JJ8AD91C', '6x45mm', '6x45', 6, 0.243, 1, 0, '2026-05-12 03:23:20', '2026-05-12 03:23:20', 1);
+INSERT INTO Cartridges (Id, Name, common_name, diameter_metric, diameter_imperial, suitable_for_rifle, suitable_for_pistol, Created, Modified, is_active) VALUES ('2J6ZCWXE531BMYFPJVDEPWPPSB', '6.5x55', '6.5 Swede', 6.5, 0.264, 1, 0, '2026-05-12 03:24:16', '2026-05-12 03:24:16', 1);
+INSERT INTO Cartridges (Id, Name, common_name, diameter_metric, diameter_imperial, suitable_for_rifle, suitable_for_pistol, Created, Modified, is_active) VALUES ('1RB60C2Q1P73JG2502E9C5NJ3T', '9mm Parabellum', '9mm', 9, 0.356, 1, 1, '2026-05-12 03:25:52', '2026-05-12 03:25:52', 1);
+INSERT INTO Cartridges (Id, Name, common_name, diameter_metric, diameter_imperial, suitable_for_rifle, suitable_for_pistol, Created, Modified, is_active) VALUES ('3FZQB44JPBHR58R2C8NN1A78CS', '.45 ACP', '.45', 11.43, 0.452, 1, 1, '2026-05-12 03:26:39', '2026-05-12 03:26:39', 1);
+INSERT INTO Cartridges (Id, Name, common_name, diameter_metric, diameter_imperial, suitable_for_rifle, suitable_for_pistol, Created, Modified, is_active) VALUES ('1EYB5J6V589VD7P4RJ1VC86VAK', '7.62x39', '7.62x39', 7.62, 0.311, 1, 0, '2026-05-12 03:27:58', '2026-05-12 03:27:58', 1);
+INSERT INTO Cartridges (Id, Name, common_name, diameter_metric, diameter_imperial, suitable_for_rifle, suitable_for_pistol, Created, Modified, is_active) VALUES ('5SSC545R5SFRZE8DKJV7NT5X8S', '.284 Winchester', '284Win', 7.21, 0.284, 1, 0, '2026-05-12 03:33:08', '2026-05-12 03:33:08', 1);
+INSERT INTO Cartridges (Id, Name, common_name, diameter_metric, diameter_imperial, suitable_for_rifle, suitable_for_pistol, Created, Modified, is_active) VALUES ('2ENWZZDST750BWCS4CJ1FBRDGW', '.223 Winchester', '0.223', 5.56, 0.224, 1, 1, '2026-05-12 03:33:28', '2026-05-12 03:33:28', 1);
+COMMIT TRANSACTION;
