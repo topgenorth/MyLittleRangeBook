@@ -89,6 +89,5 @@ if ($IsLinux) {
 
 mlrb db migrate
 mlrb db versions
-mlrb --help
 Write-Host "Installed $executable to : $destinationPath"
 
