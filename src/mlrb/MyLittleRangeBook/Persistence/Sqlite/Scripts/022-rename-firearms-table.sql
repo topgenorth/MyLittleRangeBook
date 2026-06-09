@@ -10,8 +10,8 @@ BEGIN TRANSACTION;
 -- 1. Rename Firearms table to firearms
 --------------------------------------------------------------------------------
 
--- Create new table firearms with snake_case names
-CREATE TABLE firearms
+-- Create new table firearms_new with snake_case names
+CREATE TABLE firearms_new
 (
     row_id       INTEGER PRIMARY KEY AUTOINCREMENT,
     id           TEXT                              NOT NULL, -- NanoID unique key.
@@ -26,12 +26,15 @@ CREATE TABLE firearms
 );
 
 -- Copy data from old table Firearms
-INSERT INTO firearms (row_id, id, name, notes, is_active, rounds_fired, created, modified)
+INSERT INTO firearms_new (row_id, id, name, notes, is_active, rounds_fired, created, modified)
 SELECT RowId, Id, Name, Notes, IsActive, RoundsFired, Created, Modified
 FROM Firearms;
 
 -- Drop old table
 DROP TABLE Firearms;
+
+-- Rename new table
+ALTER TABLE firearms_new RENAME TO firearms;
 
 -- Create indices for firearms
 CREATE UNIQUE INDEX ix_firearms_id

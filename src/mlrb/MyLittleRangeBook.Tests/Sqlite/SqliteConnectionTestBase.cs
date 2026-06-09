@@ -70,7 +70,7 @@ namespace MyLittleRangeBook.Sqlite
                     throw new Exception("Migration failed");
                 }
 
-                conn = await SqliteHelper.GetDatabaseConnectionAsync();
+                conn = await SqliteHelper.GetDatabaseConnectionAsync().ConfigureAwait(false);
 
                 return conn;
             }
