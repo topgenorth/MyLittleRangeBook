@@ -48,8 +48,8 @@ namespace MyLittleRangeBook.Cartridges
                 cartridge.Id,
                 cartridge.Name,
                 cartridge.CommonName,
-                cartridge.ProjectileDiameterMetric,
-                cartridge.ProjectileDiameterImperial,
+                ProjectileDiameterMetric = cartridge.ProjectileDiameterMetric <= 0 ? (double?)null :cartridge.ProjectileDiameterMetric,
+                ProjectileDiameterImperial = cartridge.ProjectileDiameterImperial <= 0 ? (double?)null :cartridge.ProjectileDiameterImperial,
                 cartridge.SuitableForRifle,
                 cartridge.SuitableForPistol,
                 cartridge.IsActive
