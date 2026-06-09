@@ -175,7 +175,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 await connection.ExecuteAsync(
                     """
                     DELETE FROM simple_range_events;
-                    DELETE FROM Firearms;
+                    DELETE FROM firearms;
                     DELETE FROM asset_files;
                     VACUUM;
                     """);
