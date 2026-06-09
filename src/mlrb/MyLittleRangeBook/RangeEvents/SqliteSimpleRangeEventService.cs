@@ -16,26 +16,36 @@ namespace MyLittleRangeBook.RangeEvents
     public class SqliteSimpleRangeEventService : ISimpleRangeEventService
     {
         const string UpsertSql = """
-                                 INSERT INTO SimpleRangeEvents (Id, EventDate, FirearmName, RangeName, RoundsFired, AmmoDescription, Notes, Created, Modified)
+                                 INSERT INTO simple_range_events (id, event_date, firearm_name, range_name, rounds_fired, ammo_description, notes, created, modified)
                                  VALUES (@Id, @EventDate, @FirearmName, @RangeName, @RoundsFired, @AmmoDescription, @Notes, @Created, @Modified)
-                                 ON CONFLICT(Id) DO UPDATE SET
-                                   EventDate = excluded.EventDate,
-                                   FirearmName = excluded.FirearmName,
-                                   RangeName = excluded.RangeName,
-                                   RoundsFired = excluded.RoundsFired,
-                                   AmmoDescription = excluded.AmmoDescription,
-                                   Notes = excluded.Notes,
-                                   Modified = excluded.Modified
-                                 RETURNING RowId;
+                                 ON CONFLICT(id) DO UPDATE SET
+                                   event_date = excluded.event_date,
+                                   firearm_name = excluded.firearm_name,
+                                   range_name = excluded.range_name,
+                                   rounds_fired = excluded.rounds_fired,
+                                   ammo_description = excluded.ammo_description,
+                                   notes = excluded.notes,
+                                   modified = excluded.modified
+                                 RETURNING row_id;
                                  """;
 
         const string SelectSql = """
-                                 SELECT *
-                                 FROM SimpleRangeEvents 
-                                 ORDER BY EventDate, FirearmName, RangeName;
+                                 SELECT
+                                     row_id AS RowId,
+                                     id AS Id,
+                                     event_date AS EventDate,
+                                     firearm_name AS FirearmName,
+                                     range_name AS RangeName,
+                                     rounds_fired AS RoundsFired,
+                                     ammo_description AS AmmoDescription,
+                                     notes AS Notes,
+                                     created AS Created,
+                                     modified AS Modified
+                                 FROM simple_range_events 
+                                 ORDER BY event_date, firearm_name, range_name;
                                  """;
 
-        const string DeleteSql = "DELETE FROM SimpleRangeEvents WHERE Id = @Id;";
+        const string DeleteSql = "DELETE FROM simple_range_events WHERE id = @Id;";
 
         static DapperCommand UpsertCommand => new(UpsertSql);
         static DapperCommand DeleteCommand => new(DeleteSql);

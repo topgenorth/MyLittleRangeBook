@@ -155,19 +155,19 @@ namespace MyLittleRangeBook.Firearms
                                      """;
 
             const string AssociateFirearmWithRangeEventSql = """
-                                                             INSERT INTO Firearms_SimpleRangeEvents (FirearmsId, SimpleRangeEventId) 
+                                                             INSERT INTO firearms_simple_range_events (firearm_id, simple_range_event_id) 
                                                              VALUES (@FirearmsId, @SimpleRangeEventId);
                                                              """;
 
 
             const string RangeEventsByFirearmNameSql = """
                                                         SELECT 
-                                                            s.FirearmName,
-                                                            s.Id AS SimpleRangeEventId
-                                                        FROM SimpleRangeEvents AS s
-                                                        LEFT JOIN Firearms AS f ON f.Name = s.FirearmName
+                                                            s.firearm_name AS FirearmName,
+                                                            s.id AS SimpleRangeEventId
+                                                        FROM simple_range_events AS s
+                                                        LEFT JOIN Firearms AS f ON f.Name = s.firearm_name
                                                         WHERE f.Name IS NULL
-                                                        ORDER BY s.FirearmName;                                                       
+                                                        ORDER BY s.firearm_name;                                                       
                                                        """;
 
 

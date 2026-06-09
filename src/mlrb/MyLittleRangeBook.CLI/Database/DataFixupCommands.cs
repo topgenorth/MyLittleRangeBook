@@ -14,7 +14,7 @@ namespace MyLittleRangeBook.Database
     [RegisterCommands("db"), UsedImplicitly]
     public class DataFixupCommands : MlrbSqliteCommandBase
     {
-        readonly string[] _tablesToUpdate = ["Cartridges", "Firearms"];
+        readonly string[] _tablesToUpdate = ["cartridges", "Firearms"];
         public DataFixupCommands(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper) :
             base(logger, cliDisplay, sqliteHelper)
         {
@@ -53,7 +53,7 @@ namespace MyLittleRangeBook.Database
             Logger.Information("Fixing up IDs on {databaseName}.", conn.DataSource);
             CliDisplay.PrintCommandHeader($"Fixing up IDs on {conn.DataSource}");
 
-            Logger.Information("Skipping {tableName} - already done.", "SimpleRangeEvents");
+            Logger.Information("Skipping {tableName} - already done.", "simple_range_events");
 
             foreach (string tableName in _tablesToUpdate)
             {
@@ -130,11 +130,11 @@ namespace MyLittleRangeBook.Database
             IDbTransaction trans,
             CancellationToken ct = default)
         {
-            const string TABLENAME = "SimpleRangeEvents";
+            const string TABLENAME = "simple_range_events";
             Logger.Information("Updating IDs on: {tableName}.", TABLENAME);
 
-            const string SQL = "SELECT Id, EventDate FROM SimpleRangeEvents;";
-            const string UPDATE = "UPDATE SimpleRangeEvents SET Id = @newId WHERE Id = @oldId";
+            const string SQL = "SELECT id AS Id, event_date AS EventDate FROM simple_range_events;";
+            const string UPDATE = "UPDATE simple_range_events SET id = @newId WHERE id = @oldId";
 
             IEnumerable<SimpleRangeEventRow> rows =
                 await conn.QueryAsync<SimpleRangeEventRow>(SQL, transaction: trans).ConfigureAwait(false);
