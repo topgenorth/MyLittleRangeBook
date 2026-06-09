@@ -25,24 +25,22 @@ The main purpose of the application is to act as a marksman log book:
 Follow these priorities in order:
 
 1. Prefer the CLI path first when implementing new functionality.
-2. Prefer async methods where ever practical and supported by the codebase.
-3. Reuse existing abstractions and patterns before introducing new ones.
-4. Keep the solution cross-platform for Windows, Ubuntu Linux, and macOS.
-5. Preserve single-file, self-contained app compatibility.
-6. Use Dapper for data access.
-7. Support SQLite and PostgreSQL where the feature naturally applies. If the feature is not supported, then return a clear error message explaining that.
-8. Directories that start with an _ are for file organization only and are not to be used as a namespace provider. For example, files in the directory MyLittleRangeBook.CLI/_Commands/_Firearms belong in the namespace MyLittleRangeBook, and not MyLittleRangeBook/Commands/Firearms.
+2. Ensure that AOT will not break anything.
+3. Ignore the MyLittleRangeBook.GUI and MyLittleRangeBook.GUI.Tests folders/project.
+4. Prefer async methods where ever practical and supported by the codebase.
+5. Reuse existing abstractions and patterns before introducing new ones.
+6. Keep the solution cross-platform for Windows, Ubuntu Linux, and macOS.
+7. Preserve single-file, self-contained app compatibility.
+8. Use Dapper for data access.
+9. Support SQLite and PostgreSQL where the feature naturally applies. If the feature is not supported, then return a clear error message explaining that.
+10. Directories that start with an _ are for file organization only and are not to be used as a namespace provider. For example, files in the directory MyLittleRangeBook.CLI/_Commands/_Firearms belong in the namespace MyLittleRangeBook, and not MyLittleRangeBook/Commands/Firearms.
 
 ## Solution structure
 
 Important projects under `src/mlrb` include:
 
 - `MyLittleRangeBook.CLI` — primary feature surface right now.
-- `MyLittleRangeBook.GUI` — Avalonia desktop app.
 - `MyLittleRangeBook.FIT` — FIT parsing and Garmin Xero-related domain logic.
-- `MyLittleRangeBook.IO`  —  Input and output code such opening files, writing files.
-- `MyLittleRangeBook.Sqlite` — SQLite services, repositories, migrations, handlers.
-- `MyLittleRangeBook.PgSQL` — PostgreSQL services, repositories, migrations, handlers.
 - `MyLittleRangeBook` — shared models, configuration, service interfaces.
 - `MyLittleRangeBook.Tests` and `MyLittleRangeBook.GUI.Tests` — tests.
 
@@ -63,7 +61,7 @@ Important projects under `src/mlrb` include:
 When implementing CLI features:
 
 - Follow patterns already present in:
-  - `MyLittleRangeBook.CLI/Commands/`
+  - `MyLittleRangeBook.CLI`
   - `Program.cs`
   - console display and printer helpers.
 - Prefer adding a new command class or extending an existing command group rather than placing logic directly in `Program.cs`.

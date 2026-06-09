@@ -87,8 +87,9 @@ if ($IsLinux) {
     & chmod +x $destinationPath
 }
 
+Write-Host "Migrating database and run maintenance tasks...."
 mlrb db migrate
+mlrb db maintenance
 mlrb db versions
-mlrb --help
 Write-Host "Installed $executable to : $destinationPath"
 

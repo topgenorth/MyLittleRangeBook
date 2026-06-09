@@ -142,16 +142,16 @@ namespace MyLittleRangeBook.Firearms
         /// </summary>
         public static class Commands
         {
-            const string SelectSql = "SELECT * FROM Firearms ORDER BY Name;";
-            const string SelectByIdSql = "SELECT * FROM Firearms WHERE Id=@Id;";
-            const string SelectActiveSql = "SELECT * FROM Firearms WHERE IsActive=1 ORDER BY Name;";
-            const string DeleteSql = "DELETE FROM Firearms WHERE Id = @Id";
+            const string SelectSql = "SELECT row_id AS RowId, id AS Id, name AS Name, notes AS Notes, is_active AS IsActive, rounds_fired AS RoundsFired, created AS Created, modified AS Modified FROM firearms ORDER BY name;";
+            const string SelectByIdSql = "SELECT row_id AS RowId, id AS Id, name AS Name, notes AS Notes, is_active AS IsActive, rounds_fired AS RoundsFired, created AS Created, modified AS Modified FROM firearms WHERE id=@Id;";
+            const string SelectActiveSql = "SELECT row_id AS RowId, id AS Id, name AS Name, notes AS Notes, is_active AS IsActive, rounds_fired AS RoundsFired, created AS Created, modified AS Modified FROM firearms WHERE is_active=1 ORDER BY name;";
+            const string DeleteSql = "DELETE FROM firearms WHERE id = @Id";
 
             const string UpsertSql = """
-                                     INSERT INTO Firearms (Id,Name, Notes, Modified, Created, RoundsFired) 
+                                     INSERT INTO firearms (id, name, notes, modified, created, rounds_fired) 
                                      VALUES (@Id, @Name, @Notes, utcnow(), utcnow(), @RoundsFired) 
-                                     ON CONFLICT(Name) DO UPDATE SET Notes = @Notes, Modified = utcnow(), RoundsFired=@RoundsFired
-                                     RETURNING RowId
+                                     ON CONFLICT(name) DO UPDATE SET notes = @Notes, modified = utcnow(), rounds_fired=@RoundsFired
+                                     RETURNING row_id
                                      """;
 
             const string AssociateFirearmWithRangeEventSql = """
@@ -165,8 +165,8 @@ namespace MyLittleRangeBook.Firearms
                                                             s.firearm_name AS FirearmName,
                                                             s.id AS SimpleRangeEventId
                                                         FROM simple_range_events AS s
-                                                        LEFT JOIN Firearms AS f ON f.Name = s.firearm_name
-                                                        WHERE f.Name IS NULL
+                                                        LEFT JOIN firearms AS f ON f.name = s.firearm_name
+                                                        WHERE f.name IS NULL
                                                         ORDER BY s.firearm_name;                                                       
                                                        """;
 
