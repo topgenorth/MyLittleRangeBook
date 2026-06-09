@@ -212,7 +212,7 @@ namespace MyLittleRangeBook.MlrbAssets
                                                    """;
 
             const string AssociateWithRangeEventSql = """
-                                                      INSERT INTO asset_files_simplerangeevents (simple_range_event_id, asset_id)
+                                                      INSERT INTO asset_files_simple_range_events (simple_range_event_id, asset_id)
                                                       VALUES (@SimpleRangeEventId, @AssetId)
                                                       ON CONFLICT DO NOTHING 
                                                       RETURNING row_id;

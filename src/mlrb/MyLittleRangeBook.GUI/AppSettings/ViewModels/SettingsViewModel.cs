@@ -174,9 +174,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 // Drop existing tables and vacuum the database to reclaim space
                 await connection.ExecuteAsync(
                     """
-                    TRUNCATE SimpleRangeEvents;
-                    TRUNCATE TABLE Firearms;
-                    TRUNCATE TABLE FitFiles;
+                    DELETE FROM simple_range_events;
+                    DELETE FROM Firearms;
+                    DELETE FROM asset_files;
                     VACUUM;
                     """);
 

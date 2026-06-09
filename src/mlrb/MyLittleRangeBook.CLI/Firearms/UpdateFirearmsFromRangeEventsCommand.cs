@@ -132,12 +132,12 @@ namespace MyLittleRangeBook
         {
             const string GetNewFirearmNamesFromRangeEventsSql = """
                                                                 SELECT 
-                                                                    SimpleRangeEvents.FirearmName,
-                                                                    COALESCE(SUM(SimpleRangeEvents.RoundsFired), 0) AS TotalRoundsFired
-                                                                FROM SimpleRangeEvents
-                                                                WHERE SimpleRangeEvents.FirearmName NOT IN (SELECT Name FROM Firearms)
-                                                                GROUP BY SimpleRangeEvents.FirearmName
-                                                                ORDER BY SimpleRangeEvents.FirearmName;
+                                                                    simple_range_events.firearm_name AS FirearmName,
+                                                                    COALESCE(SUM(simple_range_events.rounds_fired), 0) AS TotalRoundsFired
+                                                                FROM simple_range_events
+                                                                WHERE simple_range_events.firearm_name NOT IN (SELECT Name FROM Firearms)
+                                                                GROUP BY simple_range_events.firearm_name
+                                                                ORDER BY simple_range_events.firearm_name;
                                                                 """;
 
             internal static readonly DapperCommand GetNewFirearmsFromRangeEvents =

@@ -1,40 +1,40 @@
-﻿UPDATE SimpleRangeEvents
-SET FirearmName     = CASE
-                          WHEN FirearmName IS NOT NULL
-                              AND LENGTH(FirearmName) >= 2
-                              AND SUBSTR(FirearmName, 1, 1) = '"'
-                              AND SUBSTR(FirearmName, -1, 1) = '"'
-                              THEN SUBSTR(FirearmName, 2, LENGTH(FirearmName) - 2)
-                          ELSE FirearmName
+UPDATE simple_range_events
+SET firearm_name     = CASE
+                          WHEN firearm_name IS NOT NULL
+                              AND LENGTH(firearm_name) >= 2
+                              AND SUBSTR(firearm_name, 1, 1) = ''
+ AND SUBSTR(firearm_name, -1, 1) = ''
+                              THEN SUBSTR(firearm_name, 2, LENGTH(firearm_name) - 2)
+                          ELSE firearm_name
     END,
-    RangeName       = CASE
-                          WHEN RangeName IS NOT NULL
-                              AND LENGTH(RangeName) >= 2
-                              AND SUBSTR(RangeName, 1, 1) = '"'
-                              AND SUBSTR(RangeName, -1, 1) = '"'
-                              THEN SUBSTR(RangeName, 2, LENGTH(RangeName) - 2)
-                          ELSE RangeName
+    range_name       = CASE
+                          WHEN range_name IS NOT NULL
+                              AND LENGTH(range_name) >= 2
+                              AND SUBSTR(range_name, 1, 1) = ''
+ AND SUBSTR(range_name, -1, 1) = ''
+                              THEN SUBSTR(range_name, 2, LENGTH(range_name) - 2)
+                          ELSE range_name
         END,
-    AmmoDescription = CASE
-                          WHEN AmmoDescription IS NOT NULL
-                              AND LENGTH(AmmoDescription) >= 2
-                              AND SUBSTR(AmmoDescription, 1, 1) = '"'
-                              AND SUBSTR(AmmoDescription, -1, 1) = '"'
-                              THEN SUBSTR(AmmoDescription, 2, LENGTH(AmmoDescription) - 2)
-                          ELSE AmmoDescription
+    ammo_description = CASE
+                          WHEN ammo_description IS NOT NULL
+                              AND LENGTH(ammo_description) >= 2
+                              AND SUBSTR(ammo_description, 1, 1) = ''
+ AND SUBSTR(ammo_description, -1, 1) = ''
+                              THEN SUBSTR(ammo_description, 2, LENGTH(ammo_description) - 2)
+                          ELSE ammo_description
         END,
-    Notes           = CASE
-                          WHEN Notes IS NOT NULL
-                              AND LENGTH(Notes) >= 2
-                              AND SUBSTR(Notes, 1, 1) = '"'
-                              AND SUBSTR(Notes, -1, 1) = '"'
-                              THEN SUBSTR(Notes, 2, LENGTH(Notes) - 2)
-                          ELSE Notes
+    notes           = CASE
+                          WHEN notes IS NOT NULL
+                              AND LENGTH(notes) >= 2
+                              AND SUBSTR(notes, 1, 1) = ''
+ AND SUBSTR(notes, -1, 1) = ''
+                              THEN SUBSTR(notes, 2, LENGTH(notes) - 2)
+                          ELSE notes
         END
-WHERE (FirearmName IS NOT NULL AND LENGTH(FirearmName) >= 2 AND SUBSTR(FirearmName, 1, 1) = '"' AND
-       SUBSTR(FirearmName, -1, 1) = '"')
-   OR (RangeName IS NOT NULL AND LENGTH(RangeName) >= 2 AND SUBSTR(RangeName, 1, 1) = '"' AND
-       SUBSTR(RangeName, -1, 1) = '"')
-   OR (AmmoDescription IS NOT NULL AND LENGTH(AmmoDescription) >= 2 AND SUBSTR(AmmoDescription, 1, 1) = '"' AND
-       SUBSTR(AmmoDescription, -1, 1) = '"')
-   OR (Notes IS NOT NULL AND LENGTH(Notes) >= 2 AND SUBSTR(Notes, 1, 1) = '"' AND SUBSTR(Notes, -1, 1) = '"');
+WHERE (firearm_name IS NOT NULL AND LENGTH(firearm_name) >= 2 AND SUBSTR(firearm_name, 1, 1) = '' AND
+ SUBSTR(firearm_name, -1, 1) = '')
+   OR (range_name IS NOT NULL AND LENGTH(range_name) >= 2 AND SUBSTR(range_name, 1, 1) = '' AND
+ SUBSTR(range_name, -1, 1) = '')
+   OR (ammo_description IS NOT NULL AND LENGTH(ammo_description) >= 2 AND SUBSTR(ammo_description, 1, 1) = '' AND
+ SUBSTR(ammo_description, -1, 1) = '')
+   OR (notes IS NOT NULL AND LENGTH(notes) >= 2 AND SUBSTR(notes, 1, 1) = '' AND SUBSTR(notes, -1, 1) = '');

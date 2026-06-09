@@ -8,20 +8,20 @@ namespace MyLittleRangeBook.RangeEvents
     public class SqliteSimpleRangeEventHelper : ISimpleRangeEventHelper
     {
         internal const string SQL_RANGE_NAMES =
-            "SELECT DISTINCT RangeName FROM SimpleRangeEvents ORDER BY Modified DESC, RangeName;";
+            "SELECT DISTINCT range_name FROM simple_range_events ORDER BY modified DESC, range_name;";
 
         /// <summary>
         ///     Retrieve all the active firearms.
         /// </summary>
         internal const string SQL_ACTIVE_FIREARMS =
-            "SELECT DISTINCT FirearmName FROM SimpleRangeEvents ORDER BY FirearmName;";
+            "SELECT DISTINCT firearm_name FROM simple_range_events ORDER BY firearm_name;";
 
         /// <summary>
-        ///     Retrieve all the ammo descriptions for a given firearm name. The results are ordered by the Modified date of the
+        ///     Retrieve all the ammo descriptions for a given firearm name. The results are ordered by the modified date of the
         ///     SimpleRangeEvent, then by the AmmoDescription.
         /// </summary>
         internal const string SQL_AMMO_FOR_NAMED_FIREARM =
-            "SELECT DISTINCT AmmoDescription FROM SimpleRangeEvents WHERE FirearmName=@firearmname ORDER BY Modified DESC, AmmoDescription;";
+            "SELECT DISTINCT ammo_description FROM simple_range_events WHERE firearm_name=@firearmname ORDER BY modified DESC, ammo_description;";
 
         readonly ISqliteHelper _sqliteHelper;
 

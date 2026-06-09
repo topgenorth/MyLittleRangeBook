@@ -52,7 +52,7 @@ namespace MyLittleRangeBook.RangeEvents
 
         public async Task<Result<SimpleRangeEvent>> GetAsync(string id, CancellationToken cancellationToken)
         {
-            const string SQL = "SELECT * FROM main.SimpleRangeEvents WHERE Id=@Id;";
+            const string SQL = "SELECT row_id AS RowId, id AS Id, event_date AS EventDate, firearm_name AS FirearmName, range_name AS RangeName, rounds_fired AS RoundsFired, ammo_description AS AmmoDescription, notes AS Notes, created AS Created, modified AS Modified FROM main.simple_range_events WHERE id=@Id;";
             await using SqliteConnection conn = await _sqliteHelper
                 .GetDatabaseConnectionAsync(cancellationToken)
                 .ConfigureAwait(false);
