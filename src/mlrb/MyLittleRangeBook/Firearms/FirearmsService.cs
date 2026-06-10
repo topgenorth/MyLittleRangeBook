@@ -85,11 +85,25 @@ namespace MyLittleRangeBook.Firearms
         {
             DapperCommand cmd = Commands.SelectById;
             DapperCommandContext ctx = context with { Arguments = new { Id = id } };
-            Firearm? f = await cmd.QuerySingleAsync<Firearm?>(ctx).ConfigureAwait(false);
+            try
+            {
+                Firearm? f = await cmd.QuerySingleAsync<Firearm?>(ctx).ConfigureAwait(false);
 
-            return f is null
-                ? Result.Fail<Firearm>(new Error($"Firearm with id `{id}` not found").Enrich(id, null))
-                : Result.Ok(f);
+                return f is null
+                    ? Result.Fail<Firearm>(new Error($"Firearm with id `{id}` not found").Enrich(id, null))
+                    : Result.Ok(f);
+            }
+            catch (InvalidOperationException ioex)
+            {
+                // [TO20260610] This probably means that the firearm doesn't exist.
+                Error? err = new Error($"Firearm with id `{id}` not found.").Enrich(id, null).CausedBy(ioex);
+                return Result.Fail<Firearm>(err);
+            }
+            catch (Exception e)
+            {
+                Error? err = new Error($"Unexpected error trying to retrieve firearm  id `{id}`.").Enrich(id, null).CausedBy(e);
+                return Result.Fail<Firearm>(err);
+            }
         }
 
         public Task<Result> AssociateAssetWithFirearm(DapperCommandContext context, string firearmId, string assetId)

@@ -89,7 +89,7 @@ if ($IsLinux) {
 
 Write-Host "Migrating database and run maintenance tasks...."
 mlrb db migrate
+mlrb firearms recalculate-round-count
 mlrb db maintenance
-mlrb db versions
 Write-Host "Installed $executable to : $destinationPath"
 
