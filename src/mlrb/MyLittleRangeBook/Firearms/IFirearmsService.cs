@@ -10,7 +10,6 @@ namespace MyLittleRangeBook.Firearms
     /// </summary>
     public interface IFirearmsService
     {
-        // TODO [TO20260528] Allow for an IDbTransaction.
 
         /// <summary>
         ///     Associate a range asset with the specified firearm.
@@ -23,22 +22,6 @@ namespace MyLittleRangeBook.Firearms
             string firearmId,
             string assetId);
 
-        /// <summary>
-        ///     Delete a firearm from the database.
-        /// </summary>
-        /// <param name="connection"></param>
-        /// <param name="firearm"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        [Obsolete("Use DapperCommandContext overload.")]
-        Task<Result<bool>> DeleteAsync(IDbConnection connection,
-            Firearm firearm,
-            CancellationToken cancellationToken = default)
-        {
-            var ctx = new DapperCommandContext(connection, null, cancellationToken);
-
-            return DeleteAsync(ctx, firearm);
-        }
 
         Task<Result<bool>> DeleteAsync(DapperCommandContext context, Firearm firearm);
 
@@ -82,29 +65,21 @@ namespace MyLittleRangeBook.Firearms
         Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(DapperCommandContext context,
             bool activeOnly = true);
 
-        /// <summary>
-        ///     Add a firearm to the database.
-        /// </summary>
-        /// <param name="firearm"></param>
-        /// <param name="connection"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns>An <c cref="EntityId">EntityId</c> that holds the Nanoid and the RowId of the firearm in the database.</returns>
-        [Obsolete("Use DapperCommandContext overload.")]
-        Task<Result<EntityId>> UpsertAsync(Firearm firearm,
-            IDbConnection connection,
-            CancellationToken cancellationToken = default)
-        {
-            var ctx = new DapperCommandContext(connection, null, cancellationToken);
-
-            return UpsertAsync(ctx, firearm);
-        }
 
         /// <summary>
-        ///     Add a firearm to the database.
+        ///    Update a row in the firearms table using the aggregate.
         /// </summary>
         /// <param name="firearm"></param>
         /// <param name="context"></param>
         /// <returns>An <c cref="EntityId">EntityId</c> that holds the Nanoid and the RowId of the firearm in the database.</returns>
         Task<Result<EntityId>> UpsertAsync(DapperCommandContext context, Firearm firearm);
+
+        /// <summary>
+        ///     Add a firearm to the database.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="firearmAggregate"></param>
+        /// <returns>An <c cref="EntityId">EntityId</c> that holds the Nanoid and the RowId of the firearm in the database.</returns>
+        Task<Result<EntityId>> UpsertAsync(DapperCommandContext context, FirearmAggregate firearmAggregate);
     }
 }

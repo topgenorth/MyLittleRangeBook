@@ -57,7 +57,6 @@ namespace MyLittleRangeBook
                     .QueryAsync<(string FirearmName, int TotalRounds)>(ctx)
                     .ConfigureAwait(false);
 
-                int updateCount = 0;
                 foreach ((string FirearmName, int TotalRounds) row in firearmsWithRounds)
                 {
                     #region Capture the domain events.
@@ -90,36 +89,11 @@ namespace MyLittleRangeBook
                     }
                     #endregion
 
-
-                    #region Update the firearm table (project the events to the firearms table).
-
-                    // [TO20260610] the aggregate id (stream id) is the same as the firearm id.
-                    Result<Firearm> fResult = await _firearmsService.GetFirearmAsync(ctx, fa.Id.ToString()).ConfigureAwait(false);
-
-                    Firearm f;
-                    if (fResult.IsFailed)
-                    {
-                        f = fa.ToFirearm();
-                        updateCount++;
-                        Logger.Verbose("Created a new firearm record.");
-                    }
-                    else
-                    {
-                        f = fResult.Value;
-                        if (f.RoundsFired != fa.RoundsFired)
-                        {
-                            updateCount++;
-                        }
-                    }
-
-                    f.RoundsFired = fa.RoundsFired;
-                    f.Notes = fa.Notes;
-                    await _firearmsService.UpsertAsync(ctx, f).ConfigureAwait(false);
-                    #endregion
+                    await _firearmsService.UpsertAsync(ctx, fa).ConfigureAwait(false);
 
                 }
 
-                CliDisplay.PrintSuccess($"Recalculation complete. {updateCount} firearms updated.");
+                CliDisplay.PrintSuccess($"Firearm round count recalculation complete.");
                 return ReturnCodes.SUCCESS;
             }
             catch (Exception ex)
