@@ -14,6 +14,15 @@ namespace MyLittleRangeBook
     public class UpdateFirearmsFromRangeEventsCommand : MlrbSqliteCommandBase
     {
 
+        const string RoundCountSql = """
+                           SELECT 
+                               firearm_name AS FirearmName, 
+                               COALESCE(SUM(rounds_fired), 0) AS TotalRounds 
+                           FROM simple_range_events 
+                           GROUP BY firearm_name;
+                           """;
+        static readonly DapperCommand RoundCountCommand = new DapperCommand(RoundCountSql);
+
         readonly IFirearmAggregateRepository _firearmAggregateRepo;
         readonly IFirearmsService _firearmsService;
 
@@ -29,6 +38,77 @@ namespace MyLittleRangeBook
             _firearmAggregateRepo = firearmAggregateRepo;
         }
 
+                /// <summary>
+        /// Recalculates the total round count per firearm based on range events.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [Command("recalculate-round-count"), UsedImplicitly]
+        public async Task<int> UpdateTotalRoundCountForFirearms(CancellationToken cancellationToken = default)
+        {
+            CliDisplay.PrintCommandHeader("Recalculate firearm round counts.");
+            try
+            {
+                await using ScopedSqliteConnection scopedConn = await SqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+
+                DapperCommandContext ctx = new DapperCommandContext(scopedConn.Connection, CancellationToken: cancellationToken);
+
+                IEnumerable<(string FirearmName, int TotalRounds)> firearmsWithRounds = await RoundCountCommand
+                    .QueryAsync<(string FirearmName, int TotalRounds)>(ctx)
+                    .ConfigureAwait(false);
+
+                int updateCount = 0;
+                foreach ((string FirearmName, int TotalRounds) row in firearmsWithRounds)
+                {
+                    Result<FirearmAggregate> faResult = await _firearmAggregateRepo
+                        .GetOrCreateByNameAsync(row.FirearmName, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (faResult.IsFailed)
+                    {
+                        Logger.Warning("Failed to retrieve aggregate for firearm '{FirearmName}'.", row.FirearmName);
+                        continue;
+                    }
+
+                    FirearmAggregate fa = faResult.Value;
+                    if (fa.RoundsFired == row.TotalRounds)
+                    {
+                        continue;
+                    }
+                    Logger.Verbose("Recalculating rounds for '{FirearmName}': {OldCount} -> {NewCount}",
+                        row.FirearmName, fa.RoundsFired, row.TotalRounds);
+
+                    Firearm f = fa.ToFirearm();
+                    Result<EntityId> x = await _firearmsService.UpsertAsync(ctx, f).ConfigureAwait(false);
+
+                    fa.TotalRoundCountRecalculated(row.TotalRounds, DateTimeOffset.UtcNow);
+                    Result saveResult = await _firearmAggregateRepo.SaveAsync(fa, cancellationToken).ConfigureAwait(false);
+
+                    if (saveResult.IsSuccess)
+                    {
+                        updateCount++;
+                    }
+                    else
+                    {
+                        Logger.Warning("Failed to save recalculated round count for firearm '{FirearmName}'.", row.FirearmName);
+                    }
+                }
+
+                CliDisplay.PrintSuccess($"Recalculation complete. {updateCount} firearms updated.");
+                return ReturnCodes.SUCCESS;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "An error occurred while recalculating round counts.");
+                CliDisplay.PrintFailure("Failed to recalculate round counts.");
+                return ReturnCodes.FAILURE;
+            }
+            finally
+            {
+                PressEnterToContinue();
+            }
+        }
+
         /// <summary>
         ///     This is a maintenance task. It will update the Firearms table based on what is in the SimpleRangeEvents table.
         /// </summary>
@@ -36,7 +116,7 @@ namespace MyLittleRangeBook
         /// <returns></returns>
         [Command("import-from-range-events")]
         [UsedImplicitly]
-        public async Task<int> UpdateFirearmsFromRangeEvents(CancellationToken cancellationToken = default)
+        public async Task<int> ImportFirearmsFromRangeEvents(CancellationToken cancellationToken = default)
         {
             CliDisplay.PrintCommandHeader("Import new firearms from range events.");
 

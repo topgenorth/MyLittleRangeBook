@@ -1,10 +1,13 @@
-﻿using ConsoleAppFramework;
+﻿using System.Data.Common;
+using ConsoleAppFramework;
+using Dapper;
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Firearms;
+using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook
@@ -12,6 +15,9 @@ namespace MyLittleRangeBook
     [RegisterCommands("firearms")]
     public class FirearmCommands : MlrbCommandBase
     {
+
+
+
         readonly IFirearmAggregateRepository _repo;
         readonly IFirearmsService _firearmsService;
         readonly FirearmsTablePrinter _printer;
@@ -30,13 +36,13 @@ namespace MyLittleRangeBook
         }
 
 
+
         /// <summary>
         ///     List all the active firearms.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("list")]
-        [UsedImplicitly]
+        [Command("list"), UsedImplicitly]
         public async Task<int> PrintFirearmsToConsole(CancellationToken cancellationToken = default)
         {
             CliDisplay.PrintCommandHeader("List firearms");
