@@ -6,9 +6,13 @@ namespace MyLittleRangeBook
 {
     public static partial class ServiceCollectionExtensions
     {
+        /// <summary>
+        /// This should match the JsonSerializeble attributes in MlrbJsonSerializerContext.cs
+        /// </summary>
         static readonly Type[] SupportedFirearmsEvents = [
-            typeof(AssetAssociatedWithFirearm),
             typeof(FirearmActive),
+            typeof(FirearmAssociatedWithAsset),
+            typeof(FirearmAssociatedWithRangeEvent),
             typeof(FirearmBarrelChanged),
             typeof(FirearmCleaned),
             typeof(FirearmCreated),
@@ -16,8 +20,8 @@ namespace MyLittleRangeBook
             typeof(FirearmInactive),
             typeof(FirearmModified),
             typeof(FirearmNoteAdded),
+            typeof(FirearmRoundCountRecalculated),
             typeof(FirearmSightingSystemChanged),
-            typeof(RangeEventAssociatedWithFirearm),
         ];
 
         public static IServiceCollection RegisterFirearmEventSourcing(this IServiceCollection services)

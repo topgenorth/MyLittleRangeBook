@@ -22,6 +22,7 @@ namespace MyLittleRangeBook.Persistence
         PropertyNameCaseInsensitive = true)]
 
     #region Domain Events: MrlbAsset
+    // [TO20260609] This list should match the SupportedRangeAssetsEvents list in MlrbAssets/ServiceCollectionExtensions.cs
     [JsonSerializable(typeof(MrlbAssetAssociatedWithFirearm))]
     [JsonSerializable(typeof(MlrbAssetAssociatedWithSimpleRangeEvent))]
     [JsonSerializable(typeof(MlrbAssetCreated))]
@@ -36,19 +37,19 @@ namespace MyLittleRangeBook.Persistence
     #endregion
 
     #region Domain Events: Firearms
-    [JsonSerializable(typeof(AssetAssociatedWithFirearm))]
+    // [TO20260609] This list should match the SupportedFirearmEvents list in  Firearms/ServiceCollectionExtensions.cs
     [JsonSerializable(typeof(FirearmActive))]
+    [JsonSerializable(typeof(FirearmAssociatedWithAsset))]
+    [JsonSerializable(typeof(FirearmAssociatedWithRangeEvent))]
     [JsonSerializable(typeof(FirearmBarrelChanged))]
     [JsonSerializable(typeof(FirearmCleaned))]
     [JsonSerializable(typeof(FirearmCreated))]
-    [JsonSerializable(typeof(FirearmNoteAdded))]
-    [JsonSerializable(typeof(FirearmSightingSystemChanged))]
     [JsonSerializable(typeof(FirearmDischargeMoreRounds))]
     [JsonSerializable(typeof(FirearmInactive))]
     [JsonSerializable(typeof(FirearmModified))]
     [JsonSerializable(typeof(FirearmNoteAdded))]
+    [JsonSerializable(typeof(FirearmRoundCountRecalculated))]
     [JsonSerializable(typeof(FirearmSightingSystemChanged))]
-    [JsonSerializable(typeof(RangeEventAssociatedWithFirearm))]
     #endregion
 
 
