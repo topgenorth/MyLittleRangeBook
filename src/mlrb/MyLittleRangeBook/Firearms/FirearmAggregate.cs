@@ -53,7 +53,7 @@ namespace MyLittleRangeBook.Firearms
                 IsActive = IsActive,
                 Name = Name,
                 Notes = Notes,
-                Modified = DateTimeOffset.UtcNow
+                Modified = this.Modified
             };
 
             return f;
@@ -100,9 +100,10 @@ namespace MyLittleRangeBook.Firearms
                     Name = x.Name;
                     RoundsFired = x.TotalRoundsFired;
                     Created = x.OccurredUtc;
+                    AppendToNotes("Firearm created.");
                     if (x.Notes is not null)
                     {
-                        Notes = x.Notes;
+                        AppendToNotes(x.Notes);
                     }
 
                     break;

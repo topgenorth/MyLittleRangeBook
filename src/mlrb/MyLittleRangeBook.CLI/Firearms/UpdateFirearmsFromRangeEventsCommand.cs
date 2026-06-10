@@ -60,6 +60,7 @@ namespace MyLittleRangeBook
                 int updateCount = 0;
                 foreach ((string FirearmName, int TotalRounds) row in firearmsWithRounds)
                 {
+                    #region Capture the domain events.
                     Result<FirearmAggregate> faResult = await _firearmAggregateRepo
                         .GetOrCreateByNameAsync(row.FirearmName, cancellationToken)
                         .ConfigureAwait(false);
@@ -71,27 +72,53 @@ namespace MyLittleRangeBook
                     }
 
                     FirearmAggregate fa = faResult.Value;
-                    if (fa.RoundsFired == row.TotalRounds)
+                    if (fa.RoundsFired != row.TotalRounds)
                     {
-                        continue;
+                        fa.TotalRoundCountRecalculated(row.TotalRounds, DateTimeOffset.UtcNow);
+                        Result saveResult = await _firearmAggregateRepo.SaveAsync(fa, cancellationToken).ConfigureAwait(false);
+                        if (saveResult.IsSuccess)
+                        {
+
+                        }
+                        else
+                        {
+                            Logger.Warning("Failed to save recalculated round count for firearm '{FirearmName}'.", row.FirearmName);
+                            continue;
+                        }
+                        Logger.Verbose("Recalculating rounds for '{FirearmName}': {OldCount} -> {NewCount}",
+                            row.FirearmName, fa.RoundsFired, row.TotalRounds);
                     }
-                    Logger.Verbose("Recalculating rounds for '{FirearmName}': {OldCount} -> {NewCount}",
-                        row.FirearmName, fa.RoundsFired, row.TotalRounds);
+                    #endregion
 
-                    Firearm f = fa.ToFirearm();
-                    Result<EntityId> x = await _firearmsService.UpsertAsync(ctx, f).ConfigureAwait(false);
 
-                    fa.TotalRoundCountRecalculated(row.TotalRounds, DateTimeOffset.UtcNow);
-                    Result saveResult = await _firearmAggregateRepo.SaveAsync(fa, cancellationToken).ConfigureAwait(false);
+                    #region Update the firearm table (project the events to the firearms table).
 
-                    if (saveResult.IsSuccess)
+                    // [TO20260610] the aggregate id (stream id) is the same as the firearm id.
+                    Result<Firearm> fResult = await _firearmsService.GetFirearmAsync(ctx, fa.Id.ToString()).ConfigureAwait(false);
+
+                    Firearm f;
+                    if (fResult.IsFailed)
                     {
+                        // [TO20260609] Odds are that the firearm doesn't exist in the firearm table.
+                        fa.AppendToNotes("Imported from range events.", DateTimeOffset.UtcNow);
+                        f = fa.ToFirearm();
                         updateCount++;
+                        Logger.Verbose("Created a new firearm record.");
                     }
                     else
                     {
-                        Logger.Warning("Failed to save recalculated round count for firearm '{FirearmName}'.", row.FirearmName);
+                        f = fResult.Value;
+                        if (f.RoundsFired != fa.RoundsFired)
+                        {
+                            updateCount++;
+                        }
                     }
+
+                    f.RoundsFired = fa.RoundsFired;
+                    f.Notes = fa.Notes;
+                    await _firearmsService.UpsertAsync(ctx, f).ConfigureAwait(false);
+                    #endregion
+
                 }
 
                 CliDisplay.PrintSuccess($"Recalculation complete. {updateCount} firearms updated.");
