@@ -16,17 +16,18 @@ namespace MyLittleRangeBook
         public IRenderable BuildRenderable()
         {
             Table table = new Table()
-                .Border(TableBorder.Rounded)
+                .Border(TableBorder.DoubleEdge)
+                .ShowRowSeparators()
                 .Expand()
                 .BorderColor(Color.White)
                 .AddColumn("Name", col => col.Alignment(Justify.Left))
+                .AddColumn("Rounds", col => col.Alignment(Justify.Center).Width(5))
                 .AddColumn("Notes", col => col.Alignment(Justify.Left))
-                .AddColumn("Id", col => col.Alignment(Justify.Center).Width(26))
-                .AddColumn("Row Id", col => col.Alignment(Justify.Center).Width(6));
+                .AddColumn("Id", col => col.Alignment(Justify.Center).Width(26));
 
             foreach (Firearm firearm in _firearms)
             {
-                table.AddRow(firearm.Name, firearm.Notes ?? string.Empty, firearm.Id!, firearm.RowId!.ToString() ?? "");
+                table.AddRow(firearm.Name, firearm.RoundsFired.ToString(),  firearm.Notes ?? string.Empty, firearm.Id!);
             }
 
             Panel p = new Panel(table).Expand().Border(BoxBorder.None);

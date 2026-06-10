@@ -163,12 +163,11 @@ namespace MyLittleRangeBook.Firearms
             else
             {
                 StringBuilder newNotes = new StringBuilder(Notes)
-                    .AppendLine()
                     .AppendLine("--")
-                    .AppendLine()
                     .Append("Date: ")
                     .AppendLine(Modified.ToString("O"))
-                    .AppendLine(text.Trim());
+                    .AppendLine(text.Trim())
+                    .AppendLine();
                 Notes = newNotes.ToString();
             }
         }

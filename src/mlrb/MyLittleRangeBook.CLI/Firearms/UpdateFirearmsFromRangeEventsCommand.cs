@@ -99,8 +99,6 @@ namespace MyLittleRangeBook
                     Firearm f;
                     if (fResult.IsFailed)
                     {
-                        // [TO20260609] Odds are that the firearm doesn't exist in the firearm table.
-                        fa.AppendToNotes("Imported from range events.", DateTimeOffset.UtcNow);
                         f = fa.ToFirearm();
                         updateCount++;
                         Logger.Verbose("Created a new firearm record.");
