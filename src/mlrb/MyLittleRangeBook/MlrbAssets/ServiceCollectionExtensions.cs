@@ -12,6 +12,9 @@ namespace MyLittleRangeBook
     /// </summary>
     public static partial class ServiceCollectionExtensions
     {
+        /// <summary>
+        /// This should match the JsonSerializeble attributes in MlrbJsonSerializerContext.cs
+        /// </summary>
         static readonly Type[] SupportedRangeAssetEvents = [
             typeof(MlrbAssetCreated),
             typeof(MrlbAssetAssociatedWithFirearm),
