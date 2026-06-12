@@ -106,7 +106,7 @@ namespace MyLittleRangeBook
             var downloadDir = Path.Combine(tempRoot, "download");
             Directory.CreateDirectory(downloadDir);
 
-            CliDisplay.Console.MarkupLine($"[blue]Downloading artifact to {downloadDir}...[/]");
+            CliDisplay.PrintInfo($"Downloading artifact to {downloadDir}...");
             if (!await DownloadArtifactAsync(runId, newestArtifact, downloadDir, repoRoot, ct).ConfigureAwait(false))
             {
                 CliDisplay.PrintFailure("Failed to download artifact.");
@@ -160,7 +160,7 @@ namespace MyLittleRangeBook
                 return ReturnCodes.FAILURE;
             }
 
-            CliDisplay.Console.MarkupLine("[blue]Migrating database and running maintenance tasks...[/]");
+            CliDisplay.PrintInfo("Migrating database and running maintenance tasks...");
 
             // Run post-update tasks using the newly installed executable
             await RunProcessAsync(destinationPath, "db migrate", ct, repoRoot, true).ConfigureAwait(false);

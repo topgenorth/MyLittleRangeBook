@@ -26,13 +26,13 @@ namespace MyLittleRangeBook.Database
             CliDisplay.PrintCommandHeader("SQLite Maintenance.");
             await using ScopedSqliteConnection scope = await SqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
 
-            CliDisplay.Console.WriteLine("WAL checkpoint stuff");
+            CliDisplay.PrintInfo("WAL checkpoint");
             await SqliteHelper.CheckpointWalAsync(scope.Connection).ConfigureAwait(false);
 
-            CliDisplay.Console.WriteLine("Vacuum ");
+            CliDisplay.PrintInfo("Vacuum ");
             await SqliteHelper.VacuumAync(scope.Connection).ConfigureAwait(false);
 
-            CliDisplay.Console.WriteLine("Integrity check stuff");
+            CliDisplay.PrintInfo("Integrity check");
             var x  = await SqliteHelper.IntegrityCheckAsync(scope.Connection).ConfigureAwait(false);
             Logger.Information("Database integrity check passed with result: {result}", x);
 
