@@ -48,8 +48,8 @@ namespace MyLittleRangeBook.Sqlite
 
         protected async Task EnsureDatabaseExistsAsync()
         {
-            await using SqliteConnection conn = await GetSqliteConnectionAsync();
-            await conn.CloseAsync();
+            await using ScopedSqliteConnection conn = await GetSqliteConnectionAsync();
+            await conn.Connection.CloseAsync();
 
             Debug.Assert(File.Exists(_sqliteDbFileName));
         }
@@ -59,9 +59,9 @@ namespace MyLittleRangeBook.Sqlite
         /// </summary>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        protected async Task<SqliteConnection> GetSqliteConnectionAsync()
+        protected async Task<ScopedSqliteConnection> GetSqliteConnectionAsync()
         {
-            SqliteConnection? conn = null;
+            ScopedSqliteConnection? conn = null;
             try
             {
                 Result<bool> migrationResult = await SqliteHelper.ApplyDbupMigrationsAsync();
@@ -70,7 +70,7 @@ namespace MyLittleRangeBook.Sqlite
                     throw new Exception("Migration failed");
                 }
 
-                conn = await SqliteHelper.GetDatabaseConnectionAsync().ConfigureAwait(false);
+                conn = await SqliteHelper.GetScopedDatabaseConnectionAsync().ConfigureAwait(false);
 
                 return conn;
             }

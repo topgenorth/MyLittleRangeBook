@@ -3,6 +3,7 @@ using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
+using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Sqlite
 {
@@ -11,7 +12,7 @@ namespace MyLittleRangeBook.Sqlite
         [Fact]
         public async Task Show_update_row()
         {
-            await using SqliteConnection conn = await GetSqliteConnectionAsync();
+            await using ScopedSqliteConnection conn = await GetSqliteConnectionAsync();
             var sut = new FirearmsService();
 
             Firearm f0 = Firearm.New("Unit test");
@@ -36,7 +37,7 @@ namespace MyLittleRangeBook.Sqlite
         [Fact]
         public async Task Should_insert_row()
         {
-            await using SqliteConnection conn = await GetSqliteConnectionAsync();
+            await using ScopedSqliteConnection conn = await GetSqliteConnectionAsync();
             var sut = new FirearmsService();
 
             var f = new Firearm { Name = "Unit test", Notes = "Inserting" };

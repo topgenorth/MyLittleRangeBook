@@ -1,6 +1,7 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
 
 namespace MyLittleRangeBook.Sqlite
@@ -12,7 +13,7 @@ namespace MyLittleRangeBook.Sqlite
         {
             // Explicitly register handlers as they are registered in Program.Main which might not run for tests
 
-            await using SqliteConnection connection = await GetSqliteConnectionAsync();
+            await using ScopedSqliteConnection scopedConn = await GetSqliteConnectionAsync();
 
             var rangeEvent = new SimpleRangeEvent(DateTime.Now)
             {
@@ -24,7 +25,7 @@ namespace MyLittleRangeBook.Sqlite
             };
 
             // Save using Dapper
-            await connection.ExecuteAsync(
+            await scopedConn.Connection.ExecuteAsync(
                 """
                 INSERT INTO simple_range_events (id, event_date, firearm_name, range_name, rounds_fired, created, modified)
                 VALUES (@Id, @EventDate, @FirearmName, @RangeName, @RoundsFired, @Created, @Modified)
@@ -32,7 +33,7 @@ namespace MyLittleRangeBook.Sqlite
 
             // Query back - this is where it fails in the issue description
             var events =
-                (await connection.QueryAsync<SimpleRangeEvent>(
+                (await scopedConn.Connection.QueryAsync<SimpleRangeEvent>(
                     "SELECT id AS Id, event_date AS EventDate, firearm_name AS FirearmName, created AS Created FROM simple_range_events WHERE firearm_name = 'Test Firearm'")).ToList();
 
             Assert.Single(events);
