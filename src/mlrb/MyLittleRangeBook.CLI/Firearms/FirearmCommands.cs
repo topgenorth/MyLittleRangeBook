@@ -47,11 +47,13 @@ namespace MyLittleRangeBook
         {
             CliDisplay.PrintCommandHeader("List firearms");
 
-            await using SqliteConnection conn = await _sqliteHelper
-                .GetDatabaseConnectionAsync(cancellationToken)
+            await using ScopedSqliteConnection scopedConn = await _sqliteHelper
+                .GetScopedDatabaseConnectionAsync(cancellationToken)
                 .ConfigureAwait(false);
+            var ctx = new DapperCommandContext(scopedConn.Connection, null, cancellationToken);
+
             Result<IEnumerable<Firearm>> firearms = await _firearmsService
-                .GetFirearmsAsync(conn, cancellationToken: cancellationToken)
+                .GetFirearmsAsync(ctx)
                 .ConfigureAwait(false);
 
             if (firearms.IsFailed)

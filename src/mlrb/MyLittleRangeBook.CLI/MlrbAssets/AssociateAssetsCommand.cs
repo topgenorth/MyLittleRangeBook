@@ -138,7 +138,7 @@ namespace MyLittleRangeBook.MlrbAssets
 
                 DateTimeOffset dto = DateTimeOffset.UtcNow;
                 asset.AssociatedWithFirearm(firearmId, dto);
-                f.Value.AssociatedWithAsset(asset.Id, dto);
+                f.Value!.AssociatedWithAsset(asset.Id, dto);
 
                 await _firearmAggregateRepository.SaveAsync(f.Value, cancellationToken).ConfigureAwait(false);
                 await _assetAggregateRepository.SaveAsync(asset, cancellationToken).ConfigureAwait(false);
