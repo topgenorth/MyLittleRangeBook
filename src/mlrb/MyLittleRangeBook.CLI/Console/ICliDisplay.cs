@@ -24,5 +24,7 @@
         void PrintFailure(string message);
 
         void PrintWarning(string message);
+
+        void PrintInfo(string message);
     }
 }
