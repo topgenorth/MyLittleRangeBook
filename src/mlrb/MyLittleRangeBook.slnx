@@ -1,4 +1,10 @@
 <Solution>
+    <Folder Name="/GUI/">
+        <Project Path="MyLittleRangeBook.GUI.Tests/MyLittleRangeBook.GUI.Tests.csproj" />
+        <Project Path="MyLittleRangeBook.GUI/MyLittleRangeBook.GUI.csproj" />
+        <Project Path="SharedControls/SharedControls.csproj" />
+        <Project Path="SharedControlsTests/SharedControlsTests.csproj" />
+    </Folder>
     <Folder Name="/SolutionItems/">
         <File Path="../../AGENTS.md" />
         <File Path="../../update-from-artifacts.ps1" />
