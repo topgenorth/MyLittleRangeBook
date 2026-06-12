@@ -88,7 +88,7 @@ namespace MyLittleRangeBook
                 return ReturnCodes.FAILURE;
             }
 
-            CliDisplay.PrintSuccess($"Found newest artifact: {newestArtifact}.");
+            CliDisplay.PrintInfo($"Found newest artifact: {newestArtifact}.");
 
             var tempRoot = Path.Combine(Path.GetTempPath(), "mlrb-cli-install");
             try
