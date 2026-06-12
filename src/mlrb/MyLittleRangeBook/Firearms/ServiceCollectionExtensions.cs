@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Firearms;
+using MyLittleRangeBook.Persistence.Sqlite;
 using static MyLittleRangeBook.Firearms.FirearmAggregate;
 
 namespace MyLittleRangeBook
@@ -27,6 +28,7 @@ namespace MyLittleRangeBook
         public static IServiceCollection RegisterFirearmEventSourcing(this IServiceCollection services)
         {
             ArgumentNullException.ThrowIfNull(services);
+            services.AddKeyedScoped<IFirearmsService, FirearmsService>(SqliteHelperExtensions.DI_KEYS_SQLITE);
             services.AddScoped<IFirearmAggregateRepository, SqliteFirearmAggregateRepository>();
             services.AddScoped<IFirearmsService, FirearmsService>();
             return services;
