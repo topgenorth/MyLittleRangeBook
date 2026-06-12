@@ -115,11 +115,16 @@ namespace MyLittleRangeBook
             {
                 if (File.Exists(destinationPath))
                 {
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    // Move the existing executable to a .old file to avoid "Text file busy" (Linux) or access errors (Windows)
+                    string oldPath = destinationPath + ".old";
+                    try
                     {
-                        string oldPath = destinationPath + ".old";
                         if (File.Exists(oldPath)) File.Delete(oldPath);
                         File.Move(destinationPath, oldPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning(ex, "Failed to move existing executable to {oldPath}. Attempting direct overwrite.", oldPath);
                     }
                 }
                 
