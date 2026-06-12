@@ -38,5 +38,10 @@ namespace MyLittleRangeBook.Console
         {
             Console.PrintWarning(message);
         }
+
+        public void PrintInfo(string message)
+        {
+            Console.MarkupLine($"[blue]{AnsiConsoleExtensions.BulletGlyph} {message}[/]");
+        }
     }
 }

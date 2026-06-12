@@ -7,6 +7,9 @@ using MyLittleRangeBook.Console;
 
 namespace MyLittleRangeBook
 {
+    /// <summary>
+    ///     Updates the application with a new version.
+    /// </summary>
     [RegisterCommands("update")]
     public class UpdateCommands : MlrbCommandBase
     {
@@ -18,7 +21,8 @@ namespace MyLittleRangeBook
         }
 
         /// <summary>
-        /// Updates the mlrb executable from the latest GitHub artifacts.
+        ///     Updates the MLRB executable from the latest GitHub artifacts. Requires that the GitHub CLI (gh) is installed and
+        ///     available in PATH.
         /// </summary>
         /// <param name="ct"></param>
         /// <returns></returns>
@@ -33,7 +37,7 @@ namespace MyLittleRangeBook
                 return ReturnCodes.FAILURE;
             }
 
-            string? repoRoot = await GetRepoRootAsync(ct).ConfigureAwait(false);
+            var repoRoot = await GetRepoRootAsync(ct).ConfigureAwait(false);
             if (string.IsNullOrEmpty(repoRoot))
             {
                 CliDisplay.PrintFailure("This command must be run from inside the MyLittleRangeBook git repository.");
@@ -53,7 +57,8 @@ namespace MyLittleRangeBook
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 artifactPattern = "*-linux-executables";
-                destinationDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin");
+                destinationDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".local", "bin");
                 executableName = "mlrb";
             }
             else
@@ -62,45 +67,54 @@ namespace MyLittleRangeBook
                 return ReturnCodes.FAILURE;
             }
 
-            CliDisplay.Console.MarkupLine($"[blue]Finding latest successful run for workflow '{WorkflowName}'...[/]");
-            string? runId = await GetLatestRunIdAsync(WorkflowName, repoRoot, ct).ConfigureAwait(false);
+            CliDisplay.PrintInfo($"Finding latest successful run for workflow '{WorkflowName}'...");
+            var runId = await GetLatestRunIdAsync(WorkflowName, repoRoot, ct).ConfigureAwait(false);
             if (string.IsNullOrEmpty(runId) || runId == "null")
             {
                 CliDisplay.PrintFailure($"Could not find a successful run for workflow '{WorkflowName}'.");
                 return ReturnCodes.FAILURE;
             }
-            CliDisplay.Console.MarkupLine($"[green]Found run ID: {runId}[/]");
 
-            CliDisplay.Console.MarkupLine($"[blue]Finding newest artifact matching '{artifactPattern}' in run {runId}...[/]");
-            string? newestArtifact = await GetNewestArtifactNameAsync(runId, artifactPattern, repoRoot, ct).ConfigureAwait(false);
+            CliDisplay.PrintSuccess($"Found run ID: {runId}");
+
+            CliDisplay.PrintInfo(
+                $"Finding newest artifact matching '{artifactPattern}' in run {runId}...");
+            var newestArtifact =
+                await GetNewestArtifactNameAsync(runId, artifactPattern, repoRoot, ct).ConfigureAwait(false);
             if (string.IsNullOrEmpty(newestArtifact))
             {
-                CliDisplay.PrintFailure($"Could not find any artifacts matching pattern '{artifactPattern}' in run {runId}.");
+                CliDisplay.PrintFailure(
+                    $"Could not find any artifacts matching pattern '{artifactPattern}' in run {runId}.");
                 return ReturnCodes.FAILURE;
             }
-            CliDisplay.Console.MarkupLine($"[green]Found newest artifact: {newestArtifact}[/]");
 
-            string tempRoot = Path.Combine(Path.GetTempPath(), "mlrb-cli-install");
+            CliDisplay.PrintInfo($"Found newest artifact: {newestArtifact}.");
+
+            var tempRoot = Path.Combine(Path.GetTempPath(), "mlrb-cli-install");
             try
             {
-                if (Directory.Exists(tempRoot)) Directory.Delete(tempRoot, true);
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, true);
+                }
             }
             catch (Exception ex)
             {
                 Logger.Warning(ex, "Failed to clean up temporary directory {tempRoot}", tempRoot);
             }
-            
-            string downloadDir = Path.Combine(tempRoot, "download");
+
+            var downloadDir = Path.Combine(tempRoot, "download");
             Directory.CreateDirectory(downloadDir);
 
-            CliDisplay.Console.MarkupLine($"[blue]Downloading artifact to {downloadDir}...[/]");
+            CliDisplay.PrintInfo($"Downloading artifact to {downloadDir}...");
             if (!await DownloadArtifactAsync(runId, newestArtifact, downloadDir, repoRoot, ct).ConfigureAwait(false))
             {
                 CliDisplay.PrintFailure("Failed to download artifact.");
                 return ReturnCodes.FAILURE;
             }
 
-            string? downloadedExecutable = Directory.GetFiles(downloadDir, executableName, SearchOption.AllDirectories).FirstOrDefault();
+            var downloadedExecutable = Directory.GetFiles(downloadDir, executableName, SearchOption.AllDirectories)
+                .FirstOrDefault();
             if (string.IsNullOrEmpty(downloadedExecutable))
             {
                 CliDisplay.PrintFailure($"Could not find {executableName} in downloaded artifact.");
@@ -108,31 +122,36 @@ namespace MyLittleRangeBook
             }
 
             Directory.CreateDirectory(destinationDir);
-            string destinationPath = Path.Combine(destinationDir, executableName);
-            CliDisplay.Console.MarkupLine($"[blue]Installing to {destinationPath}...[/]");
+            var destinationPath = Path.Combine(destinationDir, executableName);
+            CliDisplay.PrintInfo($"Installing to {destinationPath}...");
 
             try
             {
                 if (File.Exists(destinationPath))
                 {
                     // Move the existing executable to a .old file to avoid "Text file busy" (Linux) or access errors (Windows)
-                    string oldPath = destinationPath + ".old";
+                    var oldPath = destinationPath + ".old";
                     try
                     {
-                        if (File.Exists(oldPath)) File.Delete(oldPath);
+                        if (File.Exists(oldPath))
+                        {
+                            File.Delete(oldPath);
+                        }
+
                         File.Move(destinationPath, oldPath);
                     }
                     catch (Exception ex)
                     {
-                        Logger.Warning(ex, "Failed to move existing executable to {oldPath}. Attempting direct overwrite.", oldPath);
+                        Logger.Warning(ex,
+                            "Failed to move existing executable to {oldPath}. Attempting direct overwrite.", oldPath);
                     }
                 }
-                
+
                 File.Copy(downloadedExecutable, destinationPath, true);
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    await RunProcessAsync("chmod", $"+x \"{destinationPath}\"", ct, repoRoot);
+                    await RunProcessAsync("chmod", $"+x \"{destinationPath}\"", ct, repoRoot).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -141,12 +160,12 @@ namespace MyLittleRangeBook
                 return ReturnCodes.FAILURE;
             }
 
-            CliDisplay.Console.MarkupLine("[blue]Migrating database and running maintenance tasks...[/]");
-            
+            CliDisplay.PrintInfo("Migrating database and running maintenance tasks...");
+
             // Run post-update tasks using the newly installed executable
-            await RunProcessAsync(destinationPath, "db migrate", ct, repoRoot, true);
-            await RunProcessAsync(destinationPath, "firearms recalculate-round-count", ct, repoRoot, true);
-            await RunProcessAsync(destinationPath, "db maintenance", ct, repoRoot, true);
+            await RunProcessAsync(destinationPath, "db migrate", ct, repoRoot, true).ConfigureAwait(false);
+            await RunProcessAsync(destinationPath, "firearms recalculate-round-count", ct, repoRoot, true).ConfigureAwait(false);
+            await RunProcessAsync(destinationPath, "db maintenance", ct, repoRoot, true).ConfigureAwait(false);
 
             CliDisplay.PrintSuccess($"Installed {executableName} to: {destinationPath}");
             return ReturnCodes.SUCCESS;
@@ -156,7 +175,7 @@ namespace MyLittleRangeBook
         {
             try
             {
-                var result = await RunProcessAsync("gh", "--version", ct);
+                var result = await RunProcessAsync("gh", "--version", ct).ConfigureAwait(false);
                 return result.ExitCode == 0;
             }
             catch
@@ -169,7 +188,7 @@ namespace MyLittleRangeBook
         {
             try
             {
-                var result = await RunProcessAsync("git", "rev-parse --show-toplevel", ct);
+                var result = await RunProcessAsync("git", "rev-parse --show-toplevel", ct).ConfigureAwait(false);
                 return result.ExitCode == 0 ? result.Output.Trim() : null;
             }
             catch
@@ -180,28 +199,37 @@ namespace MyLittleRangeBook
 
         private async Task<string?> GetLatestRunIdAsync(string workflowName, string repoRoot, CancellationToken ct)
         {
-            var result = await RunProcessAsync("gh", $"run list --workflow \"{workflowName}\" --limit 1 --json databaseId --jq \".[0].databaseId\"", ct, repoRoot);
+            var result = await RunProcessAsync("gh",
+                $"run list --workflow \"{workflowName}\" --limit 1 --json databaseId --jq \".[0].databaseId\"", ct,
+                repoRoot).ConfigureAwait(false);
             return result.Output.Trim();
         }
 
-        private async Task<string?> GetNewestArtifactNameAsync(string runId, string pattern, string repoRoot, CancellationToken ct)
+        private async Task<string?> GetNewestArtifactNameAsync(string runId, string pattern, string repoRoot,
+            CancellationToken ct)
         {
-            var result = await RunProcessAsync("gh", $"api \"repos/{{owner}}/{{repo}}/actions/runs/{runId}/artifacts\" --jq \".artifacts | sort_by(.created_at) | reverse | map(.name) | .[]\"", ct, repoRoot).ConfigureAwait(false);
-            var names = result.Output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            
+            var result = await RunProcessAsync("gh",
+                $"api \"repos/{{owner}}/{{repo}}/actions/runs/{runId}/artifacts\" --jq \".artifacts | sort_by(.created_at) | reverse | map(.name) | .[]\"",
+                ct, repoRoot).ConfigureAwait(false);
+            var names = result.Output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+
             var regexPattern = "^" + pattern.Replace("*", ".*") + "$";
             var regex = new Regex(regexPattern, RegexOptions.IgnoreCase);
 
-            return names.FirstOrDefault(n => regex.IsMatch(n));
+            return names.FirstOrDefault(regex.IsMatch);
         }
 
-        private async Task<bool> DownloadArtifactAsync(string runId, string artifactName, string downloadDir, string repoRoot, CancellationToken ct)
+        private async Task<bool> DownloadArtifactAsync(string runId, string artifactName, string downloadDir,
+            string repoRoot, CancellationToken ct)
         {
-            var result = await RunProcessAsync("gh", $"run download {runId} --name \"{artifactName}\" --dir \"{downloadDir}\"", ct, repoRoot).ConfigureAwait(false);
+            var result = await RunProcessAsync("gh",
+                    $"run download {runId} --name \"{artifactName}\" --dir \"{downloadDir}\"", ct, repoRoot)
+                .ConfigureAwait(false);
             return result.ExitCode == 0;
         }
 
-        private async Task<(int ExitCode, string Output)> RunProcessAsync(string fileName, string arguments, CancellationToken ct, string? workingDirectory = null, bool echoOutput = false)
+        private async Task<(int ExitCode, string Output)> RunProcessAsync(string fileName, string arguments,
+            CancellationToken ct, string? workingDirectory = null, bool echoOutput = false)
         {
             var psi = new ProcessStartInfo
             {
@@ -217,20 +245,30 @@ namespace MyLittleRangeBook
             using var process = new Process();
             process.StartInfo = psi;
             var output = new StringBuilder();
-            
+
             process.OutputDataReceived += (s, e) =>
             {
-                if (e.Data != null)
+                if (e.Data == null)
                 {
-                    output.AppendLine(e.Data);
-                    if (echoOutput) CliDisplay.Console.WriteLine(e.Data);
+                    return;
+                }
+
+                output.AppendLine(e.Data);
+                if (echoOutput)
+                {
+                    CliDisplay.Console.WriteLine(e.Data);
                 }
             };
             process.ErrorDataReceived += (s, e) =>
             {
-                if (e.Data != null)
+                if (e.Data == null)
                 {
-                    if (echoOutput) CliDisplay.Console.MarkupLine($"[red]{Markup.Escape(e.Data)}[/]");
+                    return;
+                }
+
+                if (echoOutput)
+                {
+                    CliDisplay.Console.MarkupLine($"[red]{Markup.Escape(e.Data)}[/]");
                 }
             };
 

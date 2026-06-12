@@ -11,14 +11,8 @@ namespace MyLittleRangeBook.Console
         public const string WarningGlyph = "⚠";
         public const string SuccessGlyph = "✓";
         public const string ErrorGlyph = "✗";
+        public const string BulletGlyph = "•";
 
-        [Obsolete("Don't use")]
-        public static ICliDisplay PrintAppInfo(this ICliDisplay cliDisplay)
-        {
-            cliDisplay.Console.PrintAppInfo();
-
-            return cliDisplay;
-        }
 
         public static IAnsiConsole PrintWarning(this IAnsiConsole console, string message)
         {
