@@ -22,7 +22,7 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="firearmId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<Result<FirearmAggregate>> GetAsync(MlrbId firearmId, CancellationToken cancellationToken = default);
+        Task<Result<FirearmAggregate?>> GetAsync(MlrbId firearmId, CancellationToken cancellationToken = default);
     }
 
     public class SqliteFirearmAggregateRepository : SqliteAggregateRepository<FirearmAggregate>,

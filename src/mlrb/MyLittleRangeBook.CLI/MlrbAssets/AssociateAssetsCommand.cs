@@ -121,7 +121,7 @@ namespace MyLittleRangeBook.MlrbAssets
 
             try
             {
-                Result<FirearmAggregate> f = await _firearmAggregateRepository.GetAsync(firearmId, cancellationToken)
+                Result<FirearmAggregate?> f = await _firearmAggregateRepository.GetAsync(firearmId, cancellationToken)
                     .ConfigureAwait(false);
                 if (f.IsFailed)
                 {
