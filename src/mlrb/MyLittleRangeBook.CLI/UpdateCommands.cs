@@ -22,7 +22,7 @@ namespace MyLittleRangeBook
         /// </summary>
         /// <param name="ct"></param>
         /// <returns></returns>
-        [Command("")]
+        [Command("from-artifacts")]
         public async Task<int> UpdateAsync(CancellationToken ct = default)
         {
             CliDisplay.PrintCommandHeader("Update MyLittleRangeBook from Artifacts");
