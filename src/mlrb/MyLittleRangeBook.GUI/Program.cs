@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
@@ -61,6 +62,13 @@ namespace MyLittleRangeBook.GUI
             }
 
             services.RegisterMyLittleRangeBookSqlite(configuration);
+            services.RegisterRangeEventStuff()
+                .RegisterCartridges()
+                .RegisterRangeAssetHandlers()
+                .RegisterDomainEventSerializers()
+                .RegisterRangeAssetEventSourcing()
+                .RegisterFirearmEventSourcing();
+
             services.AddSingleton<Func<IDialogParticipant, IDialogService>>(provider =>
                 participant => new DialogService(participant));
 
@@ -69,9 +77,9 @@ namespace MyLittleRangeBook.GUI
             Trace.Listeners.Add(new SerilogTraceListener.SerilogTraceListener());
 
             services.AddTransient<MainViewModel>();
-            // services.AddTransient<ManageSimpleRangeEventsViewModel>();
-            // services.AddTransient<ManageFirearmsViewModel>();
-            // services.AddTransient<SettingsViewModel>();
+            services.AddTransient<ManageSimpleRangeEventsViewModel>();
+            services.AddTransient<ManageFirearmsViewModel>();
+            services.AddTransient<SettingsViewModel>();
 
             App.RegisterAppServices(services);
 

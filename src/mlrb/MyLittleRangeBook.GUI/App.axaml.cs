@@ -17,27 +17,6 @@ using MainWindow = MyLittleRangeBook.GUI.Views.MainWindow;
 
 namespace MyLittleRangeBook.GUI
 {
-    /// <summary>
-    ///     Main application entry point for My Simple Range App app.
-    ///     Handles service registration, settings management, theme updates, and UI initialization.
-    /// </summary>
-    /// <remarks>
-    ///     Key responsibilities:
-    ///     - Registers all application services via DI
-    ///     - Manages settings persistence and live UI updates (e.g., accent color changes)
-    ///     - Handles platform-specific UI initialization (desktop vs single-view)
-    ///     - Configures data validation strategy (disables Avalonia's built-in validation to avoid duplicates)
-    ///     Service registration pattern:
-    ///     - Services are registered only if not already registered (prevents duplicates)
-    ///     - Settings.Default is loaded after DI container is built
-    ///     - Design mode uses a separate service collection to avoid runtime dependencies
-    ///     Theme management:
-    ///     - Accent color from settings is applied to all FluentTheme palettes
-    ///     - Changes are reactive — updating settings updates the UI immediately
-    ///     Data validation:
-    ///     - Both Avalonia and CommunityToolkit.Mvvm have DataAnnotation validators
-    ///     - This app uses CommunityToolkit's [NotifyDataErrorInfo], so we disable Avalonia's to avoid duplicate errors
-    /// </remarks>
     public class App : Application
     {
         public static IServiceProvider Services { get; set; } = null!;
