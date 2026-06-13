@@ -10,6 +10,7 @@ using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.GUI.Helper;
 using MyLittleRangeBook.GUI.Services;
+using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.GUI.Properties
 {
@@ -49,7 +50,7 @@ namespace MyLittleRangeBook.GUI.Properties
         ///     Since we want to reduce reflection usage as much as possible, we use a <see cref="JsonConverter" />
         ///     to manage the parsing.
         /// </remarks>
-        [JsonConverter(typeof(ColorCo))]
+        [JsonConverter(typeof(JsonColorConverter))]
         public Color AccentColor
         {
             get;
