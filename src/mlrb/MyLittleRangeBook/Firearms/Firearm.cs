@@ -9,6 +9,13 @@ namespace MyLittleRangeBook.Firearms
         {
             Id = new MlrbId().ToString();
         }
+
+        /// <summary>
+        /// Creates a new instance of a <see cref="Firearm"/> with the specified name.
+        /// </summary>
+        /// <param name="name">The name of the firearm. Must not be null, empty, or whitespace.</param>
+        /// <returns>A new <see cref="Firearm"/> instance with the specified name and an ID generated from the name.</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/> is null, empty, or whitespace.</exception>
         public static Firearm New(string name)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
