@@ -1,26 +1,23 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
-using FluentResults;
-using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.GUI.Services;
-using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Services;
+using MyLittleRangeBook.Persistence.Sqlite;
 using SharedControls.Controls;
 using SharedControls.Services;
 
 namespace MyLittleRangeBook.GUI.ViewModels
 {
-    public partial class EditFirearmViewModel : ViewModelBase, IDialogParticipant
+    public partial  class EditFirearmViewModel : ViewModelBase, IDialogParticipant
     {
-        readonly IDialogService _dialogService;
-        readonly IFirearmsDbService _firearmsDbService;
-        readonly ILogger _logger;
-        readonly ISqliteHelper _sqliteHelper;
+        private readonly IDialogService _dialogService;
+        private readonly IFirearmsService _firearmsDbService;
+        private readonly ILogger _logger;
+        private readonly ISqliteHelper _sqliteHelper;
 
         public EditFirearmViewModel(FirearmViewModel firearm,
-            IFirearmsDbService firearmsDbService,
+            IFirearmsService firearmsDbService,
             IDialogService dialogService,
             ISqliteHelper sqliteHelper,
             ILogger logger)
@@ -36,7 +33,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public FirearmViewModel Item { get; }
 
         [RelayCommand]
-        async Task SaveAsync(CancellationToken cancellationToken)
+        private async Task SaveAsync(CancellationToken cancellationToken)
         {
             Item.Validate();
             if (Item.HasErrors)
@@ -47,11 +44,14 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            var f = Item.ToFirearm();
+            throw new NotImplementedException();
+            /*
+             var f = Item.ToFirearm();
             try
             {
                 SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-                Result<EntityId> result = await _firearmsDbService.UpsertAsync(connection, f, cancellationToken);
+                var ctx = new DapperCommandContext(connection, null, cancellationToken);
+                Result<EntityId> result = await _firearmsDbService.UpsertAsync(ctx, f);
                 if (result.IsSuccess)
                 {
                     _logger.Debug("Firearm {Id} saved RowId: {RowId}", f.Id, result.Value);
@@ -70,14 +70,14 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 await _dialogService.ShowOverlayDialogAsync<bool>("Error",
                     $"An unexpected error occured while trying to save the firearm: {ex.Message}",
                     DialogCommands.Ok);
-            }
+            }*/
         }
 
         [RelayCommand]
-        async Task CancelAsync()
+        private async Task CancelAsync()
         {
             DialogCommand[] commands = [DialogCommands.No, DialogCommands.Yes];
-            DialogResult userResponse = await _dialogService.ShowOverlayDialogAsync<DialogResult>(
+            var userResponse = await _dialogService.ShowOverlayDialogAsync<DialogResult>(
                 "Cancel editing?",
                 "Do you want to discard your changes?",
                 commands);

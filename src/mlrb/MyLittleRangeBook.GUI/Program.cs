@@ -3,22 +3,19 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Avalonia;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using MyLittleRangeBook;
 using MyLittleRangeBook.Config;
-using MyLittleRangeBook.Database.Sqlite;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
-using MyLittleRangeBook.RangeEvent;
-using MyLittleRangeBook.Services;
+using MyLittleRangeBook.Persistence.Sqlite;
 using SharedControls.Services;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.GUI
 {
     [UsedImplicitly]
-    sealed class Program
+    internal sealed class Program
     {
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -26,19 +23,26 @@ namespace MyLittleRangeBook.GUI
         [STAThread]
         public static async Task Main(string[] args)
         {
-            // [TO20260425] This has to run first and will create a default appsettings.json file if one does not exist.
-            IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
-                .AddBootStrapper(BootstrapFuncs.LoggingSectionBootstrapper)
+            var bootstrapper = new AppSettingsJsonFileBootstrapper()
                 .AddBootStrapper(SerilogAppSettingsJsonFileBootstrap.SerilogSection)
-                .AddBootStrapper(AppSettingsFileStorageService.GuiAppSettingsBootstrapper)
                 .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
-            await bootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName);
+            await bootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName)
+                .ConfigureAwait(false);
 
             ConfigurationExtensions.DefaultLogDirectory.Create();
 
             var services = new ServiceCollection();
 
-            IConfigurationRoot configuration = services.AddMyLittleRangeBookConfig();
+            var configuration = services.AddMyLittleRangeBookConfig();
+            services.AddSerilog((serviceProvider, loggerConfiguration) =>
+            {
+                loggerConfiguration
+                    .ReadFrom.Configuration(configuration)
+                    .ReadFrom.Services(serviceProvider)
+                    .Enrich.WithEnvironmentName()
+                    .Enrich.FromLogContext();
+            });
+
 
             // Add global exception handlers to ensure uncaught errors are logged
             try
@@ -57,20 +61,18 @@ namespace MyLittleRangeBook.GUI
                 // Last resort: silently fail to avoid crashing the app if logging setup fails (e.g., under AOT)
             }
 
-            services.AddMyLittleRangeBookSqlite(configuration);
-            services.TryAddTransient<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();
-            // services.TryAddTransient<IFirearmsDbService, SqliteFirearmsDbService>();
-            services.TryAddSingleton<ISettingsStorageService, AppSettingsFileStorageService>();
-            // Register the DialogService factory for creating dialog services with specific participants
+            services.RegisterMyLittleRangeBookSqlite(configuration);
+            services.RegisterRangeEventStuff()
+                .RegisterCartridges()
+                .RegisterRangeAssetHandlers()
+                .RegisterDomainEventSerializers()
+                .RegisterRangeAssetEventSourcing()
+                .RegisterFirearmEventSourcing();
+
             services.AddSingleton<Func<IDialogParticipant, IDialogService>>(provider =>
                 participant => new DialogService(participant));
-            services.AddSerilog((serviceProvider, loggerConfiguration) =>
-            {
-                loggerConfiguration
-                    .ReadFrom.Configuration(configuration)
-                    .ReadFrom.Services(serviceProvider)
-                    .Enrich.FromLogContext();
-            });
+
+
             // Route Avalonia's internal Trace output through Serilog for unified logs
             Trace.Listeners.Add(new SerilogTraceListener.SerilogTraceListener());
 

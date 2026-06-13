@@ -1,8 +1,7 @@
 using Avalonia.Styling;
 
-namespace SharedControls.Themes
+namespace SharedControls.Themes;
+
+public class SharedControlTheme : Styles
 {
-    public class SharedControlTheme : Styles
-    {
-    }
 }

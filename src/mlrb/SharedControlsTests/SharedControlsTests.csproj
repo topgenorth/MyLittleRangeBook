@@ -7,15 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="12.0.3" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1"/>
-        <PackageReference Include="XUnit" Version="2.9.3"/>
-        <PackageReference Include="Avalonia.Headless.XUnit" Version="11.3.12"/>
-
+        <PackageReference Include="Avalonia" Version="12.0.4" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0"/>
+        <PackageReference Include="XUnit.v3" Version="3.2.2"/>
+        <PackageReference Include="Avalonia.Headless.XUnit" Version="12.0.4" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\SharedControls\SharedControls.csproj"/>
+      <ProjectReference Include="..\SharedControls\SharedControls.csproj" />
     </ItemGroup>
 </Project>

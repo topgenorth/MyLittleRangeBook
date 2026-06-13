@@ -14,11 +14,12 @@ using DynamicData;
 using DynamicData.Kernel;
 using FluentResults;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.Database.Sqlite;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Services;
+using MyLittleRangeBook.Persistence;
+using MyLittleRangeBook.Persistence.Sqlite;
 using SharedControls.Controls;
 using SharedControls.Helper;
 using SharedControls.Services;
@@ -33,14 +34,14 @@ namespace MyLittleRangeBook.GUI.ViewModels
         IRecipient<UpdateDataMessage<Firearm>>
     {
         readonly IDialogService _dialogService;
-        readonly IFirearmsDbService _firearmsDbService;
+        readonly IFirearmsService _firearmsDbService;
         readonly SourceCache<FirearmViewModel, long> _firearmViewModelCache = new(x => x.Id ?? -1);
 
         readonly ReadOnlyObservableCollection<FirearmViewModel> _firearmViewModels;
         readonly ILogger _logger;
         readonly ISqliteHelper _sqliteHelper;
 
-        public ManageFirearmsViewModel(IFirearmsDbService firearmsDbService,
+        public ManageFirearmsViewModel(IFirearmsService firearmsDbService,
             Func<IDialogParticipant, IDialogService> dialogServiceFactory,
             ISqliteHelper sqliteHelper,
             ILogger logger)
@@ -177,7 +178,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 try
                 {
                     await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-                    Result<bool> r = await _firearmsDbService.DeleteAsync(connection, firearm.ToFirearm(), cancellationToken);
+                    var ctx = new DapperCommandContext(connection, null, cancellationToken);
+                    Result<bool> r = await _firearmsDbService.DeleteAsync(ctx, firearm.ToFirearm());
                     if (r.IsSuccess)
                     {
                         _firearmViewModelCache.Remove(firearm);

@@ -1,14 +1,8 @@
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using FluentResults;
-using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Services;
-using Serilog.Events;
+using MyLittleRangeBook.Firearms;
+using MyLittleRangeBook.GUI.ViewModels;
+using MyLittleRangeBook.RangeEvents;
 
-namespace MyLittleRangeBook.GUI.ViewModels
+namespace MyLittleRangeBook.GUI
 {
     /// <summary>
     ///     Provides design-time data for the Avalonia previewer and designer.
