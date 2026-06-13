@@ -1,15 +1,13 @@
-﻿namespace MyLittleRangeBook.GUI.ViewModels
-{
-    public abstract class SortableViewModelExpression<T> : ISortableExpression<T> where T : ViewModelBase
-    {
-        protected SortableViewModelExpression(Func<T, IComparable> sortExpression, string name)
-        {
-            DisplayName = name;
-            SortExpression = sortExpression;
-        }
+﻿using MyLittleRangeBook.GUI.ViewModels;
 
-        public string DisplayName { get; }
-        public Func<T, IComparable> SortExpression { get; }
+namespace MyLittleRangeBook.GUI
+{
+    public abstract class SortableViewModelExpression<T>(Func<T, IComparable> sortExpression, string name)
+        : ISortableExpression<T>
+        where T : ViewModelBase
+    {
+        public string DisplayName { get; } = name;
+        public Func<T, IComparable> SortExpression { get; } = sortExpression;
 
         public override string ToString()
         {

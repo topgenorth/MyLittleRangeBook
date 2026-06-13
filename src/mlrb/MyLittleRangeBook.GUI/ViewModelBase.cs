@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace MyLittleRangeBook.GUI.ViewModels
+namespace MyLittleRangeBook.GUI
 {
     /// <summary>
     ///     Base class for all ViewModels in the application.

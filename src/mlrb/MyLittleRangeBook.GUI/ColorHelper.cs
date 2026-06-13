@@ -1,6 +1,6 @@
 using Avalonia.Media;
 
-namespace MyLittleRangeBook.GUI.Helper
+namespace MyLittleRangeBook.GUI
 {
     /// <summary>
     ///     Internal helper class for generating and working with Avalonia Color objects.

@@ -5,7 +5,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:services="clr-namespace:SharedControls.Services;assembly=SharedControls"
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
-             xmlns:viewModels="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              xmlns:viewModels1="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              d:DesignHeight="450"
              d:DesignWidth="800"
@@ -121,37 +120,42 @@
             </ListBox.ItemContainerTheme>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Grid ColumnDefinitions="*, Auto"
-                          RowDefinitions="Auto, Auto, Auto"
-                          RowSpacing="1"
-                          ColumnSpacing="3">
+                    <Grid ColumnDefinitions="*, 1.5*, Auto"
+                          ColumnSpacing="10">
+
+                        <!-- Left Column: Name and Round Count -->
+                        <Grid Grid.Column="0"
+                              ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <!-- Firearm Name -->
+                            <TextBlock Grid.Column="0"
+                                       HorizontalAlignment="Left"
+                                       FontWeight="SemiBold"
+                                       Text="{Binding Name}" />
+                            <!-- Round Count -->
+                            <TextBlock Grid.Column="1"
+                                       HorizontalAlignment="Right"
+                                       Text="{Binding RoundsFired, StringFormat='Rounds: {0}'}" />
+                        </Grid>
+
+                        <!-- Right Column: Notes -->
+                        <TextBlock Grid.Column="1"
+                                   FontStyle="Italic"
+                                   Opacity="0.8"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding Notes}" />
 
                         <!-- A Button that shows the ContextMenu (Useful esp. on mobile devices) -->
-                        <Button Grid.Row="0" Grid.Column="1"
-                                Grid.RowSpan="3" Classes="toolBar"
-                                VerticalAlignment="Top"
+                        <Button Grid.Column="2" Classes="toolBar"
+                                VerticalAlignment="Center"
                                 HorizontalAlignment="Right"
                                 HorizontalContentAlignment="Right"
                                 Content="{DynamicResource PhosphorIcons.DotsThreeVertical}"
                                 Flyout="{StaticResource ToDoItemContextMenu}" />
-
-                        <!-- The first thing is a grid hold the relevant stuff -->
-                        <Grid
-                            Grid.Row="0"
-                            Grid.Column="0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <!-- Id -->
-                            <TextBlock HorizontalAlignment="Left" Grid.Column="0"
-                                       TextAlignment="Center"
-                                       Text="{Binding Id}" />
-                            <!-- Firearm Name -->
-                            <TextBlock Grid.Column="1"
-                                       HorizontalAlignment="Left"
-                                       Text="{Binding Name}" />
-                        </Grid>
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>

@@ -9,6 +9,7 @@
              xmlns:views="clr-namespace:MyLittleRangeBook.GUI.Views"
              xmlns:viewModels1="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              xmlns:views1="clr-namespace:MyLittleRangeBook.GUI.Views"
+             xmlns:gui="clr-namespace:MyLittleRangeBook.GUI"
              d:DesignHeight="450"
              d:DesignWidth="800"
              x:Name="Root"
@@ -174,14 +175,14 @@
                         <!-- Ammo (hidden if not provided) -->
                         <TextBlock Grid.Row="1"
                                    Grid.Column="0"
-                                   IsVisible="{Binding AmmoDescription, Converter={x:Static views1:NullEmptyNAConverter.Instance}}"
+                                   IsVisible="{Binding AmmoDescription, Converter={x:Static gui:NullEmptyNAConverter.Instance}}"
                                    Text="{Binding AmmoDescription}" />
 
                         <!-- Notes (hidden if not provided) -->
                         <TextBlock Grid.Row="2"
                                    Grid.Column="0"
                                    FontStyle="Italic"
-                                   IsVisible="{Binding Notes, Converter={x:Static views1:NullEmptyNAConverter.Instance}}"
+                                   IsVisible="{Binding Notes, Converter={x:Static gui:NullEmptyNAConverter.Instance}}"
                                    Text="{Binding Notes}" />
                     </Grid>
                 </DataTemplate>
