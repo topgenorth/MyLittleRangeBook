@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.GUI.ViewModels

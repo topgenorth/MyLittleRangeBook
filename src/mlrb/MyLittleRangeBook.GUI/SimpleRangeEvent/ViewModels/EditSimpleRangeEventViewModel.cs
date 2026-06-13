@@ -2,10 +2,8 @@
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using FluentResults;
-using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.GUI.Services;
-using MyLittleRangeBook.RangeEvent;
-using MyLittleRangeBook.Services;
+using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
 using SharedControls.Services;
 

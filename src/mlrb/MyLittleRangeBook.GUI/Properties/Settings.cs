@@ -10,7 +10,6 @@ using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.GUI.Helper;
 using MyLittleRangeBook.GUI.Services;
-using JsonContextHelper = MyLittleRangeBook.GUI.Helper.JsonContextHelper;
 
 namespace MyLittleRangeBook.GUI.Properties
 {
@@ -50,7 +49,7 @@ namespace MyLittleRangeBook.GUI.Properties
         ///     Since we want to reduce reflection usage as much as possible, we use a <see cref="JsonConverter" />
         ///     to manage the parsing.
         /// </remarks>
-        [JsonConverter(typeof(JsonColorConverter))]
+        [JsonConverter(typeof(ColorCo))]
         public Color AccentColor
         {
             get;
@@ -88,7 +87,8 @@ namespace MyLittleRangeBook.GUI.Properties
         /// </summary>
         async void SaveSettingsAsync()
         {
-            try
+            throw new NotImplementedException("TODO");
+            /*try
             {
                 if (!_canSave)
                 {
@@ -109,7 +109,7 @@ namespace MyLittleRangeBook.GUI.Properties
             {
                 // remember to enable _canSave again
                 _canSave = true;
-            }
+            }*/
         }
 
         /// <summary>
@@ -117,6 +117,10 @@ namespace MyLittleRangeBook.GUI.Properties
         /// </summary>
         internal async Task LoadSettingsAsync()
         {
+
+            throw new NotImplementedException();
+
+            /*
             try
             {
                 // Remember to disable _canSave before reading the settings.
@@ -144,7 +148,7 @@ namespace MyLittleRangeBook.GUI.Properties
             {
                 // Remember to enable _canSave.
                 _canSave = true;
-            }
+            }*/
         }
     }
 }

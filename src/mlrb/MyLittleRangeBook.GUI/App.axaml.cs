@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.GUI.Properties;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
+using static Avalonia.Data.Core.Plugins.BindingPlugins;
 using MainView = MyLittleRangeBook.GUI.Views.MainView;
 using MainWindow = MyLittleRangeBook.GUI.Views.MainWindow;
 
@@ -144,12 +145,12 @@ namespace MyLittleRangeBook.GUI
         {
             // Get an array of plugins to remove
             var dataValidationPluginsToRemove =
-                BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
+                DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
 
             // remove each entry found
             foreach (var plugin in dataValidationPluginsToRemove)
             {
-                BindingPlugins.DataValidators.Remove(plugin);
+                DataValidators.Remove(plugin);
             }
         }
     }

@@ -1,25 +1,17 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Dapper;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.Database.Sqlite;
-using MyLittleRangeBook.GUI.Database;
-using MyLittleRangeBook.GUI.Helper;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Properties;
-using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
 using SharedControls.Services;
-using JsonContextHelper = MyLittleRangeBook.GUI.Helper.JsonContextHelper;
 using WeakReferenceMessenger = CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger;
 
 namespace MyLittleRangeBook.GUI.ViewModels
@@ -30,7 +22,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
     /// </summary>
     public partial class SettingsViewModel : ViewModelBase, IDialogParticipant
     {
-        readonly ISqliteHelper _sqliteHelper;
+        private readonly ISqliteHelper _sqliteHelper;
 
         public SettingsViewModel(ISqliteHelper sqliteHelper)
         {
@@ -58,7 +50,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     A command that will export the entire database to JSON.
         /// </summary>
         [RelayCommand]
-        async Task ExportDataAsync(CancellationToken cancellationToken = default)
+        private async Task ExportDataAsync(CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
             /*try
@@ -102,7 +94,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     Existing items will be updated.
         /// </summary>
         [RelayCommand]
-        async Task ImportDataAsync(CancellationToken cancellationToken = default)
+        private async Task ImportDataAsync(CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
             /*try
@@ -153,10 +145,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     Notifies other ViewModels to refresh their data after completion.
         /// </summary>
         [RelayCommand]
-        async Task ClearDatabaseAsync(CancellationToken cancellationToken = default)
+        private async Task ClearDatabaseAsync(CancellationToken cancellationToken = default)
         {
             // Show a confirmation dialog with a warning about data loss
-            DialogResult choice = await this.ShowOverlayDialogAsync<DialogResult>("Clear Database",
+            var choice = await this.ShowOverlayDialogAsync<DialogResult>("Clear Database",
                 """
                 Are you sure you want to clear the database? This cannot be undone.
                 TIP: Consider to export the data before you continue.

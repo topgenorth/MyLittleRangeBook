@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.RangeEvents;
 
 
 namespace MyLittleRangeBook.GUI.ViewModels
