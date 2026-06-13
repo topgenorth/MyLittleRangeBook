@@ -17,6 +17,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             Id = firearm.RowId;
             Name = firearm.Name;
+            RoundsFired = firearm.RoundsFired;
             Modified = firearm.Modified;
             Created = firearm.Created;
         }
@@ -25,6 +26,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
 
         [ObservableProperty] [Required] [NotifyDataErrorInfo] public partial string Name { get; set; }
+        [ObservableProperty] [Required] [NotifyDataErrorInfo] public partial int RoundsFired { get; set; }
         [ObservableProperty] [Required] [NotifyDataErrorInfo] public partial DateTimeOffset Modified { get; set; }
         [ObservableProperty] [Required] [NotifyDataErrorInfo] public partial DateTimeOffset Created { get; set; }
 
@@ -35,7 +37,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
         public Firearm ToFirearm()
         {
-            return new Firearm { RowId = Id, Modified = Modified, Created = Created, Name = Name };
+            return new Firearm { RowId = Id, Modified = Modified, Created = Created, Name = Name, RoundsFired = RoundsFired };
         }
 
         public FirearmViewModel CloneFirearmViewModel()

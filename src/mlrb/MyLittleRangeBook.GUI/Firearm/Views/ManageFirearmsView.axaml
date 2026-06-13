@@ -137,10 +137,12 @@
                         <!-- The first thing is a grid hold the relevant stuff -->
                         <Grid
                             Grid.Row="0"
-                            Grid.Column="0">
+                            Grid.Column="0"
+                            ColumnSpacing="10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <!-- Id -->
                             <TextBlock HorizontalAlignment="Left" Grid.Column="0"
@@ -150,6 +152,10 @@
                             <TextBlock Grid.Column="1"
                                        HorizontalAlignment="Left"
                                        Text="{Binding Name}" />
+                            <!-- Round Count -->
+                            <TextBlock Grid.Column="2"
+                                       HorizontalAlignment="Right"
+                                       Text="{Binding RoundsFired, StringFormat='Rounds: {0}'}" />
                         </Grid>
                     </Grid>
                 </DataTemplate>
