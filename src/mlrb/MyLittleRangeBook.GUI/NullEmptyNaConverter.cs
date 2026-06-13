@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace MyLittleRangeBook.GUI.Views
+namespace MyLittleRangeBook.GUI
 {
     public class NullEmptyNAConverter : IValueConverter
     {

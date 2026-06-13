@@ -5,7 +5,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:services="clr-namespace:SharedControls.Services;assembly=SharedControls"
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
-             xmlns:viewModels="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              xmlns:viewModels1="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              d:DesignHeight="450"
              d:DesignWidth="800"

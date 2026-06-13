@@ -10,27 +10,22 @@ namespace MyLittleRangeBook.GUI.ViewModels
     ///     dialog interactions throughout the application.
     /// </summary>
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    public class MainViewModel : ViewModelBase, IDialogParticipant
+    public class MainViewModel(
+        ManageSimpleRangeEventsViewModel manageSimpleRangeEventsVm,
+        ManageFirearmsViewModel manageFirearmsVm,
+        SettingsViewModel settingsVm)
+        : ViewModelBase, IDialogParticipant
     {
-        public MainViewModel(ManageSimpleRangeEventsViewModel manageSimpleRangeEventsVM,
-            ManageFirearmsViewModel manageFirearmsVM,
-            SettingsViewModel settingsVM)
-        {
-            ManageSimpleRangeEventsVM = manageSimpleRangeEventsVM;
-            ManageFirearmsVM = manageFirearmsVM;
-            SettingsVM = settingsVM;
-        }
-
         /// <summary>
         ///     The ViewModel that manages the SimpleRangeEvents and CRUD operations.
         /// </summary>
-        public ManageSimpleRangeEventsViewModel ManageSimpleRangeEventsVM { get; set; }
+        public ManageSimpleRangeEventsViewModel ManageSimpleRangeEventsVM { get; set; } = manageSimpleRangeEventsVm;
 
-        public ManageFirearmsViewModel ManageFirearmsVM { get; set; }
+        public ManageFirearmsViewModel ManageFirearmsVM { get; set; } = manageFirearmsVm;
 
         /// <summary>
         ///     The ViewModel that manages application settings and configuration.
         /// </summary>
-        public SettingsViewModel SettingsVM { get; set; }
+        public SettingsViewModel SettingsVM { get; set; } = settingsVm;
     }
 }
