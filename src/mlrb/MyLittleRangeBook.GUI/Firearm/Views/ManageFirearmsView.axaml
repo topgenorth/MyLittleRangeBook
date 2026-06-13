@@ -121,42 +121,43 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid ColumnDefinitions="*, Auto"
-                          RowDefinitions="Auto, Auto, Auto"
+                          RowDefinitions="Auto, Auto"
                           RowSpacing="1"
                           ColumnSpacing="3">
 
                         <!-- A Button that shows the ContextMenu (Useful esp. on mobile devices) -->
                         <Button Grid.Row="0" Grid.Column="1"
-                                Grid.RowSpan="3" Classes="toolBar"
+                                Grid.RowSpan="2" Classes="toolBar"
                                 VerticalAlignment="Top"
                                 HorizontalAlignment="Right"
                                 HorizontalContentAlignment="Right"
                                 Content="{DynamicResource PhosphorIcons.DotsThreeVertical}"
                                 Flyout="{StaticResource ToDoItemContextMenu}" />
 
-                        <!-- The first thing is a grid hold the relevant stuff -->
-                        <Grid
-                            Grid.Row="0"
-                            Grid.Column="0"
+                        <!-- Line 1: Name and Round Count -->
+                        <Grid Grid.Row="0" Grid.Column="0"
                             ColumnSpacing="10">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <!-- Id -->
-                            <TextBlock HorizontalAlignment="Left" Grid.Column="0"
-                                       TextAlignment="Center"
-                                       Text="{Binding Id}" />
                             <!-- Firearm Name -->
-                            <TextBlock Grid.Column="1"
+                            <TextBlock Grid.Column="0"
                                        HorizontalAlignment="Left"
+                                       FontWeight="SemiBold"
                                        Text="{Binding Name}" />
                             <!-- Round Count -->
-                            <TextBlock Grid.Column="2"
+                            <TextBlock Grid.Column="1"
                                        HorizontalAlignment="Right"
                                        Text="{Binding RoundsFired, StringFormat='Rounds: {0}'}" />
                         </Grid>
+
+                        <!-- Line 2: Notes -->
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   FontStyle="Italic"
+                                   Opacity="0.8"
+                                   TextWrapping="Wrap"
+                                   Text="{Binding Notes}" />
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
