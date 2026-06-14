@@ -100,6 +100,8 @@ namespace MyLittleRangeBook
             }
         }
 
+
+
         /// <summary>
         ///     This is a maintenance task. It will update the Firearms table based on what is in the SimpleRangeEvents table.
         /// </summary>
@@ -115,11 +117,11 @@ namespace MyLittleRangeBook
             IEnumerable<NewFirearmWithRoundCountRow> firearms;
             try
             {
-                await using var conn = await SqliteHelper.GetDatabaseConnectionAsync(cancellationToken)
+                await using var scopedConn = await SqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken)
                     .ConfigureAwait(false);
                 await using var trans =
-                    await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-                var ctx = new DapperCommandContext(conn, trans, cancellationToken);
+                    await scopedConn.Connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+                var ctx = new DapperCommandContext(scopedConn, trans, cancellationToken);
                 firearms = await Commands
                     .GetNewFirearmsFromRangeEvents
                     .QueryAsync<NewFirearmWithRoundCountRow>(ctx)
@@ -144,7 +146,6 @@ namespace MyLittleRangeBook
                 {
                     CliDisplay.PrintFailure($"Could not import firearm {row.FirearmName}");
                     continue;
-                    ;
                 }
 
                 fa.Value.AppendToNotes("Imported from range events.", DateTimeOffset.UtcNow);
@@ -199,6 +200,7 @@ namespace MyLittleRangeBook
 
         internal record struct NewFirearmWithRoundCountRow(string FirearmName, int TotalRoundsFired);
 
+
         private static class Commands
         {
             /// <summary>
@@ -212,17 +214,7 @@ namespace MyLittleRangeBook
                                                  GROUP BY firearm_name;
                                                  """;
 
-            /// <summary>
-            /// Insert records in the junction table between firearms and simple_range_events.
-            /// </summary>
-            private const string AssociateFirearmsWithRangeEventsSql = """
-                                                         INSERT INTO firearms_simple_range_events (firearm_id, simple_range_event_id)
-                                                         SELECT f.id, s.id
-                                                         FROM simple_range_events s
-                                                                  LEFT JOIN firearms f ON f.name = s.firearm_name
-                                                         WHERE s.id NOT IN (SELECT simple_range_event_id FROM firearms_simple_range_events)
-                                                         ORDER BY f.name;
-                                                         """;
+
 
             /// <summary>
             /// Retrieves the names of firearms and their associated total rounds fired,
@@ -243,7 +235,6 @@ namespace MyLittleRangeBook
                 new(GetNewFirearmNamesFromRangeEventsSql);
 
             internal static readonly DapperCommand RoundCountCommand = new(RoundCountSql);
-            internal static readonly DapperCommand AssociateRangeEventsToFirearmsCommand = new(AssociateFirearmsWithRangeEventsSql);
-        }
+         }
     }
 }
