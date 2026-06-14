@@ -8,21 +8,10 @@ using MyLittleRangeBook.Persistence.Sqlite;
 namespace MyLittleRangeBook
 {
     [RegisterCommands("firearms")]
-    public class UpdateFirearmsFromRangeEventsCommand : MlrbSqliteCommandBase
+    public class UpdateFirearmsFromRangeEventsCommand : MlrbFirearmsCommandBase
     {
-        private readonly IFirearmAggregateRepository _firearmAggregateRepo;
-        private readonly IFirearmsService _firearmsService;
-
-        public UpdateFirearmsFromRangeEventsCommand(ILogger logger,
-            ICliDisplay display,
-            ISqliteHelper sqliteHelper,
-            IFirearmsService firearmsService,
-            IFirearmAggregateRepository firearmAggregateRepo) : base(logger, display, sqliteHelper)
+        public UpdateFirearmsFromRangeEventsCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper, IFirearmsService firearmsService, IFirearmAggregateRepository firearmAggregateRepo) : base(logger, display, sqliteHelper, firearmsService, firearmAggregateRepo)
         {
-            ArgumentNullException.ThrowIfNull(firearmsService);
-            _firearmsService = firearmsService;
-            ArgumentNullException.ThrowIfNull(firearmAggregateRepo);
-            _firearmAggregateRepo = firearmAggregateRepo;
         }
 
         /// <summary>
@@ -50,7 +39,7 @@ namespace MyLittleRangeBook
                 {
                     #region Capture the domain events.
 
-                    var faResult = await _firearmAggregateRepo
+                    var faResult = await FirearmAggregateRepository
                         .GetOrCreateByNameAsync(row.FirearmName, cancellationToken)
                         .ConfigureAwait(false);
 
@@ -64,7 +53,8 @@ namespace MyLittleRangeBook
                     if (fa.RoundsFired != row.TotalRounds)
                     {
                         fa.TotalRoundCountRecalculated(row.TotalRounds, DateTimeOffset.UtcNow);
-                        var saveResult = await _firearmAggregateRepo.SaveAsync(fa, cancellationToken)
+                        var saveResult = await FirearmAggregateRepository
+                            .SaveAsync(fa, cancellationToken)
                             .ConfigureAwait(false);
                         if (saveResult.IsSuccess)
                         {
@@ -82,7 +72,7 @@ namespace MyLittleRangeBook
 
                     #endregion
 
-                    await _firearmsService.UpsertAsync(ctx, fa).ConfigureAwait(false);
+                    await FirearmsService.UpsertAsync(ctx, fa).ConfigureAwait(false);
                 }
 
                 CliDisplay.PrintSuccess("Firearm round count recalculation complete.");
@@ -140,7 +130,7 @@ namespace MyLittleRangeBook
             var totalCount = firearms.Count();
             foreach (var row in firearms)
             {
-                var fa = await _firearmAggregateRepo.GetOrCreateByNameAsync(row.FirearmName, cancellationToken)
+                var fa = await FirearmAggregateRepository.GetOrCreateByNameAsync(row.FirearmName, cancellationToken)
                     .ConfigureAwait(false);
                 if (fa.IsFailed)
                 {
@@ -155,7 +145,7 @@ namespace MyLittleRangeBook
                     fa.Value.MoreRoundsFired(row.TotalRoundsFired, DateTimeOffset.UtcNow);
                 }
 
-                var x = await _firearmAggregateRepo.SaveAsync(fa.Value, cancellationToken).ConfigureAwait(false);
+                var x = await FirearmAggregateRepository.SaveAsync(fa.Value, cancellationToken).ConfigureAwait(false);
                 if (!x.IsSuccess)
                 {
                     Logger.Warning("Failed to save event stream for firearm '{firearm}'.", row.FirearmName);
@@ -170,7 +160,7 @@ namespace MyLittleRangeBook
                     await using var trans =
                         await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
                     var ctx = new DapperCommandContext(conn, trans, cancellationToken);
-                    var y = await _firearmsService.UpsertAsync(ctx, f).ConfigureAwait(false);
+                    var y = await FirearmsService.UpsertAsync(ctx, f).ConfigureAwait(false);
 
                     if (y.IsFailed)
                     {
