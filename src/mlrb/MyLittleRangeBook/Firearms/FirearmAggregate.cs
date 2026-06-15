@@ -127,10 +127,6 @@ namespace MyLittleRangeBook.Firearms
 
                     break;
 
-                case FirearmRoundCountRecalculated x:
-                    RoundsFired = x.TotalRoundCount;
-                    AppendToNotes("Round count recalculated.");
-                    break;
 
                 case FirearmSightingSystemChanged x:
                     StringBuilder sbSightsChanged = new StringBuilder("Changed sights from ")
@@ -222,17 +218,5 @@ namespace MyLittleRangeBook.Firearms
                 Raise(new FirearmActive(Id, utcNow));
             }
         }
-
-        public void TotalRoundCountRecalculated(int totalRoundCount, DateTimeOffset utcNow)
-        {
-            if (totalRoundCount is < 0)
-            {
-                throw new ArgumentException("Round count must be > 0.");
-            }
-
-            Raise(new FirearmRoundCountRecalculated(Id, totalRoundCount, utcNow));
-        }
-
-
     }
 }

@@ -21,7 +21,6 @@ namespace MyLittleRangeBook
             typeof(FirearmInactive),
             typeof(FirearmModified),
             typeof(FirearmNoteAdded),
-            typeof(FirearmRoundCountRecalculated),
             typeof(FirearmSightingSystemChanged),
         ];
 

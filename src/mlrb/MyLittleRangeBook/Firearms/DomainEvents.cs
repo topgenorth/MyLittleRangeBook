@@ -65,11 +65,11 @@ namespace MyLittleRangeBook.Firearms
         public record struct FirearmAssociatedWithAsset(MlrbId StreamId, MlrbId AssetId, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
-        [EventType("firearm-round-count-recalculated")]
-        public record struct FirearmRoundCountRecalculated(
-            MlrbId StreamId,
-            int TotalRoundCount,
-            DateTimeOffset OccurredUtc) : IDomainEvent;
+        // [EventType("firearm-round-count-recalculated")]
+        // public record struct FirearmRoundCountRecalculated(
+        //     MlrbId StreamId,
+        //     int TotalRoundCount,
+        //     DateTimeOffset OccurredUtc) : IDomainEvent;
 
     }
 }
