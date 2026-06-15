@@ -24,8 +24,7 @@ namespace MyLittleRangeBook
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("list")]
-        [UsedImplicitly]
+        [Command("list"), UsedImplicitly]
         public async Task<int> PrintFirearmsToConsole(CancellationToken cancellationToken = default)
         {
             CliDisplay.PrintCommandHeader("List firearms");

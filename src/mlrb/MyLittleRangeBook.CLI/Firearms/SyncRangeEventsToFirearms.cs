@@ -69,8 +69,7 @@ namespace MyLittleRangeBook
         ///     A task representing the asynchronous operation. The task result contains an integer status code indicating the
         ///     success or failure of the command.
         /// </returns>
-        [Command("sync-from-range-events")]
-        [UsedImplicitly]
+        [Command("sync-from-range-events"), UsedImplicitly]
         public async Task<int> DoWOrk(CancellationToken cancellationToken = default)
         {
             CliDisplay.PrintCommandHeader("Sync firearms from range events.");

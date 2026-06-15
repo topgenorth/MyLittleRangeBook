@@ -10,8 +10,12 @@ namespace MyLittleRangeBook
     [RegisterCommands("firearms")]
     public class UpdateFirearmsFromRangeEventsCommand : MlrbFirearmsCommandBase
     {
-        public UpdateFirearmsFromRangeEventsCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper, IFirearmsService firearmsService, IFirearmAggregateRepository firearmAggregateRepo) : base(logger, display, sqliteHelper, firearmsService, firearmAggregateRepo)
+        private IProjector _projector;
+        public UpdateFirearmsFromRangeEventsCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper,
+            IFirearmsService firearmsService, IFirearmAggregateRepository firearmAggregateRepo
+            ) : base(logger, display, sqliteHelper, firearmsService, firearmAggregateRepo)
         {
+
         }
 
         /// <summary>
@@ -50,29 +54,30 @@ namespace MyLittleRangeBook
                     }
 
                     var fa = faResult.Value;
-                    if (fa.RoundsFired != row.TotalRounds)
+                    if (fa.RoundsFired == row.TotalRounds)
                     {
-                        fa.TotalRoundCountRecalculated(row.TotalRounds, DateTimeOffset.UtcNow);
-                        var saveResult = await FirearmAggregateRepository
-                            .SaveAsync(fa, cancellationToken)
-                            .ConfigureAwait(false);
-                        if (saveResult.IsSuccess)
-                        {
-                        }
-                        else
-                        {
-                            Logger.Warning("Failed to save recalculated round count for firearm '{FirearmName}'.",
-                                row.FirearmName);
-                            continue;
-                        }
-
-                        Logger.Verbose("Recalculating rounds for '{FirearmName}': {OldCount} -> {NewCount}",
-                            row.FirearmName, fa.RoundsFired, row.TotalRounds);
+                        continue;
                     }
+
+                    fa.TotalRoundCountRecalculated(row.TotalRounds, DateTimeOffset.UtcNow);
+                    var saveResult = await FirearmAggregateRepository
+                        .SaveAsync(fa, cancellationToken)
+                        .ConfigureAwait(false);
+                    if (saveResult.IsSuccess)
+                    {
+                    }
+                    else
+                    {
+                        Logger.Warning("Failed to save recalculated round count for firearm '{FirearmName}'.",
+                            row.FirearmName);
+                        continue;
+                    }
+
+                    Logger.Verbose("Recalculating rounds for '{FirearmName}': {OldCount} -> {NewCount}",
+                        row.FirearmName, fa.RoundsFired, row.TotalRounds);
 
                     #endregion
 
-                    await FirearmsService.UpsertAsync(ctx, fa).ConfigureAwait(false);
                 }
 
                 CliDisplay.PrintSuccess("Firearm round count recalculation complete.");

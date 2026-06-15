@@ -1,70 +1,62 @@
 ﻿using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
-using static MyLittleRangeBook.Firearms.FirearmAggregate;
+using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Firearms
 {
     /// <summary>
     ///     Will update the Firearms table with the events from a given stream.
     /// </summary>
-    class FirearmsProjector : IProjector
+    internal class FirearmsProjector : IProjector
     {
-        readonly ILogger _logger;
-        readonly IFirearmAggregateRepository _repo;
-        readonly IFirearmsService _service;
+        private readonly ILogger _logger;
+        private readonly IFirearmAggregateRepository _repo;
+        private readonly IFirearmsService _service;
+        private readonly ISqliteHelper _sqliteHelper;
 
-        public FirearmsProjector(IFirearmsService service, IFirearmAggregateRepository repo, ILogger logger)
+        public FirearmsProjector(ISqliteHelper sqliteHelper, IFirearmsService service, IFirearmAggregateRepository repo,
+            ILogger logger)
         {
+            _sqliteHelper = sqliteHelper;
             _service = service;
             _repo = repo;
             _logger = logger;
         }
 
-        public async Task<Result> ProjectAsync(DapperCommandContext context,
+        public async Task<Result> ProjectAggregateAsync(DapperCommandContext context,
             MlrbId streamId,
-            IEnumerable<IDomainEvent> domainEvents)
+            IEnumerable<IDomainEvent>? domainEvents = null,
+            CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
-            Firearm? f = null;
-
-            Result<Firearm> fr = await _service.GetFirearmAsync(streamId, context.Connection, context.CancellationToken)
-                .ConfigureAwait(false);
-
-            if (fr.IsFailed)
+            try
             {
-                return Result.Fail(fr.Errors);
-            }
-
-            // [TO20260531] Assumes that the events are in order.
-            foreach (IDomainEvent e in domainEvents)
-            {
-                switch (e)
+                var fa = await _repo.GetAsync(streamId, cancellationToken).ConfigureAwait(false);
+                if (fa.IsFailed)
                 {
-                    case FirearmCreated x:
-                        if (f is null)
-                        {
-                            f = Firearm.New(x.Name);
-                            f.RoundsFired = x.TotalRoundsFired;
-                            f.Notes = x.Notes;
-                            f.Modified = x.OccurredUtc;
-                            f.Created = x.OccurredUtc;
-                        }
-                        else
-                        {
-                            _logger.Verbose("New firearm {name}", x.Name);
-                        }
-
-                        break;
-                    case FirearmModified x:
-                        break;
-                    default:
-                        _logger.Verbose("Unknown and unhandled event {event}.", e);
-
-                        break;
+                    _logger.Warning("Failed to retrieve firearm aggregate. {0}", fa.Errors[0]);
+                    return Result.Fail(fa.Errors);
                 }
-            }
 
-            return Result.Ok();
+                var scopedConn = await _sqliteHelper
+                    .GetScopedDatabaseConnectionAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                var ctx = new DapperCommandContext(scopedConn.Connection, CancellationToken: cancellationToken);
+                var x = await _service.UpsertAsync(ctx, fa.Value!).ConfigureAwait(false);
+
+                if (x.IsFailed)
+                {
+                    _logger.Error("Failed to updated the firearm projection. {0}", x.Errors[0]);
+                    return Result.Fail(x.Errors);
+                }
+
+                return Result.Ok();
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Unexpected error with the firearm aggregate projection.");
+                var err = new Error("Unexpected error with the firearm aggregate projection.").CausedBy(e);
+                return Result.Fail(err);
+            }
         }
     }
 }
