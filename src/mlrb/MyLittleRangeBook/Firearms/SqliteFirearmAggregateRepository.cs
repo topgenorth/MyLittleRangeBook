@@ -10,9 +10,10 @@ namespace MyLittleRangeBook.Firearms
         /// </summary>
         /// <param name="firearmName"></param>
         /// <param name="cancellationToken"></param>
+        /// <param name="createUtc">If specified, the date that the firearm was created. Otherwise the current date-time will be used.</param>
         /// <returns></returns>
         Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(string firearmName,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default, DateTimeOffset? createUtc = null);
 
         Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default);
 
@@ -37,7 +38,8 @@ namespace MyLittleRangeBook.Firearms
         }
 
         public async Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(string firearmName,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            DateTimeOffset? createUtc = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
             var streamId = MlrbId.FromString(firearmName);
@@ -53,7 +55,8 @@ namespace MyLittleRangeBook.Firearms
                 return Result.Ok(firearmAggregate.Value);
             }
 
-            var fa = FirearmAggregate.New(firearmName,  DateTimeOffset.UtcNow);
+            DateTimeOffset createdUtc = createUtc ?? DateTimeOffset.UtcNow;
+            var fa = FirearmAggregate.New(firearmName, createdUtc);
 
             return Result.Ok(fa);
         }
