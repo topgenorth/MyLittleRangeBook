@@ -53,7 +53,7 @@ namespace MyLittleRangeBook.Firearms
                 return Result.Ok(firearmAggregate.Value);
             }
 
-            var fa = FirearmAggregate.New(firearmName, 0, null, DateTimeOffset.UtcNow);
+            var fa = FirearmAggregate.New(firearmName,  DateTimeOffset.UtcNow);
 
             return Result.Ok(fa);
         }

@@ -30,16 +30,11 @@ namespace MyLittleRangeBook.Firearms
             return agg;
         }
 
-        public static FirearmAggregate New(string name, int roundsCount, string? notes, DateTimeOffset utcNow)
+        public static FirearmAggregate New(string name, DateTimeOffset utcNow)
         {
-            if (roundsCount < 0)
-            {
-                throw new ArgumentException("Round count must be > 0.");
-            }
-
             var streamId = MlrbId.FromString(name);
             var agg = new FirearmAggregate();
-            agg.Raise(new FirearmCreated(streamId, name, roundsCount, notes, utcNow));
+            agg.Raise(new FirearmCreated(streamId, name, utcNow));
 
             return agg;
         }
@@ -73,7 +68,7 @@ namespace MyLittleRangeBook.Firearms
                     break;
 
                 case FirearmAssociatedWithRangeEvent x:
-                    RoundsFired += x.RoundCount ?? 0;
+                    // [TO20260614] NOOP
 
                     break;
                 case FirearmBarrelChanged x:
@@ -98,14 +93,7 @@ namespace MyLittleRangeBook.Firearms
                 case FirearmCreated x:
                     Id = x.StreamId;
                     Name = x.Name;
-                    RoundsFired = x.TotalRoundsFired;
                     Created = x.OccurredUtc;
-                    AppendToNotes("Firearm created.");
-                    if (x.Notes is not null)
-                    {
-                        AppendToNotes(x.Notes);
-                    }
-
                     break;
 
                 case FirearmInactive x:
@@ -178,18 +166,9 @@ namespace MyLittleRangeBook.Firearms
             Raise(new FirearmAssociatedWithAsset(Id, assetId, dto));
         }
 
-        public void AssociateWithRangeEvent(MlrbId rangeEventId, int? roundCount, DateTimeOffset utcNow)
+        public void AssociateWithSimpleRangeEvent(MlrbId assetId, DateTimeOffset utcNow)
         {
-            if (roundCount is < 0)
-            {
-                throw new ArgumentException("Round count must be > 0.");
-            }
-
-            Raise(new FirearmAssociatedWithRangeEvent(Id, rangeEventId, roundCount, utcNow));
-            if (roundCount is not null)
-            {
-                Raise(new FirearmDischargeMoreRounds(Id, roundCount.Value, utcNow));
-            }
+            Raise(new FirearmAssociatedWithRangeEvent(Id, assetId, utcNow));
         }
 
         public void Cleaned(DateTimeOffset utcNow)

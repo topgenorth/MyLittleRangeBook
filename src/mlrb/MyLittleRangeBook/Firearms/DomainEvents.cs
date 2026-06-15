@@ -21,8 +21,6 @@ namespace MyLittleRangeBook.Firearms
         public record struct FirearmCreated(
             MlrbId StreamId,
             string Name,
-            int TotalRoundsFired,
-            string? Notes,
             DateTimeOffset OccurredUtc) : IDomainEvent;
 
         [EventType("firearm-cleaned")]
@@ -57,7 +55,6 @@ namespace MyLittleRangeBook.Firearms
         public record struct FirearmAssociatedWithRangeEvent(
             MlrbId StreamId,
             MlrbId RangeEventId,
-            int? RoundCount,
             DateTimeOffset OccurredUtc)
             : IDomainEvent;
 
