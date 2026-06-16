@@ -85,10 +85,10 @@ namespace MyLittleRangeBook.Firearms
 
                     break;
 
-                case FirearmDischargeMoreRounds x:
-                    RoundsFired += x.Rounds;
-
-                    break;
+                // case FirearmDischargeMoreRounds x:
+                //     RoundsFired += x.Rounds;
+                //
+                //     break;
 
                 case FirearmCreated x:
                     Id = x.StreamId;
@@ -118,9 +118,9 @@ namespace MyLittleRangeBook.Firearms
 
                 case FirearmSightingSystemChanged x:
                     StringBuilder sbSightsChanged = new StringBuilder("Changed sights from ")
-                        .Append(x.OldSystem)
+                        .Append(x.OldAiminSystem)
                         .Append(" to ")
-                        .Append(x.NewSystem)
+                        .Append(x.NewAimingSystem)
                         .Append(". ")
                         .Append(x.OccurredUtc.ToString());
                     AppendToNotes(sbSightsChanged.ToString());
@@ -178,12 +178,13 @@ namespace MyLittleRangeBook.Firearms
 
         public void MoreRoundsFired(int roundCount, DateTimeOffset utcNow)
         {
-            if (roundCount < 0)
-            {
-                throw new ArgumentException("Round count must be > 0.");
-            }
-
-            Raise(new FirearmDischargeMoreRounds(Id, roundCount, utcNow));
+            throw new NotImplementedException();
+            // if (roundCount < 0)
+            // {
+            //     throw new ArgumentException("Round count must be > 0.");
+            // }
+            //
+            // Raise(new FirearmDischargeMoreRounds(Id, roundCount, utcNow));
         }
 
         public void IsInactive(bool inactive, DateTimeOffset utcNow)
