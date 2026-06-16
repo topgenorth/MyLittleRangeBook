@@ -99,6 +99,9 @@ namespace MyLittleRangeBook.Firearms
                                                                                               WHERE e.stream_type = 'firearm'
                                                                                                 AND e.event_type = 'firearm-created'
                                                                                                 AND JSON_EXTRACT(e.data_json, '$.name') = s.firearm_name)
+                                                                               OR NOT EXISTS (SELECT 1
+                                                                                              FROM firearms f
+                                                                                              WHERE f.name = s.firearm_name)
                                                                         )
                                                                         SELECT SimpleRangeEventId,
                                                                                FirearmName,
