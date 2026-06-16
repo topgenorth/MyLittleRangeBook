@@ -523,6 +523,7 @@ namespace MyLittleRangeBook
     /// </summary>
     public interface IProjector
     {
-            Task<Result> ProjectAsync(DapperCommandContext context, MlrbId streamId,  IEnumerable<IDomainEvent> domainEvents);
+            Task<Result> ProjectAggregateAsync(DapperCommandContext context, MlrbId streamId,
+                IEnumerable<IDomainEvent>? domainEvents = null, CancellationToken cancellationToken = default);
     }
 }

@@ -1,8 +1,7 @@
-﻿using System.Data.Common;
+﻿using System.Globalization;
 using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
-using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
@@ -11,101 +10,13 @@ using MyLittleRangeBook.Persistence.Sqlite;
 namespace MyLittleRangeBook
 {
     [RegisterCommands("firearms")]
-    public class UpdateFirearmsFromRangeEventsCommand : MlrbSqliteCommandBase
+    public class UpdateFirearmsFromRangeEventsCommand : MlrbFirearmsCommandBase
     {
-
-        const string RoundCountSql = """
-                           SELECT 
-                               firearm_name AS FirearmName, 
-                               COALESCE(SUM(rounds_fired), 0) AS TotalRounds 
-                           FROM simple_range_events 
-                           GROUP BY firearm_name;
-                           """;
-        static readonly DapperCommand RoundCountCommand = new DapperCommand(RoundCountSql);
-
-        readonly IFirearmAggregateRepository _firearmAggregateRepo;
-        readonly IFirearmsService _firearmsService;
-
-        public UpdateFirearmsFromRangeEventsCommand(ILogger logger,
-            ICliDisplay display,
-            ISqliteHelper sqliteHelper,
+        public UpdateFirearmsFromRangeEventsCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper,
             IFirearmsService firearmsService,
-            IFirearmAggregateRepository firearmAggregateRepo) : base(logger, display, sqliteHelper)
+            IFirearmAggregateRepository firearmAggregateRepo
+        ) : base(logger, display, sqliteHelper, firearmsService, firearmAggregateRepo)
         {
-            ArgumentNullException.ThrowIfNull(firearmsService);
-            _firearmsService = firearmsService;
-            ArgumentNullException.ThrowIfNull(firearmAggregateRepo);
-            _firearmAggregateRepo = firearmAggregateRepo;
-        }
-
-                /// <summary>
-        /// Recalculates the total round count per firearm based on range events.
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        [Command("recalculate-round-count"), UsedImplicitly]
-        public async Task<int> UpdateTotalRoundCountForFirearms(CancellationToken cancellationToken = default)
-        {
-            CliDisplay.PrintCommandHeader("Recalculate firearm round counts.");
-            try
-            {
-                await using ScopedSqliteConnection scopedConn = await SqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
-
-                DapperCommandContext ctx = new DapperCommandContext(scopedConn.Connection, CancellationToken: cancellationToken);
-
-                IEnumerable<(string FirearmName, int TotalRounds)> firearmsWithRounds = await RoundCountCommand
-                    .QueryAsync<(string FirearmName, int TotalRounds)>(ctx)
-                    .ConfigureAwait(false);
-
-                foreach ((string FirearmName, int TotalRounds) row in firearmsWithRounds)
-                {
-                    #region Capture the domain events.
-                    Result<FirearmAggregate> faResult = await _firearmAggregateRepo
-                        .GetOrCreateByNameAsync(row.FirearmName, cancellationToken)
-                        .ConfigureAwait(false);
-
-                    if (faResult.IsFailed)
-                    {
-                        Logger.Warning("Failed to retrieve aggregate for firearm '{FirearmName}'.", row.FirearmName);
-                        continue;
-                    }
-
-                    FirearmAggregate fa = faResult.Value;
-                    if (fa.RoundsFired != row.TotalRounds)
-                    {
-                        fa.TotalRoundCountRecalculated(row.TotalRounds, DateTimeOffset.UtcNow);
-                        Result saveResult = await _firearmAggregateRepo.SaveAsync(fa, cancellationToken).ConfigureAwait(false);
-                        if (saveResult.IsSuccess)
-                        {
-
-                        }
-                        else
-                        {
-                            Logger.Warning("Failed to save recalculated round count for firearm '{FirearmName}'.", row.FirearmName);
-                            continue;
-                        }
-                        Logger.Verbose("Recalculating rounds for '{FirearmName}': {OldCount} -> {NewCount}",
-                            row.FirearmName, fa.RoundsFired, row.TotalRounds);
-                    }
-                    #endregion
-
-                    await _firearmsService.UpsertAsync(ctx, fa).ConfigureAwait(false);
-
-                }
-
-                CliDisplay.PrintSuccess($"Firearm round count recalculation complete.");
-                return ReturnCodes.SUCCESS;
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "An error occurred while recalculating round counts.");
-                CliDisplay.PrintFailure("Failed to recalculate round counts.");
-                return ReturnCodes.FAILURE;
-            }
-            finally
-            {
-                PressEnterToContinue();
-            }
         }
 
         /// <summary>
@@ -118,86 +29,111 @@ namespace MyLittleRangeBook
         public async Task<int> ImportFirearmsFromRangeEvents(CancellationToken cancellationToken = default)
         {
             CliDisplay.PrintCommandHeader("Import new firearms from range events.");
+            DapperCommandContext ctx;
+            var returnCode = -1;
 
-            int returnCode = -1;
-            IEnumerable<NewFirearmWithRoundCountRow> firearms;
+            #region Get the database context
+
             try
             {
-                await using SqliteConnection conn = await SqliteHelper.GetDatabaseConnectionAsync(cancellationToken)
+                await using var scopedConn = await SqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken)
                     .ConfigureAwait(false);
-                await using DbTransaction trans =
-                    await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-                var ctx = new DapperCommandContext(conn, trans, cancellationToken);
-                firearms = await Commands
-                    .GetNewFirearmsFromRangeEvents
-                    .QueryAsync<NewFirearmWithRoundCountRow>(ctx)
-                    .ConfigureAwait(false);
+
+                ctx = new DapperCommandContext(scopedConn,CancellationToken: cancellationToken);
             }
             catch (Exception ex)
             {
-                CliDisplay.PrintFailure("something bad happened trying to figure out new firearms.");
-                Logger.Error(ex, "Failed to update firearms from range events");
+                CliDisplay.PrintFailure("Failed to get a connection to the database.");
+                Logger.Fatal(ex, "Failed to get a connection to the database.");
                 returnCode = ReturnCodes.FAILURE;
 
                 goto ExitFunction;
             }
 
-            var importCount = 0;
-            int totalCount = firearms.Count();
-            foreach (NewFirearmWithRoundCountRow row in firearms)
-            {
-                Result<FirearmAggregate> fa = await _firearmAggregateRepo.GetOrCreateByNameAsync(row.FirearmName, cancellationToken).ConfigureAwait(false);
-                if (fa.IsFailed)
-                {
-                    CliDisplay.PrintFailure($"Could not import firearm {row.FirearmName}");
-                    continue;;
-                }
-                fa.Value.AppendToNotes("Imported from range events.", DateTimeOffset.UtcNow);
-                if (fa.Value.Version <2)
-                {
-                    // [TO20260531] Assume this is a new firearm, update the round count.
-                    fa.Value.MoreRoundsFired(row.TotalRoundsFired, DateTimeOffset.UtcNow);
-                }
+            #endregion
 
-                Result x = await _firearmAggregateRepo.SaveAsync(fa.Value, cancellationToken).ConfigureAwait(false);
-                if (!x.IsSuccess)
+            var r1 = await FirearmAggregateRepository
+                .GetNewFirearmNamesFromSimpleRangeEventsAsync(ctx)
+                .ConfigureAwait(false);
+
+            if (r1.IsFailed)
+            {
+                Logger.Fatal("Unexpected exception trying to retrieve new firearm names. {error}", r1.Errors[0]);
+                CliDisplay.PrintFailure("Unexpected exception trying to retrieve new firearm names.");
+                returnCode = ReturnCodes.FAILURE;
+                goto ExitFunction;
+            }
+
+            if (r1.Value is null || !r1.Value!.Any())
+            {
+                CliDisplay.PrintSuccess("No new firearms found.");
+                returnCode = ReturnCodes.SUCCESS;
+                goto ExitFunction;
+            }
+
+            var firearmNames = r1.Value!;
+
+            foreach (var row in firearmNames)
+            {
+                // ReSharper disable once JoinDeclarationAndInitializer
+                FirearmAggregate firearmAgg;
+                #region Step 1: Get (or create) the firearm aggregate
+
+                var r2 = await FirearmAggregateRepository
+                    .GetOrCreateByNameAsync(row.FirearmName, cancellationToken: cancellationToken, row.CreatedUtc)
+                    .ConfigureAwait(false);
+                if (r2.IsFailed)
                 {
-                    Logger.Warning("Failed to save event stream for firearm '{firearm}'.", row.FirearmName);
+                    Logger.Error("Unexpected exception trying to create the aggregate for {firearmName} - moving on. {error}.", row.FirearmName, r2.Errors[0]);
+                    CliDisplay.PrintFailure($"Unexpected exception trying to create the aggregate for {row.FirearmName}. {r2.Errors[0]}.");
                     continue;
                 }
 
-                try
-                {
-                    Firearm f = fa.Value!.ToFirearm();
-                    await using SqliteConnection conn = await SqliteHelper.GetDatabaseConnectionAsync(cancellationToken)
-                        .ConfigureAwait(false);
-                    await using DbTransaction trans =
-                        await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-                    var ctx = new DapperCommandContext(conn, trans, cancellationToken);
-                    Result<EntityId> y = await _firearmsService.UpsertAsync(ctx, f).ConfigureAwait(false);
+                firearmAgg = r2.Value!;
 
-                    if (y.IsFailed)
-                    {
-                        Logger.Warning("Failed to add '{firearm}' to Firearms table.", f.Name);
-                        await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
-                        importCount++;
-                    }
+                Logger.Verbose("Working on {firearmId}:{firearmName}.", firearmAgg.Id, firearmAgg.Name);
+                #endregion
 
-                }
-                catch (Exception e2)
+                #region Step 2: Get a list of all SimpleRangeEvents for the firearm name with the round count (that are not already associated).
+                var listOfRangeEvents = await FirearmAggregateRepository
+                    .GetSimpleRangeEventRoundCountsByFirearmNameAsync(ctx, row.FirearmName)
+                    .ConfigureAwait(false);
+                foreach (var roundCountRow in listOfRangeEvents)
                 {
-                    Logger.Warning(e2, "Failed to update the firearms table!");
+                    // THe order here matters.  First associate the range event, the record rounds fired.
+                    firearmAgg.AssociateWithSimpleRangeEvent(roundCountRow.SimpleRangeEventId, roundCountRow.CreatedUtc);
+                    if (roundCountRow.RoundsFired > 0)
+                    {
+                        firearmAgg.MoreRoundsFired(roundCountRow.RoundsFired, roundCountRow.CreatedUtc);
+                    }
                 }
 
+                var r3 = await FirearmAggregateRepository.SaveAsync(firearmAgg, ctx.CancellationToken)
+                    .ConfigureAwait(false);
+                if (r3.IsFailed)
+                {
+                    Logger.Warning("Failed to create firearm aggregate for {firearmName} - skipping this one. {error}", row.FirearmName, r3.Errors[0]);
+                    CliDisplay.PrintFailure($"Unexpected errors with firearm {row.FirearmName} - skipping it.");
+                    continue;
+                }
+                #endregion
 
+                #region Step 3: Upsert the Firearms table with the FirearmAggregate
+
+                var r4 = await FirearmsService.UpsertAsync(ctx, firearmAgg).ConfigureAwait(false);
+                if (r4.IsFailed)
+                {
+                    CliDisplay.PrintWarning($"Failed to update the `firearm` table for {row.FirearmName}.");
+                    Logger.Warning("There was a problem trying to update the firearm table {firearmName}. {error}",
+                        row.FirearmName, r4.Errors[0]);
+                    continue;
+                }
+                #endregion
+
+                CliDisplay.PrintSuccess($"Created firearm aggregate and `firearm` record for {firearmAgg.Id}:{firearmAgg.Name}, {firearmAgg.RoundsFired} rounds fired.");
             }
 
             returnCode = ReturnCodes.SUCCESS;
-            CliDisplay.PrintSuccess($"Imported {importCount}/{totalCount} firearms from range events.");
 
             ExitFunction:
             PressEnterToContinue();
@@ -205,22 +141,15 @@ namespace MyLittleRangeBook
             return returnCode;
         }
 
-        internal record struct NewFirearmWithRoundCountRow(string FirearmName, int TotalRoundsFired);
-
-        static class Commands
+        private static class Commands
         {
-            const string GetNewFirearmNamesFromRangeEventsSql = """
-                                                                SELECT 
-                                                                    simple_range_events.firearm_name AS FirearmName,
-                                                                    COALESCE(SUM(simple_range_events.rounds_fired), 0) AS TotalRoundsFired
-                                                                FROM simple_range_events
-                                                                WHERE simple_range_events.firearm_name NOT IN (SELECT name FROM firearms)
-                                                                GROUP BY simple_range_events.firearm_name
-                                                                ORDER BY simple_range_events.firearm_name;
-                                                                """;
+            private const string InsertSimpleRangeEventFirearmAssociationSql = """
+                                                                               INSERT INTO firearms_simple_range_events (firearm_id, simple_range_event_id)
+                                                                               VALUES (@FirearmId, @SimpleRangeEventId) 
+                                                                               RETURNING row_id;
+                                                                               """;
 
-            internal static readonly DapperCommand GetNewFirearmsFromRangeEvents =
-                new(GetNewFirearmNamesFromRangeEventsSql);
+            internal static readonly DapperCommand InsertAssociationCommand = new(InsertSimpleRangeEventFirearmAssociationSql);
         }
     }
 }

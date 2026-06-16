@@ -75,4 +75,8 @@
         <ProjectReference Include="..\MyLittleRangeBook\MyLittleRangeBook.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Firearms\SyncRangeEventsToFirearms.cs" />
+    </ItemGroup>
+
 </Project>

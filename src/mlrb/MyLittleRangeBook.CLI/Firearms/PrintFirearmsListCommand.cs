@@ -1,10 +1,5 @@
-﻿using System.Data.Common;
-using ConsoleAppFramework;
-using Dapper;
-using FluentResults;
+﻿using ConsoleAppFramework;
 using JetBrains.Annotations;
-using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
@@ -13,29 +8,16 @@ using MyLittleRangeBook.Persistence.Sqlite;
 namespace MyLittleRangeBook
 {
     [RegisterCommands("firearms")]
-    public class FirearmCommands : MlrbCommandBase
+    public class PrintFirearmsListCommand : MlrbFirearmsCommandBase
     {
+        private readonly FirearmsTablePrinter _printer = new();
 
 
-
-        readonly IFirearmAggregateRepository _repo;
-        readonly IFirearmsService _firearmsService;
-        readonly FirearmsTablePrinter _printer;
-        readonly ISqliteHelper _sqliteHelper;
-
-        public FirearmCommands(ILogger logger,
-            ICliDisplay cliDisplay,
-            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] IFirearmsService firearmsService,
-            ISqliteHelper sqliteHelper,
-            IFirearmAggregateRepository repo) : base(logger, cliDisplay)
+        public PrintFirearmsListCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper,
+            IFirearmsService firearmsService, IFirearmAggregateRepository firearmAggregateRepo) : base(logger, display,
+            sqliteHelper, firearmsService, firearmAggregateRepo)
         {
-            _firearmsService = firearmsService;
-            _sqliteHelper = sqliteHelper;
-            _repo = repo;
-            _printer = new FirearmsTablePrinter();
         }
-
-
 
         /// <summary>
         ///     List all the active firearms.
@@ -47,12 +29,12 @@ namespace MyLittleRangeBook
         {
             CliDisplay.PrintCommandHeader("List firearms");
 
-            await using ScopedSqliteConnection scopedConn = await _sqliteHelper
+            await using var scopedConn = await SqliteHelper
                 .GetScopedDatabaseConnectionAsync(cancellationToken)
                 .ConfigureAwait(false);
             var ctx = new DapperCommandContext(scopedConn.Connection, null, cancellationToken);
 
-            Result<IEnumerable<Firearm>> firearms = await _firearmsService
+            var firearms = await FirearmsService
                 .GetFirearmsAsync(ctx)
                 .ConfigureAwait(false);
 

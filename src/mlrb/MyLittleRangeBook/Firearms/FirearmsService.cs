@@ -5,6 +5,8 @@ namespace MyLittleRangeBook.Firearms
 {
     public partial class FirearmsService : IFirearmsService
     {
+
+
         public async Task<Result<bool>> DeleteAsync(DapperCommandContext context, Firearm firearm)
         {
             if (firearm.RowId is null)
@@ -117,51 +119,6 @@ namespace MyLittleRangeBook.Firearms
                 return Result.Fail<Firearm>(err);
             }
         }
-
-        public Task<Result> AssociateAssetWithFirearm(DapperCommandContext context, string firearmId, string assetId)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        async Task<Result> AssociateRangeEventsWithFirearm(DapperCommandContext ctx)
-        {
-            try
-            {
-                IEnumerable<Commands.RangeEventForFirearm> rangeEvents = await Commands.RangeEventsByFirearmName
-                    .QueryAsync<Commands.RangeEventForFirearm>(ctx)
-                    .ConfigureAwait(false);
-
-                var reasons = new List<IReason>();
-                foreach (Commands.RangeEventForFirearm row in rangeEvents)
-                {
-                    try
-                    {
-                        DapperCommandContext c = ctx with
-                        {
-                            Arguments = new { FirearmsId = row.FirearmName, SimpleRangeEventId = row.SimpleRangeId }
-                        };
-                        int l = await Commands.AssociateFirearmWithRangeEvent.ExecuteAsync(c).ConfigureAwait(false);
-                    }
-                    catch (Exception e)
-                    {
-                        var reason = new Success(
-                            $"Failed to associate firearm {row.FirearmName} with range event {row.SimpleRangeId}: {e.Message}");
-                        reasons.Add(reason);
-                    }
-                }
-
-                return Result.Ok().WithReasons(reasons);
-            }
-            catch (Exception e)
-            {
-                Error? err = new Error(e.Message).CausedBy(e);
-
-                return Result.Fail(err);
-            }
-        }
-
-
 
     }
 }
