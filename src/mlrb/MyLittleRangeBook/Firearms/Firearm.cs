@@ -1,4 +1,5 @@
-﻿using MyLittleRangeBook.Models;
+﻿using System.Globalization;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Firearms
 {

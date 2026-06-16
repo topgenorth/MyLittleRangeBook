@@ -10,19 +10,12 @@ namespace MyLittleRangeBook.Firearms
     /// </summary>
     public interface IFirearmsService
     {
-
         /// <summary>
-        ///     Associate a range asset with the specified firearm.
+        ///     Deletes the Firearm record from the database.
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="firearmId"></param>
-        /// <param name="assetId"></param>
+        /// <param name="firearm"></param>
         /// <returns></returns>
-        Task<Result> AssociateAssetWithFirearm(DapperCommandContext context,
-            string firearmId,
-            string assetId);
-
-
         Task<Result<bool>> DeleteAsync(DapperCommandContext context, Firearm firearm);
 
 
@@ -33,7 +26,7 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="connection">The database connection to be used for the query.</param>
         /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
         /// <returns>A <c cref="Result{Firearm}" /> containing the firearm if found, or an error if not.</returns>
-        [Obsolete("Use DapperCommandContext overload.")]
+        [Obsolete("Use DapperCommandContext overload.", true)]
         Task<Result<Firearm>> GetFirearmAsync(string id,
             IDbConnection connection,
             CancellationToken cancellationToken = default)
@@ -67,7 +60,7 @@ namespace MyLittleRangeBook.Firearms
 
 
         /// <summary>
-        ///    Update a row in the firearms table using the aggregate.
+        ///     Update a row in the firearms table using the aggregate.
         /// </summary>
         /// <param name="firearm"></param>
         /// <param name="context"></param>

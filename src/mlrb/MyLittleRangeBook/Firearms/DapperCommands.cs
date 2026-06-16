@@ -21,35 +21,12 @@ namespace MyLittleRangeBook.Firearms
                                      RETURNING row_id
                                      """;
 
-            const string AssociateFirearmWithRangeEventSql = """
-                                                             INSERT INTO firearms_simple_range_events (firearm_id, simple_range_event_id) 
-                                                             VALUES (@FirearmsId, @SimpleRangeEventId);
-                                                             """;
 
-
-            const string RangeEventsByFirearmNameSql = """
-                                                        SELECT 
-                                                            s.firearm_name AS FirearmName,
-                                                            s.id AS SimpleRangeEventId
-                                                        FROM simple_range_events AS s
-                                                        LEFT JOIN firearms AS f ON f.name = s.firearm_name
-                                                        WHERE f.name IS NULL
-                                                        ORDER BY s.firearm_name;                                                       
-                                                       """;
-
-
-
-            internal static readonly DapperCommand AssociateFirearmWithRangeEvent =
-                new(AssociateFirearmWithRangeEventSql);
-
-            internal static readonly DapperCommand RangeEventsByFirearmName = new(RangeEventsByFirearmNameSql);
             internal static DapperCommand SelectAll => new(SelectSql);
             internal static DapperCommand SelectActive => new(SelectActiveSql);
             internal static DapperCommand SelectById => new(SelectByIdSql);
             internal static DapperCommand DeleteById => new(DeleteSql);
-            internal static DapperCommand Upsert => new(UpsertSql);
-
-            internal record struct RangeEventForFirearm(string FirearmName, string SimpleRangeId);
+            internal static  DapperCommand Upsert => new(UpsertSql);
 
         }
     }
