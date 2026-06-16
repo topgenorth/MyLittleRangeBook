@@ -44,7 +44,7 @@ namespace MyLittleRangeBook.Persistence
     [JsonSerializable(typeof(FirearmBarrelChanged))]
     [JsonSerializable(typeof(FirearmCleaned))]
     [JsonSerializable(typeof(FirearmCreated))]
-    // [JsonSerializable(typeof(FirearmDischargeMoreRounds))]
+    [JsonSerializable(typeof(FirearmDischargeMoreRounds))]
     [JsonSerializable(typeof(FirearmInactive))]
     [JsonSerializable(typeof(FirearmModified))]
     [JsonSerializable(typeof(FirearmNoteAdded))]

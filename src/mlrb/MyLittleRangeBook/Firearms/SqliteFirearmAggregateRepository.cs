@@ -1,6 +1,7 @@
 ﻿using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
+using static MyLittleRangeBook.Firearms.IFirearmAggregateRepository;
 
 namespace MyLittleRangeBook.Firearms
 {
@@ -15,13 +16,13 @@ namespace MyLittleRangeBook.Firearms
         {
         }
 
-        public async Task<IList<IFirearmAggregateRepository.RangeEventRoundCountRow>>
+        public async Task<IList<RangeEventRoundCountRow>>
             GetSimpleRangeEventsForFirearmName(DapperCommandContext context, string name)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             var ctx = context with { Arguments = new { FirearmName = name } };
             var list = await Commands.GetSimpleRangeEventRoundCountsByFirearmName
-                .QueryAsync<IFirearmAggregateRepository.RangeEventRoundCountRow>(ctx)
+                .QueryAsync<RangeEventRoundCountRow>(ctx)
                 .ConfigureAwait(false);
             return list.ToList();
         }
@@ -50,19 +51,33 @@ namespace MyLittleRangeBook.Firearms
             return Result.Ok(fa);
         }
 
-        public Task<IList<IFirearmAggregateRepository.RangeEventRoundCountRow>> GetSimpleRangeEventRoundCountsByFirearmNameAsync(DapperCommandContext context, string name)
+        public async Task<IEnumerable<RangeEventRoundCountRow>> GetSimpleRangeEventRoundCountsByFirearmNameAsync(DapperCommandContext context, string name)
         {
-            throw new NotImplementedException();
+            var ctx = context with {Arguments = new {FirearmName = name}};
+            var list = await Commands
+                .GetSimpleRangeEventsNotAssociatedWithFirearms.QueryAsync<RangeEventRoundCountRow>(ctx)
+                .ConfigureAwait(false);
+
+            return list;
         }
 
-        public async Task<IEnumerable<IFirearmAggregateRepository.NewFirearmNameFromSimpleRangeEventRow>>
+        public async Task<Result<IEnumerable<NewFirearmNameFromSimpleRangeEventRow>>>
             GetNewFirearmNamesFromSimpleRangeEventsAsync(DapperCommandContext context)
         {
-            var firearms = await Commands
-                .NewFirearmNamesFromRangeEvents
-                .QueryAsync<IFirearmAggregateRepository.NewFirearmNameFromSimpleRangeEventRow>(context)
-                .ConfigureAwait(false);
-            return firearms;
+            try
+            {
+                var firearms = await Commands
+                    .NewFirearmNamesFromRangeEvents
+                    .QueryAsync<NewFirearmNameFromSimpleRangeEventRow>(context)
+                    .ConfigureAwait(false);
+                return Result.Ok(firearms);
+            }
+            catch (Exception e)
+            {
+                var err = new Error("Unexpected exception trying to get a list of new firearm names").CausedBy(e);
+                return Result.Fail(err);
+            }
+
         }
 
         private static class Commands
@@ -76,7 +91,7 @@ namespace MyLittleRangeBook.Firearms
                                                                         WITH UnassociatedOldest AS (
                                                                             SELECT s.id           AS SimpleRangeEventId,
                                                                                    s.firearm_name AS FirearmName,
-                                                                                   s.event_date   AS EventDate,
+                                                                                   s.event_date   AS Created,
                                                                                    ROW_NUMBER() OVER (PARTITION BY s.firearm_name ORDER BY s.event_date, s.id) AS rn
                                                                             FROM simple_range_events s
                                                                             WHERE NOT EXISTS (SELECT 1
@@ -87,14 +102,36 @@ namespace MyLittleRangeBook.Firearms
                                                                         )
                                                                         SELECT SimpleRangeEventId,
                                                                                FirearmName,
-                                                                               EventDate
+                                                                               Created
                                                                         FROM UnassociatedOldest
                                                                         WHERE rn = 1
-                                                                        ORDER BY EventDate, FirearmName;
+                                                                        ORDER BY Created, FirearmName;
                                                                         """;
 
+            private const string GetSimpleRangeEventsNotAssociatedWithFirearmsSql = """
+                                                                              SELECT s.id AS SimpleRangeEventId,
+                                                                                     s.firearm_name AS FirearmName,
+                                                                                     s.rounds_fired AS RoundsFired,
+                                                                                     s.event_date AS EventDate
+                                                                              FROM simple_range_events s
+                                                                              WHERE NOT EXISTS (SELECT 1
+                                                                                                FROM events e
+                                                                                                WHERE e.stream_type = 'firearm'
+                                                                                                  AND e.event_type = 'range-event-associated-with-firearm'
+                                                                                                  AND JSON_EXTRACT(e.data_json, '$.rangeEventId') = s.id)
+                                                                              AND s.firearm_name = @FirearmName
+                                                                              ORDER BY s.event_date, s.firearm_name;
+                                                                              
+                                                                              """;
             private const string GetSimpleRangeEventRoundCountsByFirearmNameSql = """
-
+                                                                  SELECT s.id           AS SimpleRangeEventId,
+                                                                         s.firearm_name AS FirearmName,
+                                                                         s.rounds_fired AS RoundsFired,
+                                                                         s.event_date   AS EventDate
+                                                                  FROM simple_range_events s
+                                                                  WHERE s.rounds_fired > 0
+                                                                    AND s.firearm_name = @FirearmName
+                                                                  ORDER BY s.event_date, s.firearm_name;
                                                                   """;
 
 
@@ -109,8 +146,17 @@ namespace MyLittleRangeBook.Firearms
                 new(GetNewFirearmNamesFromRangeEventsSql);
 
 
+            /// <summary>
+            /// Get a list of SimpleRangeEvents and the rounds fired for a given firearm name.
+            /// </summary>
             internal static readonly DapperCommand GetSimpleRangeEventRoundCountsByFirearmName =
                 new(GetSimpleRangeEventRoundCountsByFirearmNameSql);
+
+            /// <summary>
+            /// A list of all range events (that are not associated with a firearm aggregrete.
+            /// </summary>
+            internal static readonly DapperCommand GetSimpleRangeEventsNotAssociatedWithFirearms =
+                new(GetSimpleRangeEventsNotAssociatedWithFirearmsSql);
         }
     }
 }

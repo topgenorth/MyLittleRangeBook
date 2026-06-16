@@ -128,7 +128,6 @@ namespace MyLittleRangeBook.Firearms
         /// The UTC timestamp when the discharge event was recorded.
         /// </param>
         [EventType("firearm-discharged-rounds")]
-        [Obsolete("Do we need this?", true)]
         public record struct FirearmDischargeMoreRounds(MlrbId StreamId, int Rounds, DateTimeOffset OccurredUtc)
             : IDomainEvent;
 

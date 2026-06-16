@@ -38,9 +38,8 @@ namespace MyLittleRangeBook
             {
                 await using var scopedConn = await SqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken)
                     .ConfigureAwait(false);
-                await using var trans =
-                    await scopedConn.Connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-                ctx = new DapperCommandContext(scopedConn, trans, cancellationToken);
+
+                ctx = new DapperCommandContext(scopedConn,CancellationToken: cancellationToken);
             }
             catch (Exception ex)
             {
@@ -53,38 +52,85 @@ namespace MyLittleRangeBook
 
             #endregion
 
-            var firearms = await FirearmAggregateRepository.GetNewFirearmNamesFromSimpleRangeEventsAsync(ctx).ConfigureAwait(false);
+            var r1 = await FirearmAggregateRepository
+                .GetNewFirearmNamesFromSimpleRangeEventsAsync(ctx)
+                .ConfigureAwait(false);
 
-            foreach (var row in firearms)
+            if (r1.IsFailed)
+            {
+                Logger.Fatal("Unexpected exception trying to retrieve new firearm names. {error}", r1.Errors[0]);
+                CliDisplay.PrintFailure("Unexpected exception trying to retrieve new firearm names.");
+                returnCode = ReturnCodes.FAILURE;
+                goto ExitFunction;
+            }
+
+            if (r1.Value is null || !r1.Value!.Any())
+            {
+                CliDisplay.PrintSuccess("No new firearms found.");
+                returnCode = ReturnCodes.SUCCESS;
+                goto ExitFunction;
+            }
+
+            var firearmNames = r1.Value!;
+
+            foreach (var row in firearmNames)
             {
                 // ReSharper disable once JoinDeclarationAndInitializer
                 FirearmAggregate firearmAgg;
                 #region Step 1: Get (or create) the firearm aggregate
 
-                var w = await FirearmAggregateRepository
+                var r2 = await FirearmAggregateRepository
                     .GetOrCreateByNameAsync(row.FirearmName, cancellationToken: cancellationToken, row.CreatedUtc)
                     .ConfigureAwait(false);
-                if (w.IsFailed)
+                if (r2.IsFailed)
                 {
-                    Logger.Error("Unexpected exception trying to create the aggregate for {firearmName} - moving on. {error}.", row.FirearmName, w.Errors[0]);
-                    CliDisplay.PrintFailure($"Unexpected exception trying to create the aggregate for  {row.FirearmName}. {w.Errors[0]}.");
+                    Logger.Error("Unexpected exception trying to create the aggregate for {firearmName} - moving on. {error}.", row.FirearmName, r2.Errors[0]);
+                    CliDisplay.PrintFailure($"Unexpected exception trying to create the aggregate for {row.FirearmName}. {r2.Errors[0]}.");
                     continue;
                 }
 
-                firearmAgg = w.Value!;
+                firearmAgg = r2.Value!;
 
+                Logger.Verbose("Working on {firearmId}:{firearmName}.", firearmAgg.Id, firearmAgg.Name);
                 #endregion
 
-                #region Step 2: Get a list of all SimpleRangeEvents for the firearm name with the round count.
-                var list = await FirearmAggregateRepository
+                #region Step 2: Get a list of all SimpleRangeEvents for the firearm name with the round count (that are not already associated).
+                var listOfRangeEvents = await FirearmAggregateRepository
                     .GetSimpleRangeEventRoundCountsByFirearmNameAsync(ctx, row.FirearmName)
                     .ConfigureAwait(false);
+                foreach (var roundCountRow in listOfRangeEvents)
+                {
+                    // THe order here matters.  First associate the range event, the record rounds fired.
+                    firearmAgg.AssociateWithSimpleRangeEvent(roundCountRow.SimpleRangeEventId, roundCountRow.CreatedUtc);
+                    if (roundCountRow.RoundsFired > 0)
+                    {
+                        firearmAgg.MoreRoundsFired(roundCountRow.RoundsFired, roundCountRow.CreatedUtc);
+                    }
+                }
+
+                var r3 = await FirearmAggregateRepository.SaveAsync(firearmAgg, ctx.CancellationToken)
+                    .ConfigureAwait(false);
+                if (r3.IsFailed)
+                {
+                    Logger.Warning("Failed to create firearm aggregate for {firearmName} - skipping this one. {error}", row.FirearmName, r3.Errors[0]);
+                    CliDisplay.PrintFailure($"Unexpected errors with firearm {row.FirearmName} - skipping it.");
+                    continue;
+                }
                 #endregion
 
                 #region Step 3: Upsert the Firearms table with the FirearmAggregate
+
+                var r4 = await FirearmsService.UpsertAsync(ctx, firearmAgg).ConfigureAwait(false);
+                if (r4.IsFailed)
+                {
+                    CliDisplay.PrintWarning($"Failed to update the `firearm` table for {row.FirearmName}.");
+                    Logger.Warning("There was a problem trying to update the firearm table {firearmName}. {error}",
+                        row.FirearmName, r4.Errors[0]);
+                    continue;
+                }
                 #endregion
 
-                CliDisplay.PrintInfo($"Created firearm aggreate and firearm  {firearmAgg.Id}:{firearmAgg.Name}, {firearmAgg.RoundsFired} rounds fired.");
+                CliDisplay.PrintSuccess($"Created firearm aggregate and `firearm` record for {firearmAgg.Id}:{firearmAgg.Name}, {firearmAgg.RoundsFired} rounds fired.");
             }
 
             returnCode = ReturnCodes.SUCCESS;
@@ -94,47 +140,6 @@ namespace MyLittleRangeBook
 
             return returnCode;
         }
-
-        private async Task<Result> UpdateFirearm(Firearm f, List<SimpleRangeEventFirearmRow> associations,
-            CancellationToken cancellationToken)
-        {
-            await using var scopedConn = await SqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken)
-                .ConfigureAwait(false);
-            await using var trans =
-                await scopedConn.Connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-
-            var ctx = new DapperCommandContext(scopedConn.Connection, trans, cancellationToken);
-
-            var x = await FirearmsService.UpsertAsync(ctx, f).ConfigureAwait(false);
-            if (x.IsFailed)
-            {
-                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
-                return Result.Fail(x.Errors);
-            }
-
-            try
-            {
-                foreach (var row in associations)
-                {
-                    var p = new { row.FirearmId, row.SimpleRangeEventId };
-                    var ctx2 = ctx with { Arguments = p };
-                    var y = Commands.InsertAssociationCommand.ExecuteScalarAsync<long>(ctx2);
-                }
-
-                await trans.CommitAsync(cancellationToken).ConfigureAwait(true);
-
-                return Result.Ok();
-            }
-            catch (Exception ex)
-            {
-                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
-                return Result.Fail(ex.Message);
-            }
-        }
-
-
-
-        private readonly record struct SimpleRangeEventFirearmRow(string FirearmId, string SimpleRangeEventId);
 
         private static class Commands
         {

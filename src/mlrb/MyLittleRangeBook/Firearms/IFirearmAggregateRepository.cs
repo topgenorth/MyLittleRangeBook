@@ -14,13 +14,12 @@ namespace MyLittleRangeBook.Firearms
         /// <returns></returns>
         Task<Result<FirearmAggregate?>> GetAsync(MlrbId firearmId, CancellationToken cancellationToken = default);
 
-
         /// <summary>
         /// Retrieves a list of firearm names in SimpleRangeEvents that do not have an associated FirearmAggregrate.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        Task<IEnumerable<NewFirearmNameFromSimpleRangeEventRow>> GetNewFirearmNamesFromSimpleRangeEventsAsync(DapperCommandContext context);
+        Task<Result<IEnumerable<NewFirearmNameFromSimpleRangeEventRow>>> GetNewFirearmNamesFromSimpleRangeEventsAsync(DapperCommandContext context);
 
         /// <summary>
         ///     Will retrieve a firearm aggregate by its name, creating it if it doesn't exist.
@@ -41,7 +40,7 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="context">The context for the database command, providing connection and transaction details.</param>
         /// <param name="name">The name of the firearm for which to retrieve range events.</param>
         /// <returns>A task representing the asynchronous operation, returning a list of range event round count rows.</returns>
-        Task<IList<RangeEventRoundCountRow>> GetSimpleRangeEventRoundCountsByFirearmNameAsync(
+        Task<IEnumerable<RangeEventRoundCountRow>> GetSimpleRangeEventRoundCountsByFirearmNameAsync(
             DapperCommandContext context, string name);
 
         /// <summary>
@@ -79,6 +78,13 @@ namespace MyLittleRangeBook.Firearms
             public DateTimeOffset CreatedUtc => DateTimeOffset.Parse(Created, null, DateTimeStyles.AssumeLocal);
         }
 
+        public readonly record struct RangeEventThatIsNotAssociatedWithFirearmRow(
+            string SimpleRangeEventId,
+            string FirearmName,
+            string Created)
+        {
+            public DateTimeOffset CreatedUtc => DateTimeOffset.Parse(Created, null, DateTimeStyles.AssumeLocal);
+        }
         /// <summary>
         /// Represents a record containing data about the round count for a specific range event.
         /// This record is utilized to track the number of rounds fired during a range event
@@ -101,6 +107,7 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         public readonly record struct RangeEventRoundCountRow(
             string SimpleRangeEventId,
+            string FirearmName,
             int RoundsFired,
             string EventDate)
         {

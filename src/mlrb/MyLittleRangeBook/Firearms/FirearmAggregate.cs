@@ -85,10 +85,10 @@ namespace MyLittleRangeBook.Firearms
 
                     break;
 
-                // case FirearmDischargeMoreRounds x:
-                //     RoundsFired += x.Rounds;
-                //
-                //     break;
+                case FirearmDischargeMoreRounds x:
+                    RoundsFired += x.Rounds;
+
+                    break;
 
                 case FirearmCreated x:
                     Id = x.StreamId;
@@ -178,13 +178,13 @@ namespace MyLittleRangeBook.Firearms
 
         public void MoreRoundsFired(int roundCount, DateTimeOffset utcNow)
         {
-            throw new NotImplementedException();
-            // if (roundCount < 0)
-            // {
-            //     throw new ArgumentException("Round count must be > 0.");
-            // }
-            //
-            // Raise(new FirearmDischargeMoreRounds(Id, roundCount, utcNow));
+
+            if (roundCount < 0)
+            {
+                throw new ArgumentException("Round count must be > 0.");
+            }
+
+            Raise(new FirearmDischargeMoreRounds(Id, roundCount, utcNow));
         }
 
         public void IsInactive(bool inactive, DateTimeOffset utcNow)

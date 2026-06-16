@@ -34,10 +34,6 @@ WHERE s.firearm_name = 'SKS'
 ORDER BY s.event_date;
 
 
-SELECT id,
-       JSON_EXTRACT(data_json, '$.sha256') AS sha256
-FROM events;
-
 -- Get a list of firearm names that already exist.
 SELECT JSON_EXTRACT(data_json, '$.name') AS firearm_name
 FROM events
@@ -46,18 +42,17 @@ WHERE stream_type = 'firearm'
 
 
 -- Get the oldest simple range event for each firearm name that is not yet associated with a firearm.
-WITH UnassociatedOldest AS (
-    SELECT s.id           AS SimpleRangeEventId,
-           s.firearm_name AS FirearmName,
-           s.event_date   AS EventDate,
-           ROW_NUMBER() OVER (PARTITION BY s.firearm_name ORDER BY s.event_date, s.id) AS rn
-    FROM simple_range_events s
-    WHERE NOT EXISTS (SELECT 1
-                      FROM events e
-                      WHERE e.stream_type = 'firearm'
-                        AND e.event_type = 'firearm-created'
-                        AND JSON_EXTRACT(e.data_json, '$.name') = s.firearm_name)
-)
+-- IFirearmsAggregateRepository.Commands.NewFirearmNamesFromRangeEvents
+WITH UnassociatedOldest AS (SELECT s.id                                                                        AS SimpleRangeEventId,
+                                   s.firearm_name                                                              AS FirearmName,
+                                   s.event_date                                                                AS EventDate,
+                                   ROW_NUMBER() OVER (PARTITION BY s.firearm_name ORDER BY s.event_date, s.id) AS rn
+                            FROM simple_range_events s
+                            WHERE NOT EXISTS (SELECT 1
+                                              FROM events e
+                                              WHERE e.stream_type = 'firearm'
+                                                AND e.event_type = 'firearm-created'
+                                                AND JSON_EXTRACT(e.data_json, '$.name') = s.firearm_name))
 SELECT SimpleRangeEventId,
        FirearmName,
        EventDate
@@ -66,10 +61,29 @@ WHERE rn = 1
 ORDER BY EventDate, FirearmName;
 
 -- Get the round count for all SimpleRangeEvents that are not associated with a firearm.
+-- IFirearmsAggregateRepository.Commands.GetSimpleRangeEventRoundCountsByFirearmName
+
+SELECT JSON_EXTRACT(data_json, '$.stream_id') AS FirearmId,
+       JSON_EXTRACT(data_json, '$.range_event_id') AS SimpleRangeEventId,
+       JSON_EXTRACT(data_json, '$.name') AS FirearmName
+FROM events
+WHERE stream_type = 'firearm'
+  AND event_type = 'range-event-associated-with-firearm';
+
 SELECT s.id AS SimpleRangeEventId,
        s.firearm_name AS FirearmName,
        s.rounds_fired AS RoundsFired,
        s.event_date AS EventDate
 FROM simple_range_events s
-WHERE s.rounds_fired > 0
+WHERE NOT EXISTS (SELECT 1
+                  FROM events e
+                  WHERE e.stream_type = 'firearm'
+                    AND e.event_type = 'range-event-associated-with-firearm'
+                    AND JSON_EXTRACT(e.data_json, '$.rangeEventId') = s.id)
+AND s.firearm_name = 'PT-101'
 ORDER BY s.event_date, s.firearm_name;
+
+
+---
+
+
