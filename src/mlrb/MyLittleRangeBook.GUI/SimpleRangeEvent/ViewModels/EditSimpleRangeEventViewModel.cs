@@ -1,7 +1,9 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using FluentResults;
+using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
@@ -17,11 +19,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
         public EditSimpleRangeEventViewModel(SimpleRangeEventViewModel simpleRangeEvent,
             ILogger logger,
-            IDialogService dialogService,
+            Func<IDialogParticipant, IDialogService> dialogServiceFactory,
             ISimpleRangeEventRepository repo)
         {
             Item = simpleRangeEvent;
-            _dialogService = dialogService;
+            _dialogService = dialogServiceFactory(this);
             _logger = logger;
             _repo = repo;
         }
@@ -48,7 +50,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 Result<long?> result = await _repo.UpsertAsync(simpleRangeEvent, cancellationToken);
                 if (result.IsSuccess)
                 {
-                    _dialogService.ReturnResultFromOverlayDialog(new SimpleRangeEventViewModel(simpleRangeEvent));
+                    var updatedViewModel = new SimpleRangeEventViewModel(simpleRangeEvent);
+                    _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
+
+                    // Notify the rest of the app about the change
+                    WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
+
+                        Item.RowId == null ? UpdateAction.Added : UpdateAction.Updated,[simpleRangeEvent]));
                 }
                 else
                 {

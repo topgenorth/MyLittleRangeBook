@@ -18,13 +18,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
         public EditFirearmViewModel(FirearmViewModel firearm,
             IFirearmsService firearmsDbService,
-            IDialogService dialogService,
+            Func<IDialogParticipant, IDialogService> dialogServiceFactory,
             ISqliteHelper sqliteHelper,
             ILogger logger)
         {
             Item = firearm;
             _firearmsDbService = firearmsDbService;
-            _dialogService = dialogService;
+            _dialogService = dialogServiceFactory(this);
             _logger = logger;
             _sqliteHelper = sqliteHelper;
         }

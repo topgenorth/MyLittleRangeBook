@@ -50,7 +50,12 @@
 
                 <!--  Rounds   -->
                 <controls:LabeledControl Header="Rounds">
-                    <TextBox x:Name="RoundsTextBox" Text="{Binding RoundsFired}" Watermark="Round fired." />
+                    <NumericUpDown Value="{Binding RoundsFired}"
+                                   Minimum="0"
+                                   Maximum="10000"
+                                   Increment="1"
+                                   FormatString="0"
+                                   HorizontalAlignment="Left" />
                 </controls:LabeledControl>
 
                 <!--  Ammo  -->

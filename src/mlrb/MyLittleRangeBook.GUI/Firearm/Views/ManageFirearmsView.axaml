@@ -19,6 +19,14 @@
     <UserControl.Resources>
         <!-- Defining a MenuFlyout for shared usage -->
         <MenuFlyout x:Key="ToDoItemContextMenu" x:DataType="viewModels1:FirearmViewModel">
+            <MenuItem Header="Add Range Event"
+                      Command="{Binding #Root.((viewModels1:ManageFirearmsViewModel)DataContext).AddRangeEventForFirearmCommand}"
+                      CommandParameter="{Binding}">
+                <MenuItem.Icon>
+                    <PathIcon Data="{DynamicResource PhosphorIcons.PlusCircleLight}" />
+                </MenuItem.Icon>
+            </MenuItem>
+
             <MenuItem Header="Edit Item"
                       Command="{Binding #Root.((viewModels1:ManageFirearmsViewModel)DataContext).EditFirearmCommand}"
                       CommandParameter="{Binding}">
@@ -58,17 +66,22 @@
                 <Button Classes="toolBar"
                         Content="{DynamicResource PhosphorIcons.PlusCircleLight}"
                         Command="{Binding AddNewFirearmCommand}"
-                        ToolTip.Tip="New Range Event" />
+                        ToolTip.Tip="New Firearm" />
+                <Button Classes="toolBar"
+                        Content="{DynamicResource PhosphorIcons.PlusCircleLight}"
+                        Command="{Binding AddRangeEventForFirearmCommand}"
+                        CommandParameter="{Binding SelectedFirearm}"
+                        ToolTip.Tip="Add Range Event" />
                 <Button Classes="toolBar"
                         Content="{DynamicResource PhosphorIcons.NotePencilLight}"
                         Command="{Binding EditFirearmCommand}"
                         CommandParameter="{Binding SelectedFirearm}"
-                        ToolTip.Tip="Edit Range Event" />
+                        ToolTip.Tip="Edit Firearm" />
                 <Button Classes="toolBar"
                         Content="{DynamicResource PhosphorIcons.TrashLight}"
                         Command="{Binding DeleteFirearmCommand}"
                         CommandParameter="{Binding SelectedFirearm}"
-                        ToolTip.Tip="Delete Range Event" />
+                        ToolTip.Tip="Delete Firearm" />
 
                 <Separator VerticalAlignment="Stretch" Width="1" Height="NaN"
                            Margin="0,5" />

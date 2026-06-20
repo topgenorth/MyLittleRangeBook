@@ -17,6 +17,9 @@
         <DataTemplate DataType="viewModels:EditSimpleRangeEventViewModel">
             <views:EditSimpleRangeEventView />
         </DataTemplate>
+        <DataTemplate DataType="viewModels:EditFirearmViewModel">
+            <views:EditFirearmView />
+        </DataTemplate>
 
     </Application.DataTemplates>
 
