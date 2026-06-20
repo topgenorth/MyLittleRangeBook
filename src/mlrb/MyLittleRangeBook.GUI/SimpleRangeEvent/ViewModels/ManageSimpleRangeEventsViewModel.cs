@@ -36,6 +36,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         IRecipient<UpdateDataMessage<SimpleRangeEvent>>
     {
         readonly IDialogService _dialogService;
+        readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly ILogger _logger;
         readonly ISimpleRangeEventRepository _repo;
 
@@ -49,7 +50,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     Source cache for managing ManageSimpleRangeEventsVM instances with reactive updates.
         ///     Uses the SimpleRangeEvent ID as the key for efficient lookups and updates.
         /// </summary>
-        readonly SourceCache<SimpleRangeEventViewModel, long> _simpleRangeEventSourceCache = new(x => x.Id ?? -1);
+        readonly SourceCache<SimpleRangeEventViewModel, long> _simpleRangeEventSourceCache = new(x => x.RowId ?? -1);
 
 
         public ManageSimpleRangeEventsViewModel(ILogger logger,
@@ -57,6 +58,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             ISimpleRangeEventRepository repo)
         {
             _repo = repo;
+            _dialogServiceFactory = dialogServiceFactory;
             _dialogService = dialogServiceFactory(this);
             _logger = logger;
 
@@ -230,6 +232,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 if (r.IsSuccess)
                 {
                     _simpleRangeEventSourceCache.Remove(simpleRangeEvent);
+                    WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
+                        UpdateAction.Removed, [x]));
                 }
             }
         }
@@ -242,7 +246,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            var vm = new EditSimpleRangeEventViewModel(simpleRangeEvent, _logger, _dialogService, _repo);
+            var vm = new EditSimpleRangeEventViewModel(simpleRangeEvent, _logger, _dialogServiceFactory, _repo);
 
             SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
                 "Edit the Range Event",
@@ -258,7 +262,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand]
         async Task RefreshAsync()
         {
-            long previousSelectedId = SelectedSimpleRangeEvent?.Id ?? -1;
+            long previousSelectedId = long.Parse(SelectedSimpleRangeEvent?.Id ?? "-1");
             _simpleRangeEventSourceCache.Clear();
             await LoadDataAsync();
 

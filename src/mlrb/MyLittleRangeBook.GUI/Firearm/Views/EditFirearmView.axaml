@@ -1,8 +1,19 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:services="clr-namespace:SharedControls.Services;assembly=SharedControls"
+             xmlns:viewModels="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             services:DialogManager.Register="{Binding}"
+             x:DataType="viewModels:EditFirearmViewModel"
              x:Class="MyLittleRangeBook.GUI.Views.EditFirearmView">
-    Welcome to Avalonia!
+    <Grid Margin="10">
+        <TextBlock Text="Edit Firearm (Not fully implemented yet)" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <!-- Basic UI to allow Cancel/Save buttons to be visible if they were there -->
+        <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="5">
+            <Button Command="{Binding CancelCommand}" Content="Cancel" />
+            <Button Command="{Binding SaveCommand}" Content="Save" />
+        </StackPanel>
+    </Grid>
 </UserControl>

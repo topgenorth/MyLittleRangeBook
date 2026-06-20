@@ -20,6 +20,7 @@ using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
 using SharedControls.Helper;
 using SharedControls.Services;
@@ -31,26 +32,35 @@ namespace MyLittleRangeBook.GUI.ViewModels
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class ManageFirearmsViewModel : ViewModelBase, IDialogParticipant,
-        IRecipient<UpdateDataMessage<Firearm>>
+        IRecipient<UpdateDataMessage<Firearm>>,
+        IRecipient<UpdateDataMessage<SimpleRangeEvent>>
     {
         readonly IDialogService _dialogService;
+        readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly IFirearmsService _firearmsDbService;
+        readonly ISimpleRangeEventRepository _rangeEventRepo;
         readonly SourceCache<FirearmViewModel, long> _firearmViewModelCache = new(x => x.Id ?? -1);
 
         readonly ReadOnlyObservableCollection<FirearmViewModel> _firearmViewModels;
-        readonly ILogger _logger;
         readonly ISqliteHelper _sqliteHelper;
+        readonly ILogger _logger;
 
         public ManageFirearmsViewModel(IFirearmsService firearmsDbService,
+            ISimpleRangeEventRepository rangeEventRepo,
             Func<IDialogParticipant, IDialogService> dialogServiceFactory,
             ISqliteHelper sqliteHelper,
             ILogger logger)
         {
             _sqliteHelper = sqliteHelper;
             _firearmsDbService = firearmsDbService;
+            _rangeEventRepo = rangeEventRepo;
+            _dialogServiceFactory = dialogServiceFactory;
             _dialogService = dialogServiceFactory(this);
             _logger = logger;
-            WeakReferenceMessenger.Default.Register(this);
+
+            // Register for message notifications from other ViewModels
+            WeakReferenceMessenger.Default.Register<UpdateDataMessage<Firearm>>(this);
+            WeakReferenceMessenger.Default.Register<UpdateDataMessage<SimpleRangeEvent>>(this);
 
             // Get the current synchronization context for UI thread operations
             SynchronizationContext syncContext = SynchronizationContext.Current ??
@@ -121,6 +131,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _ = RefreshAsync();
         }
 
+        public void Receive(UpdateDataMessage<SimpleRangeEvent> message)
+        {
+            _ = RefreshAsync();
+        }
+
         [RelayCommand]
         async Task LoadDataAsync(CancellationToken cancellationToken = default)
         {
@@ -155,6 +170,29 @@ namespace MyLittleRangeBook.GUI.ViewModels
             var firearm = new Firearm();
 
             await EditFirearmAsync(new FirearmViewModel(firearm));
+        }
+
+        [RelayCommand(CanExecute = nameof(CanEditOrDeleteFirearm))]
+        async Task AddRangeEventForFirearmAsync(FirearmViewModel? firearm)
+        {
+            if (firearm is null)
+            {
+                return;
+            }
+
+            var rangeEvent = new SimpleRangeEvent
+            {
+                FirearmName = firearm.Name ?? string.Empty,
+                Created = DateTimeOffset.UtcNow,
+                Modified = DateTimeOffset.UtcNow,
+                EventDate = DateTime.UtcNow
+            };
+
+            var vm = new EditSimpleRangeEventViewModel(new SimpleRangeEventViewModel(rangeEvent), _logger, _dialogServiceFactory, _rangeEventRepo);
+
+            await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
+                "Add Range Event",
+                vm);
         }
 
         bool CanEditOrDeleteFirearm(FirearmViewModel? firearm)
@@ -203,9 +241,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            var vm = new EditFirearmViewModel(firearm.CloneFirearmViewModel(), _firearmsDbService, _dialogService, _sqliteHelper, _logger);
-            FirearmViewModel? result = await this.ShowDialogWindow<FirearmViewModel>(
-                "Edit firearm", firearm);
+            var vm = new EditFirearmViewModel(firearm.CloneFirearmViewModel(), _firearmsDbService, _dialogServiceFactory, _sqliteHelper, _logger);
+            FirearmViewModel? result = await this.ShowOverlayDialogAsync<FirearmViewModel>(
+                "Edit firearm", vm);
 
 
 
