@@ -17,10 +17,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly ILogger _logger;
         readonly ISimpleRangeEventRepository _repo;
 
-        public EditSimpleRangeEventViewModel(SimpleRangeEventViewModel simpleRangeEvent,
-            ILogger logger,
-            Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-            ISimpleRangeEventRepository repo)
+        /// <summary>
+        /// ViewModel responsible for editing a simple range event.
+        /// This class provides functionality for handling user inputs and interactions
+        /// related to editing range events, as well as integrating with services for logging and persistence.
+        /// </summary>
+        public EditSimpleRangeEventViewModel(SimpleRangeEventViewModel                simpleRangeEvent,
+                                             ILogger                                  logger,
+                                             Func<IDialogParticipant, IDialogService> dialogServiceFactory,
+                                             ISimpleRangeEventRepository              repo)
         {
             Item = simpleRangeEvent;
             _dialogService = dialogServiceFactory(this);
@@ -47,7 +52,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
             try
             {
-                Result<long?> result = await _repo.UpsertAsync(simpleRangeEvent, cancellationToken);
+                Result<long> result = await _repo.UpsertAsync(simpleRangeEvent, cancellationToken);
                 if (result.IsSuccess)
                 {
                     var updatedViewModel = new SimpleRangeEventViewModel(simpleRangeEvent);

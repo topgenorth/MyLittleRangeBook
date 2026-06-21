@@ -1,4 +1,6 @@
-﻿namespace MyLittleRangeBook.RangeEvents
+﻿using MyLittleRangeBook.Persistence;
+
+namespace MyLittleRangeBook.RangeEvents
 {
     /// <summary>
     ///     Provides an interface for managing and performing operations on simple range events
@@ -22,8 +24,16 @@
         /// <param name="simpleRangeEvent">The simple range event to add or update.</param>
         /// <param name="cancellationToken">A token to cancel the operation if required.</param>
         /// <returns>A result containing the ID of the added or updated record, or null if the operation fails.</returns>
-        Task<Result<long?>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
+        Task<Result<long>> UpsertAsync(SimpleRangeEvent simpleRangeEvent,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Adds or updates a simple range event within the provided DapperCommandContext.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="simpleRangeEvent"></param>
+        /// <returns></returns>
+        Task<Result<long>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent  simpleRangeEvent);
 
         /// <summary>
         ///     Retrieves a collection of simple range events.

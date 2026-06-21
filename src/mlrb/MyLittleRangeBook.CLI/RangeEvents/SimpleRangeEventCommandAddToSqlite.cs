@@ -95,7 +95,7 @@ namespace MyLittleRangeBook.RangeEvents
                     goto ExitFunction;
                 }
 
-                Result<long?> result = await _repo.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
+                Result<long> result = await _repo.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
 
                 if (result.IsSuccess)
                 {
