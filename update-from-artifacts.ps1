@@ -19,12 +19,14 @@ Set-Location $repoRoot
 if ($IsWindows) {
     $artifactPattern = "mlrb-*-windows-executables"
     $destinationDir = Join-Path ([Environment]::GetFolderPath("UserProfile")) ".bin"
-    $executableName = "mlrb.exe"
+    $cliExecutableName = "mlrb.exe"
+    $guiExecutableName = "mlrb-gui.exe"
 }
 elseif ($IsLinux) {
     $destinationDir = Join-Path ([Environment]::GetFolderPath("UserProfile")) ".local/bin"
     $artifactPattern = "*-linux-executables"
-    $executableName = "mlrb"
+    $cliExecutableName = "mlrb"
+    $guiExecutableName = "mlrb-gui"
 }
 else {
     throw "Unsupported platform. This script supports Windows and Linux only."
@@ -70,25 +72,34 @@ gh run download $runId --name "$newestArtifact" --dir $downloadDir
 Write-Host "Contents of download directory:"
 Get-ChildItem -Path $downloadDir -Recurse | ForEach-Object { Write-Host "  $_" }
 
-$executable = Get-ChildItem -Path $downloadDir -Recurse -File |
-    Where-Object { $_.Name -eq $executableName } |
+$cliExecutable = Get-ChildItem -Path $downloadDir -Recurse -File |
+    Where-Object { $_.Name -eq $cliExecutableName } |
     Select-Object -First 1
 
-if (-not $executable) {
+$guiExecutable = Get-ChildItem -Path $downloadDir -Recurse -File |
+        Where-Object { $_.Name -eq $guiExecutableName } |
+        Select-Object -First 1
+
+
+if (-not $cliExecutable) {
     $files = Get-ChildItem -Path $downloadDir -Recurse -File | ForEach-Object { $_.FullName }
-    throw "Could not find " + $executableName + " in downloaded artifact.`nFiles found:`n$($files -join "`n")"
+    throw "Could not find " + $cliExecutableName + " in downloaded artifact.`nFiles found:`n$($files -join "`n")"
 }
 
 New-Item -ItemType Directory -Path $destinationDir -Force | Out-Null
-$destinationPath = Join-Path $destinationDir $executableName
-Copy-Item -Path $executable.FullName -Destination $destinationPath -Force
+$cliDestinationPath = Join-Path $destinationDir $cliExecutableName
+$guiDestinationPath = Join-Path $destinationDir $guiExecutableName
+
+Copy-Item -Path $cliExecutable.FullName -Destination $cliDestinationPath -Force
+Copy-Item -Path $guiExecutable.FullName -Destination $guiDestinationPath -Force
 
 if ($IsLinux) {
-    & chmod +x $destinationPath
+    & chmod +x $cliDestinationPath
+    & chmod +x $guiDestinationPath
 }
 
 Write-Host "Migrating database and run maintenance tasks...."
 mlrb db migrate
 mlrb db maintenance
-Write-Host "Installed $executable to : $destinationPath"
-
+Write-Host "Installed $cliExecutable to $cliDestinationPath"
+Write-Host "Installed $guiExecutable to $guiDestinationPath"
