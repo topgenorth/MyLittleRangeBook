@@ -22,20 +22,15 @@ namespace MyLittleRangeBook.Firearms
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
 
-            await using ScopedSqliteConnection scopedConn =
-                await SqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
-            await using DbTransaction trans =
-                await scopedConn.Connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-            DapperCommandContext ctx = new(scopedConn.Connection, trans, cancellationToken);
+            var ctx = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken);
 
             Result<FirearmAggregate> r1 = await GetOrCreateByNameAsync(ctx, firearmName, createUtc);
             if (r1.IsFailed)
             {
-                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                ctx.Transaction!.Rollback();
                 return Result.Fail(r1.Errors);
             }
 
-            await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
             return Result.Ok(r1.Value);
         }
 
@@ -76,6 +71,12 @@ namespace MyLittleRangeBook.Firearms
             return list;
         }
 
+        public async Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default)
+        {
+            var ctx = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken);
+            return await UpsertAsync(ctx, aggregate);
+        }
+
 
         public async Task<Result<IEnumerable<NewFirearmNameFromSimpleRangeEventRow>>>
             GetNewFirearmNamesFromSimpleRangeEventsAsync(DapperCommandContext context)
@@ -96,6 +97,8 @@ namespace MyLittleRangeBook.Firearms
             }
         }
 
+
+
         public async Task<IList<RangeEventRoundCountRow>>
             GetSimpleRangeEventsForFirearmName(DapperCommandContext context, string name)
         {
@@ -105,16 +108,6 @@ namespace MyLittleRangeBook.Firearms
                                                                       .QueryAsync<RangeEventRoundCountRow>(ctx)
                                                                       .ConfigureAwait(false);
             return list.ToList();
-        }
-
-        public Task<Result> UpsertAsync(DapperCommandContext context, FirearmAggregate aggregate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
         }
 
         static class Commands

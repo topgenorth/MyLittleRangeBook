@@ -18,10 +18,36 @@ namespace MyLittleRangeBook.Persistence
 
         }
 
-        public DapperCommandContext(ScopedSqliteConnection scopedSqliteConnection, CancellationToken CancellationToken = default)
+        /// <summary>
+        /// Represents a command context used for database interactions within the application,
+        /// containing a database connection, an optional transaction, a cancellation token,
+        /// and optional additional arguments.
+        /// </summary>
+        /// <param name="scopedSqliteConnection"></param>
+        /// <param name="CancellationToken">A token to monitor for cancellation requests during execution of commands.</param>
+        /// <param name="Arguments">Optional additional arguments required for command execution.</param>
+        public DapperCommandContext(ScopedSqliteConnection scopedSqliteConnection,
+                                    CancellationToken      CancellationToken = default)
             : this(scopedSqliteConnection.Connection, scopedSqliteConnection.Transaction, CancellationToken)
         {
 
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="DapperCommandContext"/> asynchronously.
+        /// </summary>
+        /// <param name="sqliteHelper">The SQLite helper used to acquire a scoped database connection.</param>
+        /// <param name="cancellationToken">A token to cancel the asynchronous operation, if necessary.</param>
+        /// <returns>An instance of <see cref="DapperCommandContext"/> configured with the obtained database connection.</returns>
+        public static async Task<DapperCommandContext> NewAsync(ISqliteHelper     sqliteHelper,
+                                                                CancellationToken cancellationToken = default)
+        {
+            var scopedConnection = await sqliteHelper
+                                        .GetScopedDatabaseConnectionAsync(cancellationToken)
+                                        .ConfigureAwait(false);
+            var ctx = new DapperCommandContext(scopedConnection, cancellationToken);
+
+            return ctx;
         }
 
 

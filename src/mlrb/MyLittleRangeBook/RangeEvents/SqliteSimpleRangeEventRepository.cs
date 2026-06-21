@@ -2,6 +2,7 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 using static MyLittleRangeBook.Persistence.Sqlite.SqliteHelperExtensions;
@@ -13,16 +14,18 @@ namespace MyLittleRangeBook.RangeEvents
     /// </summary>
     public class SqliteSimpleRangeEventRepository : ISimpleRangeEventRepository
     {
-        readonly ISimpleRangeEventService _simpleRangeEventService;
-        readonly ISqliteHelper            _sqliteHelper;
+        readonly IFirearmAggregateRepository _faRepo;
+        readonly ISimpleRangeEventService    _simpleRangeEventService;
+        readonly ISqliteHelper               _sqliteHelper;
 
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
                                                 [FromKeyedServices(DI_KEYS_SQLITE)]
-                                                ISimpleRangeEventService simpleRangeEventService
-        )
+                                                ISimpleRangeEventService simpleRangeEventService,
+                                                IFirearmAggregateRepository faRepo)
         {
             _sqliteHelper            = sqliteHelper;
             _simpleRangeEventService = simpleRangeEventService;
+            _faRepo                  = faRepo;
         }
 
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
@@ -54,22 +57,21 @@ namespace MyLittleRangeBook.RangeEvents
 
         public async Task<Result<SimpleRangeEvent>> GetAsync(string id, CancellationToken cancellationToken)
         {
-            const string SQL =
-                "SELECT row_id AS RowId, id AS Id, event_date AS EventDate, firearm_name AS FirearmName, range_name AS RangeName, rounds_fired AS RoundsFired, ammo_description AS AmmoDescription, notes AS Notes, created AS Created, modified AS Modified FROM main.simple_range_events WHERE id=@Id;";
             await using SqliteConnection conn = await _sqliteHelper
                                                      .GetDatabaseConnectionAsync(cancellationToken)
                                                      .ConfigureAwait(false);
 
             try
             {
-                SimpleRangeEvent? sre = await conn.QueryFirstOrDefaultAsync<SimpleRangeEvent>(SQL, new { Id = id });
+                SimpleRangeEvent? sre = await conn
+                                           .QueryFirstOrDefaultAsync<SimpleRangeEvent>(Commands.GetByIdSql,
+                                                new { Id = id });
                 if (sre is not null)
                 {
                     return Result.Ok(sre);
                 }
 
                 Error err = new Error("Could not find range event " + id + ".").Enrich(id);
-
                 return Result.Fail(err);
             }
             catch (Exception ex)
@@ -108,24 +110,25 @@ namespace MyLittleRangeBook.RangeEvents
                                            .UpsertAsync(context.Connection, simpleRangeEvent, context.Transaction,
                                                         context.CancellationToken)
                                            .ConfigureAwait(false);
-            if (sreResult.IsSuccess)
+            if (sreResult.IsFailed || sreResult.Value is null)
             {
-                return Result.Ok(sreResult.Value!.Value);
+                return Result.Fail(sreResult.Errors);
             }
 
-            return Result.Fail(sreResult.Errors[0]);
+            Result r1 = await AddToFirearmStream(context, simpleRangeEvent);
+
+            return Result.Fail(r1.IsFailed ? r1.Errors : sreResult.Errors);
         }
 
 
         public async Task<Result<long>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
                                                     CancellationToken cancellationToken = default)
         {
-            await using ScopedSqliteConnection scopedConn = await _sqliteHelper
-                                                               .GetScopedDatabaseConnectionAsync(cancellationToken,
-                                                                    true);
+            DapperCommandContext ctx = await DapperCommandContext
+                                            .NewAsync(_sqliteHelper, cancellationToken)
+                                            .ConfigureAwait(false);
 
-            DapperCommandContext ctx = new(scopedConn, cancellationToken);
-            Result<long>         r1  = await UpsertAsync(ctx, simpleRangeEvent).ConfigureAwait(false);
+            Result<long> r1 = await UpsertAsync(ctx, simpleRangeEvent).ConfigureAwait(false);
 
             if (r1.IsFailed)
             {
@@ -133,6 +136,43 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             return r1;
+        }
+
+        async Task<Result> AddToFirearmStream(DapperCommandContext ctx, SimpleRangeEvent sre)
+        {
+            Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(ctx, sre.FirearmName);
+            if (r1.IsFailed)
+            {
+                return Result.Fail(r1.Errors);
+            }
+
+            FirearmAggregate? fa = r1.Value;
+            fa.AssociateWithSimpleRangeEvent(sre.Id!, sre.Created);
+            if (sre.RoundsFired > 0)
+            {
+                fa.MoreRoundsFired(sre.RoundsFired, sre.EventDate);
+            }
+
+            Result r2 = await _faRepo.UpsertAsync(ctx, fa).ConfigureAwait(false);
+            return r2.IsFailed ? Result.Fail(r2.Errors) : Result.Ok();
+        }
+
+        static class Commands
+        {
+            internal const string GetByIdSql = """
+                                               SELECT row_id AS RowId,
+                                                      id AS Id,
+                                                      event_date AS EventDate,
+                                                      firearm_name AS FirearmName,
+                                                      range_name AS RangeName,
+                                                      rounds_fired AS RoundsFired,
+                                                      ammo_description AS AmmoDescription,
+                                                      notes AS Notes,
+                                                      created AS Created,
+                                                      modified AS Modified
+                                               FROM simple_range_events
+                                               WHERE id=@Id;
+                                               """;
         }
     }
 }

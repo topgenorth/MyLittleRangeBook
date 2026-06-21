@@ -12,10 +12,8 @@ namespace MyLittleRangeBook
     {
         public static IServiceCollection RegisterRangeEventStuff(this IServiceCollection services)
         {
-            services.TryAddScoped<SqliteSimpleRangeEventRepository>();
-
-            services.TryAddScoped<ISimpleRangeEventRepository, SimpleRangeEventRepositoryFirearmStream>();
-            services.TryAddKeyedScoped<ISimpleRangeEventRepository, SimpleRangeEventRepositoryFirearmStream>(SqliteHelperExtensions.DI_KEYS_SQLITE);
+            services.TryAddScoped<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();
+            services.TryAddKeyedScoped<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(SqliteHelperExtensions.DI_KEYS_SQLITE);
             return services;
         }
     }
