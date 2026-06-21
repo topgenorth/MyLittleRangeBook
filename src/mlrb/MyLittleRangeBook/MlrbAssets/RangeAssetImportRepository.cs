@@ -35,6 +35,11 @@ namespace MyLittleRangeBook.MlrbAssets
             return await GetAsync(streamId, cancellationToken).ConfigureAwait(false);
         }
 
+        public Task<Result> SaveAsync(MlrbAssetAggregate aggregate, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         protected override Task ProjectAsync(SqliteConnection connection,
             DbTransaction transaction,
             string streamId,

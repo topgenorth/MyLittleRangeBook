@@ -170,7 +170,9 @@ namespace MyLittleRangeBook
             }
             string streamId = aggregate.Id.ToString();
 
-            var (connection, transaction, cancellationToken) = context;
+            var connection = (SqliteConnection)context.Connection;
+            var transaction = (DbTransaction)context.Transaction!;
+            var cancellationToken = context.CancellationToken;
 
             try
             {

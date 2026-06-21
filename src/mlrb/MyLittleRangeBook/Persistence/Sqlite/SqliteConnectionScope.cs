@@ -12,16 +12,23 @@ namespace MyLittleRangeBook.Persistence.Sqlite
     public sealed class ScopedSqliteConnection : IAsyncDisposable
     {
         SqliteConnection? _connection;
+        SqliteTransaction? _transaction;
         bool _disposed;
 
-        internal ScopedSqliteConnection(SqliteConnection connection)
+        internal ScopedSqliteConnection(SqliteConnection connection, bool useTransaction = false)
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            if (useTransaction)
+            {
+                _transaction = _connection.BeginTransaction();
+            }
         }
 
         public SqliteConnection Connection => _disposed || _connection is null
             ? throw new ObjectDisposedException(nameof(ScopedSqliteConnection))
             : _connection;
+
+        public SqliteTransaction? Transaction => _transaction;
 
         public async ValueTask DisposeAsync()
         {
@@ -31,6 +38,22 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             }
 
             _disposed = true;
+
+            if (_transaction is not null)
+            {
+                try
+                {
+                    if (_transaction.Connection is not null)
+                    {
+                        await _transaction.CommitAsync();
+                    }
+                }
+                finally
+                {
+                    await _transaction.DisposeAsync();
+                    _transaction = null;
+                }
+            }
 
             SqliteConnection? connection = _connection;
             _connection = null;

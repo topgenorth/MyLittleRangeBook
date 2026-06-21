@@ -109,8 +109,13 @@ namespace MyLittleRangeBook.Firearms
 
         public Task<Result> UpsertAsync(DapperCommandContext context, FirearmAggregate aggregate)
         {
+            throw new NotImplementedException();
+        }
 
-        };
+        public Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
 
         static class Commands
         {

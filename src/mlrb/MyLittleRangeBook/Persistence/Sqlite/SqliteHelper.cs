@@ -69,10 +69,10 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         }
 
         public async Task<ScopedSqliteConnection> GetScopedDatabaseConnectionAsync(CancellationToken cancellationToken =
-            default)
+            default, bool useTransaction = false)
         {
             SqliteConnection conn = await GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
-            var scoped = new ScopedSqliteConnection(conn);
+            var scoped = new ScopedSqliteConnection(conn, useTransaction);
 
             return scoped;
         }
