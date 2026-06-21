@@ -16,24 +16,30 @@
         <StackPanel Spacing="10"
                     Grid.IsSharedSizeScope="True"
                     Margin="10">
-            <TextBlock Classes="h1" Text="Database" />
+            <TextBlock Classes="h1" Text="Directories/Files" />
             <controls:LabeledControl Header="SQLite:" Width="600">
-                <TextBox Text="{Binding PathToDatabase}"></TextBox>
-
+                <TextBox Text="{Binding PathToDatabase}" />
             </controls:LabeledControl>
 
+            <controls:LabeledControl Header="Logs:" Width="600">
+                <TextBox Text="{Binding MlrbAppSettings.LogsDirectory}" />
+            </controls:LabeledControl>
+
+            <controls:LabeledControl Header="Assets:" Width="600">
+                <TextBox Text="{Binding PathToAssets}" />
+            </controls:LabeledControl>
 
             <TextBlock Classes="h1" Text="Appearance" />
 
             <!-- Selects the AppTheme -->
             <controls:LabeledControl Header="Theme">
-                <ComboBox SelectedItem="{Binding Settings.AppTheme}"
+                <ComboBox SelectedItem="{Binding MlrbAppSettings.AppTheme}"
                           ItemsSource="{Binding AvailableThemeVariants}" />
             </controls:LabeledControl>
 
             <!-- Selects the AccentColor -->
             <controls:LabeledControl Header="Accent">
-                <ColorPicker Color="{Binding Settings.AccentColor}"
+                <ColorPicker Color="{Binding MlrbAppSettings.AccentColor}"
                              HorizontalAlignment="Left"
                              IsAlphaEnabled="False"
                              IsAlphaVisible="False" />

@@ -10,7 +10,7 @@
              xmlns:properties="clr-namespace:MyLittleRangeBook.GUI.Properties"
              xmlns:views="clr-namespace:MyLittleRangeBook.GUI.Views"
              x:DataType="viewModels:SettingsViewModel"
-             RequestedThemeVariant="{Binding AppTheme, Source={x:Static properties:Settings.Default}}">
+             RequestedThemeVariant="{Binding AppTheme, Source={x:Static properties:MlrbAppSettings.Default}}">
 
     <Application.DataTemplates>
         <!-- EditCategoryViewModel: Maps to the edit category view -->

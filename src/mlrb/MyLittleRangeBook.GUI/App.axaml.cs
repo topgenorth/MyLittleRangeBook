@@ -27,7 +27,7 @@ namespace MyLittleRangeBook.GUI
             try
             {
                 Services = services.BuildServiceProvider();
-                await Settings.Default.LoadSettingsAsync();
+                await MlrbAppSettings.Default.LoadSettingsAsync();
             }
             catch (Exception ex)
             {
@@ -47,19 +47,19 @@ namespace MyLittleRangeBook.GUI
             }
 
             // Subscribe to settings changes so UI updates immediately when accent color changes
-            Settings.Default.PropertyChanged += SettingsOnPropertyChanged;
+            MlrbAppSettings.Default.PropertyChanged += SettingsOnPropertyChanged;
 
             AvaloniaXamlLoader.Load(this);
 
-            UpdateAccentColor(Settings.Default.AccentColor);
+            UpdateAccentColor(MlrbAppSettings.Default.AccentColor);
         }
 
         private void SettingsOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {
-                case nameof(Settings.Default.AccentColor):
-                    UpdateAccentColor((sender as Settings)?.AccentColor);
+                case nameof(MlrbAppSettings.Default.AccentColor):
+                    UpdateAccentColor((sender as MlrbAppSettings)?.AccentColor);
 
                     break;
             }
