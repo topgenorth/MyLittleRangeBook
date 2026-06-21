@@ -1,30 +1,28 @@
-﻿using MyLittleRangeBook.Models;
+﻿using JetBrains.Annotations;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.RangeEvents
 {
     public record SimpleRangeEvent
     {
-        public SimpleRangeEvent()
-        {
-            Id = new MlrbId().ToString();
-        }
+        public SimpleRangeEvent() => Id = new MlrbId().ToString();
 
         public SimpleRangeEvent(DateOnly eventDateOnly)
         {
-            var id = MlrbId.From(eventDateOnly);
-            Id = id.ToString();
+            MlrbId id = MlrbId.From(eventDateOnly);
+            Id        = id.ToString();
             EventDate = id.DateTimeLocal;
         }
 
         public SimpleRangeEvent(DateTime eventDateTime)
         {
-            Id = MlrbId.From(eventDateTime).ToString();
+            Id        = MlrbId.From(eventDateTime).ToString();
             EventDate = eventDateTime.ToLocalTime();
         }
 
         public SimpleRangeEvent(DateTimeOffset eventDateTimeOffset)
         {
-            Id = new MlrbId(eventDateTimeOffset);
+            Id        = new MlrbId(eventDateTimeOffset);
             EventDate = eventDateTimeOffset.ToLocalTime().DateTime;
         }
 
@@ -56,6 +54,7 @@ namespace MyLittleRangeBook.RangeEvents
         /// <summary>
         ///     How many rounds were fired.
         /// </summary>
+        [ValueRange(0, 10000)]
         public int RoundsFired { get; set; }
 
         /// <summary>
@@ -93,25 +92,25 @@ namespace MyLittleRangeBook.RangeEvents
         ///     the local timezone.
         /// </param>
         /// <returns>A new instance of the <see cref="SimpleRangeEvent" /> class with the provided details.</returns>
-        public static SimpleRangeEvent New(string firearm,
-            int rounds,
-            string range,
-            string ammo,
-            string notes,
-            DateOnly date = default)
+        public static SimpleRangeEvent New(string                     firearm,
+                                           [ValueRange(0, 10000)] int rounds,
+                                           string                     range,
+                                           string                     ammo,
+                                           string                     notes,
+                                           DateOnly                   date = default)
         {
             DateOnly eventDate = date == default ? DateOnly.FromDateTime(DateTime.Now) : date;
-            var id = MlrbId.From(eventDate);
-            var sre = new SimpleRangeEvent
-            {
-                Id = id.ToString(),
-                FirearmName = firearm,
-                RoundsFired = rounds,
-                RangeName = range,
-                AmmoDescription = ammo,
-                Notes = notes,
-                EventDate = eventDate.ToDateTime(TimeOnly.MinValue)
-            };
+            MlrbId   id        = MlrbId.From(eventDate);
+            SimpleRangeEvent sre = new()
+                                   {
+                                       Id              = id.ToString(),
+                                       FirearmName     = firearm,
+                                       RoundsFired     = rounds,
+                                       RangeName       = range,
+                                       AmmoDescription = ammo,
+                                       Notes           = notes,
+                                       EventDate       = eventDate.ToDateTime(TimeOnly.MinValue),
+                                   };
 
             return sre;
         }
