@@ -76,6 +76,7 @@ namespace MyLittleRangeBook.Firearms
             return list;
         }
 
+
         public async Task<Result<IEnumerable<NewFirearmNameFromSimpleRangeEventRow>>>
             GetNewFirearmNamesFromSimpleRangeEventsAsync(DapperCommandContext context)
         {
@@ -105,6 +106,11 @@ namespace MyLittleRangeBook.Firearms
                                                                       .ConfigureAwait(false);
             return list.ToList();
         }
+
+        public Task<Result> UpsertAsync(DapperCommandContext context, FirearmAggregate aggregate)
+        {
+
+        };
 
         static class Commands
         {

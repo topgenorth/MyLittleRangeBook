@@ -1,30 +1,12 @@
 ﻿using System.Data.Common;
 using System.Reflection;
 using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook
 {
-    public static partial class ServiceCollectionExtensions
-    {
-        public static IServiceCollection RegisterDomainEventSerializers(this IServiceCollection services)
-        {
-            services.AddScoped<IEventSerializer, SystemTextJsonEventSerializer>(serviceProvider =>
-            {
-                var l = new List<Type>();
-                l.AddRange(SupportedRangeAssetEvents);
-                l.AddRange(SupportedFirearmsEvents);
-
-                return new SystemTextJsonEventSerializer(l);
-            });
-
-            return services;
-        }
-    }
-
     /// <summary>
     ///     Generic SQLite-backed repository for any <see cref="Aggregate" /> subclass. It persists
     ///     uncommitted events to the <c>events</c> table and upserts the corresponding row in the
@@ -158,20 +140,37 @@ namespace MyLittleRangeBook
             aggregate.LoadFromHistory(events);
         }
 
-        public async Task<Result> SaveAsync(TAggregate aggregate, CancellationToken cancellationToken = default)
+        /// <summary>
+        ///     Hook invoked after events are persisted but before the transaction is committed. Override
+        ///     to project the just-saved events into additional read-model tables within the same transaction.
+        /// </summary>
+        protected virtual Task ProjectAsync(SqliteConnection            connection,
+                                            DbTransaction               transaction,
+                                            string                      streamId,
+                                            IReadOnlyList<IDomainEvent> pendingEvents,
+                                            CancellationToken           cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+
+        /// <summary>
+        /// Upserts the specified aggregate into the database using the provided Dapper command context.
+        /// If the aggregate does not exist, it will be inserted; if it exists, it will be updated.
+        /// </summary>
+        /// <param name="context">The Dapper command context containing the database connection and transaction information.</param>
+        /// <param name="aggregate">The aggregate entity to upsert.</param>
+        /// <returns>A result indicating the success or failure of the operation.</returns>
+        public async Task<Result> UpsertAsync(DapperCommandContext context, TAggregate aggregate)
         {
             IReadOnlyList<IDomainEvent> pendingEvents = aggregate.DequeueUncommittedEvents();
             if (pendingEvents.Count == 0)
             {
                 return Result.Ok();
             }
+            string streamId = aggregate.Id.ToString();
 
-            var streamId = aggregate.Id.ToString();
-
-            await using SqliteConnection connection =
-                await SqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
-            await using DbTransaction transaction =
-                await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+            var (connection, transaction, cancellationToken) = context;
 
             try
             {
@@ -246,24 +245,46 @@ namespace MyLittleRangeBook
         }
 
         /// <summary>
-        ///     Hook invoked after events are persisted but before the transaction is committed. Override
-        ///     to project the just-saved events into additional read-model tables within the same transaction.
+        /// Inserts or updates the state of the specified aggregate in the event store.
         /// </summary>
-        protected virtual Task ProjectAsync(SqliteConnection connection,
-            DbTransaction transaction,
-            string streamId,
-            IReadOnlyList<IDomainEvent> pendingEvents,
-            CancellationToken cancellationToken)
+        /// <param name="aggregate">The aggregate to be persisted. Holds the pending domain events to store.</param>
+        /// <param name="cancellationToken">Token to cancel the operation if required.</param>
+        /// <returns>A result indicating success or failure of the operation.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when an attempt is made to update an aggregate without uncommitted events,
+        /// or other invalid operation occurs during the database transaction.
+        /// </exception>
+        public async Task<Result> UpsertAsync(TAggregate aggregate, CancellationToken cancellationToken = default)
         {
-            return Task.CompletedTask;
+            IReadOnlyList<IDomainEvent> pendingEvents = aggregate.DequeueUncommittedEvents();
+            if (pendingEvents.Count == 0)
+            {
+                return Result.Ok();
+            }
+
+            await using SqliteConnection connection =
+                await SqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+            await using DbTransaction transaction =
+                await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
+            var ctx = new DapperCommandContext(connection, transaction, cancellationToken);
+            var r1 = await UpsertAsync(ctx, aggregate).ConfigureAwait(false);
+
+            if (r1.IsFailed)
+            {
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            return r1;
+
         }
 
         async Task UpsertEventStreamAsync(SqliteConnection conn,
-            DbTransaction trans,
-            string streamId,
-            int? currentVersion,
-            int nextVersion,
-            CancellationToken ct)
+                                          DbTransaction trans,
+                                          string streamId,
+                                          int? currentVersion,
+                                          int nextVersion,
+                                          CancellationToken ct)
         {
             string sql;
             object? p;

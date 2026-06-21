@@ -72,6 +72,20 @@ namespace MyLittleRangeBook.Firearms
         Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Saves the provided firearm aggregate to the data store.
+        /// </summary>
+        /// <param name="aggregate">
+        /// The firearm aggregate to be saved.
+        /// </param>
+        /// <param name="cancellationToken">
+        /// Token to monitor for cancellation requests.
+        /// </param>
+        /// <returns>
+        /// A result indicating the success or failure of the save operation.
+        /// </returns>
+        Task<Result> UpsertAsync(DapperCommandContext context, FirearmAggregate aggregate);
+
+        /// <summary>
         ///     Represents a record containing the name of a firearm extracted from a SimpleRangeEvent
         ///     in cases where no associated FirearmAggregate exists. It is used to process and handle
         ///     events where firearm names need to be retrieved or linked to an aggregate.

@@ -60,7 +60,7 @@ namespace MyLittleRangeBook.RangeEvents
                 fa.MoreRoundsFired(sre.RoundsFired, sre.EventDate);
             }
 
-            var r2 = await _faRepo.SaveAsync(ctx, fa).ConfigureAwait(false);
+            var r2 = await _faRepo.UpsertAsync(ctx, fa).ConfigureAwait(false);
             return r2.IsFailed ? Result.Fail(r2.Errors) : Result.Ok();
         }
 
