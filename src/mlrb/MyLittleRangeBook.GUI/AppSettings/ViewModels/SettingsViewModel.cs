@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Dapper;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Properties;
 using MyLittleRangeBook.Persistence.Sqlite;
@@ -22,11 +23,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
     /// </summary>
     public partial class SettingsViewModel : ViewModelBase, IDialogParticipant
     {
-        private readonly ISqliteHelper _sqliteHelper;
+        readonly ISqliteHelper  _sqliteHelper;
+        readonly IConfiguration _config;
 
-        public SettingsViewModel(ISqliteHelper sqliteHelper)
+        public SettingsViewModel(ISqliteHelper sqliteHelper, IConfiguration config)
         {
             _sqliteHelper = sqliteHelper;
+            _config  = config;
         }
 
         /// <summary>
@@ -34,26 +37,36 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         public Settings Settings => Settings.Default;
 
+        public string PathToDatabase
+        {
+            get
+            {
+                string s = _config.GetConnectionString("SqliteConnection") ?? "";
+                var    b = new SqliteConnectionStringBuilder(s);
+                return b.DataSource;
+            }
+        }
+
         /// <summary>
         ///     Array of available theme variants that users can select from.
         ///     Includes Default, Dark, and Light theme options.
         /// </summary>
         [UsedImplicitly]
         public string[] AvailableThemeVariants { get; } =
-        [
-            ThemeVariant.Default.ToString(),
-            ThemeVariant.Dark.ToString(),
-            ThemeVariant.Light.ToString()
-        ];
+            [
+                ThemeVariant.Default.ToString(),
+                ThemeVariant.Dark.ToString(),
+                ThemeVariant.Light.ToString(),
+            ];
 
         /// <summary>
         ///     A command that will export the entire database to JSON.
         /// </summary>
         [RelayCommand]
-        private async Task ExportDataAsync(CancellationToken cancellationToken = default)
-        {
+        async Task ExportDataAsync(CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
-            /*try
+
+        /*try
             {
                 // Show the file save dialog for the user to choose an export location
                 SaveFilePickerResult? safeFilePickerResult = await this.SafeFileDialogAsync("Export Data",
@@ -87,17 +100,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 await this.ShowOverlayDialogAsync<DialogResult>("Could not export the data",
                     e.Message, DialogCommands.OkOnly);
             }*/
-        }
-
         /// <summary>
         ///     A command that will import the selected JSON file into the current database.
         ///     Existing items will be updated.
         /// </summary>
         [RelayCommand]
-        private async Task ImportDataAsync(CancellationToken cancellationToken = default)
-        {
+        async Task ImportDataAsync(CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
-            /*try
+
+        /*try
             {
                 // NOTE: Existing items will be updated / overridden. You may want to let the user choose
                 // how to handle it.
@@ -137,25 +148,23 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 await this.ShowOverlayDialogAsync<DialogResult>("Error importing JSON file",
                     e.Message, DialogCommands.OkOnly);
             }*/
-        }
-
         /// <summary>
         ///     A command that clears all data from the database.
         ///     Shows a confirmation dialog first, then drops, and recreates all tables.
         ///     Notifies other ViewModels to refresh their data after completion.
         /// </summary>
         [RelayCommand]
-        private async Task ClearDatabaseAsync(CancellationToken cancellationToken = default)
+        async Task ClearDatabaseAsync(CancellationToken cancellationToken = default)
         {
             // Show a confirmation dialog with a warning about data loss
-            var choice = await this.ShowOverlayDialogAsync<DialogResult>("Clear Database",
-                """
-                Are you sure you want to clear the database? This cannot be undone.
-                TIP: Consider to export the data before you continue.
+            DialogResult choice = await this.ShowOverlayDialogAsync<DialogResult>("Clear Database",
+                                      """
+                                      Are you sure you want to clear the database? This cannot be undone.
+                                      TIP: Consider to export the data before you continue.
 
-                Press "Yes" to continue.
-                """,
-                DialogCommands.YesNo);
+                                      Press "Yes" to continue.
+                                      """,
+                                      DialogCommands.YesNo);
 
             if (choice == DialogResult.Yes)
             {
@@ -165,12 +174,12 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
                 // Drop existing tables and vacuum the database to reclaim space
                 await connection.ExecuteAsync(
-                    """
-                    DELETE FROM simple_range_events;
-                    DELETE FROM firearms;
-                    DELETE FROM asset_files;
-                    VACUUM;
-                    """);
+                                              """
+                                              DELETE FROM simple_range_events;
+                                              DELETE FROM firearms;
+                                              DELETE FROM asset_files;
+                                              VACUUM;
+                                              """);
 
 
                 // Notify other ViewModels about updated DB to refresh their views

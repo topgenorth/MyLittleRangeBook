@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
              xmlns:services="clr-namespace:SharedControls.Services;assembly=SharedControls"
-             xmlns:viewModels1="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              xmlns:viewModels="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              services:DialogManager.Register="{Binding}"
@@ -13,10 +12,16 @@
     <Design.DataContext>
         <viewModels:SettingsViewModel />
     </Design.DataContext>
-    <ScrollViewer MaxWidth="400">
+    <ScrollViewer MaxWidth="750">
         <StackPanel Spacing="10"
                     Grid.IsSharedSizeScope="True"
                     Margin="10">
+            <TextBlock Classes="h1" Text="Database" />
+            <controls:LabeledControl Header="SQLite:" Width="600">
+                <TextBox Text="{Binding PathToDatabase}"></TextBox>
+
+            </controls:LabeledControl>
+
 
             <TextBlock Classes="h1" Text="Appearance" />
 
@@ -34,22 +39,6 @@
                              IsAlphaVisible="False" />
             </controls:LabeledControl>
 
-            <!-- Options to Import or Export the TodoList -->
-            <TextBlock Classes="h1" Text="Import / Export" />
-            <Button HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    Command="{Binding ExportDataCommand}"
-                    Content="Export to JSON" />
-            <Button HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    Command="{Binding ImportDataCommand}"
-                    Content="Import from JSON" />
-
-            <TextBlock Classes="h1" Text="DANGER Zone" />
-            <Button HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    Command="{Binding ClearDatabaseCommand}"
-                    Content="Clear all Simple Range Events" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>
