@@ -102,32 +102,23 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
-        public async  Task<Result<long>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
+        public async Task<Result<long>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
         {
-            try
+            Result<long?> sreResult = await _simpleRangeEventService
+                                           .UpsertAsync(context.Connection, simpleRangeEvent, context.Transaction,
+                                                        context.CancellationToken)
+                                           .ConfigureAwait(false);
+            if (sreResult.IsSuccess)
             {
-                Result<long?> sreResult = await _simpleRangeEventService
-                                               .UpsertAsync(context.Connection, simpleRangeEvent, context.Transaction, context.CancellationToken)
-                                               .ConfigureAwait(false);
-                if (sreResult.IsSuccess)
-                {
-                    return Result.Ok(sreResult.Value!.Value);
-                }
+                return Result.Ok(sreResult.Value!.Value);
+            }
 
-                return Result.Fail(sreResult.Errors[0]);
-            }
-            catch (Exception e)
-            {
-                Error? err = new Error("Failed to upsert simple range event with file contents.")
-                            .Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId)
-                            .CausedBy(e);
-                return Result.Fail(err);
-            }
+            return Result.Fail(sreResult.Errors[0]);
         }
 
 
         public async Task<Result<long>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
-                                                     CancellationToken cancellationToken = default)
+                                                    CancellationToken cancellationToken = default)
         {
             await using ScopedSqliteConnection scopedConn =
                 await _sqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken);
@@ -135,8 +126,19 @@ namespace MyLittleRangeBook.RangeEvents
                                                               .BeginTransactionAsync(cancellationToken)
                                                               .ConfigureAwait(false);
 
-            var ctx = new DapperCommandContext(scopedConn.Connection, trans, cancellationToken);
-            return await UpsertAsync(ctx, simpleRangeEvent).ConfigureAwait(false);
+            DapperCommandContext ctx = new(scopedConn.Connection, trans, cancellationToken);
+            var r1 = await UpsertAsync(ctx, simpleRangeEvent).ConfigureAwait(false);
+
+            if (r1.IsFailed)
+            {
+                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            return r1;
         }
     }
 }

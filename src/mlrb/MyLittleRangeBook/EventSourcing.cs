@@ -55,7 +55,7 @@ namespace MyLittleRangeBook
 
         readonly Func<EventStream, TAggregate> _createFromStream;
         readonly IEventSerializer _eventSerializer;
-        readonly ISqliteHelper _sqliteHelper;
+        protected readonly ISqliteHelper SqliteHelper;
         readonly string _streamType;
 
         /// <param name="sqliteHelper">SQLite connection factory.</param>
@@ -67,7 +67,7 @@ namespace MyLittleRangeBook
             string streamType,
             Func<EventStream, TAggregate> createFromStream)
         {
-            _sqliteHelper = sqliteHelper;
+            SqliteHelper = sqliteHelper;
             _eventSerializer = eventSerializer;
             _streamType = streamType;
             _createFromStream = createFromStream;
@@ -78,7 +78,7 @@ namespace MyLittleRangeBook
             try
             {
                 await using SqliteConnection connection =
-                    await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+                    await SqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
 
                 IReadOnlyList<EventRow> eventRows = await LoadEventRowsAsync(connection, id, cancellationToken)
                     .ConfigureAwait(false);
@@ -169,7 +169,7 @@ namespace MyLittleRangeBook
             var streamId = aggregate.Id.ToString();
 
             await using SqliteConnection connection =
-                await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+                await SqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
             await using DbTransaction transaction =
                 await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
