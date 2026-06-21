@@ -4,6 +4,7 @@
     {
         string DisplayName { get; }
         Func<T, IComparable> SortExpression { get; }
+        bool IsDescending { get; }
         string ToString();
     }
 }

@@ -2,9 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
-using MyLittleRangeBook.Models;
 using MyLittleRangeBook.RangeEvents;
-
 
 namespace MyLittleRangeBook.GUI.ViewModels
 {
@@ -15,33 +13,44 @@ namespace MyLittleRangeBook.GUI.ViewModels
     /// </summary>
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
     [UnconditionalSuppressMessage("Trimming", "IL2112",
-        Justification = "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
+                                  Justification =
+                                      "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     [UnconditionalSuppressMessage("Trimming", "IL2026",
-        Justification = "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
+                                  Justification =
+                                      "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class SimpleRangeEventViewModel : ViewModelBase, ICloneable
     {
         public SimpleRangeEventViewModel(SimpleRangeEvent rangeEvent)
         {
-            Id = rangeEvent.Id;
-            RowId = rangeEvent.RowId;
-            EventDate = rangeEvent.EventDate;
-            FirearmName = rangeEvent.FirearmName;
-            RangeName = rangeEvent.RangeName;
-            RoundsFired = rangeEvent.RoundsFired;
+            Id              = rangeEvent.Id;
+            RowId           = rangeEvent.RowId;
+            EventDate       = rangeEvent.EventDate;
+            FirearmName     = rangeEvent.FirearmName;
+            RangeName       = rangeEvent.RangeName;
+            RoundsFired     = rangeEvent.RoundsFired;
             AmmoDescription = rangeEvent.AmmoDescription ?? string.Empty;
-            Notes = rangeEvent.Notes ?? string.Empty;
-            Modified = rangeEvent.Modified;
-            Created = rangeEvent.Created;
+            Notes           = rangeEvent.Notes           ?? string.Empty;
+            Modified        = rangeEvent.Modified;
+            Created         = rangeEvent.Created;
         }
 
-        [ObservableProperty] public partial string? Id { get; private set; }
-        [ObservableProperty] public partial long? RowId { get; private set; }
+        [ObservableProperty] public partial string? Id    { get; private set; }
+        [ObservableProperty] public partial long?   RowId { get; private set; }
 
-        [ObservableProperty] [Required] [NotifyDataErrorInfo] public partial DateTime EventDate { get; set; }
+        [ObservableProperty]
+        [Required]
+        [NotifyDataErrorInfo]
+        public partial DateTime EventDate { get; set; }
 
-        [ObservableProperty] [Required] [NotifyDataErrorInfo] public partial string FirearmName { get; set; }
+        [ObservableProperty]
+        [Required]
+        [NotifyDataErrorInfo]
+        public partial string FirearmName { get; set; }
 
-        [ObservableProperty] [Required] [NotifyDataErrorInfo] public partial string RangeName { get; set; }
+        [ObservableProperty]
+        [Required]
+        [NotifyDataErrorInfo]
+        public partial string RangeName { get; set; }
 
 
         [ObservableProperty]
@@ -51,39 +60,38 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public partial int RoundsFired { get; set; }
 
         [ObservableProperty] public partial string AmmoDescription { get; set; }
+
         [ObservableProperty] public partial string Notes { get; set; }
 
-        [ObservableProperty] [Required] [NotifyDataErrorInfo] public partial DateTimeOffset Modified { get; set; }
+        [ObservableProperty]
+        [Required]
+        [NotifyDataErrorInfo]
+        public partial DateTimeOffset Modified { get; set; }
 
-        [ObservableProperty] [Required] [NotifyDataErrorInfo] public partial DateTimeOffset Created { get; set; }
+        [ObservableProperty]
+        [Required]
+        [NotifyDataErrorInfo]
+        public partial DateTimeOffset Created { get; set; }
 
-        public object Clone()
-        {
-            return MemberwiseClone();
-        }
+        public object Clone() => MemberwiseClone();
 
         [UsedImplicitly]
-        public SimpleRangeEvent ToSimpleRangeEvent()
-        {
-            return new SimpleRangeEvent
+        public SimpleRangeEvent ToSimpleRangeEvent() =>
+            new()
             {
-                Id = Id,
-                RowId = RowId,
-                EventDate = EventDate,
-                FirearmName = FirearmName?.Trim() ?? String.Empty,
-                RangeName = RangeName,
-                RoundsFired = RoundsFired,
+                Id              = Id,
+                RowId           = RowId,
+                EventDate       = EventDate,
+                FirearmName     = FirearmName?.Trim() ?? string.Empty,
+                RangeName       = RangeName,
+                RoundsFired     = RoundsFired,
                 AmmoDescription = AmmoDescription,
-                Notes = Notes,
-                Modified = Modified,
-                Created = Created
+                Notes           = Notes,
+                Modified        = Modified,
+                Created         = Created,
             };
-        }
 
         [UsedImplicitly]
-        public SimpleRangeEventViewModel CloneSimpleRangeEventViewModel()
-        {
-            return (SimpleRangeEventViewModel)Clone();
-        }
+        public SimpleRangeEventViewModel CloneSimpleRangeEventViewModel() => (SimpleRangeEventViewModel)Clone();
     }
 }

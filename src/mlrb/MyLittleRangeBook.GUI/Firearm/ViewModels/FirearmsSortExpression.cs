@@ -2,8 +2,11 @@
 {
     public class FirearmsSortExpression : SortableViewModelExpression<FirearmViewModel>
     {
-        public FirearmsSortExpression(Func<FirearmViewModel, IComparable> sortExpression, string name) : base(
-            sortExpression, name)
+        public FirearmsSortExpression(
+            Func<FirearmViewModel, IComparable> sortExpression,
+            string name,
+            bool isDescending = false) : base(
+            sortExpression, name, isDescending)
         {
         }
 

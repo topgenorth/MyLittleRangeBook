@@ -2,14 +2,17 @@
 {
     public class SimpleRangeEventsSortExpression : SortableViewModelExpression<SimpleRangeEventViewModel>
     {
-        public SimpleRangeEventsSortExpression(Func<SimpleRangeEventViewModel, IComparable> sortExpression, string name)
-            : base(sortExpression, name)
+        public SimpleRangeEventsSortExpression(
+            Func<SimpleRangeEventViewModel, IComparable> sortExpression,
+            string name,
+            bool isDescending = false)
+            : base(sortExpression, name, isDescending)
         {
         }
 
 
         public static SimpleRangeEventsSortExpression SortByEventDateExpression { get; } =
-            new(x => x.EventDate, "Event Date");
+            new(x => x.EventDate, "Event Date", true);
 
         public static SimpleRangeEventsSortExpression SortByFirearmNameExpression { get; } =
             new(x => x.FirearmName, "Firearm Name");

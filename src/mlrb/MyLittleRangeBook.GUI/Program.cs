@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook;
+
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
@@ -26,7 +26,8 @@ namespace MyLittleRangeBook.GUI
             var bootstrapper = new AppSettingsJsonFileBootstrapper()
                 .AddBootStrapper(SerilogAppSettingsJsonFileBootstrap.SerilogSection)
                 .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
-            await bootstrapper.EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName)
+            await bootstrapper
+                .EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName)
                 .ConfigureAwait(false);
 
             ConfigurationExtensions.DefaultLogDirectory.Create();
@@ -107,6 +108,7 @@ namespace MyLittleRangeBook.GUI
         }
 
         // Avalonia configuration, don't remove; also used by visual designer.
+        // ReSharper disable once MemberCanBePrivate.Global
         public static AppBuilder BuildAvaloniaApp()
         {
             return AppBuilder.Configure<App>()

@@ -5,7 +5,7 @@
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
              xmlns:viewModels1="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              xmlns:views="clr-namespace:MyLittleRangeBook.GUI.Views"
-             mc:Ignorable="d" d:DesignWidth="690" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MyLittleRangeBook.GUI.Views.MainView"
              x:Name="Root"
              x:DataType="viewModels1:MainViewModel">
@@ -21,16 +21,20 @@
                             AutoClosePaneThreshold="700">
 
         <!-- The available Items -->
-        <controls:HamburgerMenu.MenuItems>
-            <controls:HamburgerMenuItem Label="Firearms"
-                                        Icon="{DynamicResource PhosphorIcons.CirclesThreePlusThin}"
-                                        Tag="{Binding ManageFirearmsVM}" />
-        </controls:HamburgerMenu.MenuItems>
+
         <controls:HamburgerMenu.MenuItems>
             <controls:HamburgerMenuItem Label="Range Events"
                                         Icon="{DynamicResource PhosphorIcons.CirclesThreePlusThin}"
                                         Tag="{Binding ManageSimpleRangeEventsVM}" />
         </controls:HamburgerMenu.MenuItems>
+
+
+        <controls:HamburgerMenu.MenuItems>
+            <controls:HamburgerMenuItem Label="Firearms"
+                                        Icon="{DynamicResource PhosphorIcons.CirclesThreePlusThin}"
+                                        Tag="{Binding ManageFirearmsVM}" />
+        </controls:HamburgerMenu.MenuItems>
+
 
         <controls:HamburgerMenu.OptionsMenuItems>
             <controls:HamburgerMenuItem Label="Settings"
