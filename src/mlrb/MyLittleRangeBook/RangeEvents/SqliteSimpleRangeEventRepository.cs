@@ -120,22 +120,16 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<Result<long>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
                                                     CancellationToken cancellationToken = default)
         {
-            await using ScopedSqliteConnection scopedConn =
-                await _sqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken);
-            await using DbTransaction trans = await scopedConn.Connection
-                                                              .BeginTransactionAsync(cancellationToken)
-                                                              .ConfigureAwait(false);
+            await using ScopedSqliteConnection scopedConn = await _sqliteHelper
+                                                               .GetScopedDatabaseConnectionAsync(cancellationToken,
+                                                                    true);
 
-            DapperCommandContext ctx = new(scopedConn.Connection, trans, cancellationToken);
-            var r1 = await UpsertAsync(ctx, simpleRangeEvent).ConfigureAwait(false);
+            DapperCommandContext ctx = new(scopedConn, cancellationToken);
+            Result<long>         r1  = await UpsertAsync(ctx, simpleRangeEvent).ConfigureAwait(false);
 
             if (r1.IsFailed)
             {
-                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
+                ctx.Transaction?.Rollback();
             }
 
             return r1;

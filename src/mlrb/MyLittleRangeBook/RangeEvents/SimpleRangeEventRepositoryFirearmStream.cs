@@ -6,73 +6,84 @@ namespace MyLittleRangeBook.RangeEvents
 {
     public class SimpleRangeEventRepositoryFirearmStream : ISimpleRangeEventRepository
     {
-        readonly SqliteSimpleRangeEventRepository _wrapped;
         readonly IFirearmAggregateRepository      _faRepo;
         readonly ISqliteHelper                    _sqliteHelper;
-        public SimpleRangeEventRepositoryFirearmStream(SqliteSimpleRangeEventRepository wrapped, IFirearmAggregateRepository faRepo, ISqliteHelper sqliteHelper)
+        readonly SqliteSimpleRangeEventRepository _wrapped;
+
+        public SimpleRangeEventRepositoryFirearmStream(SqliteSimpleRangeEventRepository wrapped,
+                                                       IFirearmAggregateRepository faRepo, ISqliteHelper sqliteHelper)
         {
-            _wrapped           = wrapped;
-            _faRepo            = faRepo;
+            _wrapped      = wrapped;
+            _faRepo       = faRepo;
             _sqliteHelper = sqliteHelper;
         }
 
         public Task<Result> DeleteAsync(SimpleRangeEvent  simpleRangeEvent,
-                                        CancellationToken cancellationToken = default) => _wrapped.DeleteAsync(simpleRangeEvent, cancellationToken);
+                                        CancellationToken cancellationToken = default) =>
+            _wrapped.DeleteAsync(simpleRangeEvent, cancellationToken);
 
+        /// <summary>
+        ///     Inserts or updates a <see cref="SimpleRangeEvent" /> in the database and logs the event into the firearm stream.
+        /// </summary>
+        /// <param name="simpleRangeEvent">
+        ///     The <see cref="SimpleRangeEvent" /> to be inserted or updated in the database.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A cancellation token that can be used to cancel the operation.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Result{T}" /> containing the identifier of the updated or inserted record upon success,
+        ///     or an error result if the operation failed.
+        /// </returns>
         public async Task<Result<long>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
-                                                     CancellationToken cancellationToken = default)
+                                                    CancellationToken cancellationToken = default)
         {
+            await using ScopedSqliteConnection scopedConn = await _sqliteHelper
+                                                                 .GetScopedDatabaseConnectionAsync(cancellationToken,
+                                                                           true)
+                                                                 .ConfigureAwait(false);
+            DapperCommandContext ctx = new(scopedConn, cancellationToken);
 
-            await using var scopedConn = await _sqliteHelper
-                                              .GetScopedDatabaseConnectionAsync(cancellationToken)
-                                                .ConfigureAwait(false);
-            await using var trans = await scopedConn.Connection
-                                                    .BeginTransactionAsync(cancellationToken)
-                                                    .ConfigureAwait(false);
-            var ctx = new DapperCommandContext(scopedConn.Connection, trans, cancellationToken);
-
-            var r1 = await _wrapped.UpsertAsync(ctx, simpleRangeEvent);
+            Result<long> r1 = await UpsertAsync(ctx, simpleRangeEvent);
             if (r1.IsFailed)
-                return r1;
-
-            var r2 = await AddToFirearmStream(ctx, simpleRangeEvent);
-            if (r2.IsFailed)
             {
-                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
-                return Result.Fail(r2.Errors[0]);
+                await scopedConn.Transaction!.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                return r1;
             }
-            await trans.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+            await scopedConn.Transaction!.CommitAsync(cancellationToken).ConfigureAwait(false);
             return Result.Ok();
         }
 
-        async Task<Result> AddToFirearmStream(DapperCommandContext ctx, SimpleRangeEvent sre)
-        {
-            var r1 = await _faRepo.GetOrCreateByNameAsync(ctx, sre.FirearmName);
-            if (r1.IsFailed)
-            {
-                return Result.Fail(r1.Errors);
-            }
-
-            var fa = r1.Value;
-            fa.AssociateWithSimpleRangeEvent(sre.Id!, sre.Created);
-            if (sre.RoundsFired> 0)
-            {
-                fa.MoreRoundsFired(sre.RoundsFired, sre.EventDate);
-            }
-
-            var r2 = await _faRepo.UpsertAsync(ctx, fa).ConfigureAwait(false);
-            return r2.IsFailed ? Result.Fail(r2.Errors) : Result.Ok();
-        }
-
+        /// <summary>
+        ///     Inserts or updates a <see cref="SimpleRangeEvent" /> in the database and logs the event into the firearm stream.
+        /// </summary>
+        /// <param name="context">
+        ///     The <see cref="DapperCommandContext" /> representing the database connection, transaction, and other related
+        ///     arguments.
+        /// </param>
+        /// <param name="simpleRangeEvent">
+        ///     The <see cref="SimpleRangeEvent" /> to be inserted or updated in the database.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Result{T}" /> containing the identifier of the updated or inserted record upon success,
+        ///     or an error result if the operation failed.
+        /// </returns>
         public async Task<Result<long>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
         {
-            var r1 = await _wrapped.UpsertAsync(context, simpleRangeEvent);
+            Result<long> r1 = await _wrapped.UpsertAsync(context, simpleRangeEvent);
             if (r1.IsFailed)
             {
-                return Result.Fail(r1.Errors[0]);
+                return r1;
             }
 
-            throw new NotImplementedException();
+            Result r2 = await AddToFirearmStream(context, simpleRangeEvent);
+            if (r2.IsFailed)
+            {
+                return Result.Fail(r2.Errors);
+            }
+
+            return r1;
         }
 
         public Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
@@ -80,5 +91,24 @@ namespace MyLittleRangeBook.RangeEvents
 
         public Task<Result<SimpleRangeEvent>> GetAsync(string id, CancellationToken cancellationToken = default) =>
             _wrapped.GetAsync(id, cancellationToken);
+
+        async Task<Result> AddToFirearmStream(DapperCommandContext ctx, SimpleRangeEvent sre)
+        {
+            Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(ctx, sre.FirearmName);
+            if (r1.IsFailed)
+            {
+                return Result.Fail(r1.Errors);
+            }
+
+            FirearmAggregate? fa = r1.Value;
+            fa.AssociateWithSimpleRangeEvent(sre.Id!, sre.Created);
+            if (sre.RoundsFired > 0)
+            {
+                fa.MoreRoundsFired(sre.RoundsFired, sre.EventDate);
+            }
+
+            Result r2 = await _faRepo.UpsertAsync(ctx, fa).ConfigureAwait(false);
+            return r2.IsFailed ? Result.Fail(r2.Errors) : Result.Ok();
+        }
     }
 }

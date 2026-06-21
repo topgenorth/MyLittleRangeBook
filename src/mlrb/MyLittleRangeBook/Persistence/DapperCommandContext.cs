@@ -18,6 +18,12 @@ namespace MyLittleRangeBook.Persistence
 
         }
 
+        public DapperCommandContext(ScopedSqliteConnection scopedSqliteConnection, CancellationToken CancellationToken = default)
+            : this(scopedSqliteConnection.Connection, scopedSqliteConnection.Transaction, CancellationToken)
+        {
+
+        }
+
 
     }
 }

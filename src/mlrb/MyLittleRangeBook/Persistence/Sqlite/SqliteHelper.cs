@@ -18,7 +18,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
     {
         FitFiles,
         ShotViewCsvFiles,
-        ImageFiles
+        ImageFiles,
     }
 
 
@@ -34,13 +34,11 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// </summary>
         public const int FILE_LENGTH_THRESHOLD = 100 * 1024;
 
-        readonly string _connectionString;
+        readonly string  _connectionString;
         readonly ILogger _logger;
 
         public SqliteHelper(ILogger logger, IConfiguration configuration) :
-            this(logger, configuration.GetSqliteConnectionString())
-        {
-        }
+            this(logger, configuration.GetSqliteConnectionString()) { }
 
         public SqliteHelper(ILogger logger, string connectionString)
         {
@@ -49,30 +47,43 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             if (string.IsNullOrEmpty(connectionString))
             {
                 _logger.Warning("SQLite connection string is empty!");
-                DatabaseFile = string.Empty;
+                DatabaseFile      = string.Empty;
                 _connectionString = string.Empty;
             }
             else
             {
-                var builder = new SqliteConnectionStringBuilder(connectionString)
-                {
-                    Mode = SqliteOpenMode.ReadWriteCreate, ForeignKeys = true
-                };
+                SqliteConnectionStringBuilder builder = new(connectionString)
+                                                        {
+                                                            Mode = SqliteOpenMode.ReadWriteCreate, ForeignKeys = true,
+                                                        };
                 _connectionString = builder.ConnectionString;
-                DatabaseFile = builder.DataSource;
+                DatabaseFile      = builder.DataSource;
             }
         }
 
-        async Task<IDbConnection> IDatabaseHelper.GetDatabaseConnectionAsync(CancellationToken cancellationToken)
-        {
-            return await GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
-        }
+        [Obsolete("Prefer GetScopedDatabaseConnectionAsync.")]
+        async Task<IDbConnection> IDatabaseHelper.GetDatabaseConnectionAsync(CancellationToken cancellationToken) =>
+            await GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
 
+        /// <summary>
+        /// Creates a new scoped SQLite connection and initializes it for usage.
+        /// </summary>
+        /// <remarks>
+        /// The returned connection allows for optional transaction management. Ensure that the scoped connection is properly
+        /// disposed of after use to release database resources.
+        /// </remarks>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+        /// <param name="useTransaction">Specifies whether a transaction should be started with the scoped connection.</param>
+        /// <returns>A scoped SQLite connection, optionally with an active transaction.</returns>
         public async Task<ScopedSqliteConnection> GetScopedDatabaseConnectionAsync(CancellationToken cancellationToken =
-            default, bool useTransaction = false)
+                default, bool useTransaction = false)
         {
-            SqliteConnection conn = await GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
-            var scoped = new ScopedSqliteConnection(conn, useTransaction);
+            SqliteConnection connection = new(_connectionString);
+            connection.AddFunctions();
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            await InitializeConnectionAsync(connection).ConfigureAwait(false);
+            ScopedSqliteConnection scoped = new(connection, useTransaction);
 
             return scoped;
         }
@@ -92,7 +103,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         [Obsolete("Maybe use the GetScopedDatabaseConnectionAsync?")]
         public async Task<SqliteConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
         {
-            var connection = new SqliteConnection(_connectionString);
+            SqliteConnection connection = new(_connectionString);
             connection.AddFunctions();
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
@@ -112,8 +123,8 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             try
             {
                 UpgradeEngineBuilder? ueb = DeployChanges.To
-                    .SqliteDatabase(_connectionString)
-                    .WithScriptsEmbeddedInAssembly(GetType().Assembly);
+                                                         .SqliteDatabase(_connectionString)
+                                                         .WithScriptsEmbeddedInAssembly(GetType().Assembly);
                 if (!EnvironmentExtensions.IsProduction)
                 {
                     ueb.LogToConsole();
@@ -131,8 +142,8 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                 else
                 {
                     Error? err = new Error("Could not apply database migrations.")
-                        .WithMetadata("Errors", migrationResult.Error)
-                        .WithMetadata("Database", _connectionString);
+                                .WithMetadata("Errors",   migrationResult.Error)
+                                .WithMetadata("Database", _connectionString);
 
                     result = new Result().WithError(err);
                 }
@@ -141,9 +152,9 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             {
                 _logger.Error(e, "Unexpected error occurred while applying database migrations.");
                 Error? err = new Error("Unexpected error occurred while applying database migrations.")
-                        .CausedBy(e)
-                        .WithMetadata("Exception", e)
-                        .WithMetadata("Database", _connectionString)
+                            .CausedBy(e)
+                            .WithMetadata("Exception", e)
+                            .WithMetadata("Database",  _connectionString)
                     ;
 
                 result = new Result().WithError(err);
@@ -164,7 +175,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             try
             {
                 await using SqliteConnection connection = await GetDatabaseConnectionAsync(cancellationToken);
-                await using var cmd = new SqliteCommand(sql, connection);
+                await using SqliteCommand    cmd        = new(sql, connection);
                 await cmd.ExecuteNonQueryAsync(cancellationToken);
 
                 return Result.Ok();
@@ -172,18 +183,18 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             catch (SqliteException sqe)
             {
                 Error? err = new Error(sqe.Message)
-                    .CausedBy(sqe)
-                    .WithMetadata("SQL", sql)
-                    .WithMetadata("SQLiteErrorCode", sqe.ErrorCode)
-                    .WithMetadata("SQLiteExtendedErrorCode", sqe.SqliteExtendedErrorCode)
-                    .WithMetadata("Connection", _connectionString);
+                            .CausedBy(sqe)
+                            .WithMetadata("SQL",                     sql)
+                            .WithMetadata("SQLiteErrorCode",         sqe.ErrorCode)
+                            .WithMetadata("SQLiteExtendedErrorCode", sqe.SqliteExtendedErrorCode)
+                            .WithMetadata("Connection",              _connectionString);
 
                 return Result.Fail(err);
             }
             catch (Exception e)
             {
                 Error? err = new Error("Unexpected error running SQL on database..").CausedBy(e);
-                err.Metadata.Add("SQL", sql);
+                err.Metadata.Add("SQL",        sql);
                 err.Metadata.Add("Connection", _connectionString);
 
                 return Result.Fail(err);
@@ -217,7 +228,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         {
             ArgumentNullException.ThrowIfNull(connection);
             // VACUUM must run outside an explicit transaction.
-            await using (var vacuum = connection.CreateCommand())
+            await using (SqliteCommand vacuum = connection.CreateCommand())
             {
                 vacuum.CommandText = "VACUUM;";
                 vacuum.ExecuteNonQuery();
@@ -225,54 +236,55 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         }
 
         public async Task<Result<(string id, long rowId)>> WriteFileToTableAsync(SqliteConnection conn,
-            SqliteFileTable table,
-            string fileName,
-            byte[] fileContents,
-            CancellationToken cancellationToken)
+            SqliteFileTable                                                                       table,
+            string                                                                                fileName,
+            byte[]                                                                                fileContents,
+            CancellationToken                                                                     cancellationToken)
         {
             string sql = table switch
-            {
-                SqliteFileTable.FitFiles => """
-                                            INSERT INTO FitFiles (Id, FileName, Contents)
-                                            VALUES (@Id, @FileName, @FileContents)
-                                            RETURNING rowid;
-                                            """,
-                _ => throw new ArgumentOutOfRangeException(nameof(table), $"Unsupported table: {table}")
-            };
+                         {
+                             SqliteFileTable.FitFiles => """
+                                                         INSERT INTO FitFiles (Id, FileName, Contents)
+                                                         VALUES (@Id, @FileName, @FileContents)
+                                                         RETURNING rowid;
+                                                         """,
+                             _ => throw new ArgumentOutOfRangeException(nameof(table), $"Unsupported table: {table}"),
+                         };
 
             switch (fileContents.Length)
             {
                 case 0:
                     return Result.Ok((string.Empty, 0L))
-                        .WithReason(
-                            new Success("File contents are empty - nothing to write.").WithMetadata("Table", table));
+                                 .WithReason(
+                                             new Success("File contents are empty - nothing to write.")
+                                                .WithMetadata("Table", table));
                 case > FILE_LENGTH_THRESHOLD:
                     _logger.Warning(
-                        "File contents are larger than 100KB. This may cause performance issues when writing to the database. Table: {Table}, Size: {Size} bytes",
-                        table, fileContents.Length);
+                                    "File contents are larger than 100KB. This may cause performance issues when writing to the database. Table: {Table}, Size: {Size} bytes",
+                                    table, fileContents.Length);
 
                     break;
             }
 
-            var id = new MlrbId().ToString();
+            string id = new MlrbId().ToString();
             try
             {
                 // TODO [TO20260503] It's possible to duplicate file contents; maybe file name should be unique in the database?
-                var cmd = new SqliteCommand(sql, conn);
+                SqliteCommand cmd = new(sql, conn);
                 cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@Id", id);
+                cmd.Parameters.AddWithValue("@Id",           id);
                 cmd.Parameters.AddWithValue("@FileContents", fileContents);
-                cmd.Parameters.AddWithValue("@FileName", fileName);
+                cmd.Parameters.AddWithValue("@FileName",     fileName);
 
-                object? l = await cmd.ExecuteScalarAsync(cancellationToken);
-                long rowId = l is null ? -1 : Convert.ToInt64(l);
+                object? l     = await cmd.ExecuteScalarAsync(cancellationToken);
+                long    rowId = l is null ? -1 : Convert.ToInt64(l);
 
                 return Result.Ok((id, rowId));
             }
             catch (Exception e)
             {
                 Error? err = new Error($"Failed to write file to table {table}.").CausedBy(e);
-                err.Metadata.Add("Table", table);
+                err.Metadata.Add("Table",    table);
                 err.Metadata.Add("FileName", fileName);
 
                 return Result.Fail(err);
@@ -285,8 +297,8 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <param name="sqliteDatabaseFile"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<Result<bool>> CreateSqliteDatabaseAsync(string sqliteDatabaseFile,
-            CancellationToken cancellationToken = default)
+        public async Task<Result<bool>> CreateSqliteDatabaseAsync(string            sqliteDatabaseFile,
+                                                                  CancellationToken cancellationToken = default)
         {
             if (File.Exists(sqliteDatabaseFile))
             {
@@ -305,8 +317,8 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         }
 
         public async Task<Result<bool>> RunSqlOnDatabaseAsync(SqliteTransaction trans,
-            SqliteCommand sqliteCommand,
-            CancellationToken cancellationToken = default)
+                                                              SqliteCommand     sqliteCommand,
+                                                              CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(trans);
 
@@ -320,31 +332,31 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             catch (SqliteException sqe)
             {
                 Error? err = new Error(sqe.Message)
-                    .CausedBy(sqe)
-                    .WithMetadata("SQL", sqliteCommand.CommandText)
-                    .WithMetadata("SQLiteErrorCode", sqe.ErrorCode)
-                    .WithMetadata("SQLiteExtendedErrorCode", sqe.SqliteExtendedErrorCode)
-                    .WithMetadata("Connection", _connectionString);
+                            .CausedBy(sqe)
+                            .WithMetadata("SQL",                     sqliteCommand.CommandText)
+                            .WithMetadata("SQLiteErrorCode",         sqe.ErrorCode)
+                            .WithMetadata("SQLiteExtendedErrorCode", sqe.SqliteExtendedErrorCode)
+                            .WithMetadata("Connection",              _connectionString);
 
                 return Result.Fail<bool>(err).WithValue(false);
             }
             catch (Exception e)
             {
                 Error? err = new Error("Unexpected error running SQL on database.").CausedBy(e);
-                err.Metadata.Add("SQL", sqliteCommand.CommandText);
+                err.Metadata.Add("SQL",        sqliteCommand.CommandText);
                 err.Metadata.Add("Connection", _connectionString);
 
                 return Result.Fail<bool>(err).WithValue(false);
             }
         }
 
-        public async Task<Result<bool>> UpdateSqliteDatabasePathAsync(string sqliteDatabaseName,
-            string? appSettingsFile = null,
-            CancellationToken cancellationToken = default)
+        public async Task<Result<bool>> UpdateSqliteDatabasePathAsync(string            sqliteDatabaseName,
+                                                                      string?           appSettingsFile   = null,
+                                                                      CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(sqliteDatabaseName))
             {
-                var err = new Error("SQLite database name is empty.");
+                Error err = new("SQLite database name is empty.");
 
                 return Result.Fail<bool>(err).WithValue(false);
             }
@@ -354,46 +366,44 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                 appSettingsFile = DatabaseFile;
             }
 
-            var appSettings = new FileInfo(appSettingsFile);
+            FileInfo appSettings = new(appSettingsFile);
             if (!appSettings.Exists)
             {
-                var err = new Error($"Could not find appsettings.json at {appSettingsFile}.");
+                Error err = new($"Could not find appsettings.json at {appSettingsFile}.");
 
                 return Result.Fail<bool>(err).WithValue(false);
             }
 
-            using StreamReader reader = appSettings.OpenText();
-            string jsonBody = await reader.ReadToEndAsync(cancellationToken);
+            using StreamReader reader   = appSettings.OpenText();
+            string             jsonBody = await reader.ReadToEndAsync(cancellationToken);
 
-            var node = JsonNode.Parse(jsonBody);
+            JsonNode? node = JsonNode.Parse(jsonBody);
             if (node is null)
             {
                 Error? err = new Error($"Could not parse appsettings.json at {appSettingsFile}.")
-                    .WithMetadata("Json", jsonBody)
-                    .WithMetadata("File", appSettingsFile);
+                            .WithMetadata("Json", jsonBody)
+                            .WithMetadata("File", appSettingsFile);
 
                 return Result.Fail<bool>(err).WithValue(false);
             }
 
-            var b = new SqliteConnectionStringBuilder
-            {
-                DataSource = sqliteDatabaseName, Mode = SqliteOpenMode.ReadWriteCreate
-            };
+            SqliteConnectionStringBuilder b = new()
+                                              {
+                                                  DataSource = sqliteDatabaseName,
+                                                  Mode       = SqliteOpenMode.ReadWriteCreate,
+                                              };
 
             // [TO20260414] Just wondering if the Mode should be set to ReadWriteCreate?
             node["ConnectionStrings"]!["SqliteConnection"] = b.ConnectionString;
 
-            var success = new Success("Updated appsettings.json with SQLite database connection string.");
-            success.Metadata.Add("File", appSettingsFile);
+            Success success = new("Updated appsettings.json with SQLite database connection string.");
+            success.Metadata.Add("File",             appSettingsFile);
             success.Metadata.Add("ConnectionString", b.ConnectionString);
 
             return Result.Ok(true).WithSuccess(success);
         }
 
-        public override string ToString()
-        {
-            return _connectionString;
-        }
+        public override string ToString() => _connectionString;
 
         static async Task InitializeConnectionAsync(SqliteConnection connection)
         {

@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence.Sqlite;
 using static MyLittleRangeBook.Firearms.FirearmAggregate;
 
+// ReSharper disable once CheckNamespace
 namespace MyLittleRangeBook
 {
     public static partial class ServiceCollectionExtensions
@@ -27,9 +29,10 @@ namespace MyLittleRangeBook
         public static IServiceCollection RegisterFirearmEventSourcing(this IServiceCollection services)
         {
             ArgumentNullException.ThrowIfNull(services);
-            services.AddKeyedScoped<IFirearmsService, FirearmsService>(SqliteHelperExtensions.DI_KEYS_SQLITE);
-            services.AddScoped<IFirearmAggregateRepository, SqliteFirearmAggregateRepository>();
-            services.AddScoped<IFirearmsService, FirearmsService>();
+
+            services.TryAddKeyedScoped<IFirearmsService, FirearmsService>(SqliteHelperExtensions.DI_KEYS_SQLITE);
+            services.TryAddScoped<IFirearmAggregateRepository, SqliteFirearmAggregateRepository>();
+            services.TryAddScoped<IFirearmsService, FirearmsService>();
             return services;
         }
     }
