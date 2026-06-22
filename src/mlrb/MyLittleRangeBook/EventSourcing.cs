@@ -35,7 +35,7 @@ namespace MyLittleRangeBook
             _createFromStream = createFromStream;
         }
 
-        public  virtual async Task<Result<TAggregate?>> GetAsync(DapperCommandContext context, MlrbId id)
+        public virtual async Task<Result<TAggregate?>> GetAsync(DapperCommandContext context, MlrbId id)
         {
             try
             {
@@ -115,17 +115,6 @@ namespace MyLittleRangeBook
             aggregate.LoadFromHistory(events);
         }
 
-        /// <summary>
-        ///     Hook invoked after events are persisted but before the transaction is committed. Override
-        ///     to project the just-saved events into additional read-model tables within the same transaction.
-        /// </summary>
-        protected virtual Task ProjectAsync(SqliteConnection            connection,
-                                            DbTransaction               transaction,
-                                            string                      streamId,
-                                            IReadOnlyList<IDomainEvent> pendingEvents,
-                                            CancellationToken           cancellationToken) =>
-            Task.CompletedTask;
-
 
         /// <summary>
         ///     Upserts the specified aggregate into the database using the provided Dapper command context.
@@ -143,16 +132,10 @@ namespace MyLittleRangeBook
             }
 
             string streamId = aggregate.Id.ToString();
-
-            SqliteConnection  connection        = context.Connection;
-            DbTransaction     transaction       = (DbTransaction)context.Transaction!;
-            CancellationToken cancellationToken = context.CancellationToken;
-
             try
             {
-                int? currentVersion = await GetStreamVersion(connection, transaction, streamId, cancellationToken)
-                                         .ConfigureAwait(false);
-                int expectedVersion, nextVersion;
+                int? currentVersion = await GetStreamVersion(context, streamId).ConfigureAwait(false);
+                int  expectedVersion, nextVersion;
                 if (currentVersion is null)
                 {
                     expectedVersion = aggregate.Version;
@@ -172,46 +155,19 @@ namespace MyLittleRangeBook
 
                 foreach (IDomainEvent evt in pendingEvents)
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
-
-                        return Result.Fail("Operation was cancelled.");
-                    }
-
-                    await InsertDomainEventAsync(connection,
-                                                 transaction,
-                                                 streamId,
-                                                 nextVersion,
-                                                 evt,
-                                                 cancellationToken)
+                    await InsertDomainEventAsync(context, streamId, nextVersion, evt)
                        .ConfigureAwait(false);
                     nextVersion++;
                 }
 
-                await UpsertEventStreamAsync(connection,
-                                             transaction,
+                await UpsertEventStreamAsync(context,
                                              streamId,
                                              currentVersion,
-                                             nextVersion - 1,
-                                             cancellationToken)
+                                             nextVersion - 1)
                    .ConfigureAwait(false);
-
-                await ProjectAsync(connection, transaction, streamId, pendingEvents, cancellationToken)
-                   .ConfigureAwait(false);
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
-
-                    return Result.Fail("Operation was cancelled.");
-                }
-
-                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception e)
             {
-                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                 Error err = new Error(e.Message).CausedBy(e);
 
                 return Result.Fail(err);
@@ -254,12 +210,10 @@ namespace MyLittleRangeBook
             return r1;
         }
 
-        async Task UpsertEventStreamAsync(SqliteConnection  conn,
-                                          DbTransaction     trans,
-                                          string            streamId,
-                                          int?              currentVersion,
-                                          int               nextVersion,
-                                          CancellationToken ct)
+        async Task UpsertEventStreamAsync(DapperCommandContext context,
+                                          string               streamId,
+                                          int?                 currentVersion,
+                                          int                  nextVersion)
         {
             string  sql;
             object? p;
@@ -283,7 +237,7 @@ namespace MyLittleRangeBook
                 p = new { Version = nextVersion, StreamId = streamId, ExpectedVersion = currentVersion };
             }
 
-            DapperCommandContext ctx = new(conn, trans, ct, p);
+            DapperCommandContext ctx = context with { Arguments = p };
             DapperCommand        cmd = new(sql);
             int                  i   = await cmd.ExecuteAsync(ctx).ConfigureAwait(false);
             if (i != 1)
@@ -292,12 +246,8 @@ namespace MyLittleRangeBook
             }
         }
 
-        async Task InsertDomainEventAsync(SqliteConnection  connection,
-                                          DbTransaction     transaction,
-                                          string            streamId,
-                                          int               nextVersion,
-                                          IDomainEvent      domainEvent,
-                                          CancellationToken ct)
+        async Task InsertDomainEventAsync(DapperCommandContext context, string streamId, int nextVersion,
+                                          IDomainEvent         domainEvent)
         {
             const string SQL = """
                                insert into events
@@ -338,7 +288,7 @@ namespace MyLittleRangeBook
                         MetadataJson = "{}",
                     };
             DapperCommand        cmd = new(SQL);
-            DapperCommandContext ctx = new(connection, transaction, ct, p);
+            DapperCommandContext ctx = context with { Arguments = p };
             int                  x;
             try
             {
@@ -358,12 +308,10 @@ namespace MyLittleRangeBook
             }
         }
 
-        async Task<int?> GetStreamVersion(SqliteConnection  c,
-                                          DbTransaction     t,
-                                          string            streamId,
-                                          CancellationToken ct)
+        async Task<int?> GetStreamVersion(DapperCommandContext context,
+                                          string               streamId)
         {
-            DapperCommandContext ctx            = new(c, t, ct, new { StreamId = streamId });
+            DapperCommandContext ctx            = context with { Arguments = new { StreamId = streamId } };
             DapperCommand        versionCmd     = new("SELECT version from event_streams WHERE id=@StreamId;");
             int?                 currentVersion = await versionCmd.ExecuteScalarAsync<int?>(ctx).ConfigureAwait(false);
 

@@ -99,7 +99,12 @@ namespace MyLittleRangeBook.RangeEvents
 
             Result r1 = await AddToFirearmStream(context, simpleRangeEvent);
 
-            return Result.Fail(r1.IsFailed ? r1.Errors : sreResult.Errors);
+            if (r1.IsFailed)
+            {
+                return Result.Fail(r1.Errors);
+            }
+            return Result.Ok(sreResult.Value.Value);
+
         }
 
 

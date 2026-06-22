@@ -43,11 +43,11 @@ namespace MyLittleRangeBook.MlrbAssets
         public Task<Result> SaveAsync(MlrbAssetAggregate aggregate, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
 
-        protected override Task ProjectAsync(SqliteConnection            connection,
-                                             DbTransaction               transaction,
-                                             string                      streamId,
-                                             IReadOnlyList<IDomainEvent> pendingEvents,
-                                             CancellationToken           cancellationToken)
+        protected Task ProjectAsync(SqliteConnection            connection,
+                                    DbTransaction               transaction,
+                                    string                      streamId,
+                                    IReadOnlyList<IDomainEvent> pendingEvents,
+                                    CancellationToken           cancellationToken)
         {
             RangeAssetProjectorContext ctx = new(connection, transaction, streamId, pendingEvents,
                                                  cancellationToken);
