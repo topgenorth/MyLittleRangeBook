@@ -1,6 +1,4 @@
-﻿using System.Data.Common;
-using Dapper;
-using Microsoft.Data.Sqlite;
+﻿using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
@@ -28,44 +26,13 @@ namespace MyLittleRangeBook.RangeEvents
             _faRepo                  = faRepo;
         }
 
-        public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
-            CancellationToken cancellationToken = default)
+        public async Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, string id)
         {
-            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-            await using DbTransaction    t = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                Result<IEnumerable<SimpleRangeEvent>> result =
-                    await _simpleRangeEventService.GetSimpleRangeEventsAsync(conn, t, cancellationToken);
-                if (!result.IsFailed)
-                {
-                    return result;
-                }
-
-                await t.RollbackAsync(cancellationToken).ConfigureAwait(false);
-
-                return Result.Fail(result.Errors);
-            }
-            catch (Exception e)
-            {
-                await t.RollbackAsync(cancellationToken).ConfigureAwait(false);
-                Error err = new Error("Failed to retrieve simple range events.").CausedBy(e);
-
-                return Result.Fail(err);
-            }
-        }
-
-        public async Task<Result<SimpleRangeEvent>> GetAsync(string id, CancellationToken cancellationToken)
-        {
-            await using SqliteConnection conn = await _sqliteHelper
-                                                     .GetDatabaseConnectionAsync(cancellationToken)
-                                                     .ConfigureAwait(false);
-
-            try
-            {
-                SimpleRangeEvent? sre = await conn
-                                           .QueryFirstOrDefaultAsync<SimpleRangeEvent>(Commands.GetByIdSql,
-                                                new { Id = id });
+                SimpleRangeEvent? sre = await context.Connection
+                                                     .QueryFirstOrDefaultAsync<SimpleRangeEvent>(Commands.GetByIdSql,
+                                                          new { Id = id });
                 if (sre is not null)
                 {
                     return Result.Ok(sre);
@@ -82,20 +49,36 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
-        public async Task<Result> DeleteAsync(SimpleRangeEvent  simpleRangeEvent,
-                                              CancellationToken cancellationToken = default)
+        public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(DapperCommandContext ctx)
         {
-            await using SqliteConnection conn = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-            await using DbTransaction trans = await conn.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-
             try
             {
-                return await _simpleRangeEventService.DeleteAsync(conn, simpleRangeEvent, trans, cancellationToken)
+                Result<IEnumerable<SimpleRangeEvent>> result =
+                    await _simpleRangeEventService.GetSimpleRangeEventsAsync(ctx).ConfigureAwait(false);
+                if (!result.IsFailed)
+                {
+                    return result;
+                }
+
+                return Result.Fail(result.Errors);
+            }
+            catch (Exception e)
+            {
+                Error err = new Error("Failed to retrieve simple range events.").CausedBy(e);
+
+                return Result.Fail(err);
+            }
+        }
+
+        public async Task<Result> DeleteAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
+        {
+            try
+            {
+                return await _simpleRangeEventService.DeleteAsync(context, simpleRangeEvent)
                                                      .ConfigureAwait(false);
             }
             catch (Exception e)
             {
-                await trans.RollbackAsync(cancellationToken).ConfigureAwait(false);
                 Error? err = new Error("Failed to delete simple range event.")
                             .Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId)
                             .CausedBy(e);
@@ -107,8 +90,7 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<Result<long>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
         {
             Result<long?> sreResult = await _simpleRangeEventService
-                                           .UpsertAsync(context.Connection, simpleRangeEvent, context.Transaction,
-                                                        context.CancellationToken)
+                                           .UpsertAsync(context, simpleRangeEvent)
                                            .ConfigureAwait(false);
             if (sreResult.IsFailed || sreResult.Value is null)
             {
@@ -121,12 +103,13 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
 
+        [Obsolete("Prefer the overload that takes the DapperCommandContext.")]
         public async Task<Result<long>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
                                                     CancellationToken cancellationToken = default)
         {
-            DapperCommandContext ctx = await DapperCommandContext
-                                            .NewAsync(_sqliteHelper, cancellationToken)
-                                            .ConfigureAwait(false);
+            await using DapperCommandContext ctx = await DapperCommandContext
+                                                        .NewAsync(_sqliteHelper, cancellationToken)
+                                                        .ConfigureAwait(false);
 
             Result<long> r1 = await UpsertAsync(ctx, simpleRangeEvent).ConfigureAwait(false);
 

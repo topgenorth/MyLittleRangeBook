@@ -7,12 +7,19 @@ namespace MyLittleRangeBook.Firearms
     public interface IFirearmAggregateRepository
     {
         /// <summary>
-        ///     Retrieves a firearm aggregate by the id.
+        /// Asynchronously retrieves a FirearmAggregate by its ID using the specified DapperCommandContext.
         /// </summary>
-        /// <param name="firearmId"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        Task<Result<FirearmAggregate?>> GetAsync(MlrbId firearmId, CancellationToken cancellationToken = default);
+        /// <param name="context">
+        /// The context containing the database connection and transaction information.
+        /// </param>
+        /// <param name="firearmId">
+        /// The unique identifier of the firearm to retrieve.
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a Result object
+        /// wrapping the retrieved FirearmAggregate, or an error if the operation fails.
+        /// </returns>
+        Task<Result<FirearmAggregate>> GetAsync(DapperCommandContext context, MlrbId firearmId);
 
         /// <summary>
         ///     Retrieves a list of firearm names in SimpleRangeEvents that do not have an associated FirearmAggregrate.
@@ -22,19 +29,6 @@ namespace MyLittleRangeBook.Firearms
         Task<Result<IEnumerable<NewFirearmNameFromSimpleRangeEventRow>>> GetNewFirearmNamesFromSimpleRangeEventsAsync(
             DapperCommandContext context);
 
-        /// <summary>
-        ///     Will retrieve a firearm aggregate by its name, creating it if it doesn't exist.
-        /// </summary>
-        /// <param name="firearmName"></param>
-        /// <param name="cancellationToken"></param>
-        /// <param name="createUtc">
-        ///     If specified, the date that the firearm was created. Otherwise the current date-time will be
-        ///     used.
-        /// </param>
-        /// <returns></returns>
-        Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(string            firearmName,
-                                                              CancellationToken cancellationToken = default,
-                                                              DateTimeOffset?   createUtc         = null);
 
         /// <summary>
         ///     Retrieves a firearm aggregate by its name or creates a new one if it does not exist.
@@ -74,11 +68,9 @@ namespace MyLittleRangeBook.Firearms
         /// <summary>
         /// Saves the provided firearm aggregate to the data store.
         /// </summary>
+        /// <param name="context"></param>
         /// <param name="aggregate">
         /// The firearm aggregate to be saved.
-        /// </param>
-        /// <param name="cancellationToken">
-        /// Token to monitor for cancellation requests.
         /// </param>
         /// <returns>
         /// A result indicating the success or failure of the save operation.

@@ -54,43 +54,10 @@ namespace MyLittleRangeBook.Persistence
 
         Task<int> ExecuteAsync(DapperCommandContext ctx);
 
-        [Obsolete("Prefer the DapperCommandContext overload")]
-        Task<int> ExecuteAsync(
-            IDbConnection     connection,
-            IDbTransaction?   transaction       = null,
-            CancellationToken cancellationToken = default)
-        {
-            var ctx = new DapperCommandContext(connection, transaction, cancellationToken);
-
-            return ExecuteAsync(ctx);
-        }
-
         Task<T?> QuerySingleOrDefaultAsync<T>(DapperCommandContext ctx);
 
         Task<T> QuerySingleAsync<T>(DapperCommandContext ctx);
 
-        [Obsolete("Prefer the DapperCommandContext overload")]
-        Task<T> QuerySingleAsync<T>(
-            IDbConnection     connection,
-            IDbTransaction?   transaction       = null,
-            CancellationToken cancellationToken = default)
-        {
-            var ctx = new DapperCommandContext(connection, transaction, cancellationToken);
-
-            return QuerySingleAsync<T>(ctx);
-        }
-
         Task<IEnumerable<T>> QueryAsync<T>(DapperCommandContext ctx);
-
-        [Obsolete("Prefer the DapperCommandContext overload")]
-        Task<IEnumerable<T>> QueryAsync<T>(
-            IDbConnection     connection,
-            IDbTransaction?   transaction       = null,
-            CancellationToken cancellationToken = default)
-        {
-            var ctx = new DapperCommandContext(connection, transaction, cancellationToken);
-
-            return QueryAsync<T>(ctx);
-        }
     }
 }

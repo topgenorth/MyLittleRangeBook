@@ -3,6 +3,8 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.Persistence;
+using MyLittleRangeBook.Persistence.Sqlite;
 using static MyLittleRangeBook.ReturnCodes;
 using static MyLittleRangeBook.Persistence.Sqlite.SqliteHelperExtensions;
 
@@ -12,7 +14,7 @@ namespace MyLittleRangeBook.RangeEvents
     ///     Allows us to create a new Range Event from the CLI, and optionally the FIT file that goes with it.
     /// </summary>
     [RegisterCommands("rangeevent"), UsedImplicitly]
-    public class SimpleRangeEventCommandAddToSqlite : MlrbCommandBase
+    public class SimpleRangeEventCommandAddToSqlite : MlrbSqliteCommandBase
     {
         readonly ISimpleRangeEventHelper _rangeEventHelper;
         readonly ISimpleRangeEventRepository _repo;
@@ -22,7 +24,8 @@ namespace MyLittleRangeBook.RangeEvents
             ICliDisplay cliDisplay,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
             [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventHelper rangeEventHelper,
-            ISimpleRangeEventPrinter simpleRangeEventPrinter) : base(logger, cliDisplay)
+            ISqliteHelper sqliteHelper,
+            ISimpleRangeEventPrinter simpleRangeEventPrinter) : base(logger, cliDisplay, sqliteHelper)
         {
             _repo = repo;
             _rangeEventHelper = rangeEventHelper;
@@ -55,10 +58,13 @@ namespace MyLittleRangeBook.RangeEvents
             bool quiet = false,
             CancellationToken cancellationToken = default)
         {
-            int returnValue=-1;
+            int returnValue;
             CliDisplay.PrintCommandHeader("Add range event");
+
+            await using var context = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken).ConfigureAwait(false);
+
             Result<(List<string>, List<string>)> r1 = await _rangeEventHelper
-                .GetFirearmsAndRangesAsync(cancellationToken)
+                .GetFirearmsAndRangesAsync(context)
                 .ConfigureAwait(false);
             if (r1.IsFailed)
             {
@@ -95,7 +101,7 @@ namespace MyLittleRangeBook.RangeEvents
                     goto ExitFunction;
                 }
 
-                Result<long> result = await _repo.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
+                Result<long> result = await _repo.UpsertAsync(context, sre).ConfigureAwait(false);
 
                 if (result.IsSuccess)
                 {
@@ -183,8 +189,9 @@ namespace MyLittleRangeBook.RangeEvents
                 return ammo;
             }
 
+            await using var context = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken).ConfigureAwait(false);
             Result<List<string>> ammoChoices = await _rangeEventHelper
-                .GetAmmoDescriptionsForFirearmAsync(firearm, cancellationToken)
+                .GetAmmoDescriptionsForFirearmAsync(context, firearm)
                 .ConfigureAwait(false);
 
             IPrompt<string> prompt;

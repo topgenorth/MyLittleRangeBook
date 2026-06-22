@@ -13,64 +13,42 @@ namespace MyLittleRangeBook
     ///     <c>event_streams</c> table.
     /// </summary>
     /// <typeparam name="TAggregate">The concrete aggregate type.</typeparam>
-    public class SqliteAggregateRepository<TAggregate> where TAggregate : Aggregate
+    public abstract class SqliteAggregateRepository<TAggregate> where TAggregate : Aggregate
     {
-        const string SelectStreamSql = """
-                                       SELECT id AS StreamId, stream_type AS StreamType, version AS Version,
-                                              created_utc as Created, modified_utc as Modified
-                                       FROM event_streams
-                                       WHERE id = @StreamId;
-                                       """;
-
-        const string SelectEventsSql = """
-                                       select stream_id as StreamId,
-                                              stream_type as StreamType,
-                                              version as Version,
-                                              event_type as EventType,
-                                              occurred_utc as OccurredUtc,
-                                              data_json as DataJson,
-                                              metadata_json as MetadataJson
-                                       from events
-                                       where stream_id = @StreamId
-                                       order by version asc;
-                                       """;
-
-        readonly Func<EventStream, TAggregate> _createFromStream;
-        readonly IEventSerializer _eventSerializer;
-        protected readonly ISqliteHelper SqliteHelper;
-        readonly string _streamType;
+        readonly           Func<EventStream, TAggregate> _createFromStream;
+        readonly           IEventSerializer              _eventSerializer;
+        readonly           string                        _streamType;
+        protected readonly ISqliteHelper                 SqliteHelper;
 
         /// <param name="sqliteHelper">SQLite connection factory.</param>
         /// <param name="eventSerializer">Serializer used to (de)serialize <see cref="IDomainEvent" /> instances.</param>
         /// <param name="streamType">The stream type identifier used in the <c>event_streams</c>/<c>events</c> tables.</param>
         /// <param name="createFromStream">Factory invoked when rehydrating an aggregate from an existing event stream.</param>
-        public SqliteAggregateRepository(ISqliteHelper sqliteHelper,
-            IEventSerializer eventSerializer,
-            string streamType,
-            Func<EventStream, TAggregate> createFromStream)
+        protected SqliteAggregateRepository(ISqliteHelper                 sqliteHelper,
+                                            IEventSerializer              eventSerializer,
+                                            string                        streamType,
+                                            Func<EventStream, TAggregate> createFromStream)
         {
-            SqliteHelper = sqliteHelper;
-            _eventSerializer = eventSerializer;
-            _streamType = streamType;
+            SqliteHelper      = sqliteHelper;
+            _eventSerializer  = eventSerializer;
+            _streamType       = streamType;
             _createFromStream = createFromStream;
         }
 
-        public async Task<Result<TAggregate?>> GetAsync(MlrbId id, CancellationToken cancellationToken = default)
+        public  virtual async Task<Result<TAggregate?>> GetAsync(DapperCommandContext context, MlrbId id)
         {
             try
             {
-                await using SqliteConnection connection =
-                    await SqliteHelper.GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
-
-                IReadOnlyList<EventRow> eventRows = await LoadEventRowsAsync(connection, id, cancellationToken)
-                    .ConfigureAwait(false);
+                IReadOnlyList<EventRow> eventRows =
+                    await LoadEventRowsAsync(context.Connection, id, context.CancellationToken)
+                       .ConfigureAwait(false);
                 if (eventRows.Count == 0)
                 {
                     // [TO20260530] No events; this is okay because it means this is a new thing.
                     return Result.Ok<TAggregate?>(null);
                 }
 
-                EventStream? stream = await LoadStreamAsync(connection, id, cancellationToken).ConfigureAwait(false);
+                EventStream? stream = await LoadStreamAsync(context, id).ConfigureAwait(false);
                 if (stream is null)
                 {
                     // [TO20260530] We couldn't find the stream; this is okay because it means this is a new thing.
@@ -93,18 +71,14 @@ namespace MyLittleRangeBook
             }
         }
 
-        async Task<EventStream?> LoadStreamAsync(SqliteConnection connection,
-            MlrbId streamId,
-            CancellationToken ct)
+        async Task<EventStream?> LoadStreamAsync(DapperCommandContext context, MlrbId streamId)
         {
-            var ctx = new DapperCommandContext(connection, null, ct, new { StreamId = streamId.ToString() });
-
-            var cmd = new DapperCommand(SelectStreamSql);
+            DapperCommandContext ctx = context with { Arguments = new { StreamId = streamId.ToString() } };
 
             EventStream? es;
             try
             {
-                es = await cmd.QuerySingleAsync<EventStream>(ctx).ConfigureAwait(false);
+                es = await Commands.SelectStreamCommand.QuerySingleAsync<EventStream>(ctx).ConfigureAwait(false);
             }
             catch (InvalidOperationException ioex)
             {
@@ -122,13 +96,13 @@ namespace MyLittleRangeBook
             return es;
         }
 
-        async Task<IReadOnlyList<EventRow>> LoadEventRowsAsync(SqliteConnection connection,
-            MlrbId streamId,
-            CancellationToken ct)
+        async Task<IReadOnlyList<EventRow>> LoadEventRowsAsync(SqliteConnection  connection,
+                                                               MlrbId            streamId,
+                                                               CancellationToken ct)
         {
-            var ctx = new DapperCommandContext(connection, null, ct, new { StreamId = streamId.ToString() });
-            var cmd = new DapperCommand(SelectEventsSql);
-            IEnumerable<EventRow> rows = await cmd.QueryAsync<EventRow>(ctx).ConfigureAwait(false);
+            DapperCommandContext ctx = new(connection, null, ct, new { StreamId = streamId.ToString() });
+            IEnumerable<EventRow> rows =
+                await Commands.SelectEventsCommand.QueryAsync<EventRow>(ctx).ConfigureAwait(false);
 
             return rows as EventRow[] ?? rows.ToArray();
         }
@@ -136,7 +110,8 @@ namespace MyLittleRangeBook
         void Replay(TAggregate aggregate, IReadOnlyList<EventRow> rows)
         {
             IEnumerable<IDomainEvent> events = rows.Select(row =>
-                (IDomainEvent)_eventSerializer.Deserialize(row.EventType, row.DataJson));
+                                                               (IDomainEvent)_eventSerializer.Deserialize(row.EventType,
+                                                                   row.DataJson));
             aggregate.LoadFromHistory(events);
         }
 
@@ -148,15 +123,13 @@ namespace MyLittleRangeBook
                                             DbTransaction               transaction,
                                             string                      streamId,
                                             IReadOnlyList<IDomainEvent> pendingEvents,
-                                            CancellationToken           cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
+                                            CancellationToken           cancellationToken) =>
+            Task.CompletedTask;
 
 
         /// <summary>
-        /// Upserts the specified aggregate into the database using the provided Dapper command context.
-        /// If the aggregate does not exist, it will be inserted; if it exists, it will be updated.
+        ///     Upserts the specified aggregate into the database using the provided Dapper command context.
+        ///     If the aggregate does not exist, it will be inserted; if it exists, it will be updated.
         /// </summary>
         /// <param name="context">The Dapper command context containing the database connection and transaction information.</param>
         /// <param name="aggregate">The aggregate entity to upsert.</param>
@@ -168,21 +141,22 @@ namespace MyLittleRangeBook
             {
                 return Result.Ok();
             }
+
             string streamId = aggregate.Id.ToString();
 
-            var connection = (SqliteConnection)context.Connection;
-            var transaction = (DbTransaction)context.Transaction!;
-            var cancellationToken = context.CancellationToken;
+            SqliteConnection  connection        = context.Connection;
+            DbTransaction     transaction       = (DbTransaction)context.Transaction!;
+            CancellationToken cancellationToken = context.CancellationToken;
 
             try
             {
                 int? currentVersion = await GetStreamVersion(connection, transaction, streamId, cancellationToken)
-                    .ConfigureAwait(false);
+                                         .ConfigureAwait(false);
                 int expectedVersion, nextVersion;
                 if (currentVersion is null)
                 {
                     expectedVersion = aggregate.Version;
-                    nextVersion = 0;
+                    nextVersion     = 0;
                 }
                 else
                 {
@@ -190,7 +164,7 @@ namespace MyLittleRangeBook
                     if (currentVersion.Value != expectedVersion)
                     {
                         throw new InvalidOperationException(
-                            $"Concurrency conflict detected for stream {streamId}. Expected version {expectedVersion}, but actual version is {currentVersion}.");
+                                                            $"Concurrency conflict detected for stream {streamId}. Expected version {expectedVersion}, but actual version is {currentVersion}.");
                     }
 
                     nextVersion = currentVersion.Value + 1;
@@ -206,25 +180,25 @@ namespace MyLittleRangeBook
                     }
 
                     await InsertDomainEventAsync(connection,
-                            transaction,
-                            streamId,
-                            nextVersion,
-                            evt,
-                            cancellationToken)
-                        .ConfigureAwait(false);
+                                                 transaction,
+                                                 streamId,
+                                                 nextVersion,
+                                                 evt,
+                                                 cancellationToken)
+                       .ConfigureAwait(false);
                     nextVersion++;
                 }
 
                 await UpsertEventStreamAsync(connection,
-                        transaction,
-                        streamId,
-                        currentVersion,
-                        nextVersion - 1,
-                        cancellationToken)
-                    .ConfigureAwait(false);
+                                             transaction,
+                                             streamId,
+                                             currentVersion,
+                                             nextVersion - 1,
+                                             cancellationToken)
+                   .ConfigureAwait(false);
 
                 await ProjectAsync(connection, transaction, streamId, pendingEvents, cancellationToken)
-                    .ConfigureAwait(false);
+                   .ConfigureAwait(false);
 
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -247,14 +221,14 @@ namespace MyLittleRangeBook
         }
 
         /// <summary>
-        /// Inserts or updates the state of the specified aggregate in the event store.
+        ///     Inserts or updates the state of the specified aggregate in the event store.
         /// </summary>
         /// <param name="aggregate">The aggregate to be persisted. Holds the pending domain events to store.</param>
         /// <param name="cancellationToken">Token to cancel the operation if required.</param>
         /// <returns>A result indicating success or failure of the operation.</returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when an attempt is made to update an aggregate without uncommitted events,
-        /// or other invalid operation occurs during the database transaction.
+        ///     Thrown when an attempt is made to update an aggregate without uncommitted events,
+        ///     or other invalid operation occurs during the database transaction.
         /// </exception>
         public async Task<Result> UpsertAsync(TAggregate aggregate, CancellationToken cancellationToken = default)
         {
@@ -269,8 +243,8 @@ namespace MyLittleRangeBook
             await using DbTransaction transaction =
                 await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
-            var ctx = new DapperCommandContext(connection, transaction, cancellationToken);
-            var r1 = await UpsertAsync(ctx, aggregate).ConfigureAwait(false);
+            DapperCommandContext ctx = new(connection, transaction, cancellationToken);
+            Result               r1  = await UpsertAsync(ctx, aggregate).ConfigureAwait(false);
 
             if (r1.IsFailed)
             {
@@ -278,17 +252,16 @@ namespace MyLittleRangeBook
             }
 
             return r1;
-
         }
 
-        async Task UpsertEventStreamAsync(SqliteConnection conn,
-                                          DbTransaction trans,
-                                          string streamId,
-                                          int? currentVersion,
-                                          int nextVersion,
+        async Task UpsertEventStreamAsync(SqliteConnection  conn,
+                                          DbTransaction     trans,
+                                          string            streamId,
+                                          int?              currentVersion,
+                                          int               nextVersion,
                                           CancellationToken ct)
         {
-            string sql;
+            string  sql;
             object? p;
             if (currentVersion is null)
             {
@@ -310,21 +283,21 @@ namespace MyLittleRangeBook
                 p = new { Version = nextVersion, StreamId = streamId, ExpectedVersion = currentVersion };
             }
 
-            var ctx = new DapperCommandContext(conn, trans, ct, p);
-            var cmd = new DapperCommand(sql);
-            int i = await cmd.ExecuteAsync(ctx).ConfigureAwait(false);
+            DapperCommandContext ctx = new(conn, trans, ct, p);
+            DapperCommand        cmd = new(sql);
+            int                  i   = await cmd.ExecuteAsync(ctx).ConfigureAwait(false);
             if (i != 1)
             {
                 throw new InvalidOperationException($"Failed to update event stream version for {streamId}");
             }
         }
 
-        async Task InsertDomainEventAsync(SqliteConnection connection,
-            DbTransaction transaction,
-            string streamId,
-            int nextVersion,
-            IDomainEvent domainEvent,
-            CancellationToken ct)
+        async Task InsertDomainEventAsync(SqliteConnection  connection,
+                                          DbTransaction     transaction,
+                                          string            streamId,
+                                          int               nextVersion,
+                                          IDomainEvent      domainEvent,
+                                          CancellationToken ct)
         {
             const string SQL = """
                                insert into events
@@ -351,22 +324,22 @@ namespace MyLittleRangeBook
                                );
                                """;
 
-            Type t = domainEvent.GetType();
+            Type   t         = domainEvent.GetType();
             string eventType = t.GetCustomAttribute<EventTypeAttribute>()?.Name ?? t.Name;
             var p = new
-            {
-                StreamId = streamId,
-                Id = new MlrbId(domainEvent.OccurredUtc).ToString(),
-                StreamType = _streamType,
-                Version = nextVersion,
-                EventType = eventType,
-                domainEvent.OccurredUtc,
-                DataJson = _eventSerializer.Serialize(domainEvent),
-                MetadataJson = "{}"
-            };
-            var cmd = new DapperCommand(SQL);
-            var ctx = new DapperCommandContext(connection, transaction, ct, p);
-            int x;
+                    {
+                        StreamId   = streamId,
+                        Id         = new MlrbId(domainEvent.OccurredUtc).ToString(),
+                        StreamType = _streamType,
+                        Version    = nextVersion,
+                        EventType  = eventType,
+                        domainEvent.OccurredUtc,
+                        DataJson     = _eventSerializer.Serialize(domainEvent),
+                        MetadataJson = "{}",
+                    };
+            DapperCommand        cmd = new(SQL);
+            DapperCommandContext ctx = new(connection, transaction, ct, p);
+            int                  x;
             try
             {
                 x = await cmd.ExecuteAsync(ctx).ConfigureAwait(false);
@@ -374,27 +347,56 @@ namespace MyLittleRangeBook
             catch (Exception ex)
             {
                 throw new InvalidOperationException(
-                    $"Failed to insert event of type {domainEvent.GetType().Name} for stream {streamId}",
-                    ex);
+                                                    $"Failed to insert event of type {domainEvent.GetType().Name} for stream {streamId}",
+                                                    ex);
             }
 
             if (x != 1)
             {
                 throw new InvalidOperationException(
-                    $"Failed to insert event of type {domainEvent.GetType().Name} for stream {streamId}");
+                                                    $"Failed to insert event of type {domainEvent.GetType().Name} for stream {streamId}");
             }
         }
 
-        async Task<int?> GetStreamVersion(SqliteConnection c,
-            DbTransaction t,
-            string streamId,
-            CancellationToken ct)
+        async Task<int?> GetStreamVersion(SqliteConnection  c,
+                                          DbTransaction     t,
+                                          string            streamId,
+                                          CancellationToken ct)
         {
-            var ctx = new DapperCommandContext(c, t, ct, new { StreamId = streamId });
-            var versionCmd = new DapperCommand("SELECT version from event_streams WHERE id=@StreamId;");
-            int? currentVersion = await versionCmd.ExecuteScalarAsync<int?>(ctx).ConfigureAwait(false);
+            DapperCommandContext ctx            = new(c, t, ct, new { StreamId = streamId });
+            DapperCommand        versionCmd     = new("SELECT version from event_streams WHERE id=@StreamId;");
+            int?                 currentVersion = await versionCmd.ExecuteScalarAsync<int?>(ctx).ConfigureAwait(false);
 
             return currentVersion;
+        }
+
+        static class Commands
+        {
+            const string SelectStreamSql = """
+                                           SELECT id AS StreamId, stream_type AS StreamType, version AS Version,
+                                                  created_utc as Created, modified_utc as Modified
+                                           FROM event_streams
+                                           WHERE id = @StreamId;
+                                           """;
+
+            const string SelectEventsSql = """
+                                           select stream_id as StreamId,
+                                                  stream_type as StreamType,
+                                                  version as Version,
+                                                  event_type as EventType,
+                                                  occurred_utc as OccurredUtc,
+                                                  data_json as DataJson,
+                                                  metadata_json as MetadataJson
+                                           from events
+                                           where stream_id = @StreamId
+                                           order by version;
+                                           """;
+
+            // ReSharper disable once StaticMemberInGenericType
+            internal static readonly DapperCommand SelectStreamCommand = new(SelectStreamSql);
+
+            // ReSharper disable once StaticMemberInGenericType
+            internal static readonly DapperCommand SelectEventsCommand = new(SelectEventsSql);
         }
     }
 
@@ -408,10 +410,9 @@ namespace MyLittleRangeBook
     {
         readonly List<IDomainEvent> _uncommitted = [];
 
-        protected Aggregate()
-        {
+        protected Aggregate() =>
+            // ReSharper disable once VirtualMemberCallInConstructor
             StreamType = DefaultStreamType;
-        }
 
         /// <summary>
         ///     The default stream type for this aggregate. Subclasses must override this with a constant
@@ -419,8 +420,8 @@ namespace MyLittleRangeBook
         /// </summary>
         public abstract string DefaultStreamType { get; }
 
-        public MlrbId Id { get; protected set; } = MlrbId.Empty;
-        public int Version { get; protected set; } = -1;
+        public MlrbId Id         { get; protected set; } = MlrbId.Empty;
+        public int    Version    { get; protected set; } = -1;
         public string StreamType { get; protected set; }
 
         /// <summary>
@@ -451,19 +452,16 @@ namespace MyLittleRangeBook
             return events;
         }
 
-        public void ClearUncommittedEvents()
-        {
-            _uncommitted.Clear();
-        }
+        public void ClearUncommittedEvents() => _uncommitted.Clear();
 
         /// <summary>
         ///     Initializes the aggregate from an existing event stream (used during rehydration).
         /// </summary>
         protected void Hydrate(EventStream stream)
         {
-            Id = stream.StreamId;
+            Id         = stream.StreamId;
             StreamType = stream.StreamType;
-            Version = stream.Version;
+            Version    = stream.Version;
         }
 
         /// <summary>
@@ -499,35 +497,35 @@ namespace MyLittleRangeBook
     /// <param name="Created"></param>
     /// <param name="Modified"></param>
     public record struct EventStream(
-        string StreamId,
-        string StreamType,
-        int Version,
+        string         StreamId,
+        string         StreamType,
+        int            Version,
         DateTimeOffset Created,
         DateTimeOffset Modified);
 
     public record struct EventRow(
-        string StreamId,
-        string StreamType,
-        string EventType,
-        int Version,
-        string DataJson,
-        string MetadataJson,
+        string         StreamId,
+        string         StreamType,
+        string         EventType,
+        int            Version,
+        string         DataJson,
+        string         MetadataJson,
         DateTimeOffset OccurredUtc,
         DateTimeOffset Created,
         DateTimeOffset Modified);
 
 
     public record RangeAssetProjectorContext(
-        SqliteConnection Connection,
-        DbTransaction Transaction,
-        MlrbId RangeAssetId,
+        SqliteConnection            Connection,
+        DbTransaction               Transaction,
+        MlrbId                      RangeAssetId,
         IReadOnlyList<IDomainEvent> PendingEvents,
-        CancellationToken CancellationToken = default);
+        CancellationToken           CancellationToken = default);
 
 
     public interface IDomainEvent
     {
-        MlrbId StreamId { get; }
+        MlrbId         StreamId    { get; }
         DateTimeOffset OccurredUtc { get; }
     }
 
@@ -537,8 +535,8 @@ namespace MyLittleRangeBook
     public interface IEventSerializer
     {
         string GetEventType(object @event);
-        string Serialize(object domainEvent);
-        object Deserialize(string rowEventType, string rowDataJson);
+        string Serialize(object    domainEvent);
+        object Deserialize(string  rowEventType, string rowDataJson);
     }
 
     /// <summary>
@@ -546,7 +544,8 @@ namespace MyLittleRangeBook
     /// </summary>
     public interface IProjector
     {
-            Task<Result> ProjectAggregateAsync(DapperCommandContext context, MlrbId streamId,
-                IEnumerable<IDomainEvent>? domainEvents = null, CancellationToken cancellationToken = default);
+        Task<Result> ProjectAggregateAsync(DapperCommandContext       context, MlrbId streamId,
+                                           IEnumerable<IDomainEvent>? domainEvents      = null,
+                                           CancellationToken          cancellationToken = default);
     }
 }

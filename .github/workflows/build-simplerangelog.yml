@@ -24,8 +24,8 @@ jobs:
 
     env:
       VERSION_MAJOR: 0
-      VERSION_MINOR: 10
-      VERSION_REVISION: 9
+      VERSION_MINOR: 11
+      VERSION_REVISION: 10
 
     steps:
       - name: Checkout code

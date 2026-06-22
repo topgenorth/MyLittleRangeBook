@@ -28,23 +28,21 @@ namespace MyLittleRangeBook.Firearms
             IEnumerable<IDomainEvent>? domainEvents = null,
             CancellationToken cancellationToken = default)
         {
+            await using var ctx = await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken).ConfigureAwait(false);
             try
             {
-                var fa = await _repo.GetAsync(streamId, cancellationToken).ConfigureAwait(false);
+                var fa = await _repo.GetAsync(ctx, streamId).ConfigureAwait(false);
                 if (fa.IsFailed)
                 {
                     _logger.Warning("Failed to retrieve firearm aggregate. {0}", fa.Errors[0]);
                     return Result.Fail(fa.Errors);
                 }
 
-                var scopedConn = await _sqliteHelper
-                    .GetScopedDatabaseConnectionAsync(cancellationToken)
-                    .ConfigureAwait(false);
-                var ctx = new DapperCommandContext(scopedConn.Connection, CancellationToken: cancellationToken);
                 var x = await _service.UpsertAsync(ctx, fa.Value!).ConfigureAwait(false);
 
                 if (x.IsFailed)
                 {
+                    ctx.Transaction?.Rollback();
                     _logger.Error("Failed to updated the firearm projection. {0}", x.Errors[0]);
                     return Result.Fail(x.Errors);
                 }

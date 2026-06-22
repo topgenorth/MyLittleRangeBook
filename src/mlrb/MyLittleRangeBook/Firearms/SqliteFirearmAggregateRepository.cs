@@ -15,6 +15,11 @@ namespace MyLittleRangeBook.Firearms
                  FirearmAggregate.STREAM_TYPE,
                  FirearmAggregate.Create) { }
 
+        public async Task<Result<FirearmAggregate>> GetAsync(DapperCommandContext context, MlrbId firearmId)
+        {
+            return await base.GetAsync(context, firearmId).ConfigureAwait(false);
+        }
+
         public async Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(string firearmName,
                                                                            CancellationToken cancellationToken =
                                                                                default,
@@ -22,7 +27,7 @@ namespace MyLittleRangeBook.Firearms
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
 
-            var ctx = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken);
+            await using var ctx = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken);
 
             Result<FirearmAggregate> r1 = await GetOrCreateByNameAsync(ctx, firearmName, createUtc);
             if (r1.IsFailed)
@@ -41,7 +46,7 @@ namespace MyLittleRangeBook.Firearms
             ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
 
             MlrbId                    streamId         = MlrbId.FromString(firearmName);
-            Result<FirearmAggregate?> firearmAggregate = await GetAsync(streamId, ctx.CancellationToken);
+            Result<FirearmAggregate?> firearmAggregate = await GetAsync(ctx, streamId);
 
             if (firearmAggregate.IsFailed)
             {
@@ -73,7 +78,7 @@ namespace MyLittleRangeBook.Firearms
 
         public async Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default)
         {
-            var ctx = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken);
+            await using var ctx = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken);
             return await UpsertAsync(ctx, aggregate);
         }
 

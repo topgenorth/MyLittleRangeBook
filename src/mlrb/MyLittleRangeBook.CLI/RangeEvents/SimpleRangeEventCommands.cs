@@ -3,6 +3,8 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.Persistence;
+using MyLittleRangeBook.Persistence.Sqlite;
 using static MyLittleRangeBook.ReturnCodes;
 using static MyLittleRangeBook.Persistence.Sqlite.SqliteHelperExtensions;
 
@@ -10,16 +12,17 @@ using static MyLittleRangeBook.Persistence.Sqlite.SqliteHelperExtensions;
 namespace MyLittleRangeBook.RangeEvents
 {
     [RegisterCommands("rangeevent")]
-    public class SimpleRangeEventCommands : MlrbCommandBase
+    public class SimpleRangeEventCommands : MlrbSqliteCommandBase
     {
         readonly ISimpleRangeEventListPrinter _printer;
         readonly ISimpleRangeEventRepository _repo;
 
         public SimpleRangeEventCommands(ILogger logger,
-            ICliDisplay cliDisplay,
-            [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
-            ISimpleRangeEventListPrinter printer) :
-            base(logger, cliDisplay)
+                                        ISqliteHelper sqlitehelper,
+                                        ICliDisplay cliDisplay,
+                                        [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository repo,
+                                        ISimpleRangeEventListPrinter printer) :
+            base(logger, cliDisplay, sqlitehelper)
         {
             _repo = repo;
             _printer = printer;
@@ -46,10 +49,11 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             int returnCode;
+            var context = await DapperCommandContext.NewAsync(SqliteHelper, ct).ConfigureAwait(false);
 
             try
             {
-                Result<SimpleRangeEvent> result = await _repo.GetAsync(id, ct).ConfigureAwait(false);
+                Result<SimpleRangeEvent> result = await _repo.GetAsync(context, id).ConfigureAwait(false);
 
                 if (result.IsFailed)
                 {
@@ -87,7 +91,8 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<int> ListRangeEvents(CancellationToken cancellationToken)
         {
             CliDisplay.PrintCommandHeader("List range events.");
-            Result<IEnumerable<SimpleRangeEvent>> rangeEvents = await _repo.GetSimpleRangeEventsAsync(cancellationToken)
+            var context = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken).ConfigureAwait(false);
+            Result<IEnumerable<SimpleRangeEvent>> rangeEvents = await _repo.GetSimpleRangeEventsAsync(context)
                 .ConfigureAwait(false);
             if (rangeEvents.IsFailed)
             {
@@ -136,11 +141,11 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             int returnCode;
-
+            var context = await DapperCommandContext.NewAsync(SqliteHelper, ct).ConfigureAwait(false);
             try
             {
                 // First, retrieve the event to ensure it exists
-                Result<SimpleRangeEvent> getResult = await _repo.GetAsync(id, ct).ConfigureAwait(false);
+                Result<SimpleRangeEvent> getResult = await _repo.GetAsync(context, id).ConfigureAwait(false);
 
                 if (getResult.IsFailed)
                 {
@@ -151,7 +156,7 @@ namespace MyLittleRangeBook.RangeEvents
                 else
                 {
                     // Delete the event
-                    Result<bool> deleteResult = await _repo.DeleteAsync(getResult.Value, ct).ConfigureAwait(false);
+                    Result<bool> deleteResult = await _repo.DeleteAsync(context, getResult.Value).ConfigureAwait(false);
 
                     if (deleteResult.IsSuccess)
                     {
