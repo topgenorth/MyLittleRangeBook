@@ -87,6 +87,14 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
+        /// <summary>
+        /// Inserts or updates a SimpleRangeEvent in the database. If the event does not exist, it will be created;
+        /// otherwise, it will be updated with the provided data. Will also append to the event stream for the firearm.
+        /// </summary>
+        /// <param name="context">The Dapper command context encapsulating the database connection, transaction, and other related parameters.</param>
+        /// <param name="simpleRangeEvent">The SimpleRangeEvent object to be inserted or updated in the database.</param>
+        /// <returns>A result object containing the ID of the record that was inserted or updated,
+        /// or an error if the operation failed.</returns>
         public async Task<Result<long>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
         {
             Result<long?> sreResult = await _simpleRangeEventService
@@ -97,7 +105,7 @@ namespace MyLittleRangeBook.RangeEvents
                 return Result.Fail(sreResult.Errors);
             }
 
-            Result r1 = await AddToFirearmStream(context, simpleRangeEvent);
+            Result r1 = await AppendToFirearmEventStream(context, simpleRangeEvent);
 
             if (r1.IsFailed)
             {
@@ -112,6 +120,7 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<Result<long>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
                                                     CancellationToken cancellationToken = default)
         {
+            throw new NotImplementedException();
             await using DapperCommandContext ctx = await DapperCommandContext
                                                         .NewAsync(_sqliteHelper, cancellationToken)
                                                         .ConfigureAwait(false);
@@ -126,7 +135,7 @@ namespace MyLittleRangeBook.RangeEvents
             return r1;
         }
 
-        async Task<Result> AddToFirearmStream(DapperCommandContext ctx, SimpleRangeEvent sre)
+        async Task<Result> AppendToFirearmEventStream(DapperCommandContext ctx, SimpleRangeEvent sre)
         {
             Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(ctx, sre.FirearmName);
             if (r1.IsFailed)

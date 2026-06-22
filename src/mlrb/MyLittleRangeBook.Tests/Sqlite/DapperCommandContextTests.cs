@@ -116,5 +116,57 @@ namespace MyLittleRangeBook.Sqlite
                 count.ShouldBe(0);
             }
         }
+
+        [Fact]
+        public async Task Commit_ShouldExplicitlyCommit()
+        {
+            // Arrange
+            var tableName = "TestTable_ExplicitCommit";
+            await using (var setupConn = await SqliteHelper.GetScopedDatabaseConnectionAsync())
+            {
+                await setupConn.Connection.ExecuteAsync($"CREATE TABLE {tableName} (Id INTEGER PRIMARY KEY, Val TEXT)");
+            }
+
+            // Act
+            {
+                await using var ctx = await DapperCommandContext.NewAsync(SqliteHelper, withTransaction: true);
+                await ctx.Connection.ExecuteAsync($"INSERT INTO {tableName} (Val) VALUES ('Test')", transaction: ctx.Transaction);
+                ctx.Commit();
+                // DisposeAsync should not commit again (idempotent or skipped)
+            }
+
+            // Assert
+            await using (var assertConn = await SqliteHelper.GetScopedDatabaseConnectionAsync())
+            {
+                var count = await assertConn.Connection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM {tableName}");
+                count.ShouldBe(1);
+            }
+        }
+
+        [Fact]
+        public async Task CommitAsync_ShouldExplicitlyCommit()
+        {
+            // Arrange
+            var tableName = "TestTable_ExplicitCommitAsync";
+            await using (var setupConn = await SqliteHelper.GetScopedDatabaseConnectionAsync())
+            {
+                await setupConn.Connection.ExecuteAsync($"CREATE TABLE {tableName} (Id INTEGER PRIMARY KEY, Val TEXT)");
+            }
+
+            // Act
+            {
+                await using var ctx = await DapperCommandContext.NewAsync(SqliteHelper, withTransaction: true);
+                await ctx.Connection.ExecuteAsync($"INSERT INTO {tableName} (Val) VALUES ('Test')", transaction: ctx.Transaction);
+                await ctx.CommitAsync();
+                // DisposeAsync should not commit again
+            }
+
+            // Assert
+            await using (var assertConn = await SqliteHelper.GetScopedDatabaseConnectionAsync())
+            {
+                var count = await assertConn.Connection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM {tableName}");
+                count.ShouldBe(1);
+            }
+        }
     }
 }

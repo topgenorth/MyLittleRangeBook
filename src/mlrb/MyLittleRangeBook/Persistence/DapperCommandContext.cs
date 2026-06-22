@@ -16,6 +16,7 @@ namespace MyLittleRangeBook.Persistence
     public record DapperCommandContext(SqliteConnection Connection, IDbTransaction? Transaction = null, CancellationToken CancellationToken = default, object? Arguments = null, IAsyncDisposable? Scope = null) : IDisposable, IAsyncDisposable
     {
         private bool _wasRolledBack;
+        private bool _wasCommitted;
 
         public DapperCommandContext(ScopedSqliteConnection scopedConnection, IDbTransaction? Transaction = null, CancellationToken CancellationToken = default):
             this(scopedConnection.Connection, Transaction, CancellationToken, Scope: scopedConnection)
@@ -89,11 +90,37 @@ namespace MyLittleRangeBook.Persistence
             }
         }
 
+        public async Task CommitAsync()
+        {
+            if (Transaction != null && Transaction.Connection != null && !_wasRolledBack && !_wasCommitted)
+            {
+                if (Transaction is DbTransaction dbTrans)
+                {
+                    await dbTrans.CommitAsync(CancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    Transaction.Commit();
+                }
+
+                _wasCommitted = true;
+            }
+        }
+
+        public void Commit()
+        {
+            if (Transaction != null && Transaction.Connection != null && !_wasRolledBack && !_wasCommitted)
+            {
+                Transaction.Commit();
+                _wasCommitted = true;
+            }
+        }
+
         public async ValueTask DisposeAsync()
         {
             if (Transaction != null)
             {
-                if (Transaction.Connection != null && !_wasRolledBack)
+                if (Transaction.Connection != null && !_wasRolledBack && !_wasCommitted)
                 {
                     if (Transaction is DbTransaction dbTrans)
                     {
@@ -125,7 +152,7 @@ namespace MyLittleRangeBook.Persistence
         {
             if (Transaction != null)
             {
-                if (Transaction.Connection != null && !_wasRolledBack)
+                if (Transaction.Connection != null && !_wasRolledBack && !_wasCommitted)
                 {
                     Transaction.Commit();
                 }
