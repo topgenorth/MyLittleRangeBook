@@ -38,14 +38,29 @@ jobs:
 
       - name: Compute version metadata
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REVISION}"
+          # Use hardcoded VERSION_MINOR by default
+          DETECTED_MINOR="${VERSION_MINOR}"
+
+          # If merging to master, attempt to use the PR number as the minor version
+          if [[ "${GITHUB_REF}" == "refs/heads/master" ]]; then
+            PR_NUMBER=$(gh pr list --commit "${GITHUB_SHA}" --state merged --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [[ -n "${PR_NUMBER}" ]]; then
+              echo "Detected PR merge to master. Using PR #${PR_NUMBER} as VERSION_MINOR."
+              DETECTED_MINOR="${PR_NUMBER}"
+            fi
+          fi
+
+          VERSION="${VERSION_MAJOR}.${DETECTED_MINOR}.${VERSION_REVISION}"
           ASSEMBLY_VERSION="${VERSION}.${GITHUB_RUN_NUMBER}"
           FILE_VERSION="${VERSION}.${GITHUB_RUN_NUMBER}"
           SHORT_SHA="${GITHUB_SHA:0:7}"
           INFORMATIONAL_VERSION="${ASSEMBLY_VERSION}+${SHORT_SHA}"
           {
             echo "SHORT_SHA=$SHORT_SHA"
+            echo "VERSION_MINOR=$DETECTED_MINOR"
             echo "VERSION=$VERSION"
             echo "ASSEMBLY_VERSION=$ASSEMBLY_VERSION"
             echo "FILE_VERSION=$FILE_VERSION"
