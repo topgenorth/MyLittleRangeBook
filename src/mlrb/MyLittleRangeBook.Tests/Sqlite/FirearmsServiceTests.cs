@@ -17,7 +17,7 @@ namespace MyLittleRangeBook.Sqlite
 
             Firearm f0 = Firearm.New("Unit test");
             f0.Notes = "Inserting";
-            var ctx0 = new DapperCommandContext(conn);
+            var ctx0 = new DapperCommandContext(conn, null);
 
             //Insert
             Result<EntityId> result1 = await sut.UpsertAsync(ctx0, f0);
@@ -27,7 +27,7 @@ namespace MyLittleRangeBook.Sqlite
             // Update
             Firearm f1 = Firearm.New("Unit test");
             f1.Notes = "Updating";
-            var ctx1 = new DapperCommandContext(conn);
+            var ctx1 = new DapperCommandContext(conn, null);
             Result<EntityId> result2 = await sut.UpsertAsync(ctx1, f1);
             result2.IsSuccess.ShouldBeTrue();
             result2.Value.Id.ShouldNotBeNullOrWhiteSpace();
@@ -42,7 +42,7 @@ namespace MyLittleRangeBook.Sqlite
 
             var f = new Firearm { Name = "Unit test", Notes = "Inserting" };
 
-            var ctx = new DapperCommandContext(conn);
+            var ctx = new DapperCommandContext(conn, null);
             Result<EntityId> result = await sut.UpsertAsync(ctx, f);
             result.IsSuccess.ShouldBeTrue();
             result.Value.Id.ShouldNotBeNullOrWhiteSpace();

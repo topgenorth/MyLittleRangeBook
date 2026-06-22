@@ -1,5 +1,4 @@
-﻿using System.Data;
-using MyLittleRangeBook.Models;
+﻿using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.Firearms
@@ -19,44 +18,11 @@ namespace MyLittleRangeBook.Firearms
         Task<Result<bool>> DeleteAsync(DapperCommandContext context, Firearm firearm);
 
 
-        /// <summary>
-        ///     Retrieve a firearm from the database by its identifier.
-        /// </summary>
-        /// <param name="id">The unique identifier of the firearm to retrieve.</param>
-        /// <param name="connection">The database connection to be used for the query.</param>
-        /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
-        /// <returns>A <c cref="Result{Firearm}" /> containing the firearm if found, or an error if not.</returns>
-        [Obsolete("Use DapperCommandContext overload.", true)]
-        Task<Result<Firearm>> GetFirearmAsync(string id,
-            IDbConnection connection,
-            CancellationToken cancellationToken = default)
-        {
-            var ctx = new DapperCommandContext(connection, null, cancellationToken);
-
-            return GetFirearmAsync(ctx, id);
-        }
-
         Task<Result<Firearm>> GetFirearmAsync(DapperCommandContext context, string id);
 
-        /// <summary>
-        ///     Get a list of firearms in the database.
-        /// </summary>
-        /// <param name="connection"></param>
-        /// <param name="activeOnly">Set to false to retrieve all firearms.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        [Obsolete("Use DapperCommandContext overload.")]
-        Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(IDbConnection connection,
-            bool activeOnly = true,
-            CancellationToken cancellationToken = default)
-        {
-            var ctx = new DapperCommandContext(connection, null, cancellationToken);
-
-            return GetFirearmsAsync(ctx, activeOnly);
-        }
 
         Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(DapperCommandContext context,
-            bool activeOnly = true);
+                                                            bool                 activeOnly = true);
 
 
         /// <summary>

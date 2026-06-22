@@ -1,7 +1,6 @@
 ﻿using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Firearms;
@@ -19,16 +18,16 @@ namespace MyLittleRangeBook.MlrbAssets
     public class AssociateAssetsCommand : MlrbSqliteCommandBase
     {
         readonly IMlrbAssetAggregateRepository _assetAggregateRepository;
-        readonly IFirearmAggregateRepository _firearmAggregateRepository;
-        readonly ISimpleRangeEventRepository _simpleRangeEventRepository;
+        readonly IFirearmAggregateRepository   _firearmAggregateRepository;
+        readonly ISimpleRangeEventRepository   _simpleRangeEventRepository;
 
-        public AssociateAssetsCommand(ILogger logger,
-            ICliDisplay display,
-            ISqliteHelper sqliteHelper,
-            IFirearmAggregateRepository firearmAggregateRepository,
-            IMlrbAssetAggregateRepository assetAggregateRepository,
-            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)]
-            ISimpleRangeEventRepository simpleRangeEventRepository) :
+        public AssociateAssetsCommand(ILogger                       logger,
+                                      ICliDisplay                   display,
+                                      ISqliteHelper                 sqliteHelper,
+                                      IFirearmAggregateRepository   firearmAggregateRepository,
+                                      IMlrbAssetAggregateRepository assetAggregateRepository,
+                                      [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)]
+                                      ISimpleRangeEventRepository simpleRangeEventRepository) :
             base(logger, display, sqliteHelper)
         {
             ArgumentNullException.ThrowIfNull(firearmAggregateRepository);
@@ -36,7 +35,7 @@ namespace MyLittleRangeBook.MlrbAssets
             ArgumentNullException.ThrowIfNull(simpleRangeEventRepository);
 
             _firearmAggregateRepository = firearmAggregateRepository;
-            _assetAggregateRepository = assetAggregateRepository;
+            _assetAggregateRepository   = assetAggregateRepository;
             _simpleRangeEventRepository = simpleRangeEventRepository;
         }
 
@@ -51,20 +50,21 @@ namespace MyLittleRangeBook.MlrbAssets
         [Command("associate")]
         [UsedImplicitly]
         // ReSharper disable once AsyncMethodWithoutAwait
-        public async Task<int> ImportRangeAssetFile(string assetId,
-            string? firearmId = null,
-            string? simpleRangeEventId = null,
-            CancellationToken cancellationToken = default)
+        public async Task<int> ImportRangeAssetFile(string            assetId,
+                                                    string?           firearmId          = null,
+                                                    string?           simpleRangeEventId = null,
+                                                    CancellationToken cancellationToken  = default)
         {
-            int returnCode = -1;
+            int returnCode;
 
             CliDisplay.PrintCommandHeader("Associate asset");
+            var context = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken).ConfigureAwait(false);
 
             try
             {
                 FluentResults.Result<MlrbAssetAggregate?> a = await _assetAggregateRepository
-                    .GetAsync(assetId, cancellationToken)
-                    .ConfigureAwait(false);
+                                                                   .GetAsync(context, assetId)
+                                                                   .ConfigureAwait(false);
 
                 if (a.IsFailed || a.Value is null)
                 {
@@ -84,20 +84,15 @@ namespace MyLittleRangeBook.MlrbAssets
                     return ReturnCodes.FAILURE;
                 }
 
-                await using ScopedSqliteConnection scope = await SqliteHelper
-                    .GetScopedDatabaseConnectionAsync(cancellationToken)
-                    .ConfigureAwait(false);
-
-                await AssociateFirearmAsync(scope.Connection, a.Value, firearmId, cancellationToken)
-                    .ConfigureAwait(false);
-                await AssociateSimpleRangeEventAsync(scope.Connection, a.Value, simpleRangeEventId, cancellationToken)
-                    .ConfigureAwait(false);
+                await AssociateFirearmAsync(context, a.Value, firearmId).ConfigureAwait(false);
+                await AssociateSimpleRangeEventAsync(context, a.Value, simpleRangeEventId).ConfigureAwait(false);
 
                 CliDisplay.PrintSuccess("Finished with associations.");
                 returnCode = ReturnCodes.SUCCESS;
             }
             catch (Exception e)
             {
+                context.Transaction?.Rollback();
                 Logger.Error(e, "Failed to make associations.");
                 CliDisplay.PrintFailure("Failed to make associations. " + e.Message);
                 returnCode = ReturnCodes.FAILURE;
@@ -108,59 +103,53 @@ namespace MyLittleRangeBook.MlrbAssets
             return returnCode;
         }
 
-        async Task AssociateFirearmAsync(SqliteConnection conn,
-            MlrbAssetAggregate asset,
-            string? firearmId,
-            CancellationToken cancellationToken)
+        async Task AssociateFirearmAsync(DapperCommandContext context, MlrbAssetAggregate asset, string? firearmId)
         {
             if (firearmId is null)
             {
                 return;
             }
 
-
             try
             {
-                Result<FirearmAggregate?> f = await _firearmAggregateRepository.GetAsync(firearmId, cancellationToken)
-                    .ConfigureAwait(false);
+                Result<FirearmAggregate> f = await _firearmAggregateRepository.GetAsync(context, firearmId)
+                                                 .ConfigureAwait(false);
                 if (f.IsFailed)
                 {
                     Logger.Warning(
-                        "Failed to create the association between {assetId}:{asset} and firearm {firearmId}, {reason}.",
-                        asset.Id, asset.DestinationPath, firearmId, f.Errors[0].Message);
+                                   "Failed to create the association between {assetId}:{asset} and firearm {firearmId}, {reason}.",
+                                   asset.Id, asset.DestinationPath, firearmId, f.Errors[0].Message);
 
                     return;
                 }
 
-                var p = new { FirearmId = firearmId, AssetId = asset.Id.ToString() };
-                var ctx = new DapperCommandContext(conn, null, cancellationToken, p);
+                var                  p   = new { FirearmId = firearmId, AssetId = asset.Id.ToString() };
+                DapperCommandContext ctx = context with { Arguments = p };
                 await Commands.AssociateWithFirearm.ExecuteScalarAsync<long?>(ctx).ConfigureAwait(false);
 
                 DateTimeOffset dto = DateTimeOffset.UtcNow;
                 asset.AssociatedWithFirearm(firearmId, dto);
                 f.Value!.AssociatedWithAsset(asset.Id, dto);
 
-                await _firearmAggregateRepository.SaveAsync(f.Value, cancellationToken).ConfigureAwait(false);
-                await _assetAggregateRepository.SaveAsync(asset, cancellationToken).ConfigureAwait(false);
+                await _firearmAggregateRepository.UpsertAsync(context, f.Value).ConfigureAwait(false);
+                await _assetAggregateRepository.SaveAsync(context, asset).ConfigureAwait(false);
 
                 CliDisplay.PrintSuccess(
-                    $"Associated firearm {firearmId}:{f.Value.Name} with asset {asset.Id}:{asset.DestinationPath}");
+                                        $"Associated firearm {firearmId}:{f.Value.Name} with asset {asset.Id}:{asset.DestinationPath}");
                 Logger.Information("Associated firearm {firearmId} with asset {assetId}", firearmId, asset.Id);
             }
             catch (Exception e)
             {
                 CliDisplay.PrintFailure("Failed to associate firearm. " + e.Message);
                 Logger.Error(e, "Failed to associate the firearm {firearmId} with the asset {assetId}.", firearmId,
-                    asset.ToString());
+                             asset.ToString());
             }
         }
 
-        async Task AssociateSimpleRangeEventAsync(SqliteConnection conn,
-            MlrbAssetAggregate asset,
-            string? simpleRangeEventId,
-            CancellationToken cancellationToken)
+        async Task AssociateSimpleRangeEventAsync(DapperCommandContext context,
+                                                  MlrbAssetAggregate   asset,
+                                                  string?              simpleRangeEventId)
         {
-            // TODO [TO20260604] We don't have an aggregate for a simple range event.
             try
             {
                 if (simpleRangeEventId is null)
@@ -169,58 +158,59 @@ namespace MyLittleRangeBook.MlrbAssets
                 }
 
                 Result<SimpleRangeEvent> r = await _simpleRangeEventRepository
-                    .GetAsync(simpleRangeEventId, cancellationToken)
-                    .ConfigureAwait(false);
+                                                  .GetAsync(context, asset.Id)
+                                                  .ConfigureAwait(false);
                 if (r.IsFailed)
                 {
                     Logger.Warning(
-                        "Failed to create the association between {assetId}:{asset} and firearm {firearmId}, {reason}.",
-                        asset.Id, asset.DestinationPath, simpleRangeEventId, r.Errors[0].Message);
+                                   "Failed to create the association between {assetId}:{asset} and firearm {firearmId}, {reason}.",
+                                   asset.Id, asset.DestinationPath, simpleRangeEventId, r.Errors[0].Message);
 
                     return;
                 }
 
-                var p = new { SimpleRangeEventId = simpleRangeEventId, AssetId = asset.Id.ToString() };
-                var ctx = new DapperCommandContext(conn, null, cancellationToken, p);
+                var                  p = new { SimpleRangeEventId = simpleRangeEventId, AssetId = asset.Id.ToString() };
+                DapperCommandContext ctx = context with { Arguments = p };
+
                 await Commands.AssociateWithRangeEvent.ExecuteScalarAsync<long?>(ctx).ConfigureAwait(false);
 
                 DateTimeOffset utcNow = DateTimeOffset.UtcNow;
                 asset.AssociatedWithSimpleRangeEvent(simpleRangeEventId, utcNow);
-                await _assetAggregateRepository.SaveAsync(asset, cancellationToken).ConfigureAwait(false);
+                await _assetAggregateRepository.SaveAsync(context, asset).ConfigureAwait(false);
 
                 CliDisplay.PrintSuccess(
-                    $"Associated simple range event {simpleRangeEventId} with asset {asset.Id}:{asset.DestinationPath}");
+                                        $"Associated simple range event {simpleRangeEventId} with asset {asset.Id}:{asset.DestinationPath}");
                 Logger.Information("Associated simple range event {simpleRangeEventId} with {assetId}",
-                    simpleRangeEventId, asset.Id);
+                                   simpleRangeEventId, asset.Id);
             }
             catch (Exception e)
             {
                 CliDisplay.PrintFailure("Failed to associate simple range event. " + e.Message);
                 Logger.Error(e,
-                    "Failed to associate the simple range event {simpleRangeEventId} with the asset {assetId}.",
-                    simpleRangeEventId, asset.Id);
+                             "Failed to associate the simple range event {simpleRangeEventId} with the asset {assetId}.",
+                             simpleRangeEventId, asset.Id);
             }
         }
 
         static class Commands
         {
-            const string AssociateWithFirearmSql = """
-                                                   INSERT INTO asset_files_firearms (firearm_id, asset_id)
-                                                   VALUES (@FirearmId, @AssetId)
-                                                   ON CONFLICT DO NOTHING 
-                                                   RETURNING row_id;
-                                                   """;
-
-            const string AssociateWithRangeEventSql = """
-                                                      INSERT INTO asset_files_simple_range_events (simple_range_event_id, asset_id)
-                                                      VALUES (@SimpleRangeEventId, @AssetId)
-                                                      ON CONFLICT DO NOTHING 
+            const string ASSOCIATE_WITH_FIREARM_SQL = """
+                                                      INSERT INTO asset_files_firearms (firearm_id, asset_id)
+                                                      VALUES (@FirearmId, @AssetId)
+                                                      ON CONFLICT DO NOTHING
                                                       RETURNING row_id;
                                                       """;
 
-            internal static readonly DapperCommand AssociateWithRangeEvent = new(AssociateWithRangeEventSql);
+            const string ASSOCIATE_WITH_RANGE_EVENT_SQL = """
+                                                          INSERT INTO asset_files_simple_range_events (simple_range_event_id, asset_id)
+                                                          VALUES (@SimpleRangeEventId, @AssetId)
+                                                          ON CONFLICT DO NOTHING
+                                                          RETURNING row_id;
+                                                          """;
 
-            internal static readonly DapperCommand AssociateWithFirearm = new(AssociateWithFirearmSql);
+            internal static readonly DapperCommand AssociateWithRangeEvent = new(ASSOCIATE_WITH_RANGE_EVENT_SQL);
+
+            internal static readonly DapperCommand AssociateWithFirearm = new(ASSOCIATE_WITH_FIREARM_SQL);
         }
     }
 }

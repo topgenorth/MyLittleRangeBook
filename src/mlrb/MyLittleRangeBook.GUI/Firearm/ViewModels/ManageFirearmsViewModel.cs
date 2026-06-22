@@ -17,7 +17,6 @@ using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
-using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
@@ -28,35 +27,37 @@ using SharedControls.Services;
 namespace MyLittleRangeBook.GUI.ViewModels
 {
     [UnconditionalSuppressMessage("Trimming", "IL2112",
-        Justification = "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
+                                  Justification =
+                                      "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     [UnconditionalSuppressMessage("Trimming", "IL2026",
-        Justification = "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
+                                  Justification =
+                                      "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class ManageFirearmsViewModel : ViewModelBase, IDialogParticipant,
-        IRecipient<UpdateDataMessage<Firearm>>,
-        IRecipient<UpdateDataMessage<SimpleRangeEvent>>
+                                                   IRecipient<UpdateDataMessage<Firearm>>,
+                                                   IRecipient<UpdateDataMessage<SimpleRangeEvent>>
     {
-        readonly IDialogService _dialogService;
+        readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
-        readonly IFirearmsService _firearmsDbService;
-        readonly ISimpleRangeEventRepository _rangeEventRepo;
-        readonly SourceCache<FirearmViewModel, long> _firearmViewModelCache = new(x => x.Id ?? -1);
+        readonly IFirearmsService                         _firearmsDbService;
+        readonly SourceCache<FirearmViewModel, long>      _firearmViewModelCache = new(x => x.Id ?? -1);
 
         readonly ReadOnlyObservableCollection<FirearmViewModel> _firearmViewModels;
-        readonly ISqliteHelper _sqliteHelper;
-        readonly ILogger _logger;
+        readonly ILogger                                        _logger;
+        readonly ISimpleRangeEventRepository                    _rangeEventRepo;
+        readonly ISqliteHelper                                  _sqliteHelper;
 
-        public ManageFirearmsViewModel(IFirearmsService firearmsDbService,
-            ISimpleRangeEventRepository rangeEventRepo,
-            Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-            ISqliteHelper sqliteHelper,
-            ILogger logger)
+        public ManageFirearmsViewModel(IFirearmsService                         firearmsDbService,
+                                       ISimpleRangeEventRepository              rangeEventRepo,
+                                       Func<IDialogParticipant, IDialogService> dialogServiceFactory,
+                                       ISqliteHelper                            sqliteHelper,
+                                       ILogger                                  logger)
         {
-            _sqliteHelper = sqliteHelper;
-            _firearmsDbService = firearmsDbService;
-            _rangeEventRepo = rangeEventRepo;
+            _sqliteHelper         = sqliteHelper;
+            _firearmsDbService    = firearmsDbService;
+            _rangeEventRepo       = rangeEventRepo;
             _dialogServiceFactory = dialogServiceFactory;
-            _dialogService = dialogServiceFactory(this);
-            _logger = logger;
+            _dialogService        = dialogServiceFactory(this);
+            _logger               = logger;
 
             // Register for message notifications from other ViewModels
             WeakReferenceMessenger.Default.Register<UpdateDataMessage<Firearm>>(this);
@@ -65,26 +66,26 @@ namespace MyLittleRangeBook.GUI.ViewModels
             // Get the current synchronization context for UI thread operations
             SynchronizationContext syncContext = SynchronizationContext.Current ??
                                                  throw new InvalidOperationException(
-                                                     "No SynchronizationContext provided.");
+                                                  "No SynchronizationContext provided.");
 
             // Create reactive observable for text filtering with 300ms throttle to reduce frequent updates
             IObservable<Func<FirearmViewModel, bool>> filterByName = this.ObserveValue(nameof(FilterString),
-                    () => FilterString)
-                .Throttle(TimeSpan.FromMilliseconds(300))
-                .DistinctUntilChanged()
-                .Select(FilterByNameObservable);
+                                                                              () => FilterString)
+                                                                         .Throttle(TimeSpan.FromMilliseconds(300))
+                                                                         .DistinctUntilChanged()
+                                                                         .Select(FilterByNameObservable);
 
 
             // Set up a reactive data pipeline: auto-refresh firearm name changes, apply filters and sorting
             _firearmViewModelCache.Connect()
-                .AutoRefresh(
-                    x => x.Name,
-                    propertyChangeThrottle: TimeSpan.FromMilliseconds(500))
-                .Filter(filterByName)
-                .ObserveOn(syncContext)
-                .SortBy(x => x.Name, resetThreshold: 500)
-                .Bind(out _firearmViewModels)
-                .Subscribe();
+                                  .AutoRefresh(
+                                               x => x.Name,
+                                               propertyChangeThrottle: TimeSpan.FromMilliseconds(500))
+                                  .Filter(filterByName)
+                                  .ObserveOn(syncContext)
+                                  .SortBy(x => x.Name, resetThreshold: 500)
+                                  .Bind(out _firearmViewModels)
+                                  .Subscribe();
 
             _ = LoadDataAsync();
         }
@@ -113,12 +114,12 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 case UpdateAction.Added:
                 case UpdateAction.Updated:
                     _firearmViewModelCache.AddOrUpdate(
-                        updateEvents.Select(x => new FirearmViewModel(x)));
+                                                       updateEvents.Select(x => new FirearmViewModel(x)));
 
                     break;
                 case UpdateAction.Removed:
                     _firearmViewModelCache.Remove(
-                        updateEvents.Select(x => new FirearmViewModel(x)));
+                                                  updateEvents.Select(x => new FirearmViewModel(x)));
 
                     break;
                 case UpdateAction.Reset:
@@ -131,20 +132,16 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _ = RefreshAsync();
         }
 
-        public void Receive(UpdateDataMessage<SimpleRangeEvent> message)
-        {
-            _ = RefreshAsync();
-        }
+        public void Receive(UpdateDataMessage<SimpleRangeEvent> message) => _ = RefreshAsync();
 
         [RelayCommand]
         async Task LoadDataAsync(CancellationToken cancellationToken = default)
         {
+            await using var ctx = await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken).ConfigureAwait(false);
             try
             {
-                await using SqliteConnection connection =
-                    await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-                Result<IEnumerable<Firearm>> result =
-                    await _firearmsDbService.GetFirearmsAsync(connection, cancellationToken: cancellationToken);
+
+                Result<IEnumerable<Firearm>> result = await _firearmsDbService.GetFirearmsAsync(ctx);
 
                 if (result.IsSuccess)
                 {
@@ -152,7 +149,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 }
                 else
                 {
-                    var msg = new StringBuilder("There was a problem trying to get the range events.");
+                    StringBuilder msg = new("There was a problem trying to get the range events.");
                     result.Reasons.ForEach(x => msg.AppendLine(x.Message));
                     _logger.Error(msg.ToString());
                     _firearmViewModelCache.Clear();
@@ -167,7 +164,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand]
         async Task AddNewFirearmAsync()
         {
-            var firearm = new Firearm();
+            Firearm firearm = new();
 
             await EditFirearmAsync(new FirearmViewModel(firearm));
         }
@@ -180,25 +177,23 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            var rangeEvent = new SimpleRangeEvent
-            {
-                FirearmName = firearm.Name ?? string.Empty,
-                Created = DateTimeOffset.UtcNow,
-                Modified = DateTimeOffset.UtcNow,
-                EventDate = DateTime.UtcNow
-            };
+            SimpleRangeEvent rangeEvent = new()
+                                          {
+                                              FirearmName = firearm.Name ?? string.Empty,
+                                              Created     = DateTimeOffset.UtcNow,
+                                              Modified    = DateTimeOffset.UtcNow,
+                                              EventDate   = DateTime.UtcNow,
+                                          };
 
-            var vm = new EditSimpleRangeEventViewModel(new SimpleRangeEventViewModel(rangeEvent), _logger, _dialogServiceFactory, _rangeEventRepo);
+            EditSimpleRangeEventViewModel vm = new(new SimpleRangeEventViewModel(rangeEvent), _logger,
+                                                   _dialogServiceFactory, _rangeEventRepo, _sqliteHelper);
 
             await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
-                "Add Range Event",
-                vm);
+                                                                         "Add Range Event",
+                                                                         vm);
         }
 
-        bool CanEditOrDeleteFirearm(FirearmViewModel? firearm)
-        {
-            return firearm != null;
-        }
+        bool CanEditOrDeleteFirearm(FirearmViewModel? firearm) => firearm != null;
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteFirearm))]
         async Task DeleteFirearmAsync(FirearmViewModel? firearm, CancellationToken cancellationToken = default)
@@ -209,28 +204,26 @@ namespace MyLittleRangeBook.GUI.ViewModels
             }
 
             DialogResult result = await this.ShowOverlayDialogAsync<DialogResult>("Delete the Firearm",
-                "Are you sure you want to delete this Firearm?", DialogCommands.YesNoCancel);
+                                      "Are you sure you want to delete this Firearm?", DialogCommands.YesNoCancel);
 
             if (result == DialogResult.Yes)
             {
                 try
                 {
-                    await using SqliteConnection connection = await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
-                    var ctx = new DapperCommandContext(connection, null, cancellationToken);
-                    Result<bool> r = await _firearmsDbService.DeleteAsync(ctx, firearm.ToFirearm());
+                    await using SqliteConnection connection =
+                        await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
+                    DapperCommandContext ctx = new(connection, null, cancellationToken);
+                    Result<bool>         r   = await _firearmsDbService.DeleteAsync(ctx, firearm.ToFirearm());
                     if (r.IsSuccess)
                     {
                         _firearmViewModelCache.Remove(firearm);
                     }
-
                 }
                 catch (Exception e)
                 {
                     _logger.Error(e, "Failed to delete firearm {Id}.", firearm.Id);
                 }
             }
-
-
         }
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteFirearm))]
@@ -241,10 +234,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            var vm = new EditFirearmViewModel(firearm.CloneFirearmViewModel(), _firearmsDbService, _dialogServiceFactory, _sqliteHelper, _logger);
+            EditFirearmViewModel vm = new(firearm.CloneFirearmViewModel(), _firearmsDbService, _dialogServiceFactory,
+                                          _sqliteHelper, _logger);
             FirearmViewModel? result = await this.ShowOverlayDialogAsync<FirearmViewModel>(
-                "Edit firearm", vm);
-
+                                        "Edit firearm", vm);
 
 
             if (result is not null)
@@ -262,7 +255,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             Optional<FirearmViewModel> prevFirearm = _firearmViewModelCache.Lookup(prevId);
 
             Dispatcher.UIThread.Post(() =>
-                SelectedFirearm = prevFirearm.HasValue ? prevFirearm.Value : null);
+                                         SelectedFirearm = prevFirearm.HasValue ? prevFirearm.Value : null);
         }
 
         /// <summary>
@@ -271,9 +264,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         /// <param name="filterText">The text to search for (null/empty shows all items)</param>
         /// <returns>Filter function for use with DynamicData</returns>
-        static Func<FirearmViewModel, bool> FilterByNameObservable(string? filterText)
-        {
-            return item =>
+        static Func<FirearmViewModel, bool> FilterByNameObservable(string? filterText) =>
+            item =>
             {
                 // No filter text means this item should be visible
                 if (string.IsNullOrWhiteSpace(filterText))
@@ -284,6 +276,5 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 // Search filter text in title and description (case-insensitive)
                 return item.Name?.Contains(filterText, StringComparison.OrdinalIgnoreCase) ?? false;
             };
-        }
     }
 }

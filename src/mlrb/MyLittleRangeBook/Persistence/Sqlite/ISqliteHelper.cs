@@ -27,8 +27,9 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         ///     Ensure that the connection is disposed of after use.
         /// </remarks>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+        /// <param name="useTransaction">If true, a new <see cref="SqliteTransaction" /> will be created and exposed via the <see cref="ScopedSqliteConnection.Transaction" /> property.</param>
         /// <returns>The opened connection.</returns>
-        Task<ScopedSqliteConnection> GetScopedDatabaseConnectionAsync(CancellationToken cancellationToken = default);
+        Task<ScopedSqliteConnection> GetScopedDatabaseConnectionAsync(CancellationToken cancellationToken = default, bool useTransaction = false);
 
         /// <summary>
         ///     Runs a SQL script on the database.

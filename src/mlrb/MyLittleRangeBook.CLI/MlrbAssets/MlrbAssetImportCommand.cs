@@ -2,26 +2,32 @@
 using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.Persistence;
+using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.MlrbAssets
 {
     /// <summary>
     ///     The simplest way to import - copy the file into the asset directory.
     /// </summary>
-    [RegisterCommands("assets"), UsedImplicitly]
+    [RegisterCommands("assets")]
+    [UsedImplicitly]
     public class MlrbAssetImportCommand : MlrbCommandBase
     {
         readonly IMlrbAssetAggregateRepository _aggregateRepo;
-        readonly IPipeline<MlrbAssetFile> _assetPipeline;
+        readonly IPipeline<MlrbAssetFile>      _assetPipeline;
+        readonly ISqliteHelper                 _sqliteHelper;
 
-        public MlrbAssetImportCommand(ILogger logger,
-            ICliDisplay cliDisplay,
-            IPipeline<MlrbAssetFile> assetPipeline,
-            IMlrbAssetAggregateRepository aggregateRepo) : base(logger,
+        public MlrbAssetImportCommand(ILogger                       logger,
+                                      ICliDisplay                   cliDisplay,
+                                      IPipeline<MlrbAssetFile>      assetPipeline,
+                                      IMlrbAssetAggregateRepository aggregateRepo,
+                                      ISqliteHelper                 sqliteHelper) : base(logger,
             cliDisplay)
         {
             _assetPipeline = assetPipeline;
             _aggregateRepo = aggregateRepo;
+            _sqliteHelper  = sqliteHelper;
         }
 
 
@@ -31,13 +37,15 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <param name="file">The name of the file to import into the MLRB assets.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        [Command("import"), UsedImplicitly]
+        [Command("import")]
+        [UsedImplicitly]
         // ReSharper disable once AsyncMethodWithoutAwait
-        public async Task<int> ImportRangeAssetFile(string file,
-            CancellationToken ct = default)
+        public async Task<int> ImportRangeAssetFile(string            file,
+                                                    CancellationToken ct = default)
         {
-            int returnCode = -1;
-            var fileInfo = new FileInfo(file);
+            int                  returnCode ;
+            FileInfo             fileInfo = new(file);
+            DapperCommandContext context = await DapperCommandContext.NewAsync(_sqliteHelper, ct).ConfigureAwait(false);
             if (!fileInfo.Exists)
             {
                 CliDisplay.PrintCommandHeader("Copy file into MLRB assets.");
@@ -46,8 +54,8 @@ namespace MyLittleRangeBook.MlrbAssets
                 goto ExitMethod;
             }
 
-            Result<MlrbAssetAggregate?> r = await _aggregateRepo.GetAsync(fileInfo, ct).ConfigureAwait(false);
-            bool isNew = r.IsFailed || r.Value is null;
+            Result<MlrbAssetAggregate?> r     = await _aggregateRepo.GetAsync(context, fileInfo).ConfigureAwait(false);
+            bool                        isNew = r.IsFailed || r.Value is null;
 
             MlrbAssetAggregate aggregate;
             if (isNew)
@@ -62,7 +70,7 @@ namespace MyLittleRangeBook.MlrbAssets
                 // TODO [TO20260602] Maybe we want to have a "refresh" or a different type of "update" event?
             }
 
-            MlrbAssetFile assetFile = new MlrbAssetFile(aggregate);
+            MlrbAssetFile assetFile = new(aggregate);
 
             // TODO [TO20260527] Have to update the pipeline to create the events rather than doing things.
             Result result = await _assetPipeline.ExecuteAsync(assetFile, ct).ConfigureAwait(false);
@@ -75,7 +83,7 @@ namespace MyLittleRangeBook.MlrbAssets
             }
 
             // TODO [TO20260527] Need to create a projector that will update the read-model from the events.
-            Result saveAggregate = await _aggregateRepo.SaveAsync(assetFile.Aggregate, ct).ConfigureAwait(false);
+            Result saveAggregate = await _aggregateRepo.SaveAsync(context, assetFile.Aggregate).ConfigureAwait(false);
 
             if (saveAggregate.IsFailed)
             {
@@ -92,18 +100,23 @@ namespace MyLittleRangeBook.MlrbAssets
                 }
 
                 assetFile.Aggregate.Fail(saveAggregate.Errors[0].Message, DateTimeOffset.UtcNow);
-                await _aggregateRepo.SaveAsync(assetFile.Aggregate, ct).ConfigureAwait(false);                returnCode = ReturnCodes.FAILURE;
+                await _aggregateRepo.SaveAsync(context, assetFile.Aggregate).ConfigureAwait(false);
+                returnCode = ReturnCodes.FAILURE;
                 goto ExitMethod;
             }
 
             assetFile.Aggregate.ImportComplete(DateTimeOffset.UtcNow);
-            await _aggregateRepo.SaveAsync(assetFile.Aggregate, ct).ConfigureAwait(false);
+            await _aggregateRepo.SaveAsync(context, assetFile.Aggregate).ConfigureAwait(false);
             Logger.Verbose("Updated the event stream {id}, v{version}", aggregate.Id, aggregate.Version);
 
             CliDisplay.PrintSuccess($"{file} was imported to assets.");
             returnCode = ReturnCodes.SUCCESS;
 
             ExitMethod:
+            if (returnCode != ReturnCodes.SUCCESS)
+            {
+                context.Transaction?.Rollback();
+            }
 
             PressEnterToContinue();
             return returnCode;

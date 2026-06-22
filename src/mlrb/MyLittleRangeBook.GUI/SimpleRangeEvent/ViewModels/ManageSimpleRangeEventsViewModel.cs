@@ -16,6 +16,8 @@ using DynamicData.Kernel;
 using FluentResults;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
+using MyLittleRangeBook.Persistence;
+using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
 using SharedControls.Helper;
@@ -42,6 +44,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly ILogger                                  _logger;
         readonly ISimpleRangeEventRepository              _repo;
+        readonly ISqliteHelper                            _sqliteHelper;
 
         /// <summary>
         ///     Read-only collection bound to the UI for displaying filtered and sorted SimpleRangeEvents.
@@ -58,9 +61,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
         public ManageSimpleRangeEventsViewModel(ILogger                                  logger,
                                                 Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-                                                ISimpleRangeEventRepository              repo)
+                                                ISimpleRangeEventRepository              repo, ISqliteHelper sqliteHelper)
         {
             _repo                 = repo;
+            _sqliteHelper    = sqliteHelper;
             _dialogServiceFactory = dialogServiceFactory;
             _dialogService        = dialogServiceFactory(this);
             _logger               = logger;
@@ -194,7 +198,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         async Task LoadDataAsync(CancellationToken cancellationToken = default)
         {
-            Result<IEnumerable<SimpleRangeEvent>> r = await _repo.GetSimpleRangeEventsAsync(cancellationToken);
+            await using var context = await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken);
+            Result<IEnumerable<SimpleRangeEvent>> r = await _repo.GetSimpleRangeEventsAsync(context);
 
             if (r.IsSuccess)
             {
@@ -239,16 +244,18 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                       "Are you sure you want to delete this range event?",
                                       DialogCommands.YesNoCancel);
 
+
             if (result == DialogResult.Yes)
             {
-                SimpleRangeEvent x = simpleRangeEvent.ToSimpleRangeEvent();
-                Result<bool>     r = await _repo.DeleteAsync(x, cancellationToken);
+                await using var  context = await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken);
+                SimpleRangeEvent sre       = simpleRangeEvent.ToSimpleRangeEvent();
+                Result<bool>     r       = await _repo.DeleteAsync(context,sre);
 
                 if (r.IsSuccess)
                 {
                     _simpleRangeEventSourceCache.Remove(simpleRangeEvent);
                     WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
-                                                         UpdateAction.Removed, x));
+                                                         UpdateAction.Removed, sre));
                 }
             }
         }
@@ -261,7 +268,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            EditSimpleRangeEventViewModel vm = new(simpleRangeEvent, _logger, _dialogServiceFactory, _repo);
+            EditSimpleRangeEventViewModel vm = new(simpleRangeEvent, _logger, _dialogServiceFactory, _repo, _sqliteHelper);
 
             SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
                                                  "Edit the Range Event",

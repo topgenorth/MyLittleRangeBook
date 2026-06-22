@@ -42,7 +42,14 @@ namespace MyLittleRangeBook.Sqlite
         {
             if (File.Exists(_sqliteDbFileName))
             {
-                File.Delete(_sqliteDbFileName);
+                try
+                {
+                    File.Delete(_sqliteDbFileName);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, "Failed to delete {sqliteDbFileName}. ", _sqliteDbFileName);
+                }
             }
         }
 

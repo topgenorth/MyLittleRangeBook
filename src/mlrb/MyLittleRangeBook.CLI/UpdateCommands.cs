@@ -13,12 +13,10 @@ namespace MyLittleRangeBook
     [RegisterCommands("update")]
     public class UpdateCommands : MlrbCommandBase
     {
-        private const string WorkflowName = "Build MyLittleRangeBook";
+        const string WorkflowName = "Build MyLittleRangeBook";
 
         public UpdateCommands(ILogger logger, ICliDisplay cliDisplay)
-            : base(logger, cliDisplay)
-        {
-        }
+            : base(logger, cliDisplay) { }
 
         /// <summary>
         ///     Updates the MLRB executable from the latest GitHub artifacts. Requires that the GitHub CLI (gh) is installed and
@@ -37,7 +35,7 @@ namespace MyLittleRangeBook
                 return ReturnCodes.FAILURE;
             }
 
-            var repoRoot = await GetRepoRootAsync(ct).ConfigureAwait(false);
+            string? repoRoot = await GetRepoRootAsync(ct).ConfigureAwait(false);
             if (string.IsNullOrEmpty(repoRoot))
             {
                 CliDisplay.PrintFailure("This command must be run from inside the MyLittleRangeBook git repository.");
@@ -58,7 +56,7 @@ namespace MyLittleRangeBook
             {
                 artifactPattern = "*-linux-executables";
                 destinationDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    ".local", "bin");
+                                              ".local", "bin");
                 executableName = "mlrb";
             }
             else
@@ -68,7 +66,7 @@ namespace MyLittleRangeBook
             }
 
             CliDisplay.PrintInfo($"Finding latest successful run for workflow '{WorkflowName}'...");
-            var runId = await GetLatestRunIdAsync(WorkflowName, repoRoot, ct).ConfigureAwait(false);
+            string? runId = await GetLatestRunIdAsync(WorkflowName, repoRoot, ct).ConfigureAwait(false);
             if (string.IsNullOrEmpty(runId) || runId == "null")
             {
                 CliDisplay.PrintFailure($"Could not find a successful run for workflow '{WorkflowName}'.");
@@ -78,19 +76,19 @@ namespace MyLittleRangeBook
             CliDisplay.PrintSuccess($"Found run ID: {runId}");
 
             CliDisplay.PrintInfo(
-                $"Finding newest artifact matching '{artifactPattern}' in run {runId}...");
-            var newestArtifact =
+                                 $"Finding newest artifact matching '{artifactPattern}' in run {runId}...");
+            string? newestArtifact =
                 await GetNewestArtifactNameAsync(runId, artifactPattern, repoRoot, ct).ConfigureAwait(false);
             if (string.IsNullOrEmpty(newestArtifact))
             {
                 CliDisplay.PrintFailure(
-                    $"Could not find any artifacts matching pattern '{artifactPattern}' in run {runId}.");
+                                        $"Could not find any artifacts matching pattern '{artifactPattern}' in run {runId}.");
                 return ReturnCodes.FAILURE;
             }
 
             CliDisplay.PrintInfo($"Found newest artifact: {newestArtifact}.");
 
-            var tempRoot = Path.Combine(Path.GetTempPath(), "mlrb-cli-install");
+            string tempRoot = Path.Combine(Path.GetTempPath(), "mlrb-cli-install");
             try
             {
                 if (Directory.Exists(tempRoot))
@@ -103,7 +101,7 @@ namespace MyLittleRangeBook
                 Logger.Warning(ex, "Failed to clean up temporary directory {tempRoot}", tempRoot);
             }
 
-            var downloadDir = Path.Combine(tempRoot, "download");
+            string downloadDir = Path.Combine(tempRoot, "download");
             Directory.CreateDirectory(downloadDir);
 
             CliDisplay.PrintInfo($"Downloading artifact to {downloadDir}...");
@@ -113,8 +111,8 @@ namespace MyLittleRangeBook
                 return ReturnCodes.FAILURE;
             }
 
-            var downloadedExecutable = Directory.GetFiles(downloadDir, executableName, SearchOption.AllDirectories)
-                .FirstOrDefault();
+            string? downloadedExecutable = Directory.GetFiles(downloadDir, executableName, SearchOption.AllDirectories)
+                                                    .FirstOrDefault();
             if (string.IsNullOrEmpty(downloadedExecutable))
             {
                 CliDisplay.PrintFailure($"Could not find {executableName} in downloaded artifact.");
@@ -122,7 +120,7 @@ namespace MyLittleRangeBook
             }
 
             Directory.CreateDirectory(destinationDir);
-            var destinationPath = Path.Combine(destinationDir, executableName);
+            string destinationPath = Path.Combine(destinationDir, executableName);
             CliDisplay.PrintInfo($"Installing to {destinationPath}...");
 
             try
@@ -130,7 +128,7 @@ namespace MyLittleRangeBook
                 if (File.Exists(destinationPath))
                 {
                     // Move the existing executable to a .old file to avoid "Text file busy" (Linux) or access errors (Windows)
-                    var oldPath = destinationPath + ".old";
+                    string oldPath = destinationPath + ".old";
                     try
                     {
                         if (File.Exists(oldPath))
@@ -143,7 +141,8 @@ namespace MyLittleRangeBook
                     catch (Exception ex)
                     {
                         Logger.Warning(ex,
-                            "Failed to move existing executable to {oldPath}. Attempting direct overwrite.", oldPath);
+                                       "Failed to move existing executable to {oldPath}. Attempting direct overwrite.",
+                                       oldPath);
                     }
                 }
 
@@ -164,18 +163,20 @@ namespace MyLittleRangeBook
 
             // Run post-update tasks using the newly installed executable
             await RunProcessAsync(destinationPath, "db migrate", ct, repoRoot, true).ConfigureAwait(false);
-            await RunProcessAsync(destinationPath, "firearms recalculate-round-count", ct, repoRoot, true).ConfigureAwait(false);
+            await RunProcessAsync(destinationPath, "firearms recalculate-round-count", ct, repoRoot, true)
+               .ConfigureAwait(false);
             await RunProcessAsync(destinationPath, "db maintenance", ct, repoRoot, true).ConfigureAwait(false);
 
             CliDisplay.PrintSuccess($"Installed {executableName} to: {destinationPath}");
             return ReturnCodes.SUCCESS;
         }
 
-        private async Task<bool> IsGhInstalledAsync(CancellationToken ct)
+        async Task<bool> IsGhInstalledAsync(CancellationToken ct)
         {
             try
             {
-                var result = await RunProcessAsync("gh", "--version", ct).ConfigureAwait(false);
+                (int ExitCode, string Output) result =
+                    await RunProcessAsync("gh", "--version", ct).ConfigureAwait(false);
                 return result.ExitCode == 0;
             }
             catch
@@ -184,11 +185,12 @@ namespace MyLittleRangeBook
             }
         }
 
-        private async Task<string?> GetRepoRootAsync(CancellationToken ct)
+        async Task<string?> GetRepoRootAsync(CancellationToken ct)
         {
             try
             {
-                var result = await RunProcessAsync("git", "rev-parse --show-toplevel", ct).ConfigureAwait(false);
+                (int ExitCode, string Output) result =
+                    await RunProcessAsync("git", "rev-parse --show-toplevel", ct).ConfigureAwait(false);
                 return result.ExitCode == 0 ? result.Output.Trim() : null;
             }
             catch
@@ -197,80 +199,83 @@ namespace MyLittleRangeBook
             }
         }
 
-        private async Task<string?> GetLatestRunIdAsync(string workflowName, string repoRoot, CancellationToken ct)
+        async Task<string?> GetLatestRunIdAsync(string workflowName, string repoRoot, CancellationToken ct)
         {
-            var result = await RunProcessAsync("gh",
-                $"run list --workflow \"{workflowName}\" --limit 1 --json databaseId --jq \".[0].databaseId\"", ct,
-                repoRoot).ConfigureAwait(false);
+            (int ExitCode, string Output) result = await RunProcessAsync("gh",
+                                                                         $"run list --workflow \"{workflowName}\" --limit 1 --json databaseId --jq \".[0].databaseId\"",
+                                                                         ct,
+                                                                         repoRoot).ConfigureAwait(false);
             return result.Output.Trim();
         }
 
-        private async Task<string?> GetNewestArtifactNameAsync(string runId, string pattern, string repoRoot,
-            CancellationToken ct)
+        async Task<string?> GetNewestArtifactNameAsync(string            runId, string pattern, string repoRoot,
+                                                       CancellationToken ct)
         {
-            var result = await RunProcessAsync("gh",
-                $"api \"repos/{{owner}}/{{repo}}/actions/runs/{runId}/artifacts\" --jq \".artifacts | sort_by(.created_at) | reverse | map(.name) | .[]\"",
-                ct, repoRoot).ConfigureAwait(false);
-            var names = result.Output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+            (int ExitCode, string Output) result = await RunProcessAsync("gh",
+                                                                         $"api \"repos/{{owner}}/{{repo}}/actions/runs/{runId}/artifacts\" --jq \".artifacts | sort_by(.created_at) | reverse | map(.name) | .[]\"",
+                                                                         ct, repoRoot).ConfigureAwait(false);
+            string[] names = result.Output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
 
-            var regexPattern = "^" + pattern.Replace("*", ".*") + "$";
-            var regex = new Regex(regexPattern, RegexOptions.IgnoreCase);
+            string regexPattern = "^" + pattern.Replace("*", ".*") + "$";
+            Regex  regex        = new(regexPattern, RegexOptions.IgnoreCase);
 
             return names.FirstOrDefault(regex.IsMatch);
         }
 
-        private async Task<bool> DownloadArtifactAsync(string runId, string artifactName, string downloadDir,
-            string repoRoot, CancellationToken ct)
+        async Task<bool> DownloadArtifactAsync(string runId,    string            artifactName, string downloadDir,
+                                               string repoRoot, CancellationToken ct)
         {
-            var result = await RunProcessAsync("gh",
-                    $"run download {runId} --name \"{artifactName}\" --dir \"{downloadDir}\"", ct, repoRoot)
-                .ConfigureAwait(false);
+            (int ExitCode, string Output) result = await RunProcessAsync("gh",
+                                                                         $"run download {runId} --name \"{artifactName}\" --dir \"{downloadDir}\"",
+                                                                         ct, repoRoot)
+                                                      .ConfigureAwait(false);
             return result.ExitCode == 0;
         }
 
-        private async Task<(int ExitCode, string Output)> RunProcessAsync(string fileName, string arguments,
-            CancellationToken ct, string? workingDirectory = null, bool echoOutput = false)
+        async Task<(int ExitCode, string Output)> RunProcessAsync(string            fileName, string arguments,
+                                                                  CancellationToken ct, string? workingDirectory = null,
+                                                                  bool              echoOutput = false)
         {
-            var psi = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory
-            };
+            ProcessStartInfo psi = new()
+                                   {
+                                       FileName               = fileName,
+                                       Arguments              = arguments,
+                                       RedirectStandardOutput = true,
+                                       RedirectStandardError  = true,
+                                       UseShellExecute        = false,
+                                       CreateNoWindow         = true,
+                                       WorkingDirectory       = workingDirectory ?? Environment.CurrentDirectory,
+                                   };
 
-            using var process = new Process();
+            using Process process = new();
             process.StartInfo = psi;
-            var output = new StringBuilder();
+            StringBuilder output = new();
 
             process.OutputDataReceived += (s, e) =>
-            {
-                if (e.Data == null)
-                {
-                    return;
-                }
+                                          {
+                                              if (e.Data == null)
+                                              {
+                                                  return;
+                                              }
 
-                output.AppendLine(e.Data);
-                if (echoOutput)
-                {
-                    CliDisplay.Console.WriteLine(e.Data);
-                }
-            };
+                                              output.AppendLine(e.Data);
+                                              if (echoOutput)
+                                              {
+                                                  CliDisplay.Console.WriteLine(e.Data);
+                                              }
+                                          };
             process.ErrorDataReceived += (s, e) =>
-            {
-                if (e.Data == null)
-                {
-                    return;
-                }
+                                         {
+                                             if (e.Data == null)
+                                             {
+                                                 return;
+                                             }
 
-                if (echoOutput)
-                {
-                    CliDisplay.Console.MarkupLine($"[red]{Markup.Escape(e.Data)}[/]");
-                }
-            };
+                                             if (echoOutput)
+                                             {
+                                                 CliDisplay.Console.MarkupLine($"[red]{Markup.Escape(e.Data)}[/]");
+                                             }
+                                         };
 
             try
             {

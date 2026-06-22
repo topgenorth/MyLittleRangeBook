@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.RangeEvents;
 
+// ReSharper disable once CheckNamespace
 namespace MyLittleRangeBook
 {
 
@@ -11,9 +12,8 @@ namespace MyLittleRangeBook
     {
         public static IServiceCollection RegisterRangeEventStuff(this IServiceCollection services)
         {
-            services.TryAddKeyedScoped<IFirearmsService, FirearmsService>(SqliteHelperExtensions.DI_KEYS_SQLITE);
-            services.TryAddScoped<IFirearmsService, FirearmsService>();
-
+            services.TryAddScoped<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();
+            services.TryAddKeyedScoped<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(SqliteHelperExtensions.DI_KEYS_SQLITE);
             return services;
         }
     }
