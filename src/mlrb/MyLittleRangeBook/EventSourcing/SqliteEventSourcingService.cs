@@ -118,6 +118,7 @@ namespace MyLittleRangeBook.EventSourcing
                            StreamId   = streamId,
                            Id         = new MlrbId(domainEvent.OccurredUtc),
                            StreamType = streamType,
+                           domainEvent.EventType,
                            Version    = version,
                            domainEvent.OccurredUtc,
                            DataJson     = _eventSerializer.Serialize(domainEvent),

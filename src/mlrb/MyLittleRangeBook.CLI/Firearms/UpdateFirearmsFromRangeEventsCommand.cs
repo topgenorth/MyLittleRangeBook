@@ -14,7 +14,8 @@ namespace MyLittleRangeBook
     [RegisterCommands("firearms")]
     public class UpdateFirearmsFromRangeEventsCommand : MlrbFirearmsCommandBase
     {
-        readonly IProjector _firearmsProjector;
+        readonly IEventSourcingService _eventSourcingService;
+        readonly IProjector            _firearmsProjector;
 
         public UpdateFirearmsFromRangeEventsCommand(ILogger                     logger,
                                                     ICliDisplay                 display,
@@ -22,9 +23,14 @@ namespace MyLittleRangeBook
                                                     IFirearmsService            firearmsService,
                                                     IFirearmAggregateRepository firearmAggregateRepo,
                                                     [FromKeyedServices(FirearmProjector.DI_KEY)]
-                                                    IProjector firearmsProjector) : base(logger, display, sqliteHelper,
-            firearmsService, firearmAggregateRepo) =>
-            _firearmsProjector = firearmsProjector;
+                                                    IProjector firearmsProjector,
+                                                    IEventSourcingService eventSourcingService) : base(logger, display,
+            sqliteHelper,
+            firearmsService, firearmAggregateRepo)
+        {
+            _firearmsProjector    = firearmsProjector;
+            _eventSourcingService = eventSourcingService;
+        }
 
 
         /// <summary>
@@ -42,33 +48,45 @@ namespace MyLittleRangeBook
             await using DapperCommandContext context = await DapperCommandContext
                                                             .NewAsync(SqliteHelper, cancellationToken, true)
                                                             .ConfigureAwait(false);
-
             try
             {
                 IEnumerable<NewFirearmNameFromSimpleRangeEventRow> newFirearmNames =
                     await Commands.s_newFirearmNamesFromRangeEvents
                                   .QueryAsync<NewFirearmNameFromSimpleRangeEventRow>(context).ConfigureAwait(false);
 
-                int count = 0;
+                int count    = 0;
+                int newNamesCount = 0;
                 foreach (NewFirearmNameFromSimpleRangeEventRow f in newFirearmNames)
                 {
-                    #region Step 1: Get or create a new firearm aggregate
-                    Result<FirearmAggregate?> fetchResult =
-                        await FirearmAggregateRepository.GetAsync(context, f.FirearmId)
-                                                        .ConfigureAwait(false);
-                    if (fetchResult is { IsSuccess: true, Value: not null })
+                    newNamesCount++;
+
+                    #region Step 1: Get the event stream
+                    EventStreamRow? es = await _eventSourcingService.GetEventStream(context, f.FirearmId)
+                                                                    .ConfigureAwait(false);
+
+                    if (es is not null)
                     {
-                        var r = await _firearmsProjector.ProjectAggregateAsync(context, f.FirearmId)
-                                                        .ConfigureAwait(false);
-                        CliDisplay.PrintInfo($"Created firearm '{f.FirearmName}' from the existing event stream.");
-                        count++;
+                        Result r = await _firearmsProjector.ProjectAggregateAsync(context, f.FirearmId)
+                                                           .ConfigureAwait(false);
+                        if (r.IsSuccess)
+                        {
+                            CliDisplay.PrintInfo($"Created firearm '{f.FirearmName}' from the existing event stream.");
+                            count++;
+                        }
+                        else
+                        {
+                            CliDisplay
+                               .PrintWarning($"Failed to create firearm '{f.FirearmName}' from the existing event stream.");
+                        }
+
                         continue;
                     }
 
-                    FirearmAggregate fa = FirearmAggregate.New(f.FirearmName, f.CreatedUtc);
-                    fa.AppendToNotes($"Imported from simple_range_event {f.SimpleRangeEventId}.", DateTimeOffset.UtcNow);
 
-                    // var r = await CreateNewFirearmAggregate(context, f.FirearmName).ConfigureAwait(false);
+                    FirearmAggregate fa = FirearmAggregate.New(f.FirearmName, f.CreatedUtc);
+                    fa.AppendToNotes($"Imported from simple_range_event {f.SimpleRangeEventId}.",
+                                     DateTimeOffset.UtcNow);
+
                     CliDisplay
                        .PrintWarning($"Will have to create the firearm '{f.FirearmName}' event stream from the range events");
                     #endregion
@@ -88,7 +106,7 @@ namespace MyLittleRangeBook
 
                     Result upsertEventStreamResult = await FirearmAggregateRepository
                                                           .UpsertAsync(context, fa)
-                                                                          .ConfigureAwait(false);
+                                                          .ConfigureAwait(false);
                     if (upsertEventStreamResult.IsFailed)
                     {
                         Logger.Warning("Failed to create the firearm aggregate for '{FirearmName}' - skipped",
@@ -136,7 +154,7 @@ namespace MyLittleRangeBook
                 }
 
                 returnCode = ReturnCodes.SUCCESS;
-                CliDisplay.PrintSuccess($"Imported {count} firearms.");
+                CliDisplay.PrintSuccess($"Imported {count}/{newNamesCount} new firearms.");
             }
             catch (Exception e)
             {
@@ -182,7 +200,7 @@ namespace MyLittleRangeBook
             string FirearmName,
             string Created)
         {
-            public MlrbId FirearmId => MlrbId.FromString(FirearmName);
+            public MlrbId         FirearmId  => MlrbId.FromString(FirearmName);
             public DateTimeOffset CreatedUtc => DateTimeOffset.Parse(Created, null, DateTimeStyles.AssumeLocal);
         }
 
