@@ -45,31 +45,35 @@ namespace MyLittleRangeBook
 
             try
             {
-                IEnumerable<NewFirearmNameFromSimpleRangeEventRow> firearms =
+                IEnumerable<NewFirearmNameFromSimpleRangeEventRow> newFirearmNames =
                     await Commands.s_newFirearmNamesFromRangeEvents
                                   .QueryAsync<NewFirearmNameFromSimpleRangeEventRow>(context).ConfigureAwait(false);
 
                 int count = 0;
-                foreach (NewFirearmNameFromSimpleRangeEventRow f in firearms)
+                foreach (NewFirearmNameFromSimpleRangeEventRow f in newFirearmNames)
                 {
-                    MlrbId streamId = MlrbId.FromString(f.FirearmName);
-
                     #region Step 1: Get or create a new firearm aggregate
-                    Result<FirearmAggregate> fetchResult =
-                        await FirearmAggregateRepository.GetOrCreateByNameAsync(context, f.FirearmName, f.CreatedUtc)
+                    Result<FirearmAggregate?> fetchResult =
+                        await FirearmAggregateRepository.GetAsync(context, f.FirearmId)
                                                         .ConfigureAwait(false);
                     FirearmAggregate fa;
-                    if (fetchResult.IsFailed)
+                    if (fetchResult.IsFailed || fetchResult.Value == null)
                     {
-                        fa = FirearmAggregate.New(f.FirearmName, f.CreatedUtc);
-                        fa.AssociateWithSimpleRangeEvent(f.SimpleRangeEventId, f.CreatedUtc);
+                        // var r = await CreateNewFirearmAggregate(context, f.FirearmName).ConfigureAwait(false);
+                        CliDisplay
+                           .PrintWarning($"Will have to create the firearm {f.FirearmName} event stream from the range events");
                     }
                     else
                     {
-                        fa = fetchResult.Value!;
+                        var r = await _firearmsProjector.ProjectAggregateAsync(context, f.FirearmId)
+                                                        .ConfigureAwait(false);
+                        CliDisplay.PrintInfo($"Created firearm {f.FirearmName} from the existing event stream.");
+                        continue;
                     }
                     #endregion
 
+                    count++;
+                    /*
                     #region Step 2: Get round counts from simple range events, and update the aggregate.
                     List<(string FirearmId, string SimpleRangeEventId)> associations = [];
                     DapperCommandContext ctx = context with { Arguments = new { f.FirearmName } };
@@ -129,6 +133,7 @@ namespace MyLittleRangeBook
                                                     .ConfigureAwait(false);
                     }
                     #endregion
+                */
                 }
 
                 returnCode = ReturnCodes.SUCCESS;
@@ -178,6 +183,7 @@ namespace MyLittleRangeBook
             string FirearmName,
             string Created)
         {
+            public MlrbId FirearmId => MlrbId.FromString(FirearmName);
             public DateTimeOffset CreatedUtc => DateTimeOffset.Parse(Created, null, DateTimeStyles.AssumeLocal);
         }
 
@@ -244,30 +250,24 @@ namespace MyLittleRangeBook
             /// <summary>
             ///     Retrieves the names of firearms and their associated total rounds fired,
             ///     based on range events, for firearms that are not yet present in the firearms table.
-            ///     The results are grouped and ordered by firearm name.
             /// </summary>
             const string GET_NEW_FIREARM_NAMES_FROM_RANGE_EVENTS_SQL = """
-                                                                       WITH UnassociatedOldest AS (
-                                                                           SELECT s.id           AS SimpleRangeEventId,
+                                                                       WITH UnprojectedFirearmNames AS (
+                                                                           SELECT s.row_id AS RowId,
+                                                                                  s.id As SimpleRangeEventId,
                                                                                   s.firearm_name AS FirearmName,
                                                                                   s.event_date   AS Created,
-                                                                                  ROW_NUMBER() OVER (PARTITION BY s.firearm_name ORDER BY s.event_date, s.id) AS rn
+                                                                                  ROW_NUMBER() OVER (PARTITION BY s.firearm_name ORDER BY s.row_id) AS rn
                                                                            FROM simple_range_events s
-                                                                           WHERE NOT EXISTS (SELECT 1
-                                                                                             FROM events e
-                                                                                             WHERE e.stream_type = 'firearm'
-                                                                                               AND e.event_type = 'firearm-created'
-                                                                                               AND JSON_EXTRACT(e.data_json, '$.name') = s.firearm_name)
-                                                                              OR NOT EXISTS (SELECT 1
-                                                                                             FROM firearms f
-                                                                                             WHERE f.name = s.firearm_name)
+                                                                           WHERE NOT EXISTS (SELECT 1 FROM firearms f WHERE f.name = s.firearm_name)
+                                                                           ORDER BY s.row_id
                                                                        )
-                                                                       SELECT SimpleRangeEventId,
-                                                                              FirearmName,
-                                                                              Created
-                                                                       FROM UnassociatedOldest
-                                                                       WHERE rn = 1
-                                                                       ORDER BY Created, FirearmName;
+                                                                       SELECT ufn.SimpleRangeEventId,
+                                                                              ufn.FirearmName,
+                                                                              ufn.Created
+                                                                       FROM UnprojectedFirearmNames ufn
+                                                                       WHERE ufn.rn = 1
+                                                                       ORDER BY ufn.RowId;
                                                                        """;
 
             internal static readonly DapperCommand s_associateFirearmWithRangeEvent =

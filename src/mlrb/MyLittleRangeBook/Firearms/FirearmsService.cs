@@ -64,13 +64,8 @@ namespace MyLittleRangeBook.Firearms
 
         public async Task<Result<EntityId>> UpsertAsync(DapperCommandContext context, FirearmAggregate firearmAggregate)
         {
-            // [TO20260610] the aggregate id (stream id) is the same as the firearm id.
-            Result<Firearm> fResult = await GetFirearmAsync(context, firearmAggregate.Id.ToString()).ConfigureAwait(false);
-
-            Firearm f = fResult.IsFailed ? firearmAggregate.ToFirearm() : fResult.Value;
-
-            f.RoundsFired = firearmAggregate.RoundsFired;
-            f.Notes = firearmAggregate.Notes;
+            Firearm f = firearmAggregate.ToFirearm();
+            f.Modified = DateTimeOffset.UtcNow;
             return await UpsertAsync(context, f).ConfigureAwait(false);
         }
 

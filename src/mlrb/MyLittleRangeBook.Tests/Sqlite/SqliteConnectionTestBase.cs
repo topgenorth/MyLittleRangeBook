@@ -2,6 +2,7 @@
 using Dapper;
 using FluentResults;
 using Microsoft.Data.Sqlite;
+using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Sqlite
@@ -19,6 +20,7 @@ namespace MyLittleRangeBook.Sqlite
             SqliteHelperExtensions.SetSqlite3ProviderAndInit();
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
+            SqlMapper.AddTypeHandler(typeof(MlrbId), new SqliteMlrbIdHandler());
         }
 
         protected SqliteConnectionTestBase()

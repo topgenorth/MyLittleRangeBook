@@ -7,7 +7,7 @@ namespace MyLittleRangeBook.EventSourcing
         const string GetEventStreamSql = """
                                          SELECT
                                              row_id AS RowId,
-                                             id as Id,
+                                             id as StreamId,
                                              stream_type as StreamType,
                                              version as Version,
                                              created_utc as CreatedUtc,
@@ -20,6 +20,7 @@ namespace MyLittleRangeBook.EventSourcing
                                              SELECT
                                                  row_id AS RowId,
                                                  id AS Id,
+                                                 stream_id AS StreamId,
                                                  stream_type as StreamType,
                                                  event_type AS EventType,
                                                  version as Version,
@@ -30,7 +31,7 @@ namespace MyLittleRangeBook.EventSourcing
                                                  modified_utc as ModifiedUtc
                                              FROM main.events
                                              WHERE stream_id = @StreamId
-                                             ORDER BY occurred_utc, version;
+                                             ORDER BY row_id;
                                              """;
 
         internal static readonly DapperCommand s_getEventStream        = new(GetEventStreamSql);

@@ -11,10 +11,11 @@ namespace MyLittleRangeBook.Firearms
     /// </summary>
     public class FirearmProjector : IProjector
     {
-        public const string           DI_KEY = "firearm-projector";
-        readonly     IEventSerializer _eventSerializer;
-        readonly     IFirearmsService _firearmsService;
-        readonly     ILogger          _logger;
+        public const string                      DI_KEY = "firearm-projector";
+        readonly     IEventSerializer            _eventSerializer;
+        readonly     IFirearmsService            _firearmsService;
+        readonly     ILogger                     _logger;
+        readonly     IFirearmAggregateRepository _repo;
 
         public FirearmProjector(
             IFirearmsService firearmsService,
@@ -41,17 +42,15 @@ namespace MyLittleRangeBook.Firearms
             {
                 string               fid = firearmId.ToString();
                 DapperCommandContext ctx = context with { Arguments = new { StreamId = fid } };
-                (FirearmAggregate fa, IEnumerable<EventRow> events) =
+                (FirearmAggregate fa, IEnumerable<IDomainEvent> events) =
                     await LoadEventStreamIncludeNewEvents(ctx).ConfigureAwait(false);
 
 
                 List<DapperCommandContext> upserts = [];
-                foreach (EventRow evt in events)
+                foreach (IDomainEvent evt in events)
                 {
                     fa.Apply(evt);
-
-                    IDomainEvent domainEvent = (IDomainEvent)_eventSerializer.Deserialize(evt.EventType, evt.DataJson);
-                    if (domainEvent is FirearmAggregate.FirearmAssociatedWithRangeEvent @event)
+                    if (evt is FirearmAggregate.FirearmAssociatedWithRangeEvent @event)
                     {
                         var p = new { FirearmId = fid, SimpleRangeEventId= @event.RangeEventId };
                         upserts.Add(context with { Arguments = p });
@@ -90,32 +89,27 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="context">The database context used to fetch the event stream.</param>
         /// <param name="uncommittedDomainEvents">Optional uncommitted domain events to include in the stream.</param>
         /// <returns>A tuple containing the firearm aggregate and the combined list of event rows.</returns>
-        async Task<(FirearmAggregate stream, IEnumerable<EventRow> events)> LoadEventStreamIncludeNewEvents(
+        async Task<(FirearmAggregate stream, IEnumerable<IDomainEvent> events)> LoadEventStreamIncludeNewEvents(
             DapperCommandContext       context
           , IEnumerable<IDomainEvent>? uncommittedDomainEvents = null)
         {
             #region Combine the saved events with any new events.
-            IEnumerable<EventRow> events = await EventSourcingCommands.s_getEventStreamByRowId
+            IEnumerable<EventRow> rows = await EventSourcingCommands.s_getEventStreamByRowId
                                                                       .QueryAsync<EventRow>(context)
                                                                       .ConfigureAwait(false);
-            IEnumerable<EventRow> allEvents;
+            var commitedDomainEvents = rows.Select(row => (IDomainEvent)_eventSerializer.Deserialize(row.EventType,
+                                                    row.DataJson));
+            IEnumerable<IDomainEvent> allEvents;
             if (uncommittedDomainEvents is not null)
             {
-                EventRow[] x = uncommittedDomainEvents.Cast<EventRow>().ToArray();
-                if (x.Length != 0)
-                {
-                    allEvents = events.Concat(x).OrderBy(e => e.OccurredUtc);
-                }
-                else
-                {
-                    allEvents = events;
-                }
+                allEvents = commitedDomainEvents.Concat(uncommittedDomainEvents).OrderBy(e => e.OccurredUtc);
             }
             else
             {
-                allEvents = events;
+                allEvents = commitedDomainEvents;
             }
             #endregion
+
 
             EventStreamRow es = await EventSourcingCommands.s_getEventStream
                                                            .QuerySingleAsync<EventStreamRow>(context)
