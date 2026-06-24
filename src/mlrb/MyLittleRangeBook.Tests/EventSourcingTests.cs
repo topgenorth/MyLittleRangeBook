@@ -1,3 +1,4 @@
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using Xunit;
 

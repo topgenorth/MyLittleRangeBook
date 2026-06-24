@@ -37,6 +37,7 @@ namespace MyLittleRangeBook.RangeEvents
         /// <param name="context"></param>
         /// <param name="simpleRangeEvent"></param>
         /// <returns></returns>
+        // TODO [202060222] This should return the MrlbId, not the row_id from the database.
         Task<Result<long>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent  simpleRangeEvent);
     }
 }

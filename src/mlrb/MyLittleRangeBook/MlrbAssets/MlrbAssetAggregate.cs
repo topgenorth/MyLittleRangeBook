@@ -1,4 +1,5 @@
-﻿using MyLittleRangeBook.Models;
+﻿using MyLittleRangeBook.EventSourcing;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.MlrbAssets
 {
@@ -94,12 +95,12 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <summary>
         ///     Creates a new instance of <see cref="MlrbAssetAggregate" /> by hydrating it with data from the given event stream.
         /// </summary>
-        /// <param name="stream">The event stream used to hydrate the aggregate.</param>
+        /// <param name="streamRow">The event stream used to hydrate the aggregate.</param>
         /// <returns>A new instance of <see cref="MlrbAssetAggregate" />.</returns>
-        public static MlrbAssetAggregate Create(EventStream stream)
+        public static MlrbAssetAggregate Create(EventStreamRow streamRow)
         {
             var agg = new MlrbAssetAggregate();
-            agg.Hydrate(stream);
+            agg.Hydrate(streamRow);
 
             return agg;
         }

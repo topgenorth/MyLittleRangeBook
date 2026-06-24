@@ -1,4 +1,5 @@
 ﻿using System.Data.Common;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
@@ -6,6 +7,16 @@ using static MyLittleRangeBook.Firearms.IFirearmAggregateRepository;
 
 namespace MyLittleRangeBook.Firearms
 {
+    /// <summary>
+    /// Provides a repository for managing and accessing firearm aggregates using SQLite as the underlying data store.
+    /// This repository implements functionality for retrieving, creating, and saving firearm aggregates,
+    /// as well as querying firearm-related data.
+    /// </summary>
+    /// <remarks>
+    /// Inherits from the <see cref="SqliteAggregateRepository{TAggregate}"/> to provide base functionality for
+    /// SQLite-based event-sourced aggregate repositories. Implements the <see cref="IFirearmAggregateRepository"/>
+    /// interface for firearm-specific repository operations.
+    /// </remarks>
     public class SqliteFirearmAggregateRepository : SqliteAggregateRepository<FirearmAggregate>,
                                                     IFirearmAggregateRepository
     {
@@ -14,30 +25,6 @@ namespace MyLittleRangeBook.Firearms
                  eventSerializer,
                  FirearmAggregate.STREAM_TYPE,
                  FirearmAggregate.Create) { }
-
-        public async Task<Result<FirearmAggregate>> GetAsync(DapperCommandContext context, MlrbId firearmId)
-        {
-            return await base.GetAsync(context, firearmId).ConfigureAwait(false);
-        }
-
-        public async Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(string firearmName,
-                                                                           CancellationToken cancellationToken =
-                                                                               default,
-                                                                           DateTimeOffset? createUtc = null)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
-
-            await using var ctx = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken);
-
-            Result<FirearmAggregate> r1 = await GetOrCreateByNameAsync(ctx, firearmName, createUtc);
-            if (r1.IsFailed)
-            {
-                ctx.Transaction!.Rollback();
-                return Result.Fail(r1.Errors);
-            }
-
-            return Result.Ok(r1.Value);
-        }
 
         public async Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(DapperCommandContext ctx,
                                                                            string               firearmName,
@@ -64,6 +51,7 @@ namespace MyLittleRangeBook.Firearms
             return Result.Ok(fa);
         }
 
+        [Obsolete("Use a projector", true)]
         public async Task<IEnumerable<RangeEventRoundCountRow>> GetSimpleRangeEventRoundCountsByFirearmNameAsync(
             DapperCommandContext context, string name)
         {
@@ -82,7 +70,7 @@ namespace MyLittleRangeBook.Firearms
             return await UpsertAsync(ctx, aggregate);
         }
 
-
+        [Obsolete("Use a projector", true)]
         public async Task<Result<IEnumerable<NewFirearmNameFromSimpleRangeEventRow>>>
             GetNewFirearmNamesFromSimpleRangeEventsAsync(DapperCommandContext context)
         {
@@ -97,22 +85,8 @@ namespace MyLittleRangeBook.Firearms
             }
             catch (Exception e)
             {
-                Error? err = new Error("Unexpected exception trying to get a list of new firearm names").CausedBy(e);
-                return Result.Fail(err);
+                return Result.Fail(e.ToError("Failed to get a list of new firearm names."));
             }
-        }
-
-
-
-        public async Task<IList<RangeEventRoundCountRow>>
-            GetSimpleRangeEventsForFirearmName(DapperCommandContext context, string name)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(name);
-            DapperCommandContext ctx = context with { Arguments = new { FirearmName = name } };
-            IEnumerable<RangeEventRoundCountRow> list = await Commands.GetSimpleRangeEventRoundCountsByFirearmName
-                                                                      .QueryAsync<RangeEventRoundCountRow>(ctx)
-                                                                      .ConfigureAwait(false);
-            return list.ToList();
         }
 
         static class Commands

@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
@@ -16,14 +17,16 @@ namespace MyLittleRangeBook.RangeEvents
         readonly ISimpleRangeEventService    _simpleRangeEventService;
         readonly ISqliteHelper               _sqliteHelper;
 
+
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
                                                 [FromKeyedServices(DI_KEYS_SQLITE)]
                                                 ISimpleRangeEventService simpleRangeEventService,
-                                                IFirearmAggregateRepository faRepo)
+                                                IFirearmAggregateRepository faRepo
+                                                )
         {
-            _sqliteHelper            = sqliteHelper;
-            _simpleRangeEventService = simpleRangeEventService;
-            _faRepo                  = faRepo;
+            _sqliteHelper                   = sqliteHelper;
+            _simpleRangeEventService        = simpleRangeEventService;
+            _faRepo                         = faRepo;
         }
 
         public async Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, string id)
@@ -88,13 +91,18 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
         /// <summary>
-        /// Inserts or updates a SimpleRangeEvent in the database. If the event does not exist, it will be created;
-        /// otherwise, it will be updated with the provided data. Will also append to the event stream for the firearm.
+        ///     Inserts or updates a SimpleRangeEvent in the database. If the event does not exist, it will be created;
+        ///     otherwise, it will be updated with the provided data. Will also append to the event stream for the firearm.
         /// </summary>
-        /// <param name="context">The Dapper command context encapsulating the database connection, transaction, and other related parameters.</param>
+        /// <param name="context">
+        ///     The Dapper command context encapsulating the database connection, transaction, and other related
+        ///     parameters.
+        /// </param>
         /// <param name="simpleRangeEvent">The SimpleRangeEvent object to be inserted or updated in the database.</param>
-        /// <returns>A result object containing the ID of the record that was inserted or updated,
-        /// or an error if the operation failed.</returns>
+        /// <returns>
+        ///     A result object containing the ID of the record that was inserted or updated,
+        ///     or an error if the operation failed.
+        /// </returns>
         public async Task<Result<long>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
         {
             Result<long?> sreResult = await _simpleRangeEventService
@@ -104,54 +112,7 @@ namespace MyLittleRangeBook.RangeEvents
             {
                 return Result.Fail(sreResult.Errors);
             }
-
-            Result r1 = await AppendToFirearmEventStream(context, simpleRangeEvent);
-
-            if (r1.IsFailed)
-            {
-                return Result.Fail(r1.Errors);
-            }
             return Result.Ok(sreResult.Value.Value);
-
-        }
-
-
-        [Obsolete("Prefer the overload that takes the DapperCommandContext.")]
-        public async Task<Result<long>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
-                                                    CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-            await using DapperCommandContext ctx = await DapperCommandContext
-                                                        .NewAsync(_sqliteHelper, cancellationToken)
-                                                        .ConfigureAwait(false);
-
-            Result<long> r1 = await UpsertAsync(ctx, simpleRangeEvent).ConfigureAwait(false);
-
-            if (r1.IsFailed)
-            {
-                ctx.Transaction?.Rollback();
-            }
-
-            return r1;
-        }
-
-        async Task<Result> AppendToFirearmEventStream(DapperCommandContext ctx, SimpleRangeEvent sre)
-        {
-            Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(ctx, sre.FirearmName);
-            if (r1.IsFailed)
-            {
-                return Result.Fail(r1.Errors);
-            }
-
-            FirearmAggregate? fa = r1.Value;
-            fa.AssociateWithSimpleRangeEvent(sre.Id!, sre.Created);
-            if (sre.RoundsFired > 0)
-            {
-                fa.MoreRoundsFired(sre.RoundsFired, sre.EventDate);
-            }
-
-            Result r2 = await _faRepo.UpsertAsync(ctx, fa).ConfigureAwait(false);
-            return r2.IsFailed ? Result.Fail(r2.Errors) : Result.Ok();
         }
 
         static class Commands

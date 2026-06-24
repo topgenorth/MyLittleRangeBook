@@ -1,31 +1,18 @@
 ﻿using System.Globalization;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.Firearms
 {
-    public interface IFirearmAggregateRepository
+    public interface IFirearmAggregateRepository: ISqliteAggregateRepository<FirearmAggregate>
     {
-        /// <summary>
-        /// Asynchronously retrieves a FirearmAggregate by its ID using the specified DapperCommandContext.
-        /// </summary>
-        /// <param name="context">
-        /// The context containing the database connection and transaction information.
-        /// </param>
-        /// <param name="firearmId">
-        /// The unique identifier of the firearm to retrieve.
-        /// </param>
-        /// <returns>
-        /// A task that represents the asynchronous operation. The task result contains a Result object
-        /// wrapping the retrieved FirearmAggregate, or an error if the operation fails.
-        /// </returns>
-        Task<Result<FirearmAggregate>> GetAsync(DapperCommandContext context, MlrbId firearmId);
-
         /// <summary>
         ///     Retrieves a list of firearm names in SimpleRangeEvents that do not have an associated FirearmAggregrate.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
+        [Obsolete("Use a projector", true)]
         Task<Result<IEnumerable<NewFirearmNameFromSimpleRangeEventRow>>> GetNewFirearmNamesFromSimpleRangeEventsAsync(
             DapperCommandContext context);
 
@@ -54,6 +41,7 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="context">The context for the database command, providing connection and transaction details.</param>
         /// <param name="name">The name of the firearm for which to retrieve range events.</param>
         /// <returns>A task representing the asynchronous operation, returning a list of range event round count rows.</returns>
+        [Obsolete("Use a projector", true)]
         Task<IEnumerable<RangeEventRoundCountRow>> GetSimpleRangeEventRoundCountsByFirearmNameAsync(
             DapperCommandContext context, string name);
 
@@ -64,18 +52,6 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         /// <returns>A result indicating success or failure of the save operation.</returns>
         Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Saves the provided firearm aggregate to the data store.
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="aggregate">
-        /// The firearm aggregate to be saved.
-        /// </param>
-        /// <returns>
-        /// A result indicating the success or failure of the save operation.
-        /// </returns>
-        Task<Result> UpsertAsync(DapperCommandContext context, FirearmAggregate aggregate);
 
         /// <summary>
         ///     Represents a record containing the name of a firearm extracted from a SimpleRangeEvent

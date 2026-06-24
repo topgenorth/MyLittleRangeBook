@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using FluentResults;
+using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.Persistence;
@@ -20,6 +22,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly ISimpleRangeEventRepository _rangeEventRepo;
         readonly ISqliteHelper               _sqliteHelper;
 
+
         /// <summary>
         ///     ViewModel responsible for editing a simple range event.
         ///     This class provides functionality for handling user inputs and interactions
@@ -29,13 +32,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                              ILogger                                  logger,
                                              Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                              ISimpleRangeEventRepository              rangeEventRepo,
-                                             ISqliteHelper                            sqliteHelper)
+                                             ISqliteHelper                            sqliteHelper
+                                             )
         {
-            Item            = simpleRangeEvent;
-            _dialogService  = dialogServiceFactory(this);
-            _logger         = logger;
-            _rangeEventRepo = rangeEventRepo;
-            _sqliteHelper   = sqliteHelper;
+            Item                    = simpleRangeEvent;
+            _dialogService          = dialogServiceFactory(this);
+            _logger                 = logger;
+            _rangeEventRepo         = rangeEventRepo;
+            _sqliteHelper           = sqliteHelper;
+
         }
 
         public SimpleRangeEventViewModel Item { get; }
@@ -60,8 +65,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
             try
             {
-                Result<long> result = await _rangeEventRepo.UpsertAsync(ctx, simpleRangeEvent);
-                if (result.IsSuccess)
+                Result<long> r1 = await _rangeEventRepo.UpsertAsync(ctx, simpleRangeEvent);
+                if (r1.IsSuccess)
                 {
                     await ctx.CommitAsync();
                     SimpleRangeEventViewModel updatedViewModel = new(simpleRangeEvent);
