@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.EventSourcing;
 
 namespace MyLittleRangeBook
 {

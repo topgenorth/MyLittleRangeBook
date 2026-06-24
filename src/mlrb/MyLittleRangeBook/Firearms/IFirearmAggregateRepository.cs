@@ -1,35 +1,12 @@
 ﻿using System.Globalization;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.Firearms
 {
-    public interface IFirearmAggregateRepository
+    public interface IFirearmAggregateRepository: ISqliteAggregateRepository<FirearmAggregate>
     {
-        /// <summary>
-        /// Asynchronously retrieves a FirearmAggregate by its ID using the specified DapperCommandContext.
-        /// </summary>
-        /// <param name="context">
-        /// The context containing the database connection and transaction information.
-        /// </param>
-        /// <param name="firearmId">
-        /// The unique identifier of the firearm to retrieve.
-        /// </param>
-        /// <returns>
-        /// A task that represents the asynchronous operation. The task result contains a Result object
-        /// wrapping the retrieved FirearmAggregate, or an error if the operation fails.
-        /// </returns>
-        Task<Result<FirearmAggregate>> GetAsync(DapperCommandContext context, MlrbId firearmId);
-
-        /// <summary>
-        ///     Retrieves a list of firearm names in SimpleRangeEvents that do not have an associated FirearmAggregrate.
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        Task<Result<IEnumerable<NewFirearmNameFromSimpleRangeEventRow>>> GetNewFirearmNamesFromSimpleRangeEventsAsync(
-            DapperCommandContext context);
-
-
         /// <summary>
         ///     Retrieves a firearm aggregate by its name or creates a new one if it does not exist.
         /// </summary>
@@ -48,14 +25,6 @@ namespace MyLittleRangeBook.Firearms
         Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(DapperCommandContext ctx, string firearmName,
                                                               DateTimeOffset?      createUtc = null);
 
-        /// <summary>
-        ///     Retrieves a list of simple range events associated with a firearm, identified by its name.
-        /// </summary>
-        /// <param name="context">The context for the database command, providing connection and transaction details.</param>
-        /// <param name="name">The name of the firearm for which to retrieve range events.</param>
-        /// <returns>A task representing the asynchronous operation, returning a list of range event round count rows.</returns>
-        Task<IEnumerable<RangeEventRoundCountRow>> GetSimpleRangeEventRoundCountsByFirearmNameAsync(
-            DapperCommandContext context, string name);
 
         /// <summary>
         ///     Saves the specified firearm aggregate to the repository.
@@ -65,80 +34,5 @@ namespace MyLittleRangeBook.Firearms
         /// <returns>A result indicating success or failure of the save operation.</returns>
         Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default);
 
-        /// <summary>
-        /// Saves the provided firearm aggregate to the data store.
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="aggregate">
-        /// The firearm aggregate to be saved.
-        /// </param>
-        /// <returns>
-        /// A result indicating the success or failure of the save operation.
-        /// </returns>
-        Task<Result> UpsertAsync(DapperCommandContext context, FirearmAggregate aggregate);
-
-        /// <summary>
-        ///     Represents a record containing the name of a firearm extracted from a SimpleRangeEvent
-        ///     in cases where no associated FirearmAggregate exists. It is used to process and handle
-        ///     events where firearm names need to be retrieved or linked to an aggregate.
-        /// </summary>
-        /// <remarks>
-        ///     The <see cref="NewFirearmNameFromSimpleRangeEventRow" /> struct stores the essential data
-        ///     from SimpleRangeEvents for firearms that have not yet been linked with their respective
-        ///     aggregates in the system. It includes the event ID, firearm name, and creation timestamp.
-        /// </remarks>
-        /// <param name="SimpleRangeEventId">
-        ///     The unique identifier for the oldest SimpleRangeEvent in the database.
-        /// </param>
-        /// <param name="FirearmName">
-        ///     The name of the firearm retrieved from the SimpleRangeEvent.
-        /// </param>
-        /// <param name="Created">
-        ///     The creation timestamp of the SimpleRangeEvent in string format.
-        /// </param>
-        readonly record struct NewFirearmNameFromSimpleRangeEventRow(
-            string SimpleRangeEventId,
-            string FirearmName,
-            string Created)
-        {
-            public DateTimeOffset CreatedUtc => DateTimeOffset.Parse(Created, null, DateTimeStyles.AssumeLocal);
-        }
-
-        readonly record struct RangeEventThatIsNotAssociatedWithFirearmRow(
-            string SimpleRangeEventId,
-            string FirearmName,
-            string Created)
-        {
-            public DateTimeOffset CreatedUtc => DateTimeOffset.Parse(Created, null, DateTimeStyles.AssumeLocal);
-        }
-
-        /// <summary>
-        ///     Represents a record containing data about the round count for a specific range event.
-        ///     This record is utilized to track the number of rounds fired during a range event
-        ///     and capture the associated event details.
-        /// </summary>
-        /// <remarks>
-        ///     The <see cref="RangeEventRoundCountRow" /> struct is primarily used to process and store
-        ///     information about simple range events, including the unique event identifier, the
-        ///     number of rounds fired, and the event's date. It includes a helper property to
-        ///     convert the event date string into a <see cref="DateTimeOffset" /> instance for further use.
-        /// </remarks>
-        /// <param name="SimpleRangeEventId">
-        ///     The unique identifier for the range event.
-        /// </param>
-        /// <param name="RoundsFired">
-        ///     The total number of rounds fired during the range event.
-        /// </param>
-        /// <param name="EventDate">
-        ///     The date of the range event, represented as a string.
-        /// </param>
-        readonly record struct RangeEventRoundCountRow(
-            string SimpleRangeEventId,
-            string FirearmName,
-            int    RoundsFired,
-            string EventDate)
-        {
-            public DateTimeOffset CreatedUtc => DateTimeOffset.Parse(EventDate, null, DateTimeStyles.AssumeLocal);
-        }
     }
 }

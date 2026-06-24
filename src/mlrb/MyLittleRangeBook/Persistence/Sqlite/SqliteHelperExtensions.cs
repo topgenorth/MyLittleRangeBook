@@ -126,6 +126,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
 
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
+            SqlMapper.AddTypeHandler(typeof(MlrbId), new SqliteMlrbIdHandler());
 
             services.TryAddSingleton(configuration);
 

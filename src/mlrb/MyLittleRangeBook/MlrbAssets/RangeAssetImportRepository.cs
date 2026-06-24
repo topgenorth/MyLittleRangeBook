@@ -1,5 +1,6 @@
 ﻿using System.Data.Common;
 using Microsoft.Data.Sqlite;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;

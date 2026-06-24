@@ -1,4 +1,5 @@
-﻿using MyLittleRangeBook.Models;
+﻿using MyLittleRangeBook.EventSourcing;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Firearms
 {

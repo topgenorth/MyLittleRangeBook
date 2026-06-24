@@ -1,4 +1,6 @@
-﻿namespace MyLittleRangeBook.MlrbAssets
+﻿using MyLittleRangeBook.EventSourcing;
+
+namespace MyLittleRangeBook.MlrbAssets
 {
     class AssociateMlrbAssetToRangeEventProjector : IRangeAssetProjector
     {

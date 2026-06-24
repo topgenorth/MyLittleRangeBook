@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Firearms
@@ -22,10 +23,10 @@ namespace MyLittleRangeBook.Firearms
         public bool IsActive { get; set; }
 
 
-        public static FirearmAggregate Create(EventStream stream)
+        public static FirearmAggregate Create(EventStreamRow streamRow)
         {
             var agg = new FirearmAggregate();
-            agg.Hydrate(stream);
+            agg.Hydrate(streamRow);
 
             return agg;
         }
