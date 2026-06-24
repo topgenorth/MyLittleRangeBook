@@ -31,6 +31,7 @@ namespace MyLittleRangeBook
         {
             ArgumentNullException.ThrowIfNull(services);
 
+
             FirearmProjector.Register(services);
             services.TryAddKeyedScoped<IFirearmsService, FirearmsService>(SqliteHelperExtensions.DI_KEYS_SQLITE);
             services.TryAddScoped<IFirearmsService, FirearmsService>();
