@@ -3,7 +3,7 @@
 namespace MyLittleRangeBook.EventSourcing
 {
     /// <summary>
-    ///     A single row in the `events` table.
+    ///     A single row in the <code>events</code> table.
     /// </summary>
     /// <param name="RowId"></param>
     /// <param name="Id"></param>
@@ -16,9 +16,9 @@ namespace MyLittleRangeBook.EventSourcing
     /// <param name="OccurredUtc"></param>
     /// <param name="CreatedUtc"></param>
     /// <param name="ModifiedUtc"></param>
-    public record struct EventRow(
+    public readonly record struct EventRow(
         long?          RowId,
-        string         Id,
+        MlrbId         Id,
         MlrbId         StreamId,
         string         StreamType,
         string         EventType,
@@ -29,7 +29,19 @@ namespace MyLittleRangeBook.EventSourcing
         DateTimeOffset CreatedUtc,
         DateTimeOffset ModifiedUtc) : IDomainEvent
     {
-
+        /// <summary>
+        /// Converts the current instance of <see cref="EventRow"/> to a domain event implementation of <see cref="IDomainEvent"/>.
+        /// </summary>
+        /// <param name="eventSerializer">
+        /// The serializer used to deserialize the event data into a domain event object.
+        /// </param>
+        /// <returns>
+        /// An implementation of <see cref="IDomainEvent"/> that represents the current event row.
+        /// </returns>
+        public IDomainEvent ToDomainEvent(IEventSerializer eventSerializer)
+        {
+            return (IDomainEvent)eventSerializer.Deserialize(EventType, DataJson);
+        }
 
     };
 }
