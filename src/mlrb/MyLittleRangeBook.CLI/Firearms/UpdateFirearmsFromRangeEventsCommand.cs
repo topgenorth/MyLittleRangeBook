@@ -56,24 +56,23 @@ namespace MyLittleRangeBook
                     Result<FirearmAggregate?> fetchResult =
                         await FirearmAggregateRepository.GetAsync(context, f.FirearmId)
                                                         .ConfigureAwait(false);
-                    FirearmAggregate fa;
-                    if (fetchResult.IsFailed || fetchResult.Value == null)
-                    {
-                        // var r = await CreateNewFirearmAggregate(context, f.FirearmName).ConfigureAwait(false);
-                        CliDisplay
-                           .PrintWarning($"Will have to create the firearm {f.FirearmName} event stream from the range events");
-                    }
-                    else
+                    if (fetchResult is { IsSuccess: true, Value: not null })
                     {
                         var r = await _firearmsProjector.ProjectAggregateAsync(context, f.FirearmId)
                                                         .ConfigureAwait(false);
-                        CliDisplay.PrintInfo($"Created firearm {f.FirearmName} from the existing event stream.");
+                        CliDisplay.PrintInfo($"Created firearm '{f.FirearmName}' from the existing event stream.");
+                        count++;
                         continue;
                     }
+
+                    FirearmAggregate fa = FirearmAggregate.New(f.FirearmName, f.CreatedUtc);
+                    fa.AppendToNotes($"Imported from simple_range_event {f.SimpleRangeEventId}.", DateTimeOffset.UtcNow);
+
+                    // var r = await CreateNewFirearmAggregate(context, f.FirearmName).ConfigureAwait(false);
+                    CliDisplay
+                       .PrintWarning($"Will have to create the firearm '{f.FirearmName}' event stream from the range events");
                     #endregion
 
-                    count++;
-                    /*
                     #region Step 2: Get round counts from simple range events, and update the aggregate.
                     List<(string FirearmId, string SimpleRangeEventId)> associations = [];
                     DapperCommandContext ctx = context with { Arguments = new { f.FirearmName } };
@@ -84,21 +83,22 @@ namespace MyLittleRangeBook
                     {
                         fa.MoreRoundsFired(r.RoundsFired, r.CreatedUtc);
                         fa.AssociateWithSimpleRangeEvent(r.SimpleRangeEventId, r.CreatedUtc);
-                        associations.Add((streamId, r.SimpleRangeEventId));
+                        associations.Add((fa.Id, r.SimpleRangeEventId));
                     }
 
-                    Result upsertResult = await FirearmAggregateRepository.UpsertAsync(context, fa)
+                    Result upsertEventStreamResult = await FirearmAggregateRepository
+                                                          .UpsertAsync(context, fa)
                                                                           .ConfigureAwait(false);
-                    if (upsertResult.IsFailed)
+                    if (upsertEventStreamResult.IsFailed)
                     {
-                        Logger.Warning("Failed to create the firearm aggregate for {FirearmName} - skipped",
+                        Logger.Warning("Failed to create the firearm aggregate for '{FirearmName}' - skipped",
                                        f.FirearmName);
                         CliDisplay
-                           .PrintWarning($"Failed to create the firearm aggregate for {f.FirearmName} - skipped.");
+                           .PrintWarning($"Failed to create the firearm aggregate for '{f.FirearmName}' - skipped.");
                         continue;
                     }
 
-                    CliDisplay.PrintInfo($"Created the event stream for {f.FirearmName}.");
+                    CliDisplay.PrintInfo($"Created the event stream for '{f.FirearmName}'.");
                     #endregion
 
 
@@ -133,7 +133,6 @@ namespace MyLittleRangeBook
                                                     .ConfigureAwait(false);
                     }
                     #endregion
-                */
                 }
 
                 returnCode = ReturnCodes.SUCCESS;
