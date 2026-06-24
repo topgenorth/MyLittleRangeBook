@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System.Text.Json;
 using ConsoleAppFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -7,7 +6,6 @@ using Microsoft.Extensions.Hosting;
 using MyLittleRangeBook;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Persistence.Sqlite;
@@ -22,21 +20,21 @@ if (Console.OutputEncoding.CodePage == 437) // DOS/OEM encoding
 }
 
 IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
-    .AddBootStrapper(SerilogAppSettingsJsonFileBootstrap.SerilogSection)
-    .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
+                                       .AddBootStrapper(SerilogAppSettingsJsonFileBootstrap.SerilogSection)
+                                       .AddBootStrapper(SqliteHelperExtensions.SqliteConnectionStringBootStrapper);
 await bootstrapper.EnsureAppSettingsExistsAsync(DefaultAppSettingsFile.FullName).ConfigureAwait(false);
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.AddMyLittleRangeBookConfig();
 builder.Services.AddSerilog((services, loggerConfiguration) =>
-{
-    loggerConfiguration
-        .ReadFrom.Configuration(builder.Configuration)
-        .Enrich.WithEnvironmentName()
-        .Enrich.WithExceptionDetails()
-        .Enrich.FromLogContext();
-});
+                            {
+                                loggerConfiguration
+                                   .ReadFrom.Configuration(builder.Configuration)
+                                   .Enrich.WithEnvironmentName()
+                                   .Enrich.WithExceptionDetails()
+                                   .Enrich.FromLogContext();
+                            });
 
 #region Spectre.Console dependencies
 builder.Services.TryAddSingleton(AnsiConsole.Console);
@@ -48,17 +46,17 @@ builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventList
 #endregion
 
 builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
-builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration);
-builder.Services
-    .RegisterRangeEventStuff()
-    .RegisterCartridges()
-    .RegisterRangeAssetHandlers()
-    .RegisterDomainEventSerializers()
-    .RegisterRangeAssetEventSourcing()
-    .RegisterFirearmEventSourcing()
+builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration)
+       .RegisterEventSourcingStuff()
+       .RegisterRangeEventStuff()
+       .RegisterCartridges()
+       .RegisterRangeAssetHandlers()
+       .RegisterDomainEventSerializers()
+       .RegisterRangeAssetEventSourcing()
+       .RegisterFirearmEventSourcing()
     ;
 
-using IHost host = builder.Build();
+using IHost         host  = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
 
 ConsoleApp.ServiceProvider = scope.ServiceProvider;

@@ -3,11 +3,11 @@ using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.EventSourcing
 {
-    public class EventSourcingService : IEventSourcingService
+    public class SqliteEventSourcingService : IEventSourcingService
     {
         readonly IEventSerializer _eventSerializer;
 
-        public EventSourcingService(IEventSerializer eventSerializer) => _eventSerializer = eventSerializer;
+        public SqliteEventSourcingService(IEventSerializer eventSerializer) => _eventSerializer = eventSerializer;
 
         public async Task<IEnumerable<IDomainEvent>> GetDomainEvents(DapperCommandContext context, MlrbId streamId)
         {

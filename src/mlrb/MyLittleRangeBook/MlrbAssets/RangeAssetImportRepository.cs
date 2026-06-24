@@ -15,11 +15,13 @@ namespace MyLittleRangeBook.MlrbAssets
 
         public MlrbAssetAggregateSqliteRepository(ISqliteHelper        sqliteHelper,
                                                   IEventSerializer     eventSerializer,
-                                                  IRangeAssetProjector rangeAssetProjector)
+                                                  IRangeAssetProjector rangeAssetProjector,
+                                                  IEventSourcingService eventSourcingService)
             : base(sqliteHelper,
                    eventSerializer,
                    DEFAULT_STREAM_TYPE_NAME,
-                   Create) =>
+                   Create,
+                   eventSourcingService) =>
             _rangeAssetProjector = rangeAssetProjector;
 
         public override async Task<Result<MlrbAssetAggregate?>> GetAsync(DapperCommandContext context, MlrbId id) =>
