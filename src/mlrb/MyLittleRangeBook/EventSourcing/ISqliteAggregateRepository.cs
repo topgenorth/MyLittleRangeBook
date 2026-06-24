@@ -28,7 +28,8 @@ namespace MyLittleRangeBook.EventSourcing
         /// </summary>
         /// <param name="context">The Dapper command context containing the database connection and transaction information.</param>
         /// <param name="aggregate">The aggregate entity to upsert.</param>
+        /// <param name="metadataJson"></param>
         /// <returns>A result indicating the success or failure of the operation.</returns>
-        Task<Result> UpsertAsync(DapperCommandContext context, TAggregate aggregate);
+        Task<Result> UpsertAsync(DapperCommandContext context, TAggregate aggregate, string? metadataJson = "{}");
     }
 }
