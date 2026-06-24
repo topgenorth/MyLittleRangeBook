@@ -53,7 +53,7 @@ namespace MyLittleRangeBook.Firearms
                     IDomainEvent domainEvent = (IDomainEvent)_eventSerializer.Deserialize(evt.EventType, evt.DataJson);
                     if (domainEvent is FirearmAggregate.FirearmAssociatedWithRangeEvent @event)
                     {
-                        var p = new { FirearmId = fid, @event.RangeEventId };
+                        var p = new { FirearmId = fid, SimpleRangeEventId= @event.RangeEventId };
                         upserts.Add(context with { Arguments = p });
                     }
                 }
@@ -64,7 +64,7 @@ namespace MyLittleRangeBook.Firearms
                 {
                     foreach (DapperCommandContext u in upserts)
                     {
-                        int l = await Commands.s_addAssociationToRangeEvents.ExecuteAsync(u).ConfigureAwait(false);
+                        int l = await Commands.s_addAssociationToRangeEvent.ExecuteAsync(u).ConfigureAwait(false);
                     }
                 }
 
@@ -143,7 +143,7 @@ namespace MyLittleRangeBook.Firearms
                                                         }).ToList();
             foreach (DapperCommandContext ctx in upserts)
             {
-                int l = await Commands.s_addAssociationToRangeEvents.ExecuteAsync(ctx).ConfigureAwait(false);
+                int l = await Commands.s_addAssociationToRangeEvent.ExecuteAsync(ctx).ConfigureAwait(false);
             }
 
             return Result.Ok();
@@ -152,12 +152,13 @@ namespace MyLittleRangeBook.Firearms
         static class Commands
         {
             const string UPSERT_FIREARM_SIMPLE_RANGE_EVENTS_SQL = """
-                                                                  INSERT INTO main.firearms_simple_range_events (firearm_id, simple_range_events)
-                                                                  VALUES (@FirearmId, @SimpleRangeEvents)
-                                                                  ON CONFLICT (simple_range_event_id) DO NOTHING;
+                                                                  INSERT INTO firearms_simple_range_events (firearm_id, simple_range_event_id)
+                                                                  VALUES (@FirearmId, @SimpleRangeEventId)
+                                                                  ON CONFLICT DO NOTHING
+                                                                  RETURNING row_id;
                                                                   """;
 
-            internal static readonly DapperCommand s_addAssociationToRangeEvents =
+            internal static readonly DapperCommand s_addAssociationToRangeEvent =
                 new(UPSERT_FIREARM_SIMPLE_RANGE_EVENTS_SQL);
         }
     }
