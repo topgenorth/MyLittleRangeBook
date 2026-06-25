@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using JetBrains.Annotations;
 using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 
@@ -177,15 +178,17 @@ namespace MyLittleRangeBook.Firearms
             Raise(new FirearmCleaned(Id, utcNow));
         }
 
-        public void MoreRoundsFired(int roundCount, DateTimeOffset utcNow)
+        /// <summary>
+        /// Record the discharge of rounds for this firearm.
+        /// </summary>
+        /// <param name="roundCount">If 0, then nothing is done.</param>
+        /// <param name="utcNow"></param>
+        public void MoreRoundsFired([ValueRange(0, 10000)]int roundCount, DateTimeOffset utcNow)
         {
-
-            if (roundCount < 0)
+            if (roundCount > 0)
             {
-                throw new ArgumentException("Round count must be > 0.");
+                Raise(new FirearmDischargeMoreRounds(Id, roundCount, utcNow));
             }
-
-            Raise(new FirearmDischargeMoreRounds(Id, roundCount, utcNow));
         }
 
         public void IsInactive(bool inactive, DateTimeOffset utcNow)

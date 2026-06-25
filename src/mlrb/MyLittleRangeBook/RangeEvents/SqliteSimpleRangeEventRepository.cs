@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
+using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 using static MyLittleRangeBook.Persistence.Sqlite.SqliteHelperExtensions;
@@ -14,19 +15,20 @@ namespace MyLittleRangeBook.RangeEvents
     public class SqliteSimpleRangeEventRepository : ISimpleRangeEventRepository
     {
         readonly IFirearmAggregateRepository _faRepo;
+        readonly IProjector                  _firearmProjector;
         readonly ISimpleRangeEventService    _simpleRangeEventService;
-        readonly ISqliteHelper               _sqliteHelper;
 
 
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
                                                 [FromKeyedServices(DI_KEYS_SQLITE)]
                                                 ISimpleRangeEventService simpleRangeEventService,
-                                                IFirearmAggregateRepository faRepo
-                                                )
+                                                [FromKeyedServices(FirearmProjector.DI_KEY)]
+                                                IProjector firearmProjector,
+                                                IFirearmAggregateRepository faRepo)
         {
-            _sqliteHelper                   = sqliteHelper;
-            _simpleRangeEventService        = simpleRangeEventService;
-            _faRepo                         = faRepo;
+            _simpleRangeEventService = simpleRangeEventService;
+            _firearmProjector        = firearmProjector;
+            _faRepo                  = faRepo;
         }
 
         public async Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, string id)
@@ -105,14 +107,58 @@ namespace MyLittleRangeBook.RangeEvents
         /// </returns>
         public async Task<Result<long>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
         {
-            Result<long?> sreResult = await _simpleRangeEventService
-                                           .UpsertAsync(context, simpleRangeEvent)
-                                           .ConfigureAwait(false);
-            if (sreResult.IsFailed || sreResult.Value is null)
+            List<IReason> reasons = new();
+
+            Result r1 = await UpsertSimpleRangeEventTable(context, simpleRangeEvent).ConfigureAwait(false);
+            reasons.AddRange(r1.Reasons);
+
+            Result r2 = await UpdateFirearmAggregate(context, simpleRangeEvent).ConfigureAwait(false);
+            reasons.AddRange(r2.Reasons);
+
+            return new Result().WithReasons(reasons);
+        }
+
+
+        async Task<Result> UpdateFirearmAggregate(DapperCommandContext context,
+                                                  MlrbId rangeEventId,
+                                                  string firearmName,
+                                                  int roundsFired,
+                                                  DateTime eventDate)
+        {
+            DateTimeOffset utcOccured = eventDate.ToUniversalTime();
+            Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(context,firearmName)
+                                                       .ConfigureAwait(false);
+            if (r1.IsFailed)
             {
-                return Result.Fail(sreResult.Errors);
+                return Result.Fail(r1.Errors);
             }
-            return Result.Ok(sreResult.Value.Value);
+
+            FirearmAggregate? fa = r1.Value;
+            fa.MoreRoundsFired(roundsFired, utcOccured);
+            fa.AssociateWithSimpleRangeEvent(rangeEventId, eventDate);
+            Result r2 = await _faRepo.UpsertAsync(context, fa)
+                                     .ConfigureAwait(false);
+
+            Result r3 = await _firearmProjector.ProjectAggregateAsync(context, fa.Id)
+                                               .ConfigureAwait(false);
+            return Result.Ok();
+        }
+
+        async Task<Result<MlrbId>> UpsertSimpleRangeEventTable(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
+        {
+            Result<long?> upsertResult = await _simpleRangeEventService
+                                              .UpsertAsync(context, simpleRangeEvent)
+                                              .ConfigureAwait(false);
+            if (upsertResult.IsFailed || upsertResult.Value is null)
+            {
+                return Result.Fail(upsertResult.Errors);
+            }
+
+            long rowId = upsertResult.Value.Value;
+            Success? success = new Success("Upserted the simple_range_events table.")
+               .WithMetadata("RowId", rowId);
+
+            return Result.Ok().WithSuccess(success);
         }
 
         static class Commands
