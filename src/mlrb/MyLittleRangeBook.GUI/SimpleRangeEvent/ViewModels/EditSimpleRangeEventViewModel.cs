@@ -3,8 +3,6 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using FluentResults;
-using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.Persistence;
@@ -33,14 +31,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                              Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                              ISimpleRangeEventRepository              rangeEventRepo,
                                              ISqliteHelper                            sqliteHelper
-                                             )
+        )
         {
-            Item                    = simpleRangeEvent;
-            _dialogService          = dialogServiceFactory(this);
-            _logger                 = logger;
-            _rangeEventRepo         = rangeEventRepo;
-            _sqliteHelper           = sqliteHelper;
-
+            Item            = simpleRangeEvent;
+            _dialogService  = dialogServiceFactory(this);
+            _logger         = logger;
+            _rangeEventRepo = rangeEventRepo;
+            _sqliteHelper   = sqliteHelper;
         }
 
         public SimpleRangeEventViewModel Item { get; }
