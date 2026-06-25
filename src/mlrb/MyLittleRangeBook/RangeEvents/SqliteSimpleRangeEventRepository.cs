@@ -105,7 +105,7 @@ namespace MyLittleRangeBook.RangeEvents
         ///     A result object containing the ID of the record that was inserted or updated,
         ///     or an error if the operation failed.
         /// </returns>
-        public async Task<Result<long>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
+        public async Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
         {
             List<IReason> reasons = [];
 
@@ -117,7 +117,7 @@ namespace MyLittleRangeBook.RangeEvents
                            .ConfigureAwait(false);
             reasons.AddRange(r2.Reasons);
 
-            return new Result().WithReasons(reasons);
+            return new Result().WithReasons(reasons).ToResult<MlrbId>(simpleRangeEvent.Id!);
         }
 
 
