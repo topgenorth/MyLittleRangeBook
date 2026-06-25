@@ -107,12 +107,14 @@ namespace MyLittleRangeBook.RangeEvents
         /// </returns>
         public async Task<Result<long>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
         {
-            List<IReason> reasons = new();
+            List<IReason> reasons = [];
 
-            Result r1 = await UpsertSimpleRangeEventTable(context, simpleRangeEvent).ConfigureAwait(false);
+            Result<MlrbId> r1 = await UpsertSimpleRangeEventTable(context, simpleRangeEvent).ConfigureAwait(false);
             reasons.AddRange(r1.Reasons);
 
-            Result r2 = await UpdateFirearmAggregate(context, simpleRangeEvent).ConfigureAwait(false);
+            Result r2 = await UpdateFirearmAggregate(context, r1.Value!, simpleRangeEvent.FirearmName,
+                                                     simpleRangeEvent.RoundsFired, simpleRangeEvent.EventDate)
+                           .ConfigureAwait(false);
             reasons.AddRange(r2.Reasons);
 
             return new Result().WithReasons(reasons);
@@ -120,43 +122,48 @@ namespace MyLittleRangeBook.RangeEvents
 
 
         async Task<Result> UpdateFirearmAggregate(DapperCommandContext context,
-                                                  MlrbId rangeEventId,
-                                                  string firearmName,
-                                                  int roundsFired,
-                                                  DateTime eventDate)
+                                                  MlrbId               rangeEventId,
+                                                  string               firearmName,
+                                                  int                  roundsFired,
+                                                  DateTimeOffset       eventDate)
         {
-            DateTimeOffset utcOccured = eventDate.ToUniversalTime();
-            Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(context,firearmName)
+            Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(context, firearmName)
                                                        .ConfigureAwait(false);
             if (r1.IsFailed)
             {
                 return Result.Fail(r1.Errors);
             }
 
+            List<IReason> reasons = [];
+            reasons.AddRange(r1.Reasons);
+
             FirearmAggregate? fa = r1.Value;
-            fa.MoreRoundsFired(roundsFired, utcOccured);
+            fa.MoreRoundsFired(roundsFired, eventDate);
             fa.AssociateWithSimpleRangeEvent(rangeEventId, eventDate);
             Result r2 = await _faRepo.UpsertAsync(context, fa)
                                      .ConfigureAwait(false);
+            reasons.AddRange(r2.Reasons);
 
-            Result r3 = await _firearmProjector.ProjectAggregateAsync(context, fa.Id)
-                                               .ConfigureAwait(false);
-            return Result.Ok();
+            Result r3 = await _firearmProjector.ProjectAggregateAsync(context, fa.Id).ConfigureAwait(false);
+            reasons.AddRange(r3.Reasons);
+
+            return new Result().WithReasons(reasons);
         }
 
-        async Task<Result<MlrbId>> UpsertSimpleRangeEventTable(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
+        async Task<Result<MlrbId>> UpsertSimpleRangeEventTable(DapperCommandContext context,
+                                                               SimpleRangeEvent     simpleRangeEvent)
         {
-            Result<long?> upsertResult = await _simpleRangeEventService
-                                              .UpsertAsync(context, simpleRangeEvent)
-                                              .ConfigureAwait(false);
-            if (upsertResult.IsFailed || upsertResult.Value is null)
+            Result<MlrbId> upsertResult = await _simpleRangeEventService
+                                               .UpsertAsync(context, simpleRangeEvent)
+                                               .ConfigureAwait(false);
+            if (upsertResult.IsFailed || upsertResult.Value == MlrbId.Empty)
             {
                 return Result.Fail(upsertResult.Errors);
             }
 
-            long rowId = upsertResult.Value.Value;
+            MlrbId id = upsertResult.Value;
             Success? success = new Success("Upserted the simple_range_events table.")
-               .WithMetadata("RowId", rowId);
+               .WithMetadata("RowId", id);
 
             return Result.Ok().WithSuccess(success);
         }
