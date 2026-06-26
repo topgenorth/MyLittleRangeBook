@@ -8,6 +8,8 @@ namespace MyLittleRangeBook.RangeEvents
     {
         Task<Result> DeleteAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent);
 
+        Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId);
+
         /// <summary>
         /// Insert or update a record in the simple_range_event table.
         /// </summary>

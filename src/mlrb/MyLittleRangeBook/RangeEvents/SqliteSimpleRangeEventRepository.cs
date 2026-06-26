@@ -1,5 +1,4 @@
-﻿using Dapper;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
@@ -33,25 +32,8 @@ namespace MyLittleRangeBook.RangeEvents
 
         public async Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, string id)
         {
-            try
-            {
-                SimpleRangeEvent? sre = await context.Connection
-                                                     .QueryFirstOrDefaultAsync<SimpleRangeEvent>(Commands.GetByIdSql,
-                                                          new { Id = id });
-                if (sre is not null)
-                {
-                    return Result.Ok(sre);
-                }
-
-                Error err = new Error("Could not find range event " + id + ".").Enrich(id);
-                return Result.Fail(err);
-            }
-            catch (Exception ex)
-            {
-                Error err = new Error(ex.Message).CausedBy(ex).Enrich(id);
-
-                return Result.Fail(err);
-            }
+            Result<SimpleRangeEvent> getResult = await _simpleRangeEventService.GetAsync(context, id);
+            return getResult.Value;
         }
 
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(DapperCommandContext ctx)
@@ -112,22 +94,22 @@ namespace MyLittleRangeBook.RangeEvents
             Result<MlrbId> r1 = await UpsertSimpleRangeEventTable(context, simpleRangeEvent).ConfigureAwait(false);
             reasons.AddRange(r1.Reasons);
 
-            Result r2 = await UpdateFirearmAggregate(context, r1.Value!, simpleRangeEvent.FirearmName,
-                                                     simpleRangeEvent.RoundsFired, simpleRangeEvent.EventDate)
-                           .ConfigureAwait(false);
+            Result r2 = await UpdateFirearmAggregate(context, simpleRangeEvent).ConfigureAwait(false);
             reasons.AddRange(r2.Reasons);
 
             return new Result().WithReasons(reasons).ToResult<MlrbId>(simpleRangeEvent.Id!);
         }
 
 
-        async Task<Result> UpdateFirearmAggregate(DapperCommandContext context,
-                                                  MlrbId               rangeEventId,
-                                                  string               firearmName,
-                                                  int                  roundsFired,
-                                                  DateTimeOffset       eventDate)
+        /// <summary>
+        ///     Will add new events to the Firearm about the range event.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="sre"></param>
+        /// <returns></returns>
+        async Task<Result> UpdateFirearmAggregate(DapperCommandContext context, SimpleRangeEvent sre)
         {
-            Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(context, firearmName)
+            Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(context, sre.FirearmName)
                                                        .ConfigureAwait(false);
             if (r1.IsFailed)
             {
@@ -138,8 +120,10 @@ namespace MyLittleRangeBook.RangeEvents
             reasons.AddRange(r1.Reasons);
 
             FirearmAggregate? fa = r1.Value;
-            fa.MoreRoundsFired(roundsFired, eventDate);
-            fa.AssociateWithSimpleRangeEvent(rangeEventId, eventDate);
+            fa.MoreRoundsFired(sre.RoundsFired, sre.EventDate);
+
+            AssociateWithFirearm(fa, sre);
+
             Result r2 = await _faRepo.UpsertAsync(context, fa)
                                      .ConfigureAwait(false);
             reasons.AddRange(r2.Reasons);
@@ -149,6 +133,11 @@ namespace MyLittleRangeBook.RangeEvents
 
             return new Result().WithReasons(reasons);
         }
+
+
+        static void AssociateWithFirearm(FirearmAggregate fa, SimpleRangeEvent sre) =>
+            // TODO [TO20260626] - Capture the note and ammo description as metadata.
+            fa.AssociateWithSimpleRangeEvent(sre.Id!, sre.EventDate);
 
         async Task<Result<MlrbId>> UpsertSimpleRangeEventTable(DapperCommandContext context,
                                                                SimpleRangeEvent     simpleRangeEvent)
@@ -166,24 +155,6 @@ namespace MyLittleRangeBook.RangeEvents
                .WithMetadata("RowId", id);
 
             return Result.Ok().WithSuccess(success);
-        }
-
-        static class Commands
-        {
-            internal const string GetByIdSql = """
-                                               SELECT row_id AS RowId,
-                                                      id AS Id,
-                                                      event_date AS EventDate,
-                                                      firearm_name AS FirearmName,
-                                                      range_name AS RangeName,
-                                                      rounds_fired AS RoundsFired,
-                                                      ammo_description AS AmmoDescription,
-                                                      notes AS Notes,
-                                                      created AS Created,
-                                                      modified AS Modified
-                                               FROM simple_range_events
-                                               WHERE id=@Id;
-                                               """;
         }
     }
 }

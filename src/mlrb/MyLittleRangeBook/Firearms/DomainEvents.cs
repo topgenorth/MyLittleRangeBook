@@ -147,7 +147,7 @@ namespace MyLittleRangeBook.Firearms
         /// The UTC timestamp when the note was recorded.
         /// </param>
         [EventType("firearm-note-added")]
-        public record struct FirearmNoteAdded(MlrbId StreamId, string NewNote, DateTimeOffset OccurredUtc)
+        public record struct FirearmNoteAdded(MlrbId StreamId, string NewNote, DateTimeOffset OccurredUtc, KeyValuePair<string, string>? MetaData = null)
             : IDomainEvent;
 
         /// <summary>
@@ -170,7 +170,7 @@ namespace MyLittleRangeBook.Firearms
         [EventType("firearm-sights-changed")]
         public record struct FirearmSightingSystemChanged(
             MlrbId StreamId,
-            string OldAiminSystem,
+            string OldAimingSystem,
             string NewAimingSystem,
             DateTimeOffset OccurredUtc) : IDomainEvent;
 
@@ -189,9 +189,10 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("range-event-associated-with-firearm")]
         public record struct FirearmAssociatedWithRangeEvent(
-            MlrbId StreamId,
-            MlrbId RangeEventId,
-            DateTimeOffset OccurredUtc)
+            MlrbId         StreamId,
+            MlrbId         RangeEventId,
+            DateTimeOffset OccurredUtc
+            )
             : IDomainEvent;
 
         /// <summary>

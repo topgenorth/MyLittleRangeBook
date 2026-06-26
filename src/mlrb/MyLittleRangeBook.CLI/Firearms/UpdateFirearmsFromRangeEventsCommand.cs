@@ -100,7 +100,6 @@ namespace MyLittleRangeBook
                     foreach (RoundCountEventRow r in shotsFired)
                     {
                         fa.MoreRoundsFired(r.RoundsFired, r.CreatedUtc);
-                        fa.AssociateWithSimpleRangeEvent(r.SimpleRangeEventId, r.CreatedUtc);
                         associations.Add((fa.Id, r.SimpleRangeEventId));
                     }
 
@@ -205,10 +204,12 @@ namespace MyLittleRangeBook
         }
 
         readonly record struct RoundCountEventRow(
-            string SimpleRangeEventId,
-            string FirearmName,
-            int    RoundsFired,
-            string Created)
+            string  SimpleRangeEventId,
+            string  FirearmName,
+            int     RoundsFired,
+            string? AmmoDescription,
+            string? Notes,
+            string  Created)
         {
             public MlrbId         FirearmId  => MlrbId.FromString(FirearmName);
             public DateTimeOffset CreatedUtc => DateTimeOffset.Parse(Created, null, DateTimeStyles.AssumeLocal);

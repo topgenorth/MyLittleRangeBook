@@ -59,15 +59,33 @@ namespace MyLittleRangeBook.Firearms
 
                 Result<EntityId> r1 = await _firearmsService.UpsertAsync(context, fa);
 
-                if (r1.IsSuccess)
+                var reasons = new List<IReason>(r1.Reasons);
+
+                if (!r1.IsSuccess)
                 {
-                    foreach (DapperCommandContext u in upserts)
+                    return new Result().WithReasons(reasons);
+                }
+
+                foreach (DapperCommandContext u in upserts)
+                {
+                    dynamic args         = u.Arguments!;
+                    MlrbId  rangeEventId = args.SimpleRangeEventId;
+                    try
                     {
                         int l = await Commands.s_addAssociationToRangeEvent.ExecuteAsync(u).ConfigureAwait(false);
+                        if (l != 1)
+                        {
+                            reasons.Add(new Error($"Failed to associate the firearm {firearmId} and the event {rangeEventId}"));
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        reasons.Add(e.ToError($"Unexpected exception trying to associate the firearm {firearmId} and the event {rangeEventId}"));
+                        _logger.Error(e, "Unexpected exception try to associate the firearm {firearmId} and the event {rangeEventId}.", firearmId, rangeEventId);
                     }
                 }
 
-                return r1.IsFailed ? Result.Fail(r1.Errors) : Result.Ok();
+                return new Result().WithReasons(reasons);
             }
             catch (Exception e)
             {
@@ -119,29 +137,6 @@ namespace MyLittleRangeBook.Firearms
             return (fa, allEvents);
         }
 
-        async Task<Result> AssociateWithRangeEvents(DapperCommandContext  context,
-                                                    MlrbId                firearmId,
-                                                    IEnumerable<EventRow> events)
-        {
-            string fid = firearmId.ToString();
-
-            List<DapperCommandContext> upserts = events
-                                                .Where(row => row.EventType.Equals(""))
-                                                .Select(row =>
-                                                        {
-                                                            var p = new
-                                                                    {
-                                                                        FirearmId = fid, RangeEventId = row.DataJson,
-                                                                    };
-                                                            return context with { Arguments = p };
-                                                        }).ToList();
-            foreach (DapperCommandContext ctx in upserts)
-            {
-                int l = await Commands.s_addAssociationToRangeEvent.ExecuteAsync(ctx).ConfigureAwait(false);
-            }
-
-            return Result.Ok();
-        }
 
         static class Commands
         {

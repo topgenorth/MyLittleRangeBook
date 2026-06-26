@@ -66,11 +66,11 @@ namespace MyLittleRangeBook.Firearms
 
                     break;
                 case FirearmAssociatedWithAsset x:
-                    // [TO20260604] NOOP
                     break;
 
                 case FirearmAssociatedWithRangeEvent x:
-                    // [TO20260614] NOOP
+                    // TODO [TO20260626] - Capture the note and ammo description as metadata.
+
 
                     break;
                 case FirearmBarrelChanged x:
@@ -79,11 +79,11 @@ namespace MyLittleRangeBook.Firearms
                         .Append(" to ")
                         .Append(x.NewBarrel)
                         .Append('.');
-                    AppendToNotes(sbBarrelChange.ToString());
+                    AppendToNotes(sbBarrelChange.ToString(), x.OccurredUtc);
 
                     break;
                 case FirearmCleaned x:
-                    AppendToNotes($"Cleaned on {x.OccurredUtc.ToString()}.");
+                    AppendToNotes($"Cleaned on {x.OccurredUtc.ToString()}.", x.OccurredUtc);
 
                     break;
 
@@ -120,7 +120,7 @@ namespace MyLittleRangeBook.Firearms
 
                 case FirearmSightingSystemChanged x:
                     StringBuilder sbSightsChanged = new StringBuilder("Changed sights from ")
-                        .Append(x.OldAiminSystem)
+                        .Append(x.OldAimingSystem)
                         .Append(" to ")
                         .Append(x.NewAimingSystem)
                         .Append(". ")
