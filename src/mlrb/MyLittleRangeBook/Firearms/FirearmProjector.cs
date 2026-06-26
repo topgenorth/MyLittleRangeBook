@@ -52,14 +52,14 @@ namespace MyLittleRangeBook.Firearms
                     fa.Apply(evt);
                     if (evt is FirearmAggregate.FirearmAssociatedWithRangeEvent @event)
                     {
-                        var p = new { FirearmId = fid, SimpleRangeEventId= @event.RangeEventId };
+                        var p = new { FirearmId = fid, SimpleRangeEventId = @event.RangeEventId };
                         upserts.Add(context with { Arguments = p });
                     }
                 }
 
                 Result<EntityId> r1 = await _firearmsService.UpsertAsync(context, fa);
 
-                var reasons = new List<IReason>(r1.Reasons);
+                List<IReason> reasons = new(r1.Reasons);
 
                 if (!r1.IsSuccess)
                 {
@@ -72,16 +72,15 @@ namespace MyLittleRangeBook.Firearms
                     MlrbId  rangeEventId = args.SimpleRangeEventId;
                     try
                     {
-                        int l = await Commands.s_addAssociationToRangeEvent.ExecuteAsync(u).ConfigureAwait(false);
-                        if (l != 1)
-                        {
-                            reasons.Add(new Error($"Failed to associate the firearm {firearmId} and the event {rangeEventId}"));
-                        }
+                        await Commands.s_addAssociationToRangeEvent.ExecuteAsync(u).ConfigureAwait(false);
+                        reasons.Add(new Success($"Associate the firearm {firearmId} and the event {rangeEventId}."));
                     }
                     catch (Exception e)
                     {
                         reasons.Add(e.ToError($"Unexpected exception trying to associate the firearm {firearmId} and the event {rangeEventId}"));
-                        _logger.Error(e, "Unexpected exception try to associate the firearm {firearmId} and the event {rangeEventId}.", firearmId, rangeEventId);
+                        _logger.Error(e,
+                                      "Unexpected exception try to associate the firearm {firearmId} and the event {rangeEventId}.",
+                                      firearmId, rangeEventId);
                     }
                 }
 
@@ -93,12 +92,6 @@ namespace MyLittleRangeBook.Firearms
                 Error err = e.ToError().Enrich(firearmId);
                 return Result.Fail(err);
             }
-        }
-
-        public static IServiceCollection Register(IServiceCollection services)
-        {
-            services.TryAddKeyedTransient<IProjector, FirearmProjector>(DI_KEY);
-            return services;
         }
 
         /// <summary>
@@ -113,10 +106,11 @@ namespace MyLittleRangeBook.Firearms
         {
             #region Combine the saved events with any new events.
             IEnumerable<EventRow> rows = await EventSourcingCommands.s_getEventStreamByRowId
-                                                                      .QueryAsync<EventRow>(context)
-                                                                      .ConfigureAwait(false);
-            var commitedDomainEvents = rows.Select(row => (IDomainEvent)_eventSerializer.Deserialize(row.EventType,
-                                                    row.DataJson));
+                                                                    .QueryAsync<EventRow>(context)
+                                                                    .ConfigureAwait(false);
+            IEnumerable<IDomainEvent> commitedDomainEvents =
+                rows.Select(row => (IDomainEvent)_eventSerializer.Deserialize(row.EventType,
+                                                                              row.DataJson));
             IEnumerable<IDomainEvent> allEvents;
             if (uncommittedDomainEvents is not null)
             {
