@@ -13,7 +13,7 @@ namespace MyLittleRangeBook
         /// <summary>
         /// This should match the JsonSerializeble attributes in MlrbJsonSerializerContext.cs
         /// </summary>
-        static readonly Type[] SupportedFirearmsEvents = [
+        static readonly Type[] s_supportedFirearmsEvents = [
             typeof(FirearmActive),
             typeof(FirearmAssociatedWithAsset),
             typeof(FirearmAssociatedWithRangeEvent),
@@ -31,8 +31,7 @@ namespace MyLittleRangeBook
         {
             ArgumentNullException.ThrowIfNull(services);
 
-
-            FirearmProjector.Register(services);
+            services.TryAddKeyedScoped<IProjector, FirearmProjector>(FirearmProjector.DI_KEY);
             services.TryAddKeyedScoped<IFirearmsService, FirearmsService>(SqliteHelperExtensions.DI_KEYS_SQLITE);
             services.TryAddScoped<IFirearmsService, FirearmsService>();
             services.TryAddScoped<IFirearmAggregateRepository, SqliteFirearmAggregateRepository>();

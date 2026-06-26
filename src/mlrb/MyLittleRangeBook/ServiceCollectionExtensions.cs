@@ -20,7 +20,7 @@ namespace MyLittleRangeBook
                                                                                         {
                                                                                             var l = new List<Type>();
                                                                                             l.AddRange(SupportedRangeAssetEvents);
-                                                                                            l.AddRange(SupportedFirearmsEvents);
+                                                                                            l.AddRange(s_supportedFirearmsEvents);
 
                                                                                             return new SystemTextJsonEventSerializer(l);
                                                                                         });

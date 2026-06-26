@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using FluentResults;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
+using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
@@ -62,7 +63,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
             try
             {
-                Result<long> r1 = await _rangeEventRepo.UpsertAsync(ctx, simpleRangeEvent);
+                Result<MlrbId> r1 = await _rangeEventRepo.UpsertAsync(ctx, simpleRangeEvent);
                 if (r1.IsSuccess)
                 {
                     await ctx.CommitAsync();
