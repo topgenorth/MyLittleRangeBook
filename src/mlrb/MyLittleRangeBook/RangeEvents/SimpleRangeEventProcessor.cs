@@ -1,45 +1,83 @@
 ﻿using System.Text.Json.Nodes;
 using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
+using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.RangeEvents
 {
-    public class SimpleRangeEventProcessor
+    public interface ISimpleRangeEventProcessor
     {
+        Task<Result> RebuildFirearmAggregate(DapperCommandContext context,
+                                             SimpleRangeEvent     simpleRangeEvent);
 
-        public IEnumerable<IDomainEvent> ToFirearmDomainEvents(IEnumerable<SimpleRangeEvent> rangeEvents)
+        IReadOnlyList<IDomainEvent> ToFirearmDomainEvents(SimpleRangeEvent sre);
+    }
+
+    public class SimpleRangeEventProcessor : ISimpleRangeEventProcessor
+    {
+        readonly IFirearmAggregateRepository _faRepo;
+        ILogger                              _logger;
+
+        public SimpleRangeEventProcessor(IFirearmAggregateRepository faRepo, ILogger logger)
         {
-            return rangeEvents.SelectMany(ToFirearmDomainEvents);
+            _faRepo = faRepo;
+            _logger = logger;
+        }
+
+        public async Task<Result> RebuildFirearmAggregate(DapperCommandContext context,
+                                                          SimpleRangeEvent     simpleRangeEvent)
+        {
+            List<IReason> reason = [];
+            try
+            {
+                Result<FirearmAggregate> getResult = await _faRepo
+                                                          .GetOrCreateByNameAsync(context, simpleRangeEvent.FirearmName,
+                                                               simpleRangeEvent.OccurredUtc)
+                                                          .ConfigureAwait(false);
+                if (getResult.IsFailed)
+                {
+                    return Result.Fail(getResult.Errors);
+                }
+
+                FirearmAggregate          fa           = getResult.Value!;
+                IReadOnlyList<IDomainEvent> domainEvents = ToFirearmDomainEvents(simpleRangeEvent);
+                domainEvents.ToList().ForEach(fa.Raise);
+
+                Result r2 = await _faRepo.UpsertAsync(context, fa).ConfigureAwait(false);
+                return r2.IsFailed ? Result.Fail(r2.Errors) : Result.Ok();
+            }
+            catch (Exception e)
+            {
+                Error err = e.ToError("Unexpected exception trying to rebuild the firearm aggregate.")
+                             .Enrich(MlrbId.FromString(simpleRangeEvent.FirearmName));
+                return Result.Fail(err);
+            }
         }
 
 
-        public IEnumerable<IDomainEvent> ToFirearmDomainEvents(SimpleRangeEvent sre)
+        public IReadOnlyList<IDomainEvent> ToFirearmDomainEvents(SimpleRangeEvent sre)
         {
-            DateTimeOffset occuredUtc = sre.EventDate.Kind == DateTimeKind.Utc
-                                            ? new DateTimeOffset(sre.EventDate)
-                                            : new DateTimeOffset(DateTime.SpecifyKind(sre.EventDate,
-                                                                     DateTimeKind.Local)).ToUniversalTime();
-
-            string metaDataJson =  new JsonObject { ["simple_range_event_id"] = sre.Id! }.ToJsonString();
+            string metaDataJson = new JsonObject { ["simple_range_event_id"] = sre.Id! }.ToJsonString();
 
 
-            FirearmAggregate fa = FirearmAggregate.New(sre.FirearmName, occuredUtc);
-            fa.AssociateWithSimpleRangeEvent(sre.Id!, occuredUtc);
-            fa.MoreRoundsFired(sre.RoundsFired, occuredUtc, metaDataJson);
+            FirearmAggregate fa = FirearmAggregate.New(sre.FirearmName, sre.OccurredUtc);
+            fa.AssociateWithSimpleRangeEvent(sre.Id!, sre.OccurredUtc);
+            fa.MoreRoundsFired(sre.RoundsFired, sre.OccurredUtc, metaDataJson);
 
             if (!string.IsNullOrWhiteSpace(sre.Notes))
             {
-                fa.AppendToNotes(sre.Notes, occuredUtc, metaDataJson);
+                fa.AppendToNotes(sre.Notes, sre.OccurredUtc, metaDataJson);
             }
 
             if (!string.IsNullOrWhiteSpace(sre.AmmoDescription))
             {
-                fa.AppendToNotes(sre.AmmoDescription, occuredUtc, metaDataJson);
+                fa.AppendToNotes(sre.AmmoDescription, sre.OccurredUtc, metaDataJson);
             }
 
             IEnumerable<IDomainEvent> events =
                 fa.DequeueUncommittedEvents().Where(e => e is not FirearmAggregate.FirearmCreated);
-            return events;
+            return events.ToArray();
         }
     }
 }

@@ -253,7 +253,11 @@ namespace MyLittleRangeBook.EventSourcing
                                                 @OccurredUtc,
                                                 @DataJson,
                                                 @MetadataJson
-                                            );
+                                            )
+                                            ON CONFLICT (id) DO NOTHING
+                                            ON CONFLICT (event_type) DO NOTHING
+                                            ;
+
                                             """;
 
             const string UPSERT_EVENT_STREAM_SQL = """

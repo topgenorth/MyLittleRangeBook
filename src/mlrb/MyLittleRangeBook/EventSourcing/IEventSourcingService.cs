@@ -99,6 +99,6 @@ namespace MyLittleRangeBook.EventSourcing
                                Aggregate            aggregate,
                                string               streamType,
                                int                  version,
-                               string               metadataJson = "{}");
+                               string?              metadataJson = "{}");
     }
 }

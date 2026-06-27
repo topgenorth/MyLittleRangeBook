@@ -16,6 +16,7 @@ namespace MyLittleRangeBook
         readonly IEventSourcingService _eventSourcingService;
         readonly IProjector            _firearmsProjector;
         readonly ISimpleRangeEventRepository _simpleRangeEventRepository;
+        readonly ISimpleRangeEventProcessor _simpleRangeEventProcessor;
 
         public UpdateFirearmsFromRangeEventsCommand(ILogger                     logger,
                                                     ICliDisplay                 display,
@@ -24,13 +25,16 @@ namespace MyLittleRangeBook
                                                     IFirearmAggregateRepository firearmAggregateRepo,
                                                     [FromKeyedServices(FirearmProjector.DI_KEY)]
                                                     IProjector firearmsProjector,
-                                                    IEventSourcingService eventSourcingService, ISimpleRangeEventRepository simpleRangeEventRepository) : base(logger, display,
-                                                                                                                                                               sqliteHelper,
-                                                                                                                                                               firearmsService, firearmAggregateRepo)
+                                                    IEventSourcingService eventSourcingService,
+                                                    ISimpleRangeEventRepository simpleRangeEventRepository,
+                                                    ISimpleRangeEventProcessor simpleRangeEventProcessor) : base(logger, display,
+                                                                                                                                                                                                                     sqliteHelper,
+                                                                                                                                                                                                                     firearmsService, firearmAggregateRepo)
         {
-            _firearmsProjector               = firearmsProjector;
-            _eventSourcingService            = eventSourcingService;
-            _simpleRangeEventRepository = simpleRangeEventRepository;
+            _firearmsProjector              = firearmsProjector;
+            _eventSourcingService           = eventSourcingService;
+            _simpleRangeEventRepository     = simpleRangeEventRepository;
+            _simpleRangeEventProcessor = simpleRangeEventProcessor;
         }
 
         /// <summary>
