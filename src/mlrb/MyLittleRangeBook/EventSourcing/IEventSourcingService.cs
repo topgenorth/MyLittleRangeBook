@@ -5,6 +5,20 @@ namespace MyLittleRangeBook.EventSourcing
 {
     public interface IEventSourcingService
     {
+        /// <summary>
+        /// Retrieves the domain events associated with the specified stream ID from the event store.
+        /// </summary>
+        /// <param name="context">
+        /// The command context containing the database connection, transaction (if any), cancellation token,
+        /// and additional arguments required for executing the query.
+        /// </param>
+        /// <param name="streamId">
+        /// The unique identifier of the event stream for which domain events are to be retrieved.
+        /// </param>
+        /// <returns>
+        /// A collection of <see cref="IDomainEvent" /> items representing the domain events associated with the
+        /// specified stream ID.
+        /// </returns>
         Task<IEnumerable<IDomainEvent>> GetDomainEvents(DapperCommandContext context, MlrbId streamId);
 
         /// <summary>
@@ -21,21 +35,6 @@ namespace MyLittleRangeBook.EventSourcing
         ///     An <see cref="EventStreamRow" /> representing the event stream if it exists, or null if no stream is found.
         /// </returns>
         Task<EventStreamRow?> GetEventStream(DapperCommandContext context, MlrbId streamId);
-
-        /// <summary>
-        ///     Retrieves a collection of event rows associated with the specified stream ID from the database.
-        /// </summary>
-        /// <param name="context">
-        ///     The command context containing the database connection, transaction (if any), cancellation token,
-        ///     and additional arguments required for executing the query.
-        /// </param>
-        /// <param name="streamId">
-        ///     The unique identifier of the event stream whose associated event rows are to be retrieved.
-        /// </param>
-        /// <returns>
-        ///     A collection of <see cref="EventRow" /> objects representing the events associated with the specified stream ID.
-        /// </returns>
-        Task<IEnumerable<EventRow>> GetEventRows(DapperCommandContext context, MlrbId streamId);
 
         /// <summary>
         ///     Inserts a domain event into the event stream with the specified parameters and persists it to storage.
