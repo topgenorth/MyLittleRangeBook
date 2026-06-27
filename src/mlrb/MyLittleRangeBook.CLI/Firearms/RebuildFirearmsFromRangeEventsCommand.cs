@@ -1,13 +1,16 @@
 ﻿using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Persistence;
+using MyLittleRangeBook.RangeEvents;
 
 namespace MyLittleRangeBook
 {
     public partial class UpdateFirearmsFromRangeEventsCommand
     {
-        [Command("rebuild-from-range-events"), UsedImplicitly]
+        [Command("rebuild-from-range-events")]
+        [UsedImplicitly]
         public async Task<int> RebuildFirearmsFromSimpleRangeEvents(CancellationToken cancellationToken = default)
         {
             CliDisplay.PrintCommandHeader("Rebuilding firearms from range events.");
@@ -17,30 +20,32 @@ namespace MyLittleRangeBook
             await using DapperCommandContext context = await DapperCommandContext
                                                             .NewAsync(SqliteHelper, cancellationToken, true)
                                                             .ConfigureAwait(false);
+
+            var processor = new SimpleRangeEventProcessor();
             try
             {
-                IEnumerable<FirearmNameFromSimpleRangeEventRow> firearmNames =
-                    await Commands.s_getFirearmNamesFromRangeEvents
-                                  .QueryAsync<FirearmNameFromSimpleRangeEventRow>(context)
-                                  .ConfigureAwait(false);
-                foreach (var f in firearmNames)
+                Result<IEnumerable<SimpleRangeEvent>> rangeEvents =
+                    await _simpleRangeEventRepository.GetSimpleRangeEventsAsync(context).ConfigureAwait(false);
+
+                IEnumerable<IGrouping<string, SimpleRangeEvent>>? orderedRangeEvents = rangeEvents.Value
+                  ?.OrderBy(e => e.FirearmName).ThenBy(e => e.EventDate).GroupBy(e => e.FirearmName);
+
+                foreach (IGrouping<string, SimpleRangeEvent> x in orderedRangeEvents)
                 {
-                    var events = await _eventSourcingService.GetDomainEvents(context, f.FirearmId).ConfigureAwait(false);
-                    if (!events.Any())
-                    {
-                        Logger.Debug("No events for firearm {0}", f);
-                    }
-                    else
-                    {
-                        Logger.Debug("There are {0} events for firearm {1}.", events.Count(), f.FirearmId);
-                    }
+                    CliDisplay.PrintInfo($"Processing range events for firearm {x.Key}");
+                    var domainEvents = x.SelectMany(processor.ToFirearmDomainEvents).ToList();
+
+                    Logger.Verbose($"Found {domainEvents.Count} domain events for firearm {x.Key}");
                 }
 
                 await context.CommitAsync().ConfigureAwait(false);
+                CliDisplay.PrintSuccess("Rebuild the firearms table.");
             }
             catch (Exception ex)
             {
                 await context.RollbackAsync().ConfigureAwait(false);
+                Logger.Error(ex, "There was an unexpected exception tying to rebuild the firearms table");
+                CliDisplay.PrintFailure("There was an unexpected exception tying to rebuild the firearms table");
                 Error err = ex.ToError("Unexpected exception trying to rebuild the firearms table.");
                 reasons.Add(err);
             }

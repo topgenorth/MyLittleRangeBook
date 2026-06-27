@@ -71,7 +71,6 @@ namespace MyLittleRangeBook.Firearms
                 case FirearmAssociatedWithRangeEvent x:
                     // TODO [TO20260626] - Capture the note and ammo description as metadata.
 
-
                     break;
                 case FirearmBarrelChanged x:
                     StringBuilder sbBarrelChange = new StringBuilder("Barrel changed from ")
@@ -149,18 +148,22 @@ namespace MyLittleRangeBook.Firearms
             else
             {
                 StringBuilder newNotes = new StringBuilder(Notes)
+                    .AppendLine()
                     .AppendLine("--")
                     .Append("Date: ")
                     .AppendLine(Modified.ToString("O"))
-                    .AppendLine(text.Trim())
-                    .AppendLine();
+                    .AppendLine(text.Trim());
                 Notes = newNotes.ToString();
             }
         }
 
-        public void AppendToNotes(string text, DateTimeOffset utcNow)
+        public void AppendToNotes(string? text, DateTimeOffset utcNow, string? metaDataJson = null)
         {
-            Raise(new FirearmNoteAdded(Id, text, utcNow));
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return;
+            }
+            Raise(new FirearmNoteAdded(Id, text, utcNow, metaDataJson));
         }
 
         public void AssociatedWithAsset(MlrbId assetId, DateTimeOffset dto)
@@ -183,11 +186,12 @@ namespace MyLittleRangeBook.Firearms
         /// </summary>
         /// <param name="roundCount">If 0, then nothing is done.</param>
         /// <param name="utcNow"></param>
-        public void MoreRoundsFired([ValueRange(0, 10000)]int roundCount, DateTimeOffset utcNow)
+        /// <param name="metadataJson"></param>
+        public void MoreRoundsFired([ValueRange(0, 10000)]int roundCount, DateTimeOffset utcNow, string? metadataJson = null)
         {
             if (roundCount > 0)
             {
-                Raise(new FirearmDischargeMoreRounds(Id, roundCount, utcNow));
+                Raise(new FirearmDischargeMoreRounds(Id, roundCount, utcNow, metadataJson));
             }
         }
 

@@ -129,7 +129,7 @@ namespace MyLittleRangeBook.Firearms
         /// The UTC timestamp when the discharge event was recorded.
         /// </param>
         [EventType("firearm-discharged-rounds")]
-        public record struct FirearmDischargeMoreRounds(MlrbId StreamId, int Rounds, DateTimeOffset OccurredUtc)
+        public record struct FirearmDischargeMoreRounds(MlrbId StreamId, int Rounds, DateTimeOffset OccurredUtc, string? MetaDataJson = null)
             : IDomainEvent;
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace MyLittleRangeBook.Firearms
         /// The UTC timestamp when the note was recorded.
         /// </param>
         [EventType("firearm-note-added")]
-        public record struct FirearmNoteAdded(MlrbId StreamId, string NewNote, DateTimeOffset OccurredUtc, KeyValuePair<string, string>? MetaData = null)
+        public record struct FirearmNoteAdded(MlrbId StreamId, string NewNote, DateTimeOffset OccurredUtc, string? MetaDataJson = null)
             : IDomainEvent;
 
         /// <summary>

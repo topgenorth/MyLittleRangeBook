@@ -6,6 +6,7 @@ using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.RangeEvents;
 
 namespace MyLittleRangeBook
 {
@@ -14,6 +15,7 @@ namespace MyLittleRangeBook
     {
         readonly IEventSourcingService _eventSourcingService;
         readonly IProjector            _firearmsProjector;
+        readonly ISimpleRangeEventRepository _simpleRangeEventRepository;
 
         public UpdateFirearmsFromRangeEventsCommand(ILogger                     logger,
                                                     ICliDisplay                 display,
@@ -22,12 +24,13 @@ namespace MyLittleRangeBook
                                                     IFirearmAggregateRepository firearmAggregateRepo,
                                                     [FromKeyedServices(FirearmProjector.DI_KEY)]
                                                     IProjector firearmsProjector,
-                                                    IEventSourcingService eventSourcingService) : base(logger, display,
-            sqliteHelper,
-            firearmsService, firearmAggregateRepo)
+                                                    IEventSourcingService eventSourcingService, ISimpleRangeEventRepository simpleRangeEventRepository) : base(logger, display,
+                                                                                                                                                               sqliteHelper,
+                                                                                                                                                               firearmsService, firearmAggregateRepo)
         {
-            _firearmsProjector    = firearmsProjector;
-            _eventSourcingService = eventSourcingService;
+            _firearmsProjector               = firearmsProjector;
+            _eventSourcingService            = eventSourcingService;
+            _simpleRangeEventRepository = simpleRangeEventRepository;
         }
 
         /// <summary>
