@@ -18,19 +18,20 @@ namespace MyLittleRangeBook.RangeEvents
     [UsedImplicitly]
     public class SimpleRangeEventCommandAddToSqlite : MlrbSqliteCommandBase
     {
-
+        readonly ISimpleRangeEventService _simpleRangeEventService;
         readonly ISimpleRangeEventPrinter       _simpleRangeEventPrinter;
         readonly ISimpleRangeEventDataProcessor _rangeEventDataProcessor;
 
-        public SimpleRangeEventCommandAddToSqlite(ILogger     logger,
-                                                  ICliDisplay cliDisplay,
+        public SimpleRangeEventCommandAddToSqlite(ILogger                        logger,
+                                                  ICliDisplay                    cliDisplay,
                                                   ISimpleRangeEventDataProcessor simpleRangeEventProcessor,
-                                                  ISqliteHelper               sqliteHelper,
-                                                  ISimpleRangeEventPrinter    simpleRangeEventPrinter) :
+                                                  ISqliteHelper                  sqliteHelper,
+                                                  ISimpleRangeEventPrinter       simpleRangeEventPrinter, ISimpleRangeEventService simpleRangeEventService) :
             base(logger, cliDisplay, sqliteHelper)
         {
-            _simpleRangeEventPrinter = simpleRangeEventPrinter;
-            _rangeEventDataProcessor = simpleRangeEventProcessor;
+            _simpleRangeEventPrinter      = simpleRangeEventPrinter;
+            _simpleRangeEventService = simpleRangeEventService;
+            _rangeEventDataProcessor      = simpleRangeEventProcessor;
         }
 
         /// <summary>
@@ -71,10 +72,15 @@ namespace MyLittleRangeBook.RangeEvents
             int returnValue;
             if (r1.IsSuccess)
             {
-
                 await context.CommitAsync().ConfigureAwait(false);
                 returnValue = SUCCESS;
+                var sre = await _simpleRangeEventService.GetAsync(context, r1.Value)
+                                                        .ConfigureAwait(false);
+
+                _simpleRangeEventPrinter.Print(AnsiConsole.Console, sre.Value, quiet);
+
                 CliDisplay.PrintSuccess("Finished.");
+
             }
             else
             {
@@ -86,31 +92,5 @@ namespace MyLittleRangeBook.RangeEvents
             PressEnterToContinue();
             return returnValue ;
         }
-
-        static DateOnly GetEventDate(DateOnly? eventDate)
-        {
-            DateOnly dateOnly;
-            if (eventDate is null)
-            {
-                DateTime d = DateTime.Now;
-                dateOnly = DateOnly.FromDateTime(d);
-            }
-            else
-            {
-                dateOnly = eventDate.Value;
-            }
-
-            return dateOnly;
-        }
-
-        /// <summary>
-        ///     Will strip the double quotes from the start and end of to the string.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        static string RemoveSurroundingQuotes(string value) =>
-            value.Length >= 2 && value.StartsWith('"') && value.EndsWith('"')
-                ? value[1..^1]
-                : value;
     }
 }

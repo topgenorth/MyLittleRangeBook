@@ -7,7 +7,7 @@ namespace MyLittleRangeBook.RangeEvents
 {
     public interface ISimpleRangeEventDataProcessor
     {
-        Task<Result> ProcessSimpleRangeEventData(DapperCommandContext       context,
+        Task<Result<MlrbId>> ProcessSimpleRangeEventData(DapperCommandContext       context,
                                                  string                     firearmName,
                                                  [ValueRange(0, 10000)] int roundsFired,
                                                  string                     rangeName,
@@ -31,7 +31,7 @@ namespace MyLittleRangeBook.RangeEvents
             _firearmsService   = firearmsService;
         }
 
-        public async Task<Result> ProcessSimpleRangeEventData(DapperCommandContext       context,
+        public async Task<Result<MlrbId>> ProcessSimpleRangeEventData(DapperCommandContext       context,
                                                               string                     firearmName,
                                                               [ValueRange(0, 10000)] int roundsFired,
                                                               string                     rangeName,
@@ -47,6 +47,7 @@ namespace MyLittleRangeBook.RangeEvents
                                                                 occurredUtc)
                                     .ConfigureAwait(false);
             reasons.AddRange(r1.Reasons);
+            Result<MlrbId> result = new Result<MlrbId>();
 
             if (r1.IsSuccess)
             {
@@ -72,10 +73,11 @@ namespace MyLittleRangeBook.RangeEvents
                 {
                     Success x = new("Processed data for range event that occured on " + occurredUtc.ToString("O"));
                     reasons.Add(x);
+                    result = result.WithValue(r2.Value.Id!);
                 }
             }
 
-            return new Result().WithReasons(reasons);
+            return result.WithReasons(reasons);
         }
 
         internal async Task<Result> UpsertFirearm(DapperCommandContext context, Firearm f)
