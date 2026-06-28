@@ -147,6 +147,13 @@ namespace MyLittleRangeBook.EventSourcing
                                     Success($"CurrentVersion is {currentVersion} and expectedVersion is {expectedVersion}"));
                 }
                 #endregion
+                await _eventSourcingService.UpsertEventStream(context,
+                                                              aggregate,
+                                                              _streamType,
+                                                              nextVersion - 1,
+                                                              metadataJson
+                                                             )
+                                           .ConfigureAwait(false);
 
                 foreach (IDomainEvent evt in pendingEvents)
                 {
@@ -159,13 +166,7 @@ namespace MyLittleRangeBook.EventSourcing
                     nextVersion++;
                 }
 
-                await _eventSourcingService.UpsertEventStream(context,
-                                                              aggregate,
-                                                              _streamType,
-                                                              nextVersion - 1,
-                                                              metadataJson
-                                                             )
-                                           .ConfigureAwait(false);
+
             }
             catch (Exception e)
             {
