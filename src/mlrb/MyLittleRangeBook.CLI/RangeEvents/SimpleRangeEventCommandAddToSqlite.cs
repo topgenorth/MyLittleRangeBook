@@ -18,22 +18,19 @@ namespace MyLittleRangeBook.RangeEvents
     [UsedImplicitly]
     public class SimpleRangeEventCommandAddToSqlite : MlrbSqliteCommandBase
     {
-        readonly IFirearmAggregateRepository _faRepo;
-        readonly ISimpleRangeEventPrinter    _simpleRangeEventPrinter;
-        readonly ISimpleRangeEventRepository _simpleRangeEventRepo;
+
+        readonly ISimpleRangeEventPrinter       _simpleRangeEventPrinter;
+        readonly ISimpleRangeEventDataProcessor _rangeEventDataProcessor;
 
         public SimpleRangeEventCommandAddToSqlite(ILogger     logger,
                                                   ICliDisplay cliDisplay,
-                                                  [FromKeyedServices(DI_KEYS_SQLITE)]
-                                                  ISimpleRangeEventRepository simpleRangeEventRepo,
+                                                  ISimpleRangeEventDataProcessor simpleRangeEventProcessor,
                                                   ISqliteHelper               sqliteHelper,
-                                                  ISimpleRangeEventPrinter    simpleRangeEventPrinter,
-                                                  IFirearmAggregateRepository faRepo) :
+                                                  ISimpleRangeEventPrinter    simpleRangeEventPrinter) :
             base(logger, cliDisplay, sqliteHelper)
         {
-            _simpleRangeEventRepo    = simpleRangeEventRepo;
             _simpleRangeEventPrinter = simpleRangeEventPrinter;
-            _faRepo                  = faRepo;
+            _rangeEventDataProcessor = simpleRangeEventProcessor;
         }
 
         /// <summary>
@@ -62,63 +59,32 @@ namespace MyLittleRangeBook.RangeEvents
                                                         bool                            quiet             = false,
                                                         CancellationToken               cancellationToken = default)
         {
-            int returnValue;
-            CliDisplay.PrintCommandHeader("Add range event");
-            DateOnly       eventDateOnly = GetEventDate(eventDate);
-            DateTime       localDateTime = eventDateOnly.ToDateTime(TimeOnly.FromDateTime(DateTime.Now));
-            DateTimeOffset occuredUtc    = new DateTimeOffset(localDateTime).ToUniversalTime();
+            CliDisplay.PrintCommandHeader("Process range event data.");
             await using DapperCommandContext context =
                 await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken, true)
                                           .ConfigureAwait(false);
 
-            Result<FirearmAggregate> r1 =
-                await _faRepo.GetOrCreateByNameAsync(context, firearm, occuredUtc).ConfigureAwait(false);
-            FirearmAggregate fa = r1.Value!;
+            var r1 = await _rangeEventDataProcessor
+                           .ProcessSimpleRangeEventData(context, firearm, rounds, range, ammo, notes, eventDate)
+                           .ConfigureAwait(false);
 
-            try
+            int returnValue;
+            if (r1.IsSuccess)
             {
-                fa.MoreRoundsFired(rounds, occuredUtc, RemoveSurroundingQuotes(ammo));
-                fa.AddNote("Range: " + range,              occuredUtc, null, "range_name");
-                fa.AddNote(RemoveSurroundingQuotes(notes), occuredUtc);
-                Result r3 = await _faRepo.UpsertAsync(context, fa).ConfigureAwait(false);
-                if (r3.IsSuccess)
-                {
-                    CliDisplay.PrintSuccess("Firearm aggregate added.");
-                    returnValue = SUCCESS;
-                    goto ExitFunction;
-                }
 
-                CliDisplay.PrintFailure("Failed.");
-
-                returnValue = RANGE_EVENT_FAILED_TO_CREATE;
-            }
-            catch (TaskCanceledException tce)
-            {
-                Logger.Warning(tce, "AddSimpleRangeEventAsync was cancelled.s");
-                CliDisplay.PrintFailure("AddSimpleRangeEventAsync was cancelled.");
-                returnValue = COMMAND_CANCELLED;
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e, "Unexpected error trying to add SimpleRangeEvent");
-                CliDisplay.PrintFailure($"Unexpected error trying to add SimpleRangeEvent: {e.Message}");
-
-                returnValue = RANGE_EVENT_FAILED_TO_CREATE;
-            }
-
-            // [TO20260529] This makes me vomit; but works for now.
-            ExitFunction:
-            if (returnValue == SUCCESS)
-            {
                 await context.CommitAsync().ConfigureAwait(false);
+                returnValue = SUCCESS;
+                CliDisplay.PrintSuccess("Finished.");
             }
             else
             {
                 await context.RollbackAsync().ConfigureAwait(false);
+                returnValue = RANGE_EVENT_FAILED_TO_CREATE;
+                CliDisplay.PrintFailure("Things didn't work.");
             }
 
             PressEnterToContinue();
-            return returnValue;
+            return returnValue ;
         }
 
         static DateOnly GetEventDate(DateOnly? eventDate)

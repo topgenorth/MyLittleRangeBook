@@ -100,7 +100,7 @@ namespace MyLittleRangeBook
 
 
                     #region Step 4: Associate the range event to the firearm.
-                    foreach (DapperCommandContext? ctx2 in associations.Select(r => context with
+                    foreach (DapperCommandContext ctx2 in associations.Select(r => context with
                                                                                {
                                                                                    Arguments = new
                                                                                        {
