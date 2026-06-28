@@ -61,7 +61,7 @@ namespace MyLittleRangeBook
 
 
                     FirearmAggregate fa = FirearmAggregate.New(f.FirearmName, f.CreatedUtc);
-                    fa.AppendToNotes($"Imported from simple_range_event {f.SimpleRangeEventId}.",
+                    fa.AddNote($"Imported from simple_range_event {f.SimpleRangeEventId}.",
                                      DateTimeOffset.UtcNow);
 
                     CliDisplay

@@ -23,15 +23,13 @@ namespace MyLittleRangeBook
                                                     ISqliteHelper               sqliteHelper,
                                                     IFirearmsService            firearmsService,
                                                     IFirearmAggregateRepository firearmAggregateRepo,
-                                                    [FromKeyedServices(FirearmProjector.DI_KEY)]
-                                                    IProjector firearmsProjector,
                                                     IEventSourcingService eventSourcingService,
                                                     ISimpleRangeEventRepository simpleRangeEventRepository,
                                                     ISimpleRangeEventProcessor simpleRangeEventProcessor) : base(logger, display,
                                                                                                                                                                                                                      sqliteHelper,
                                                                                                                                                                                                                      firearmsService, firearmAggregateRepo)
         {
-            _firearmsProjector              = firearmsProjector;
+
             _eventSourcingService           = eventSourcingService;
             _simpleRangeEventRepository     = simpleRangeEventRepository;
             _simpleRangeEventProcessor = simpleRangeEventProcessor;

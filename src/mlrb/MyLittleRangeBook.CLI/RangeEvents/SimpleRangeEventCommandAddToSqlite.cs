@@ -3,6 +3,7 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 using static MyLittleRangeBook.ReturnCodes;
@@ -17,18 +18,22 @@ namespace MyLittleRangeBook.RangeEvents
     [UsedImplicitly]
     public class SimpleRangeEventCommandAddToSqlite : MlrbSqliteCommandBase
     {
-        readonly ISimpleRangeEventRepository _simpleRangeEventRepo;
+        readonly IFirearmAggregateRepository _faRepo;
         readonly ISimpleRangeEventPrinter    _simpleRangeEventPrinter;
+        readonly ISimpleRangeEventRepository _simpleRangeEventRepo;
 
-        public SimpleRangeEventCommandAddToSqlite(ILogger logger,
+        public SimpleRangeEventCommandAddToSqlite(ILogger     logger,
                                                   ICliDisplay cliDisplay,
-                                                  [FromKeyedServices(DI_KEYS_SQLITE)] ISimpleRangeEventRepository simpleRangeEventRepo,
-                                                  ISqliteHelper sqliteHelper,
-                                                  ISimpleRangeEventPrinter simpleRangeEventPrinter) :
+                                                  [FromKeyedServices(DI_KEYS_SQLITE)]
+                                                  ISimpleRangeEventRepository simpleRangeEventRepo,
+                                                  ISqliteHelper               sqliteHelper,
+                                                  ISimpleRangeEventPrinter    simpleRangeEventPrinter,
+                                                  IFirearmAggregateRepository faRepo) :
             base(logger, cliDisplay, sqliteHelper)
         {
-            _simpleRangeEventRepo                    = simpleRangeEventRepo;
+            _simpleRangeEventRepo    = simpleRangeEventRepo;
             _simpleRangeEventPrinter = simpleRangeEventPrinter;
+            _faRepo                  = faRepo;
         }
 
         /// <summary>
@@ -59,30 +64,43 @@ namespace MyLittleRangeBook.RangeEvents
         {
             int returnValue;
             CliDisplay.PrintCommandHeader("Add range event");
-            DateOnly occurredDate = GetEventDate(eventDate);
-
+            DateOnly       eventDateOnly = GetEventDate(eventDate);
+            DateTime       localDateTime = eventDateOnly.ToDateTime(TimeOnly.FromDateTime(DateTime.Now));
+            DateTimeOffset occuredUtc    = new DateTimeOffset(localDateTime).ToUniversalTime();
             await using DapperCommandContext context =
                 await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken, true)
                                           .ConfigureAwait(false);
 
+            Result<FirearmAggregate> faResult =
+                await _faRepo.GetOrCreateByNameAsync(context, firearm, occuredUtc).ConfigureAwait(false);
+            FirearmAggregate fa = faResult.Value!;
 
             try
             {
+                fa.MoreRoundsFired(rounds, occuredUtc, RemoveSurroundingQuotes(ammo));
+                fa.AddNote("Range: " + range,              occuredUtc, null, "range_name");
+                fa.AddNote(RemoveSurroundingQuotes(notes), occuredUtc);
+
                 SimpleRangeEvent sre = SimpleRangeEvent.New(
-                                                            RemoveSurroundingQuotes(firearm),
+                                                            fa.Name,
                                                             rounds,
                                                             RemoveSurroundingQuotes(range),
                                                             RemoveSurroundingQuotes(ammo),
                                                             RemoveSurroundingQuotes(notes),
-                                                            occurredDate);
+                                                            eventDateOnly);
 
-                Result<MlrbId> result = await _simpleRangeEventRepo.UpsertAsync(context, sre).ConfigureAwait(false);
-
-                if (result.IsSuccess)
+                Result<MlrbId> r2 = await _simpleRangeEventRepo.UpsertAsync(context, sre).ConfigureAwait(false);
+                if (r2.IsSuccess)
                 {
+                    fa.AssociateWithSimpleRangeEvent(sre.Id!, occuredUtc);
                     _simpleRangeEventPrinter.Print(CliDisplay.Console, sre, quiet);
                     CliDisplay.PrintSuccess("Range trip added successfully.");
+                }
 
+                Result r3 = await _faRepo.UpsertAsync(context, fa).ConfigureAwait(false);
+                if (r3.IsSuccess)
+                {
+                    CliDisplay.PrintSuccess("Firearm aggregate added.");
                     returnValue = SUCCESS;
                     goto ExitFunction;
                 }
@@ -95,7 +113,6 @@ namespace MyLittleRangeBook.RangeEvents
             {
                 Logger.Warning(tce, "AddSimpleRangeEventAsync was cancelled.s");
                 CliDisplay.PrintFailure("AddSimpleRangeEventAsync was cancelled.");
-
                 returnValue = COMMAND_CANCELLED;
             }
             catch (Exception e)

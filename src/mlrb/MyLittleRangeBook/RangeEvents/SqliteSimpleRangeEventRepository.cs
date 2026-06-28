@@ -14,19 +14,17 @@ namespace MyLittleRangeBook.RangeEvents
     public class SqliteSimpleRangeEventRepository : ISimpleRangeEventRepository
     {
         readonly IFirearmAggregateRepository _faRepo;
-        readonly IProjector                  _firearmProjector;
+
         readonly ISimpleRangeEventService    _simpleRangeEventService;
 
 
         public SqliteSimpleRangeEventRepository(ISqliteHelper sqliteHelper,
                                                 [FromKeyedServices(DI_KEYS_SQLITE)]
                                                 ISimpleRangeEventService simpleRangeEventService,
-                                                [FromKeyedServices(FirearmProjector.DI_KEY)]
-                                                IProjector firearmProjector,
+
                                                 IFirearmAggregateRepository faRepo)
         {
             _simpleRangeEventService = simpleRangeEventService;
-            _firearmProjector        = firearmProjector;
             _faRepo                  = faRepo;
         }
 
@@ -94,45 +92,9 @@ namespace MyLittleRangeBook.RangeEvents
             Result<MlrbId> r1 = await UpsertSimpleRangeEventTable(context, simpleRangeEvent).ConfigureAwait(false);
             reasons.AddRange(r1.Reasons);
 
-            Result r2 = await UpdateFirearmAggregate(context, simpleRangeEvent).ConfigureAwait(false);
-            reasons.AddRange(r2.Reasons);
-
             return new Result().WithReasons(reasons).ToResult<MlrbId>(simpleRangeEvent.Id!);
         }
 
-
-        /// <summary>
-        ///     Will add new events to the Firearm about the range event.
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="sre"></param>
-        /// <returns></returns>
-        async Task<Result> UpdateFirearmAggregate(DapperCommandContext context, SimpleRangeEvent sre)
-        {
-            Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(context, sre.FirearmName)
-                                                       .ConfigureAwait(false);
-            if (r1.IsFailed)
-            {
-                return Result.Fail(r1.Errors);
-            }
-
-            List<IReason> reasons = [];
-            reasons.AddRange(r1.Reasons);
-
-            FirearmAggregate? fa = r1.Value;
-            fa.MoreRoundsFired(sre.RoundsFired, sre.EventDate);
-
-            AssociateWithFirearm(fa, sre);
-
-            Result r2 = await _faRepo.UpsertAsync(context, fa)
-                                     .ConfigureAwait(false);
-            reasons.AddRange(r2.Reasons);
-
-            Result r3 = await _firearmProjector.ProjectAggregateAsync(context, fa.Id).ConfigureAwait(false);
-            reasons.AddRange(r3.Reasons);
-
-            return new Result().WithReasons(reasons);
-        }
 
 
         static void AssociateWithFirearm(FirearmAggregate fa, SimpleRangeEvent sre) =>

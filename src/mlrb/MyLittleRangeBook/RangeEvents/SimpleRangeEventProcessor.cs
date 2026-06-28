@@ -67,12 +67,12 @@ namespace MyLittleRangeBook.RangeEvents
 
             if (!string.IsNullOrWhiteSpace(sre.Notes))
             {
-                fa.AppendToNotes(sre.Notes, sre.OccurredUtc, metaDataJson);
+                fa.AddNote(sre.Notes, sre.OccurredUtc, metaDataJson);
             }
 
             if (!string.IsNullOrWhiteSpace(sre.AmmoDescription))
             {
-                fa.AppendToNotes(sre.AmmoDescription, sre.OccurredUtc, metaDataJson);
+                fa.AddNote(sre.AmmoDescription, sre.OccurredUtc, metaDataJson);
             }
 
             IEnumerable<IDomainEvent> events =

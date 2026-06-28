@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using MyLittleRangeBook.EventSourcing;
+﻿using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
@@ -9,6 +7,7 @@ namespace MyLittleRangeBook.Firearms
     /// <summary>
     ///     Update the round count for a given firearm.
     /// </summary>
+    [Obsolete("Don't need this right now.", true)]
     public class FirearmProjector : IProjector
     {
         public const string                      DI_KEY = "firearm-projector";
@@ -42,8 +41,10 @@ namespace MyLittleRangeBook.Firearms
             {
                 string               fid = firearmId.ToString();
                 DapperCommandContext ctx = context with { Arguments = new { StreamId = fid } };
-                (FirearmAggregate fa, IEnumerable<IDomainEvent> events) =
+                (FirearmAggregate? fa, IEnumerable<IDomainEvent> events) =
                     await LoadEventStreamIncludeNewEvents(ctx).ConfigureAwait(false);
+
+
 
 
                 List<DapperCommandContext> upserts = [];
@@ -100,7 +101,7 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="context">The database context used to fetch the event stream.</param>
         /// <param name="uncommittedDomainEvents">Optional uncommitted domain events to include in the stream.</param>
         /// <returns>A tuple containing the firearm aggregate and the combined list of event rows.</returns>
-        async Task<(FirearmAggregate stream, IEnumerable<IDomainEvent> events)> LoadEventStreamIncludeNewEvents(
+        async Task<(FirearmAggregate? stream, IEnumerable<IDomainEvent> events)> LoadEventStreamIncludeNewEvents(
             DapperCommandContext       context
           , IEnumerable<IDomainEvent>? uncommittedDomainEvents = null)
         {
@@ -123,11 +124,19 @@ namespace MyLittleRangeBook.Firearms
             #endregion
 
 
-            EventStreamRow es = await EventSourcingCommands.s_getEventStream
-                                                           .QuerySingleAsync<EventStreamRow>(context)
-                                                           .ConfigureAwait(false);
+            FirearmAggregate? fa;
+            try
+            {
+                EventStreamRow es = await EventSourcingCommands.s_getEventStream
+                                                               .QuerySingleAsync<EventStreamRow>(context)
+                                                               .ConfigureAwait(false);
+                fa = FirearmAggregate.Create(es);
+            }
+            catch (InvalidOperationException e1)
+            {
+                fa = null;
+            }
 
-            FirearmAggregate fa = FirearmAggregate.Create(es);
             return (fa, allEvents);
         }
 
