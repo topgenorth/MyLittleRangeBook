@@ -103,7 +103,11 @@ namespace MyLittleRangeBook.Firearms
 
                 case FirearmDischargeMoreRounds x:
                     RoundsFired += x.Rounds;
-                    AddNote($"Ammo: {x.AmmoDescription}", x.OccurredUtc,null, "ammo_description");
+                    if (!string.IsNullOrWhiteSpace(x.AmmoDescription))
+                    {
+                        AppendToFirearmAggregateNoteSummary(x.AmmoDescription);
+                    }
+
                     break;
 
                 case FirearmCreated x:

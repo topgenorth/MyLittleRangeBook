@@ -130,7 +130,6 @@ namespace MyLittleRangeBook.EventSourcing
                 if (currentVersion is null)
                 {
                     nextVersion = 0;
-                    reasons.Add(new Success("CurrentVersion is 0."));
                 }
                 else
                 {
@@ -138,20 +137,19 @@ namespace MyLittleRangeBook.EventSourcing
                     if (currentVersion.Value != expectedVersion)
                     {
                         reasons.Add(new
-                                        Success($"Concurrency conflict detected for stream {streamId}. Expected version {expectedVersion}, but actual version is {currentVersion}."));
+                                        Error($"Concurrency conflict detected for stream {streamId}. Expected version {expectedVersion}, but actual version is {currentVersion}."));
                         return new Result().WithReasons(reasons);
                     }
+                    reasons.Add(new Success("Event source version check passed."));
 
                     nextVersion = currentVersion.Value + 1;
-                    reasons.Add(new
-                                    Success($"CurrentVersion is {currentVersion} and expectedVersion is {expectedVersion}"));
                 }
                 #endregion
 
                 await _eventSourcingService.UpsertEventStream(context,
                                                               aggregate,
                                                               _streamType,
-                                                              nextVersion - 1,
+                                                              nextVersion,
                                                               metadataJson
                                                              )
                                            .ConfigureAwait(false);
@@ -168,6 +166,8 @@ namespace MyLittleRangeBook.EventSourcing
                     reasons.Add(new Success($"Inserted event {evt.GetType().Name} with version {nextVersion}"));
                     nextVersion++;
                 }
+
+
 
 
             }

@@ -9,6 +9,6 @@ namespace MyLittleRangeBook.Models
         /// This property is ignored during JSON serialization and deserialization.
         /// </summary>
         [JsonIgnore]
-        string? MetadataJson { get; set; }
+        string? MetadataJson { get;set; }
     }
 }
