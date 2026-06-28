@@ -71,32 +71,15 @@ namespace MyLittleRangeBook.RangeEvents
                 await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken, true)
                                           .ConfigureAwait(false);
 
-            Result<FirearmAggregate> faResult =
+            Result<FirearmAggregate> r1 =
                 await _faRepo.GetOrCreateByNameAsync(context, firearm, occuredUtc).ConfigureAwait(false);
-            FirearmAggregate fa = faResult.Value!;
+            FirearmAggregate fa = r1.Value!;
 
             try
             {
                 fa.MoreRoundsFired(rounds, occuredUtc, RemoveSurroundingQuotes(ammo));
                 fa.AddNote("Range: " + range,              occuredUtc, null, "range_name");
                 fa.AddNote(RemoveSurroundingQuotes(notes), occuredUtc);
-
-                SimpleRangeEvent sre = SimpleRangeEvent.New(
-                                                            fa.Name,
-                                                            rounds,
-                                                            RemoveSurroundingQuotes(range),
-                                                            RemoveSurroundingQuotes(ammo),
-                                                            RemoveSurroundingQuotes(notes),
-                                                            eventDateOnly);
-
-                Result<MlrbId> r2 = await _simpleRangeEventRepo.UpsertAsync(context, sre).ConfigureAwait(false);
-                if (r2.IsSuccess)
-                {
-                    fa.AssociateWithSimpleRangeEvent(sre.Id!, occuredUtc);
-                    _simpleRangeEventPrinter.Print(CliDisplay.Console, sre, quiet);
-                    CliDisplay.PrintSuccess("Range trip added successfully.");
-                }
-
                 Result r3 = await _faRepo.UpsertAsync(context, fa).ConfigureAwait(false);
                 if (r3.IsSuccess)
                 {
@@ -105,7 +88,7 @@ namespace MyLittleRangeBook.RangeEvents
                     goto ExitFunction;
                 }
 
-                CliDisplay.PrintFailure("Failed to add range trip.");
+                CliDisplay.PrintFailure("Failed.");
 
                 returnValue = RANGE_EVENT_FAILED_TO_CREATE;
             }

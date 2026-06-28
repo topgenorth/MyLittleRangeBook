@@ -134,9 +134,8 @@ namespace MyLittleRangeBook.Firearms
             MlrbId         StreamId,
             int            Rounds,
             DateTimeOffset OccurredUtc,
-            string?        AmmoDescription = null,
-            string?        MetaDataJson    = null)
-            : IDomainEvent, IHaveMetaDataJson;
+            string?        AmmoDescription = null)
+            : IDomainEvent;
 
         /// <summary>
         ///     Represents an event indicating that a note has been added to a firearm within the domain.
@@ -157,9 +156,8 @@ namespace MyLittleRangeBook.Firearms
             MlrbId         StreamId,
             string         Text,
             DateTimeOffset OccurredUtc,
-            string         NoteType     = "note",
-            string?        MetaDataJson = null)
-            : IDomainEvent, IHaveMetaDataJson;
+            string         NoteType     = "note")
+            : IDomainEvent;
 
         /// <summary>
         ///     Represents an event indicating a change in the sighting system of a firearm within the domain.

@@ -147,6 +147,7 @@ namespace MyLittleRangeBook.EventSourcing
                                     Success($"CurrentVersion is {currentVersion} and expectedVersion is {expectedVersion}"));
                 }
                 #endregion
+
                 await _eventSourcingService.UpsertEventStream(context,
                                                               aggregate,
                                                               _streamType,
@@ -157,10 +158,12 @@ namespace MyLittleRangeBook.EventSourcing
 
                 foreach (IDomainEvent evt in pendingEvents)
                 {
+
                     await _eventSourcingService.InsertDomainEvent(context,
                                                                   streamId,
                                                                   _streamType,
-                                                                  evt, nextVersion)
+                                                                  evt,
+                                                                  nextVersion)
                                                .ConfigureAwait(false);
                     reasons.Add(new Success($"Inserted event {evt.GetType().Name} with version {nextVersion}"));
                     nextVersion++;

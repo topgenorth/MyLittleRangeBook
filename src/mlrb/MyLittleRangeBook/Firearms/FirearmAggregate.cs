@@ -103,7 +103,7 @@ namespace MyLittleRangeBook.Firearms
 
                 case FirearmDischargeMoreRounds x:
                     RoundsFired += x.Rounds;
-                    AddNote($"Ammo: {x.AmmoDescription}", x.OccurredUtc, x.MetaDataJson, "ammo_description");
+                    AddNote($"Ammo: {x.AmmoDescription}", x.OccurredUtc,null, "ammo_description");
                     break;
 
                 case FirearmCreated x:
@@ -178,7 +178,7 @@ namespace MyLittleRangeBook.Firearms
                 return;
             }
 
-            Raise(new FirearmNoteAdded(Id, text, utcNow, noteType, metaDataJson));
+            Raise(new FirearmNoteAdded(Id, text, utcNow, noteType));
         }
 
         public void AssociatedWithAsset(MlrbId assetId, DateTimeOffset dto) =>

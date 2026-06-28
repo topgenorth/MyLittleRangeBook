@@ -71,7 +71,7 @@ namespace MyLittleRangeBook.EventSourcing
                                string               streamType,
                                IDomainEvent         domainEvent,
                                int                  version,
-                               string?              metadataJson = null
+                               string? metadataJson = null
         );
 
         /// <summary>

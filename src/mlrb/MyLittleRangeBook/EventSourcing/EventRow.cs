@@ -24,10 +24,10 @@ namespace MyLittleRangeBook.EventSourcing
         string         EventType,
         int            Version,
         string         DataJson,
-        string         MetadataJson,
+        string?        MetadataJson,
         DateTimeOffset OccurredUtc,
         DateTimeOffset CreatedUtc,
-        DateTimeOffset ModifiedUtc) : IDomainEvent
+        DateTimeOffset ModifiedUtc) : IDomainEvent, IHaveMetadataJson
     {
         /// <summary>
         /// Converts the current instance of <see cref="EventRow"/> to a domain event implementation of <see cref="IDomainEvent"/>.

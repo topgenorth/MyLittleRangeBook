@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using MyLittleRangeBook.EventSourcing;
+using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook
 {
@@ -11,15 +12,13 @@ namespace MyLittleRangeBook
         // TODO [TO20260531] Need to consolidate this with MlrbJsonSerializerContext.
         readonly IReadOnlyDictionary<Type, string> _eventNames;
         readonly IReadOnlyDictionary<string, Type> _eventTypes;
-        readonly JsonSerializerOptions _jsonSerializerOptions;
+        readonly JsonSerializerOptions             _jsonSerializerOptions;
 
         public SystemTextJsonEventSerializer(IEnumerable<Type> eventTypes)
-            : this(eventTypes, CreateDefaultOptions())
-        {
-        }
+            : this(eventTypes, CreateDefaultOptions()) { }
 
         public SystemTextJsonEventSerializer(
-            IEnumerable<Type> eventTypes,
+            IEnumerable<Type>     eventTypes,
             JsonSerializerOptions jsonSerializerOptions)
         {
             ArgumentNullException.ThrowIfNull(eventTypes);
@@ -28,13 +27,13 @@ namespace MyLittleRangeBook
             Type[] types = eventTypes.Distinct().ToArray();
 
             _eventTypes = types.ToDictionary(
-                static t => t.GetCustomAttribute<EventTypeAttribute>()?.Name ?? t.Name,
-                static t => t,
-                StringComparer.Ordinal);
+                                             static t => t.GetCustomAttribute<EventTypeAttribute>()?.Name ?? t.Name,
+                                             static t => t,
+                                             StringComparer.Ordinal);
 
             _eventNames = types.ToDictionary(
-                static t => t,
-                static t => t.GetCustomAttribute<EventTypeAttribute>()?.Name ?? t.Name);
+                                             static t => t,
+                                             static t => t.GetCustomAttribute<EventTypeAttribute>()?.Name ?? t.Name);
 
             _jsonSerializerOptions = jsonSerializerOptions;
         }
@@ -50,8 +49,7 @@ namespace MyLittleRangeBook
                 return eventType;
             }
 
-            throw new InvalidOperationException(
-                $"Event type '{type.FullName}' is not registered.");
+            throw new InvalidOperationException($"Event type '{type.FullName}' is not registered.");
         }
 
 
@@ -63,17 +61,17 @@ namespace MyLittleRangeBook
             if (!_eventTypes.TryGetValue(eventType, out Type? runtimeType))
             {
                 throw new InvalidOperationException(
-                    $"Unknown event type '{eventType}'.");
+                                                    $"Unknown event type '{eventType}'.");
             }
 
             object? deserialized = JsonSerializer.Deserialize(
-                json,
-                runtimeType,
-                _jsonSerializerOptions);
+                                                              json,
+                                                              runtimeType,
+                                                              _jsonSerializerOptions);
 
             return deserialized
                    ?? throw new InvalidOperationException(
-                       $"Deserialization returned null for event type '{eventType}'.");
+                                                          $"Deserialization returned null for event type '{eventType}'.");
         }
 
         public string Serialize(object @event)
@@ -87,16 +85,17 @@ namespace MyLittleRangeBook
 
         static JsonSerializerOptions CreateDefaultOptions()
         {
-            var options = new JsonSerializerOptions(JsonSerializerDefaults.Web)
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNameCaseInsensitive = true,
-                WriteIndented = false,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                TypeInfoResolver =
-                    JsonTypeInfoResolver.Combine(Persistence.MlrbJsonSerializerContext.Default, new DefaultJsonTypeInfoResolver())
-            };
+            JsonSerializerOptions options = new(JsonSerializerDefaults.Web)
+                                            {
+                                                PropertyNamingPolicy        = JsonNamingPolicy.CamelCase,
+                                                DictionaryKeyPolicy         = JsonNamingPolicy.CamelCase,
+                                                PropertyNameCaseInsensitive = true,
+                                                WriteIndented               = false,
+                                                DefaultIgnoreCondition      = JsonIgnoreCondition.WhenWritingNull,
+                                                TypeInfoResolver =
+                                                    JsonTypeInfoResolver.Combine(MlrbJsonSerializerContext.Default,
+                                                        new DefaultJsonTypeInfoResolver()),
+                                            };
 
             options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
 
