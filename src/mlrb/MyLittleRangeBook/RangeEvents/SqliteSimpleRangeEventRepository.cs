@@ -11,6 +11,7 @@ namespace MyLittleRangeBook.RangeEvents
     /// <summary>
     ///     Represents a repository implementation for managing simple range events using SQLite as the persistence layer.
     /// </summary>
+    [Obsolete("Do we need this if we have the SimpleRangeEventService?")]
     public class SqliteSimpleRangeEventRepository : ISimpleRangeEventRepository
     {
         readonly IFirearmAggregateRepository _faRepo;
