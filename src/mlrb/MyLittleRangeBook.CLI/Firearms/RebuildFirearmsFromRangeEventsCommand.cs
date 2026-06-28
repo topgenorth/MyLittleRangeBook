@@ -33,12 +33,6 @@ namespace MyLittleRangeBook
                 foreach (IGrouping<string, SimpleRangeEvent> x in rangeEventsByFirearm)
                 {
                     CliDisplay.PrintInfo($"Processing range events for firearm {x.Key}");
-                    foreach (SimpleRangeEvent sre in x)
-                    {
-                        Result r = await _simpleRangeEventProcessor.RebuildFirearmAggregate(context, sre)
-                                                                   .ConfigureAwait(false);
-                        reasons.AddRange(r.Reasons);
-                    }
 
                     if (!reasons.OfType<Error>().Any())
                     {

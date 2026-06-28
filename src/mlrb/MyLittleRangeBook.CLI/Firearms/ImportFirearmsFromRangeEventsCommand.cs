@@ -43,22 +43,8 @@ namespace MyLittleRangeBook
 
                     if (es is not null)
                     {
-                        Result r = await _firearmsProjector.ProjectAggregateAsync(context, f.FirearmId)
-                                                           .ConfigureAwait(false);
-                        if (r.IsSuccess)
-                        {
-                            CliDisplay.PrintInfo($"Created firearm '{f.FirearmName}' from the existing event stream.");
-                            count++;
-                        }
-                        else
-                        {
-                            CliDisplay
-                               .PrintWarning($"Failed to create firearm '{f.FirearmName}' from the existing event stream.");
-                        }
-
                         continue;
                     }
-
 
                     FirearmAggregate fa = FirearmAggregate.New(f.FirearmName, f.CreatedUtc);
                     fa.AddNote($"Imported from simple_range_event {f.SimpleRangeEventId}.",

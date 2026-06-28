@@ -14,9 +14,7 @@ namespace MyLittleRangeBook
     public partial class UpdateFirearmsFromRangeEventsCommand : MlrbFirearmsCommandBase
     {
         readonly IEventSourcingService _eventSourcingService;
-        readonly IProjector            _firearmsProjector;
         readonly ISimpleRangeEventRepository _simpleRangeEventRepository;
-        readonly ISimpleRangeEventProcessor _simpleRangeEventProcessor;
 
         public UpdateFirearmsFromRangeEventsCommand(ILogger                     logger,
                                                     ICliDisplay                 display,
@@ -24,15 +22,13 @@ namespace MyLittleRangeBook
                                                     IFirearmsService            firearmsService,
                                                     IFirearmAggregateRepository firearmAggregateRepo,
                                                     IEventSourcingService eventSourcingService,
-                                                    ISimpleRangeEventRepository simpleRangeEventRepository,
-                                                    ISimpleRangeEventProcessor simpleRangeEventProcessor) : base(logger, display,
+                                                    ISimpleRangeEventRepository simpleRangeEventRepository) : base(logger, display,
                                                                                                                                                                                                                      sqliteHelper,
                                                                                                                                                                                                                      firearmsService, firearmAggregateRepo)
         {
 
             _eventSourcingService           = eventSourcingService;
             _simpleRangeEventRepository     = simpleRangeEventRepository;
-            _simpleRangeEventProcessor = simpleRangeEventProcessor;
         }
 
         /// <summary>
