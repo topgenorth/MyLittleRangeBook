@@ -50,15 +50,25 @@ namespace MyLittleRangeBook.RangeEvents
 
             if (r1.IsSuccess)
             {
-                Result<SimpleRangeEvent> r2 = await UpsertSimpleRangeEvent(context, firearmName, roundsFired, rangeName, ammoDescription,
-                                                         notes,
-                                                         occurredUtc).ConfigureAwait(false);
+                Result<SimpleRangeEvent> r2 = await UpsertSimpleRangeEvent(context,
+                                                                           firearmName,
+                                                                           roundsFired,
+                                                                           rangeName,
+                                                                           ammoDescription,
+                                                                           notes,
+                                                                           occurredUtc).ConfigureAwait(false);
                 reasons.AddRange(r2.Reasons);
 
-                Result r3 = await UpsertFirearm(context, r1.Value, r2.Value).ConfigureAwait(false);
+                Result r3 = await UpsertFirearm(context, r1.Value).ConfigureAwait(false);
                 reasons.AddRange(r3.Reasons);
 
-                if (r3.IsSuccess && r2.IsSuccess)
+                Result r4 = await _firearmsService
+                                 .AssociateWithRangeEvent(context, r1.Value.Id!, r2.Value.Id!)
+                                 .ConfigureAwait(false);
+
+                reasons.AddRange(r4.Reasons);
+
+                if (r4.IsSuccess && r3.IsSuccess && r2.IsSuccess)
                 {
                     Success x = new("Processed data for range event that occured on " + occurredUtc.ToString("O"));
                     reasons.Add(x);
@@ -68,14 +78,14 @@ namespace MyLittleRangeBook.RangeEvents
             return new Result().WithReasons(reasons);
         }
 
-        internal async Task<Result> UpsertFirearm(DapperCommandContext context, Firearm f, SimpleRangeEvent? sre)
+        internal async Task<Result> UpsertFirearm(DapperCommandContext context, Firearm f)
         {
             Result<EntityId> r1 = await _firearmsService.UpsertAsync(context, f).ConfigureAwait(false);
             IReason          reason;
             if (r1.IsSuccess)
             {
                 reason = new Success($"Upserted the firearm '{f.Name}', {r1.Value.RowId}/{r1.Value.Id}.");
-}
+            }
             else
             {
                 reason = new Error($"Failed to upsert the firearm '{f.Name}'.");
