@@ -40,7 +40,9 @@ namespace MyLittleRangeBook.EventSourcing
         /// </returns>
         public IDomainEvent ToDomainEvent(IEventSerializer eventSerializer)
         {
-            return (IDomainEvent)eventSerializer.Deserialize(EventType, DataJson);
+            IDomainEvent evt = (IDomainEvent)eventSerializer.Deserialize(EventType, DataJson);
+            evt.MetadataJson = MetadataJson;
+            return evt;
         }
 
     };

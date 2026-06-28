@@ -73,7 +73,6 @@ namespace MyLittleRangeBook.EventSourcing
         /// <param name="version">
         ///     The expected version of the event stream after insertion of the new event.
         /// </param>
-        /// <param name="metadataJson">Optional metadata to apply to the event</param>
         /// <returns>
         ///     A task that completes when the domain event has been successfully inserted into the event stream.
         /// </returns>
@@ -85,10 +84,11 @@ namespace MyLittleRangeBook.EventSourcing
                                             MlrbId               streamId,
                                             string               streamType,
                                             IDomainEvent         domainEvent,
-                                            int                  version,
-                                            string? metadataJson = null
+                                            int                  version
         )
         {
+            string  dataJson     = _eventSerializer.Serialize(domainEvent);
+            string? metadataJson = domainEvent.MetadataJson;
             var args = new
                        {
                            StreamId   = streamId,
@@ -97,7 +97,7 @@ namespace MyLittleRangeBook.EventSourcing
                            domainEvent.EventType,
                            Version = version,
                            domainEvent.OccurredUtc,
-                           DataJson = _eventSerializer.Serialize(domainEvent),
+                           DataJson     = dataJson,
                            MetadataJson = metadataJson,
                        };
             DapperCommandContext ctx = context with { Arguments = args };
