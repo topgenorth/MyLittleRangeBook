@@ -8,7 +8,7 @@ namespace MyLittleRangeBook.EventSourcing
     ///     The base class retains the uncommitted event list as well as the <see cref="Id" />,
     ///     <see cref="Version" />, <see cref="StreamType" /> and <see cref="DefaultStreamType" /> properties.
     /// </summary>
-    public abstract class Aggregate
+    public abstract class Aggregate: IIdentifiable
     {
         readonly List<IDomainEvent> _uncommitted = [];
 

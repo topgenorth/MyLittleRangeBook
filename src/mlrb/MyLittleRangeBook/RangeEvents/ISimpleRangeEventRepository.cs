@@ -8,6 +8,7 @@ namespace MyLittleRangeBook.RangeEvents
     ///     in a repository. This includes CRUD operations such as creating, updating, retrieving,
     ///     and deleting simple range events.
     /// </summary>
+    [Obsolete("Do we need this if we have the SimpleRangeEventService?")]
     public interface ISimpleRangeEventRepository
     {
         /// <summary>

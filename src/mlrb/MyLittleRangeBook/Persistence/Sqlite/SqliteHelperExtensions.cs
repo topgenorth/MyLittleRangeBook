@@ -137,13 +137,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             services
                 .TryAddKeyedScoped<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>(DI_KEYS_SQLITE);
             services.TryAddScoped<ISimpleRangeEventRepository, SqliteSimpleRangeEventRepository>();
-            services.AddKeyedScoped<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>(DI_KEYS_SQLITE);
-            services.TryAddScoped<ISimpleRangeEventHelper, SqliteSimpleRangeEventHelper>();
-
-
-
-
-
 
             return services;
         }

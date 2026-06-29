@@ -232,7 +232,7 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <param name="StreamId"></param>
         /// <param name="OccurredUtc"></param>
         [EventType("mlrb-asset-created")]
-        public record struct MlrbAssetCreated(MlrbId StreamId, DateTimeOffset OccurredUtc)
+        public record struct MlrbAssetCreated(MlrbId StreamId, DateTimeOffset OccurredUtc,string? MetadataJson = null)
             : IDomainEvent;
 
         /// <summary>
@@ -242,60 +242,60 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <param name="SourcePath"></param>
         /// <param name="OccurredUtc"></param>
         [EventType("mlrb-asset-import-started")]
-        public record struct MlrbAssetImportStarted(MlrbId StreamId, string SourcePath, DateTimeOffset OccurredUtc)
+        public record struct MlrbAssetImportStarted(MlrbId StreamId, string SourcePath, DateTimeOffset OccurredUtc,string? MetadataJson = null)
             : IDomainEvent;
 
         [EventType("mlrb-asset-copied")]
         public record struct MlrbAssetFileCopied(
-            MlrbId StreamId,
-            string DestinationPath,
-            byte[] FileContents,
-            DateTimeOffset OccurredUtc)
+            MlrbId         StreamId,
+            string         DestinationPath,
+            byte[]         FileContents,
+            DateTimeOffset OccurredUtc,string? MetadataJson = null)
             : IDomainEvent;
 
         [EventType("mlrb-asset-stored-in-database")]
         public record struct MlrbAssetStoredInDatabase(
-            MlrbId StreamId,
-            byte[] FileContents,
-            DateTimeOffset OccurredUtc) : IDomainEvent;
+            MlrbId         StreamId,
+            byte[]         FileContents,
+            DateTimeOffset OccurredUtc,string? MetadataJson = null) : IDomainEvent;
 
         [EventType("mlrb-asset-parsed")]
-        public record struct MlrbAssetParsed(MlrbId StreamId, string MimeType, DateTimeOffset OccurredUtc)
+        public record struct MlrbAssetParsed(MlrbId StreamId, string MimeType, DateTimeOffset OccurredUtc,string? MetadataJson = null)
             : IDomainEvent;
 
         [EventType("mlrb-asset-fingerprint-computed")]
         public record struct MlrbAssetFingerprintComputed(
-            MlrbId StreamId,
-            string Sha256,
-            long FileSize,
-            DateTimeOffset OccurredUtc)
+            MlrbId         StreamId,
+            string         Sha256,
+            long           FileSize,
+            DateTimeOffset OccurredUtc,string? MetadataJson = null)
             : IDomainEvent;
 
         [EventType("mlrb-asset-associated-with-firearm")]
         public record struct MrlbAssetAssociatedWithFirearm(
-            MlrbId StreamId,
-            MlrbId FirearmId,
-            DateTimeOffset OccurredUtc) : IDomainEvent;
+            MlrbId         StreamId,
+            MlrbId         FirearmId,
+            DateTimeOffset OccurredUtc,string? MetadataJson = null) : IDomainEvent;
 
         [EventType("mlrb-asset-associated-with-simple-range-event")]
         public record struct MlrbAssetAssociatedWithSimpleRangeEvent(
-            MlrbId StreamId,
-            MlrbId SimpleRangEventId,
-            DateTimeOffset OccurredUtc) : IDomainEvent;
+            MlrbId         StreamId,
+            MlrbId         SimpleRangEventId,
+            DateTimeOffset OccurredUtc,string? MetadataJson = null) : IDomainEvent;
 
         [EventType("mlrb-asset-import-completed")]
-        public record struct MlrbAssetImportCompleted(MlrbId StreamId, DateTimeOffset OccurredUtc) : IDomainEvent;
+        public record struct MlrbAssetImportCompleted(MlrbId StreamId, DateTimeOffset OccurredUtc,string? MetadataJson = null) : IDomainEvent;
 
         [EventType("mlrb-asset-import-failed")]
-        public record struct MlrbAssetImportFailed(MlrbId StreamId, string Reason, DateTimeOffset OccurredUtc)
+        public record struct MlrbAssetImportFailed(MlrbId StreamId, string Reason, DateTimeOffset OccurredUtc,string? MetadataJson = null)
             : IDomainEvent;
 
         [EventType("mlrb-asset-updated-from-file")]
         public record struct MlrbAssetUpdatedFromFile(
-            MlrbId StreamId,
-            string FileName,
-            byte[] FileContents,
-            DateTimeOffset OccurredUtc) : IDomainEvent;
+            MlrbId         StreamId,
+            string         FileName,
+            byte[]         FileContents,
+            DateTimeOffset OccurredUtc,string? MetadataJson = null) : IDomainEvent;
 
         public void AssociatedWithSimpleRangeEvent(MlrbId simpleRangeEventId, DateTimeOffset utcNow)
         {

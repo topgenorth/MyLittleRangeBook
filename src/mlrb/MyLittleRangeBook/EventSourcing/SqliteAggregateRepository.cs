@@ -84,21 +84,21 @@ namespace MyLittleRangeBook.EventSourcing
             }
         }
 
-        public async Task<Result<IEnumerable<IDomainEvent>>> GetDomainEvents(DapperCommandContext context, MlrbId streamId)
+        public async Task<Result<IEnumerable<IDomainEvent>>> GetDomainEvents(
+            DapperCommandContext context, MlrbId streamId)
         {
             try
             {
-                var events = await _eventSourcingService.GetDomainEvents(context, streamId).ConfigureAwait(false);
+                IEnumerable<IDomainEvent> events =
+                    await _eventSourcingService.GetDomainEvents(context, streamId).ConfigureAwait(false);
                 return Result.Ok(events);
             }
             catch (Exception e)
             {
-                var err = e.ToError().Enrich(streamId);
+                Error err = e.ToError().Enrich(streamId);
                 return Result.Fail(err);
             }
-
         }
-
 
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace MyLittleRangeBook.EventSourcing
         /// </summary>
         /// <param name="context">The Dapper command context containing the database connection and transaction information.</param>
         /// <param name="aggregate">The aggregate entity to upsert.</param>
-        /// <param name="metadataJson"></param>
+        /// <param name="metadataJson">Metadata for the event stream, in JSON format.</param>
         /// <returns>A result indicating the success or failure of the operation.</returns>
         public async Task<Result> UpsertAsync(DapperCommandContext context,
                                               TAggregate           aggregate,
@@ -119,7 +119,8 @@ namespace MyLittleRangeBook.EventSourcing
                 return Result.Ok();
             }
 
-            MlrbId streamId = aggregate.Id;
+            MlrbId        streamId = aggregate.Id;
+            List<IReason> reasons  = [];
             try
             {
                 int? currentVersion = await GetStreamVersion(context, streamId).ConfigureAwait(false);
@@ -135,31 +136,40 @@ namespace MyLittleRangeBook.EventSourcing
                     int expectedVersion = aggregate.Version - pendingEvents.Count;
                     if (currentVersion.Value != expectedVersion)
                     {
-                        throw new InvalidOperationException(
-                                                            $"Concurrency conflict detected for stream {streamId}. Expected version {expectedVersion}, but actual version is {currentVersion}.");
+                        reasons.Add(new
+                                        Error($"Concurrency conflict detected for stream {streamId}. Expected version {expectedVersion}, but actual version is {currentVersion}."));
+                        return new Result().WithReasons(reasons);
                     }
+                    reasons.Add(new Success("Event source version check passed."));
 
                     nextVersion = currentVersion.Value + 1;
                 }
                 #endregion
 
-                foreach (IDomainEvent evt in pendingEvents)
-                {
-                    await _eventSourcingService.InsertDomainEvent(context,
-                                                                  streamId,
-                                                                  _streamType,
-                                                                  evt, nextVersion)
-                                               .ConfigureAwait(false);
-                    nextVersion++;
-                }
-
                 await _eventSourcingService.UpsertEventStream(context,
                                                               aggregate,
                                                               _streamType,
-                                                              nextVersion - 1,
+                                                              nextVersion,
                                                               metadataJson
                                                              )
                                            .ConfigureAwait(false);
+
+                foreach (IDomainEvent evt in pendingEvents)
+                {
+
+                    await _eventSourcingService.InsertDomainEvent(context,
+                                                                  streamId,
+                                                                  _streamType,
+                                                                  evt,
+                                                                  nextVersion)
+                                               .ConfigureAwait(false);
+                    reasons.Add(new Success($"Inserted event {evt.GetType().Name} with version {nextVersion}"));
+                    nextVersion++;
+                }
+
+
+
+
             }
             catch (Exception e)
             {
@@ -167,7 +177,7 @@ namespace MyLittleRangeBook.EventSourcing
                 return Result.Fail(err);
             }
 
-            return Result.Ok();
+            return Result.Ok().WithReasons(reasons);
         }
 
 

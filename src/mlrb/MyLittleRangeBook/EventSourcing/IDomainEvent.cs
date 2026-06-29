@@ -1,9 +1,10 @@
 ﻿using System.Reflection;
+using System.Text.Json.Serialization;
 using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.EventSourcing
 {
-    public interface IDomainEvent
+    public interface IDomainEvent: IHaveMetadataJson
     {
         MlrbId         StreamId    { get; }
         DateTimeOffset OccurredUtc { get; }
@@ -30,5 +31,6 @@ namespace MyLittleRangeBook.EventSourcing
                     i > 0 && char.IsUpper(c) ? "-" + char.ToLower(c) : char.ToLower(c).ToString()));
             }
         }
+
     }
 }

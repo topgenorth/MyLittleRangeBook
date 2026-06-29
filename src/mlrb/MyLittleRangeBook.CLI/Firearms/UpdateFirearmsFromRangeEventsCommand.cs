@@ -1,178 +1,34 @@
 ﻿using System.Globalization;
 using ConsoleAppFramework;
-using FluentResults;
-using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.RangeEvents;
 
 namespace MyLittleRangeBook
 {
     [RegisterCommands("firearms")]
-    public class UpdateFirearmsFromRangeEventsCommand : MlrbFirearmsCommandBase
+    public partial class UpdateFirearmsFromRangeEventsCommand : MlrbFirearmsCommandBase
     {
         readonly IEventSourcingService _eventSourcingService;
-        readonly IProjector            _firearmsProjector;
+        readonly ISimpleRangeEventRepository _simpleRangeEventRepository;
 
         public UpdateFirearmsFromRangeEventsCommand(ILogger                     logger,
                                                     ICliDisplay                 display,
                                                     ISqliteHelper               sqliteHelper,
                                                     IFirearmsService            firearmsService,
                                                     IFirearmAggregateRepository firearmAggregateRepo,
-                                                    [FromKeyedServices(FirearmProjector.DI_KEY)]
-                                                    IProjector firearmsProjector,
-                                                    IEventSourcingService eventSourcingService) : base(logger, display,
-            sqliteHelper,
-            firearmsService, firearmAggregateRepo)
+                                                    IEventSourcingService eventSourcingService,
+                                                    ISimpleRangeEventRepository simpleRangeEventRepository) : base(logger, display,
+                                                                                                                                                                                                                     sqliteHelper,
+                                                                                                                                                                                                                     firearmsService, firearmAggregateRepo)
         {
-            _firearmsProjector    = firearmsProjector;
-            _eventSourcingService = eventSourcingService;
-        }
 
-
-        /// <summary>
-        ///     This is a maintenance task. It will update the Firearms table based on what is in the SimpleRangeEvents table.
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        [Command("import-from-range-events")]
-        [UsedImplicitly]
-        public async Task<int> ImportFirearmsFromRangeEvents(CancellationToken cancellationToken = default)
-        {
-            CliDisplay.PrintCommandHeader("Import new firearms from range events.");
-            int returnCode;
-
-            await using DapperCommandContext context = await DapperCommandContext
-                                                            .NewAsync(SqliteHelper, cancellationToken, true)
-                                                            .ConfigureAwait(false);
-            try
-            {
-                IEnumerable<NewFirearmNameFromSimpleRangeEventRow> newFirearmNames =
-                    await Commands.s_newFirearmNamesFromRangeEvents
-                                  .QueryAsync<NewFirearmNameFromSimpleRangeEventRow>(context).ConfigureAwait(false);
-
-                int count    = 0;
-                int newNamesCount = 0;
-                foreach (NewFirearmNameFromSimpleRangeEventRow f in newFirearmNames)
-                {
-                    newNamesCount++;
-
-                    #region Step 1: Get the event stream
-                    EventStreamRow? es = await _eventSourcingService.GetEventStream(context, f.FirearmId)
-                                                                    .ConfigureAwait(false);
-
-                    if (es is not null)
-                    {
-                        Result r = await _firearmsProjector.ProjectAggregateAsync(context, f.FirearmId)
-                                                           .ConfigureAwait(false);
-                        if (r.IsSuccess)
-                        {
-                            CliDisplay.PrintInfo($"Created firearm '{f.FirearmName}' from the existing event stream.");
-                            count++;
-                        }
-                        else
-                        {
-                            CliDisplay
-                               .PrintWarning($"Failed to create firearm '{f.FirearmName}' from the existing event stream.");
-                        }
-
-                        continue;
-                    }
-
-
-                    FirearmAggregate fa = FirearmAggregate.New(f.FirearmName, f.CreatedUtc);
-                    fa.AppendToNotes($"Imported from simple_range_event {f.SimpleRangeEventId}.",
-                                     DateTimeOffset.UtcNow);
-
-                    CliDisplay
-                       .PrintWarning($"Will have to create the firearm '{f.FirearmName}' event stream from the range events");
-                    #endregion
-
-                    #region Step 2: Get round counts from simple range events, and update the aggregate.
-                    List<(string FirearmId, string SimpleRangeEventId)> associations = [];
-                    DapperCommandContext ctx = context with { Arguments = new { f.FirearmName } };
-                    IEnumerable<RoundCountEventRow> shotsFired =
-                        await Commands.s_rangeEventRoundCountsForFirearm.QueryAsync<RoundCountEventRow>(ctx)
-                                      .ConfigureAwait(false);
-                    foreach (RoundCountEventRow r in shotsFired)
-                    {
-                        fa.MoreRoundsFired(r.RoundsFired, r.CreatedUtc);
-                        associations.Add((fa.Id, r.SimpleRangeEventId));
-                    }
-
-                    Result upsertEventStreamResult = await FirearmAggregateRepository
-                                                          .UpsertAsync(context, fa)
-                                                          .ConfigureAwait(false);
-                    if (upsertEventStreamResult.IsFailed)
-                    {
-                        Logger.Warning("Failed to create the firearm aggregate for '{FirearmName}' - skipped",
-                                       f.FirearmName);
-                        CliDisplay
-                           .PrintWarning($"Failed to create the firearm aggregate for '{f.FirearmName}' - skipped.");
-                        continue;
-                    }
-
-                    CliDisplay.PrintInfo($"Created the event stream for '{f.FirearmName}'.");
-                    #endregion
-
-
-                    #region Step 3: Upsert the firearm.
-                    Firearm f2 = fa.ToFirearm();
-                    Result<EntityId> firearmUpsertResult =
-                        await FirearmsService.UpsertAsync(context, f2).ConfigureAwait(false);
-                    if (firearmUpsertResult.IsFailed)
-                    {
-                        Logger.Warning("Failed to upsert firearm '{FirearmName}' - skipped.", f2.Name);
-                        CliDisplay.PrintWarning($"Failed to upsert firearm '{f2.Name}' - skipped.");
-                    }
-                    else
-                    {
-                        count++;
-                        CliDisplay.PrintInfo($"Save '{f2.Name}' in `firearms` table.");
-                    }
-                    #endregion
-
-
-                    #region Step 4: Associate the range event to the firearm.
-                    foreach (DapperCommandContext? ctx2 in associations.Select(r => context with
-                                                                               {
-                                                                                   Arguments = new
-                                                                                       {
-                                                                                           r.FirearmId,
-                                                                                           r.SimpleRangeEventId,
-                                                                                       },
-                                                                               }))
-                    {
-                        long result = await Commands.s_associateFirearmWithRangeEvent.ExecuteScalarAsync<long>(ctx2)
-                                                    .ConfigureAwait(false);
-                    }
-                    #endregion
-                }
-
-                returnCode = ReturnCodes.SUCCESS;
-                CliDisplay.PrintSuccess($"Imported {count}/{newNamesCount} new firearms.");
-            }
-            catch (Exception e)
-            {
-                returnCode = ReturnCodes.FAILURE;
-                Logger.Error(e, "Unexpected exception trying to import firearms from range events.");
-            }
-
-            if (returnCode != ReturnCodes.SUCCESS)
-            {
-                await context.RollbackAsync().ConfigureAwait(false);
-            }
-            else
-            {
-                await context.CommitAsync().ConfigureAwait(false);
-            }
-
-            PressEnterToContinue();
-
-            return returnCode;
+            _eventSourcingService           = eventSourcingService;
+            _simpleRangeEventRepository     = simpleRangeEventRepository;
         }
 
         /// <summary>
@@ -181,7 +37,7 @@ namespace MyLittleRangeBook
         ///     events where firearm names need to be retrieved or linked to an aggregate.
         /// </summary>
         /// <remarks>
-        ///     The <see cref="NewFirearmNameFromSimpleRangeEventRow" /> struct stores the essential data
+        ///     The <see cref="FirearmNameFromSimpleRangeEventRow" /> struct stores the essential data
         ///     from SimpleRangeEvents for firearms that have not yet been linked with their respective
         ///     aggregates in the system. It includes the event ID, firearm name, and creation timestamp.
         /// </remarks>
@@ -194,13 +50,14 @@ namespace MyLittleRangeBook
         /// <param name="Created">
         ///     The creation timestamp of the SimpleRangeEvent in string format.
         /// </param>
-        readonly record struct NewFirearmNameFromSimpleRangeEventRow(
+        readonly record struct FirearmNameFromSimpleRangeEventRow(
             string SimpleRangeEventId,
             string FirearmName,
             string Created)
         {
-            public MlrbId         FirearmId  => MlrbId.FromString(FirearmName);
+            public MlrbId FirearmId => MlrbId.FromString(FirearmName);
             public DateTimeOffset CreatedUtc => DateTimeOffset.Parse(Created, null, DateTimeStyles.AssumeLocal);
+            public override string ToString() => $"{FirearmId}:{FirearmName}/{SimpleRangeEventId}";
         }
 
         readonly record struct RoundCountEventRow(
@@ -288,15 +145,33 @@ namespace MyLittleRangeBook
                                                                        ORDER BY ufn.RowId;
                                                                        """;
 
+            const string GET_ALL_FIREARM_NAMES_FROM_RANGE_EVENTS_SQL = """
+                                                                   WITH UnprojectedFirearmNames AS (
+                                                                       SELECT s.row_id AS RowId,
+                                                                              s.id As SimpleRangeEventId,
+                                                                              s.firearm_name AS FirearmName,
+                                                                              s.event_date   AS Created,
+                                                                              ROW_NUMBER() OVER (PARTITION BY s.firearm_name ORDER BY s.row_id) AS rn
+                                                                       FROM simple_range_events s
+                                                                       ORDER BY s.row_id
+                                                                   )
+                                                                   SELECT ufn.SimpleRangeEventId,
+                                                                          ufn.FirearmName,
+                                                                          ufn.Created
+                                                                   FROM UnprojectedFirearmNames ufn
+                                                                   WHERE ufn.rn = 1
+                                                                   ORDER BY ufn.Created, ufn.FirearmName;
+                                                                   """;
+
             internal static readonly DapperCommand s_associateFirearmWithRangeEvent =
                 new(UPSERT_FIREARM_RANGE_EVENT_SQL);
-
-            internal static DapperCommand s_firstRangeEventForEachFirearm =
-                new(GET_FIRST_RANGE_EVENT_FOR_EACH_FIREARM_SQL);
 
             internal static readonly DapperCommand s_rangeEventRoundCountsForFirearm =
                 new(GET_RANGE_EVENT_ROUND_COUNTS_FOR_FIREARM_SQL);
 
+
+            internal static readonly DapperCommand s_getFirearmNamesFromRangeEvents =
+                new(GET_ALL_FIREARM_NAMES_FROM_RANGE_EVENTS_SQL);
 
             /// <summary>
             ///     A pre-defined database command that retrieves information about firearms from range events

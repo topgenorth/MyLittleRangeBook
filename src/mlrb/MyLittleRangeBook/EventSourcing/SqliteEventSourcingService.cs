@@ -35,8 +35,8 @@ namespace MyLittleRangeBook.EventSourcing
             EventStreamRow? es;
             try
             {
-                es = await Commands.s_selectStream.QuerySingleAsync<EventStreamRow>(ctx)
-                                   .ConfigureAwait(false);
+                es = await EventSourcingCommands.s_selectStream.QuerySingleAsync<EventStreamRow>(ctx)
+                                                .ConfigureAwait(false);
             }
             catch (InvalidOperationException e1)
             {
@@ -52,27 +52,6 @@ namespace MyLittleRangeBook.EventSourcing
             }
 
             return es;
-        }
-
-        /// <summary>
-        ///     Retrieves a collection of event rows associated with the specified stream ID from the database.
-        /// </summary>
-        /// <param name="context">
-        ///     The command context containing the database connection, transaction (if any), cancellation token,
-        ///     and additional arguments required for executing the query.
-        /// </param>
-        /// <param name="streamId">
-        ///     The unique identifier of the event stream whose associated event rows are to be retrieved.
-        /// </param>
-        /// <returns>
-        ///     A collection of <see cref="EventRow" /> objects representing the events associated with the specified stream ID.
-        /// </returns>
-        public async Task<IEnumerable<EventRow>> GetEventRows(DapperCommandContext context, MlrbId streamId)
-        {
-            DapperCommandContext ctx = context with { Arguments = new { StreamId = streamId.ToString() } };
-            IEnumerable<EventRow> rows = await Commands.s_selectEventsCommand.QueryAsync<EventRow>(ctx)
-                                                       .ConfigureAwait(false);
-            return rows;
         }
 
         /// <summary>
@@ -94,10 +73,6 @@ namespace MyLittleRangeBook.EventSourcing
         /// <param name="version">
         ///     The expected version of the event stream after insertion of the new event.
         /// </param>
-        /// <param name="metadataJson">
-        ///     An optional JSON string containing metadata to associate with the domain event. If null or empty, a default empty
-        ///     JSON object is used.
-        /// </param>
         /// <returns>
         ///     A task that completes when the domain event has been successfully inserted into the event stream.
         /// </returns>
@@ -109,26 +84,27 @@ namespace MyLittleRangeBook.EventSourcing
                                             MlrbId               streamId,
                                             string               streamType,
                                             IDomainEvent         domainEvent,
-                                            int                  version,
-                                            string?              metadataJson = null
+                                            int                  version
         )
         {
+            string  dataJson     = _eventSerializer.Serialize(domainEvent);
+            string? metadataJson = domainEvent.MetadataJson;
             var args = new
                        {
                            StreamId   = streamId,
                            Id         = new MlrbId(domainEvent.OccurredUtc),
                            StreamType = streamType,
                            domainEvent.EventType,
-                           Version    = version,
+                           Version = version,
                            domainEvent.OccurredUtc,
-                           DataJson     = _eventSerializer.Serialize(domainEvent),
-                           MetadataJson = string.IsNullOrWhiteSpace(metadataJson) ? "{}" : metadataJson,
+                           DataJson     = dataJson,
+                           MetadataJson = metadataJson,
                        };
             DapperCommandContext ctx = context with { Arguments = args };
             int                  rowCount;
             try
             {
-                rowCount = await Commands.s_insertEvent.ExecuteAsync(ctx).ConfigureAwait(false);
+                rowCount = await EventSourcingCommands.s_insertEvent.ExecuteAsync(ctx).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -169,21 +145,21 @@ namespace MyLittleRangeBook.EventSourcing
                                             Aggregate            aggregate,
                                             string               streamType,
                                             int                  version,
-                                            string?              metadataJson = "{}")
+                                            string?              metadataJson = null)
         {
             var args = new
                        {
                            StreamId = aggregate.Id,
                            Type     = streamType,
                            aggregate.Version,
-                           MetadataJson = string.IsNullOrWhiteSpace(metadataJson) ? "{}" : metadataJson!,
+                           MetadataJson = string.IsNullOrWhiteSpace(metadataJson) ? "{}" : metadataJson,
                        };
             DapperCommandContext ctx = context with { Arguments = args };
             int                  rowCount;
             Exception?           innerEx = null;
             try
             {
-                rowCount = await Commands.s_upsertEventStream.ExecuteAsync(ctx).ConfigureAwait(false);
+                rowCount = await EventSourcingCommands.s_upsertEventStream.ExecuteAsync(ctx).ConfigureAwait(false);
             }
             catch (Exception e1)
             {
@@ -199,81 +175,29 @@ namespace MyLittleRangeBook.EventSourcing
                 }
 
                 throw new InvalidOperationException($"Failed to update event stream version for {aggregate.Id}.",
-                                                    innerEx!);
+                                                    innerEx);
             }
         }
 
-        static class Commands
+        /// <summary>
+        ///     Retrieves a collection of event rows associated with the specified stream ID from the database.
+        /// </summary>
+        /// <param name="context">
+        ///     The command context containing the database connection, transaction (if any), cancellation token,
+        ///     and additional arguments required for executing the query.
+        /// </param>
+        /// <param name="streamId">
+        ///     The unique identifier of the event stream whose associated event rows are to be retrieved.
+        /// </param>
+        /// <returns>
+        ///     A collection of <see cref="EventRow" /> objects representing the events associated with the specified stream ID.
+        /// </returns>
+        public async Task<IEnumerable<EventRow>> GetEventRows(DapperCommandContext context, MlrbId streamId)
         {
-            const string SELECT_EVENTS_SQL = """
-                                             select row_id as RowId,
-                                                    stream_id as StreamId,
-                                                    stream_type as StreamType,
-                                                    event_type as EventType,
-                                                    version as Version,
-                                                    data_json as DataJson,
-                                                    metadata_json as MetadataJson,
-                                                    occurred_utc as OccurredUtc,
-                                                    created_utc as Created,
-                                                    modified_utc as Modified
-                                             from events
-                                             where stream_id = @StreamId
-                                             order by version;
-                                             """;
-
-            const string SELECT_STREAM_SQL = """
-                                             SELECT id AS StreamId,
-                                                    stream_type AS StreamType,
-                                                    version AS Version,
-                                                    created_utc as Created,
-                                                    modified_utc as Modified
-                                             FROM event_streams
-                                             WHERE id = @StreamId;
-                                             """;
-
-            const string INSERT_EVENT_SQL = """
-                                            insert into events
-                                            (
-                                                stream_id,
-                                                id,
-                                                stream_type,
-                                                version,
-                                                event_type,
-                                                occurred_utc,
-                                                data_json,
-                                                metadata_json
-                                            )
-                                            values
-                                            (
-                                                @StreamId,
-                                                @Id,
-                                                @StreamType,
-                                                @Version,
-                                                @EventType,
-                                                @OccurredUtc,
-                                                @DataJson,
-                                                @MetadataJson
-                                            );
-                                            """;
-
-            const string UPSERT_EVENT_STREAM_SQL = """
-                                                   INSERT INTO event_streams (id, stream_type, version, created_utc, modified_utc)
-                                                   VALUES (@StreamId, @Type, @Version, utcnow(), utcnow())
-                                                   ON CONFLICT(id) DO UPDATE
-                                                   SET stream_type = excluded.stream_type,
-                                                       version = excluded.version,
-                                                       modified_utc = excluded.modified_utc;
-                                                   """;
-
-            // ReSharper disable once StaticMemberInGenericType
-            internal static readonly DapperCommand s_selectEventsCommand = new(SELECT_EVENTS_SQL);
-
-            // ReSharper disable once StaticMemberInGenericType
-            internal static readonly DapperCommand s_selectStream = new(SELECT_STREAM_SQL);
-
-            internal static readonly DapperCommand s_insertEvent = new(INSERT_EVENT_SQL);
-
-            internal static readonly DapperCommand s_upsertEventStream = new(UPSERT_EVENT_STREAM_SQL);
+            DapperCommandContext ctx = context with { Arguments = new { StreamId = streamId.ToString() } };
+            IEnumerable<EventRow> rows = await EventSourcingCommands.s_selectEventsCommand.QueryAsync<EventRow>(ctx)
+                                                                    .ConfigureAwait(false);
+            return rows;
         }
     }
 }

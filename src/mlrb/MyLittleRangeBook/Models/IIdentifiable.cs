@@ -1,6 +1,4 @@
-﻿using MyLittleRangeBook.Models;
-
-namespace MyLittleRangeBook
+﻿namespace MyLittleRangeBook.Models
 {
     public interface IIdentifiable
     {

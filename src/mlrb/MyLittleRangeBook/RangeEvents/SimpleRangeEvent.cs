@@ -42,6 +42,14 @@ namespace MyLittleRangeBook.RangeEvents
         public DateTime EventDate { get; set; }
 
         /// <summary>
+        /// Explicitly convert the EventDate into a DateTimeOffset in UTC.
+        /// </summary>
+        public DateTimeOffset OccurredUtc => EventDate.Kind == DateTimeKind.Utc
+                                                 ? new DateTimeOffset(EventDate)
+                                                 : new DateTimeOffset(DateTime.SpecifyKind(EventDate,
+                                                                          DateTimeKind.Local)).ToUniversalTime();
+
+        /// <summary>
         ///     The name of the firearm used. Should match a firearm in the Firearms table.
         /// </summary>
         public string FirearmName { get; set; } = string.Empty;

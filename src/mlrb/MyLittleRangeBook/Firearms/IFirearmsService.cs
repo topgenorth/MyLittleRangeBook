@@ -40,5 +40,7 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="firearmAggregate"></param>
         /// <returns>An <c cref="EntityId">EntityId</c> that holds the Nanoid and the RowId of the firearm in the database.</returns>
         Task<Result<EntityId>> UpsertAsync(DapperCommandContext context, FirearmAggregate firearmAggregate);
+
+        Task<Result> AssociateWithRangeEvent(DapperCommandContext context, MlrbId firearmId, MlrbId rangeEventId);
     }
 }
