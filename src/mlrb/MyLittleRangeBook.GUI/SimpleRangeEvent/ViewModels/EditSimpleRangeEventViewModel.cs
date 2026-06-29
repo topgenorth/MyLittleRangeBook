@@ -16,11 +16,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
 {
     public partial class EditSimpleRangeEventViewModel : ViewModelBase, IDialogParticipant
     {
-        readonly IDialogService              _dialogService;
-        readonly ILogger                     _logger;
-        readonly ISimpleRangeEventRepository _rangeEventRepo;
-        readonly ISqliteHelper               _sqliteHelper;
-
+        readonly IDialogService                 _dialogService;
+        readonly ILogger                        _logger;
+        readonly ISimpleRangeEventDataProcessor _simpleRangeEventDataProcessor;
+        readonly ISimpleRangeEventService       _simpleRangeEventService;
+        readonly ISqliteHelper                  _sqliteHelper;
 
         /// <summary>
         ///     ViewModel responsible for editing a simple range event.
@@ -30,15 +30,16 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public EditSimpleRangeEventViewModel(SimpleRangeEventViewModel                simpleRangeEvent,
                                              ILogger                                  logger,
                                              Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-                                             ISimpleRangeEventRepository              rangeEventRepo,
-                                             ISqliteHelper                            sqliteHelper
-        )
+                                             ISqliteHelper                            sqliteHelper,
+                                             ISimpleRangeEventDataProcessor           simpleRangeEventDataProcessor,
+                                             ISimpleRangeEventService                 simpleRangeEventService)
         {
-            Item            = simpleRangeEvent;
-            _dialogService  = dialogServiceFactory(this);
-            _logger         = logger;
-            _rangeEventRepo = rangeEventRepo;
-            _sqliteHelper   = sqliteHelper;
+            Item                           = simpleRangeEvent;
+            _dialogService                 = dialogServiceFactory(this);
+            _logger                        = logger;
+            _sqliteHelper                  = sqliteHelper;
+            _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
+            _simpleRangeEventService       = simpleRangeEventService;
         }
 
         public SimpleRangeEventViewModel Item { get; }
@@ -53,29 +54,38 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 await _dialogService.ShowOverlayDialogAsync<DialogResult>("Validation Error",
                                                                           "Please correct the errors in the form before saving.",
                                                                           DialogCommands.Ok);
-
                 return;
             }
 
-            SimpleRangeEvent simpleRangeEvent = Item.ToSimpleRangeEvent();
             await using DapperCommandContext ctx =
                 await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken, true).ConfigureAwait(false);
 
             try
             {
-                Result<MlrbId> r1 = await _rangeEventRepo.UpsertAsync(ctx, simpleRangeEvent);
+                Result<MlrbId> r1 = await _simpleRangeEventDataProcessor
+                                         .ProcessSimpleRangeEventData(ctx,
+                                                                      Item.FirearmName,
+                                                                      Item.RoundsFired,
+                                                                      Item.RangeName,
+                                                                      Item.AmmoDescription,
+                                                                      Item.Notes,
+                                                                      DateOnly.FromDateTime(Item.EventDate))
+                                         .ConfigureAwait(false);
+
                 if (r1.IsSuccess)
                 {
-                    await ctx.CommitAsync();
-                    SimpleRangeEventViewModel updatedViewModel = new(simpleRangeEvent);
+                    await ctx.CommitAsync().ConfigureAwait(false);
+                    Result<SimpleRangeEvent> r3 = await _simpleRangeEventService
+                                                       .GetAsync(ctx, r1.Value)
+                                                       .ConfigureAwait(false);
+                    SimpleRangeEvent          sre              = r3.Value;
+                    SimpleRangeEventViewModel updatedViewModel = new(sre);
                     _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
-
-                    // Notify the rest of the app about the change
                     WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
-                                                             Item.RowId == null
-                                                                 ? UpdateAction.Added
-                                                                 : UpdateAction.Updated,
-                                                             simpleRangeEvent));
+                                                         Item.RowId == null
+                                                             ? UpdateAction.Added
+                                                             : UpdateAction.Updated,
+                                                         sre));
                 }
                 else
                 {
@@ -87,7 +97,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             }
             catch (Exception e)
             {
-                _logger.Error(e, "Failed to save simple range event {Id}.", simpleRangeEvent.Id);
+                _logger.Error(e, "Failed to save simple range event {Id}.", Item.Id);
                 await ctx.RollbackAsync().ConfigureAwait(false);
                 await _dialogService.ShowOverlayDialogAsync<bool>("Error",
                                                                   "An error occured while trying to save the event.",
@@ -100,9 +110,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             DialogCommand[] commands = [DialogCommands.No, DialogCommands.Yes];
             DialogResult userResponse = await _dialogService.ShowOverlayDialogAsync<DialogResult>(
-                                             "Cancel editing?",
-                                             "Do you want to discard your changes?",
-                                             commands);
+                                         "Cancel editing?",
+                                         "Do you want to discard your changes?",
+                                         commands);
 
             switch (userResponse)
             {
