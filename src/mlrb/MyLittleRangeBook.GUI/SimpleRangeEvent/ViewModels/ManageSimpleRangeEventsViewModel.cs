@@ -43,7 +43,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly ILogger                                  _logger;
-        readonly ISimpleRangeEventRepository              _repo;
         readonly ISimpleRangeEventDataProcessor           _simpleRangeEventDataProcessor;
 
         /// <summary>
@@ -51,7 +50,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     Automatically updated through the reactive pipeline.
         /// </summary>
         readonly ReadOnlyObservableCollection<SimpleRangeEventViewModel> _simpleRangeEvents;
-
         readonly ISimpleRangeEventService _simpleRangeEventService;
 
         /// <summary>
@@ -65,11 +63,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
         public ManageSimpleRangeEventsViewModel(ILogger logger,
                                                 Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-                                                ISimpleRangeEventRepository repo, ISqliteHelper sqliteHelper,
+                                                ISqliteHelper sqliteHelper,
                                                 ISimpleRangeEventDataProcessor simpleRangeEventDataProcessor,
                                                 ISimpleRangeEventService simpleRangeEventService)
         {
-            _repo                          = repo;
             _sqliteHelper                  = sqliteHelper;
             _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
             _simpleRangeEventService       = simpleRangeEventService;
@@ -210,7 +207,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             await using DapperCommandContext context =
                 await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken);
-            Result<IEnumerable<SimpleRangeEvent>> r = await _repo.GetSimpleRangeEventsAsync(context);
+            Result<IEnumerable<SimpleRangeEvent>> r = await _simpleRangeEventService.GetSimpleRangeEventsAsync(context);
 
             if (r.IsSuccess)
             {

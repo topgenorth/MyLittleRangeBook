@@ -14,21 +14,20 @@ namespace MyLittleRangeBook
     public partial class UpdateFirearmsFromRangeEventsCommand : MlrbFirearmsCommandBase
     {
         readonly IEventSourcingService _eventSourcingService;
-        readonly ISimpleRangeEventRepository _simpleRangeEventRepository;
+        readonly ISimpleRangeEventService _simpleRangeEventService;
 
         public UpdateFirearmsFromRangeEventsCommand(ILogger                     logger,
                                                     ICliDisplay                 display,
                                                     ISqliteHelper               sqliteHelper,
                                                     IFirearmsService            firearmsService,
                                                     IFirearmAggregateRepository firearmAggregateRepo,
-                                                    IEventSourcingService eventSourcingService,
-                                                    ISimpleRangeEventRepository simpleRangeEventRepository) : base(logger, display,
-                                                                                                                                                                                                                     sqliteHelper,
-                                                                                                                                                                                                                     firearmsService, firearmAggregateRepo)
+                                                    IEventSourcingService       eventSourcingService,
+                                                    ISimpleRangeEventService simpleRangeEventService) : base(logger, display,
+                                                                                                                                                               sqliteHelper,
+                                                                                                                                                               firearmsService, firearmAggregateRepo)
         {
-
-            _eventSourcingService           = eventSourcingService;
-            _simpleRangeEventRepository     = simpleRangeEventRepository;
+            _eventSourcingService         = eventSourcingService;
+            _simpleRangeEventService = simpleRangeEventService;
         }
 
         /// <summary>

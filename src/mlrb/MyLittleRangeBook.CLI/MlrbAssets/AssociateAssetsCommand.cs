@@ -1,7 +1,6 @@
 ﻿using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
-using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
@@ -19,24 +18,22 @@ namespace MyLittleRangeBook.MlrbAssets
     {
         readonly IMlrbAssetAggregateRepository _assetAggregateRepository;
         readonly IFirearmAggregateRepository   _firearmAggregateRepository;
-        readonly ISimpleRangeEventRepository   _simpleRangeEventRepository;
+        readonly ISimpleRangeEventService      _simpleRangeEventService;
 
         public AssociateAssetsCommand(ILogger                       logger,
                                       ICliDisplay                   display,
                                       ISqliteHelper                 sqliteHelper,
                                       IFirearmAggregateRepository   firearmAggregateRepository,
                                       IMlrbAssetAggregateRepository assetAggregateRepository,
-                                      [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)]
-                                      ISimpleRangeEventRepository simpleRangeEventRepository) :
+                                      ISimpleRangeEventService      simpleRangeEventService) :
             base(logger, display, sqliteHelper)
         {
             ArgumentNullException.ThrowIfNull(firearmAggregateRepository);
             ArgumentNullException.ThrowIfNull(assetAggregateRepository);
-            ArgumentNullException.ThrowIfNull(simpleRangeEventRepository);
 
             _firearmAggregateRepository = firearmAggregateRepository;
             _assetAggregateRepository   = assetAggregateRepository;
-            _simpleRangeEventRepository = simpleRangeEventRepository;
+            _simpleRangeEventService    = simpleRangeEventService;
         }
 
         /// <summary>
@@ -58,7 +55,8 @@ namespace MyLittleRangeBook.MlrbAssets
             int returnCode;
 
             CliDisplay.PrintCommandHeader("Associate asset");
-            var context = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken).ConfigureAwait(false);
+            DapperCommandContext context =
+                await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken).ConfigureAwait(false);
 
             try
             {
@@ -113,7 +111,7 @@ namespace MyLittleRangeBook.MlrbAssets
             try
             {
                 Result<FirearmAggregate> f = await _firearmAggregateRepository.GetAsync(context, firearmId)
-                                                 .ConfigureAwait(false);
+                                                                              .ConfigureAwait(false);
                 if (f.IsFailed)
                 {
                     Logger.Warning(
@@ -157,7 +155,7 @@ namespace MyLittleRangeBook.MlrbAssets
                     return;
                 }
 
-                Result<SimpleRangeEvent> r = await _simpleRangeEventRepository
+                Result<SimpleRangeEvent> r = await _simpleRangeEventService
                                                   .GetAsync(context, asset.Id)
                                                   .ConfigureAwait(false);
                 if (r.IsFailed)
