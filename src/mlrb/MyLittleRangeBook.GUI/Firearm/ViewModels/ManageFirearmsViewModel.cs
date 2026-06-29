@@ -43,21 +43,24 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
         readonly ReadOnlyObservableCollection<FirearmViewModel> _firearmViewModels;
         readonly ILogger                                        _logger;
-        readonly ISimpleRangeEventRepository                    _rangeEventRepo;
         readonly ISqliteHelper                                  _sqliteHelper;
+        readonly ISimpleRangeEventDataProcessor                 _simpleRangeEventDataProcessor;
+        readonly ISimpleRangeEventService                       _simpleRangeEventService;
 
-        public ManageFirearmsViewModel(IFirearmsService                         firearmsDbService,
-                                       ISimpleRangeEventRepository              rangeEventRepo,
+        public ManageFirearmsViewModel(IFirearmsService firearmsDbService,
                                        Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-                                       ISqliteHelper                            sqliteHelper,
-                                       ILogger                                  logger)
+                                       ISqliteHelper sqliteHelper,
+                                       ILogger logger, ISimpleRangeEventDataProcessor simpleRangeEventDataProcessor,
+                                       ISimpleRangeEventService simpleRangeEventService)
         {
-            _sqliteHelper         = sqliteHelper;
-            _firearmsDbService    = firearmsDbService;
-            _rangeEventRepo       = rangeEventRepo;
-            _dialogServiceFactory = dialogServiceFactory;
-            _dialogService        = dialogServiceFactory(this);
-            _logger               = logger;
+            _sqliteHelper                  = sqliteHelper;
+            _firearmsDbService             = firearmsDbService;
+            _dialogServiceFactory          = dialogServiceFactory;
+            _dialogService                 = dialogServiceFactory(this);
+            _logger                        = logger;
+            _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
+            _simpleRangeEventService       = simpleRangeEventService;
+
 
             // Register for message notifications from other ViewModels
             WeakReferenceMessenger.Default.Register<UpdateDataMessage<Firearm>>(this);
@@ -179,14 +182,18 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
             SimpleRangeEvent rangeEvent = new()
                                           {
-                                              FirearmName = firearm.Name ?? string.Empty,
+                                              FirearmName = firearm.Name,
                                               Created     = DateTimeOffset.UtcNow,
                                               Modified    = DateTimeOffset.UtcNow,
                                               EventDate   = DateTime.UtcNow,
                                           };
 
-            EditSimpleRangeEventViewModel vm = new(new SimpleRangeEventViewModel(rangeEvent), _logger,
-                                                   _dialogServiceFactory, _rangeEventRepo, _sqliteHelper);
+            EditSimpleRangeEventViewModel vm = new(new SimpleRangeEventViewModel(rangeEvent),
+                                                   _logger,
+                                                   _dialogServiceFactory,
+                                                   _sqliteHelper,
+                                                   _simpleRangeEventDataProcessor,
+                                                   _simpleRangeEventService);
 
             await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
                                                                          "Add Range Event",
