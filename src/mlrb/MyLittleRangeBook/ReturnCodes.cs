@@ -20,14 +20,12 @@
         /// </summary>
         public const int COMMAND_CANCELLED = 2;
 
-
         #region SQLite specific return codes
         /// <summary>
         ///     Could not find the SQLITE database file.
         /// </summary>
         public const int SQL_SQLITE_DATABASE_FILE_NOT_FOUND = 301;
         #endregion
-
 
         #region Range event return codes.
         /// <summary>
@@ -87,5 +85,7 @@
         /// </summary>
         public const int SHOTVIEW_FILE_READ_FAILURE = 502;
         #endregion
+
+        public const int RANGEEVENT_CSV_FILE_READ_FAILURE = 601;
     }
 }

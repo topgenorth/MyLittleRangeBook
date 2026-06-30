@@ -11,8 +11,7 @@ namespace MyLittleRangeBook.RangeEvents
     /// <summary>
     ///     Allows us to create a new Range Event from the CLI, and optionally the FIT file that goes with it.
     /// </summary>
-    [RegisterCommands("rangeevent")]
-    [UsedImplicitly]
+    [RegisterCommands("rangeevent"), UsedImplicitly]
     public class SimpleRangeEventCommandAddToSqlite : MlrbSqliteCommandBase
     {
         readonly ISimpleRangeEventDataProcessor _rangeEventDataProcessor;
@@ -47,8 +46,7 @@ namespace MyLittleRangeBook.RangeEvents
         /// <param name="quiet">If this parameter is provided, then the command will display minimal output to the console.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("add")]
-        [UsedImplicitly]
+        [Command("add"), UsedImplicitly]
         public async Task<int> AddSimpleRangeEventAsync(string                          firearm,
                                                         int                             rounds,
                                                         string                          range,
