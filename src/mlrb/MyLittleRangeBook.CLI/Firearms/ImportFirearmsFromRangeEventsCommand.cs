@@ -62,7 +62,7 @@ namespace MyLittleRangeBook
                                       .ConfigureAwait(false);
                     foreach (RoundCountEventRow r in shotsFired)
                     {
-                        fa.MoreRoundsFired(r.RoundsFired, r.CreatedUtc);
+                        fa.FirearmRoundCountChanged(r.RoundsFired, r.CreatedUtc);
                         associations.Add((fa.Id, r.SimpleRangeEventId));
                     }
 

@@ -16,6 +16,7 @@ using DynamicData.Kernel;
 using FluentResults;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
+using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
@@ -256,16 +257,31 @@ namespace MyLittleRangeBook.GUI.ViewModels
             if (result == DialogResult.Yes)
             {
                 await using DapperCommandContext context =
-                    await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken);
-                SimpleRangeEvent sre = simpleRangeEvent.ToSimpleRangeEvent();
-                Result r1 = await _simpleRangeEventService
-                                 .DeleteAsync(context, sre)
-                                 .ConfigureAwait(false);
-                if (r1.IsSuccess)
+                    await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken, true);
+                SimpleRangeEvent sre       = simpleRangeEvent.ToSimpleRangeEvent();
+                var              firearmId = MlrbId.FromString(sre.FirearmName);
+
+                var r = await _simpleRangeEventDataProcessor
+                    .DeleteSimpleRangeEvent(context, sre)
+                    .ConfigureAwait(false);
+
+
+                if (r.IsSuccess)
                 {
                     _simpleRangeEventSourceCache.Remove(simpleRangeEvent);
+                    await context.CommitAsync().ConfigureAwait(false);
                     WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
                                                          UpdateAction.Removed, sre));
+                    _logger.Error("Range event deleted successfully.");
+
+                }
+                else
+                {
+                    StringBuilder message = new("Could not delete the range event.");
+                    r.Reasons.ForEach(reason => message.AppendLine(reason.Message));
+                    _logger.Error(message.ToString());
+
+                    await context.RollbackAsync().ConfigureAwait(false);
                 }
             }
         }

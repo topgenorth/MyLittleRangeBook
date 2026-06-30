@@ -17,8 +17,8 @@ namespace MyLittleRangeBook.RangeEvents
         {
             try
             {
-                var p = new { Id = simpleRangeEvent.Id! };
-                var ctx = context with { Arguments = p };
+                var                  p   = new { Id = simpleRangeEvent.Id! };
+                DapperCommandContext ctx = context with { Arguments = p };
                 int result = await Commands.s_deleteCommand
                                            .ExecuteAsync(ctx)
                                            .ConfigureAwait(false);
@@ -28,6 +28,24 @@ namespace MyLittleRangeBook.RangeEvents
             {
                 Error err = e.ToError().Enrich(simpleRangeEvent.Id!);
                 return new Result().WithError(err);
+            }
+        }
+
+        public async Task<Result> DisassociateFromFirearm(DapperCommandContext context, MlrbId firearmId,
+                                                          MlrbId               rangeEventId)
+        {
+            try
+            {
+                var args = new { FirearmId = firearmId.ToString(), SimpleRangeEventId = rangeEventId.ToString() };
+                DapperCommandContext ctx = context with { Arguments = args };
+
+                int     l       = await Commands.s_disassociateFromFirearm.ExecuteAsync(ctx).ConfigureAwait(false);
+                Success success = new($"Disassociated firearm {firearmId} with range event {rangeEventId} - {l}.");
+                return Result.Ok().WithSuccess(success);
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(ex.ToError());
             }
         }
 
@@ -155,11 +173,17 @@ namespace MyLittleRangeBook.RangeEvents
                                       ORDER BY event_date, firearm_name, range_name;
                                       """;
 
-            const                    string        DELETE_SQL      = "DELETE FROM simple_range_events WHERE id = @Id;";
-            internal static readonly DapperCommand s_upsertCommand = new(UPSERT_SQL);
-            internal static readonly DapperCommand s_deleteCommand = new(DELETE_SQL);
-            internal static readonly DapperCommand s_selectAll     = new(SELECT_SQL);
-            internal static readonly DapperCommand s_selectById    = new(SELECT_BY_ID_SQL);
+            const string DELETE_SQL = "DELETE FROM simple_range_events WHERE id = @Id;";
+
+            const string DISASSOCIATE_FROM_FIREARM_SQL = """
+                                                         DELETE FROM firearms_simple_range_events WHERE simple_range_event_id = @SimpleRangeEventId;
+                                                         """;
+
+            internal static readonly DapperCommand s_upsertCommand           = new(UPSERT_SQL);
+            internal static readonly DapperCommand s_deleteCommand           = new(DELETE_SQL);
+            internal static readonly DapperCommand s_selectAll               = new(SELECT_SQL);
+            internal static readonly DapperCommand s_selectById              = new(SELECT_BY_ID_SQL);
+            internal static readonly DapperCommand s_disassociateFromFirearm = new(DISASSOCIATE_FROM_FIREARM_SQL);
         }
     }
 }

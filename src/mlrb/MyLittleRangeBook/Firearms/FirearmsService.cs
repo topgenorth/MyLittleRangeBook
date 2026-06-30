@@ -39,13 +39,15 @@ namespace MyLittleRangeBook.Firearms
             DapperCommandContext ctx = context with
                                        {
                                            Arguments =
-                                           new { firearm.Id,
-                                                   firearm.Name,
-                                                   firearm.Notes,
-                                                   firearm.RoundsFired,
-                                                   Modified = DateTimeOffset.UtcNow,
-                                                   firearm.Created,
-                                               },
+                                           new
+                                           {
+                                               firearm.Id,
+                                               firearm.Name,
+                                               firearm.Notes,
+                                               firearm.RoundsFired,
+                                               Modified = DateTimeOffset.UtcNow,
+                                               firearm.Created,
+                                           },
                                        };
 
             try
@@ -81,8 +83,26 @@ namespace MyLittleRangeBook.Firearms
                 var args = new { FirearmId = firearmId.ToString(), SimpleRangeEventId = rangeEventId.ToString() };
                 DapperCommandContext ctx = context with { Arguments = args };
 
-                int     l       = await Commands.s_AssociateWithRangeEvent.ExecuteAsync(ctx).ConfigureAwait(false);
+                int     l       = await Commands.s_associateWithRangeEvent.ExecuteAsync(ctx).ConfigureAwait(false);
                 Success success = new($"Associated firearm {firearmId} with range event {rangeEventId} - {l}.");
+                return Result.Ok().WithSuccess(success);
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(ex.ToError());
+            }
+        }
+
+        public async Task<Result> DisassociateFromRangeEvent(DapperCommandContext context, MlrbId firearmId,
+                                                             MlrbId               rangeEventId)
+        {
+            try
+            {
+                var args = new { FirearmId = firearmId.ToString(), SimpleRangeEventId = rangeEventId.ToString() };
+                DapperCommandContext ctx = context with { Arguments = args };
+
+                int     l       = await Commands.s_disassociateWIthRangeEvent.ExecuteAsync(ctx).ConfigureAwait(false);
+                Success success = new($"Disassociated firearm {firearmId} with range event {rangeEventId} - {l}.");
                 return Result.Ok().WithSuccess(success);
             }
             catch (Exception ex)
@@ -114,7 +134,7 @@ namespace MyLittleRangeBook.Firearms
 
         public async Task<Result<Firearm>> GetFirearmAsync(DapperCommandContext context, string id)
         {
-            DapperCommand        cmd = Commands.s_selectById;
+            DapperCommand        cmd = Commands.SelectById;
             DapperCommandContext ctx = context with { Arguments = new { Id = id } };
             try
             {

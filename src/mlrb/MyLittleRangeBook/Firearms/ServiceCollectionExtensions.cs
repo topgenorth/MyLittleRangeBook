@@ -20,7 +20,7 @@ namespace MyLittleRangeBook
             typeof(FirearmBarrelChanged),
             typeof(FirearmCleaned),
             typeof(FirearmCreated),
-            typeof(FirearmDischargeMoreRounds),
+            typeof(FirearmRoundCountAltered),
             typeof(FirearmInactive),
             typeof(FirearmModified),
             typeof(FirearmNoteAdded),
