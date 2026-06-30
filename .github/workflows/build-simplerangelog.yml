@@ -24,7 +24,7 @@ jobs:
 
     env:
       VERSION_MAJOR: 0
-      VERSION_MINOR: 13
+      VERSION_MINOR: 14
       VERSION_REVISION: 12
 
     steps:
