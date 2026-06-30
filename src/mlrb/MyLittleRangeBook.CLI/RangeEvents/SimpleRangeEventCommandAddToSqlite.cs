@@ -1,13 +1,10 @@
 ﻿using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
-using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 using static MyLittleRangeBook.ReturnCodes;
-using static MyLittleRangeBook.Persistence.Sqlite.SqliteHelperExtensions;
 
 namespace MyLittleRangeBook.RangeEvents
 {
@@ -18,20 +15,21 @@ namespace MyLittleRangeBook.RangeEvents
     [UsedImplicitly]
     public class SimpleRangeEventCommandAddToSqlite : MlrbSqliteCommandBase
     {
-        readonly ISimpleRangeEventService _simpleRangeEventService;
-        readonly ISimpleRangeEventPrinter       _simpleRangeEventPrinter;
         readonly ISimpleRangeEventDataProcessor _rangeEventDataProcessor;
+        readonly ISimpleRangeEventPrinter       _simpleRangeEventPrinter;
+        readonly ISimpleRangeEventService       _simpleRangeEventService;
 
         public SimpleRangeEventCommandAddToSqlite(ILogger                        logger,
                                                   ICliDisplay                    cliDisplay,
                                                   ISimpleRangeEventDataProcessor simpleRangeEventProcessor,
                                                   ISqliteHelper                  sqliteHelper,
-                                                  ISimpleRangeEventPrinter       simpleRangeEventPrinter, ISimpleRangeEventService simpleRangeEventService) :
+                                                  ISimpleRangeEventPrinter       simpleRangeEventPrinter,
+                                                  ISimpleRangeEventService       simpleRangeEventService) :
             base(logger, cliDisplay, sqliteHelper)
         {
-            _simpleRangeEventPrinter      = simpleRangeEventPrinter;
+            _simpleRangeEventPrinter = simpleRangeEventPrinter;
             _simpleRangeEventService = simpleRangeEventService;
-            _rangeEventDataProcessor      = simpleRangeEventProcessor;
+            _rangeEventDataProcessor = simpleRangeEventProcessor;
         }
 
         /// <summary>
@@ -65,22 +63,22 @@ namespace MyLittleRangeBook.RangeEvents
                 await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken, true)
                                           .ConfigureAwait(false);
 
-            var r1 = await _rangeEventDataProcessor
-                           .ProcessSimpleRangeEventData(context, firearm, rounds, range, ammo, notes, eventDate)
-                           .ConfigureAwait(false);
+            Result<MlrbId> r1 = await _rangeEventDataProcessor
+                                     .ProcessSimpleRangeEventData(context, firearm, rounds, range, ammo, notes,
+                                                                  eventDate)
+                                     .ConfigureAwait(false);
 
             int returnValue;
             if (r1.IsSuccess)
             {
                 await context.CommitAsync().ConfigureAwait(false);
                 returnValue = SUCCESS;
-                var sre = await _simpleRangeEventService.GetAsync(context, r1.Value)
-                                                        .ConfigureAwait(false);
+                Result<SimpleRangeEvent> sre = await _simpleRangeEventService.GetAsync(context, r1.Value)
+                                                                             .ConfigureAwait(false);
 
                 _simpleRangeEventPrinter.Print(AnsiConsole.Console, sre.Value, quiet);
 
                 CliDisplay.PrintSuccess("Finished.");
-
             }
             else
             {
@@ -90,7 +88,7 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             PressEnterToContinue();
-            return returnValue ;
+            return returnValue;
         }
     }
 }
