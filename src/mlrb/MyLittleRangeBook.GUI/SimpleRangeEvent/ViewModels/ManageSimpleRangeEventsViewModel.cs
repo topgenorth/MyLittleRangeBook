@@ -261,25 +261,24 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 SimpleRangeEvent sre       = simpleRangeEvent.ToSimpleRangeEvent();
                 var              firearmId = MlrbId.FromString(sre.FirearmName);
 
-                var deleteTask = _simpleRangeEventService.DeleteAsync(context, sre);
-                var disassociateTask = _simpleRangeEventService.DisassociateFromFirearm(context, firearmId, simpleRangeEvent.Id);
+                var r = await _simpleRangeEventDataProcessor
+                    .DeleteSimpleRangeEvent(context, sre)
+                    .ConfigureAwait(false);
 
-                Result[] operationResults = await Task
-                                                 .WhenAll(deleteTask, disassociateTask)
-                                                 .ConfigureAwait(false);
-                var finalResult = Result.Merge(operationResults[0], operationResults[1]);
-                if (finalResult.IsSuccess)
+
+                if (r.IsSuccess)
                 {
                     _simpleRangeEventSourceCache.Remove(simpleRangeEvent);
                     await context.CommitAsync().ConfigureAwait(false);
                     WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
                                                          UpdateAction.Removed, sre));
+                    _logger.Error("Range event deleted successfully.");
 
                 }
                 else
                 {
                     StringBuilder message = new("Could not delete the range event.");
-                    finalResult.Reasons.ForEach(reason => message.AppendLine(reason.Message));
+                    r.Reasons.ForEach(reason => message.AppendLine(reason.Message));
                     _logger.Error(message.ToString());
 
                     await context.RollbackAsync().ConfigureAwait(false);

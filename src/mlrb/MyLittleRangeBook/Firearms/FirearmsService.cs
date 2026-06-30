@@ -98,8 +98,8 @@ namespace MyLittleRangeBook.Firearms
         {
             try
             {
-                var                  args = new { FirearmId = firearmId.ToString(), SimpleRangeEventId = rangeEventId.ToString() };
-                DapperCommandContext ctx  = context with { Arguments = args };
+                var args = new { FirearmId = firearmId.ToString(), SimpleRangeEventId = rangeEventId.ToString() };
+                DapperCommandContext ctx = context with { Arguments = args };
 
                 int     l       = await Commands.s_disassociateWIthRangeEvent.ExecuteAsync(ctx).ConfigureAwait(false);
                 Success success = new($"Disassociated firearm {firearmId} with range event {rangeEventId} - {l}.");

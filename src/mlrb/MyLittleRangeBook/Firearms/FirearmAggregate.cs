@@ -105,7 +105,7 @@ namespace MyLittleRangeBook.Firearms
 
                     break;
 
-                case FirearmDischargeMoreRounds x:
+                case FirearmRoundCountAltered x:
                     RoundsFired += x.Rounds;
                     if (!string.IsNullOrWhiteSpace(x.AmmoDescription))
                     {
@@ -202,8 +202,10 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="assetId"></param>
         /// <param name="roundsInRangeEvents"></param>
         /// <param name="utcNow"></param>
-        public void DisassociatedWithRangeEvent(MlrbId assetId, DateTimeOffset utcNow) =>
+        public void DisassociatedWithRangeEvent(MlrbId assetId, DateTimeOffset utcNow)
+        {
             Raise(new FirearmDisassociatedWithRangeEvent(Id, assetId, utcNow));
+        }
 
         /// <summary>
         ///     Record the discharge of rounds for this firearm.
@@ -212,18 +214,11 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="occurredUtc"></param>
         /// <param name="ammoDescription">Optional. Free format text that describes the ammo used. </param>
         /// <param name="metadataJson">Optional.  Any JSON metadata for this event.</param>
-        public void MoreRoundsFired([ValueRange(0, 10000)] int roundCount, DateTimeOffset occurredUtc,
+        public void FirearmRoundCountChanged(int roundCount, DateTimeOffset occurredUtc,
                                     string?                    ammoDescription = null,
                                     string?                    metadataJson    = null)
         {
-            if (roundCount > 0)
-            {
-                Raise(new FirearmDischargeMoreRounds(Id, roundCount, occurredUtc, ammoDescription));
-            }
-            else
-            {
-                AddNote(ammoDescription, occurredUtc, metadataJson, "ammo_description");
-            }
+            Raise(new FirearmRoundCountAltered(Id, roundCount, occurredUtc, ammoDescription));
         }
 
         public void IsInactive(bool inactive, DateTimeOffset utcNow)
