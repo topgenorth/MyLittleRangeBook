@@ -214,10 +214,10 @@ namespace MyLittleRangeBook.RangeEvents
                                                                       string                     rangeName,
                                                                       string                     ammoDescription,
                                                                       string                     notes,
-                                                                      DateTimeOffset             occurredUtc)
+                                                                      DateTimeOffset             eventDateUtc)
         {
             List<IReason> reasons = [];
-            Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(context, firearmName, occurredUtc)
+            Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(context, firearmName, eventDateUtc)
                                                        .ConfigureAwait(false);
 
             if (r1.IsFailed)
@@ -230,9 +230,11 @@ namespace MyLittleRangeBook.RangeEvents
 
             try
             {
-                fa.FirearmRoundCountChanged(roundsFired, occurredUtc, RemoveSurroundingQuotes(ammoDescription));
-                fa.AddNote("Range: " + rangeName,          occurredUtc, null, "range_name");
-                fa.AddNote(RemoveSurroundingQuotes(notes), occurredUtc);
+                MlrbId rangeEventId = new(eventDateUtc);
+                fa.FirearmRoundCountChanged(roundsFired, eventDateUtc, RemoveSurroundingQuotes(ammoDescription));
+                fa.AddNote("Range: " + rangeName,          eventDateUtc, null, "range_name");
+                fa.AddNote(RemoveSurroundingQuotes(notes), eventDateUtc);
+                fa.AssociateWithSimpleRangeEvent(rangeEventId, eventDateUtc);
 
                 Result r2 = await _faRepo.UpsertAsync(context, fa).ConfigureAwait(false);
                 reasons.AddRange(r2.Reasons);
