@@ -19,5 +19,8 @@ namespace MyLittleRangeBook.RangeEvents
         Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent);
 
         Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(DapperCommandContext context);
+
+        Task<Result> DisassociateFromFirearm(DapperCommandContext context, MlrbId firearmId,
+                                             MlrbId               rangeEventId);
     }
 }

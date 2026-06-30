@@ -8,12 +8,15 @@ namespace MyLittleRangeBook.RangeEvents
     public interface ISimpleRangeEventDataProcessor
     {
         Task<Result<MlrbId>> ProcessSimpleRangeEventData(DapperCommandContext       context,
-                                                 string                     firearmName,
-                                                 [ValueRange(0, 10000)] int roundsFired,
-                                                 string                     rangeName,
-                                                 string                     ammoDescription,
-                                                 string                     notes,
-                                                 DateOnly?                  dateOfEvent);
+                                                         string                     firearmName,
+                                                         [ValueRange(0, 10000)] int roundsFired,
+                                                         string                     rangeName,
+                                                         string                     ammoDescription,
+                                                         string                     notes,
+                                                         DateOnly?                  dateOfEvent);
+
+        Task<Result> DisassociateFirearmFromRangeEvent(DapperCommandContext context, MlrbId rangeEventId,
+                                                       MlrbId               firearmId);
     }
 
     public class SimpleRangeEventDataProcessor : ISimpleRangeEventDataProcessor
@@ -32,12 +35,12 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
         public async Task<Result<MlrbId>> ProcessSimpleRangeEventData(DapperCommandContext       context,
-                                                              string                     firearmName,
-                                                              [ValueRange(0, 10000)] int roundsFired,
-                                                              string                     rangeName,
-                                                              string                     ammoDescription,
-                                                              string                     notes,
-                                                              DateOnly?                  dateOfEvent)
+                                                                      string                     firearmName,
+                                                                      [ValueRange(0, 10000)] int roundsFired,
+                                                                      string                     rangeName,
+                                                                      string                     ammoDescription,
+                                                                      string                     notes,
+                                                                      DateOnly?                  dateOfEvent)
         {
             List<IReason> reasons = [];
             (DateOnly eventDate, DateTimeOffset occurredUtc) = GetEventDate(dateOfEvent);
@@ -47,7 +50,7 @@ namespace MyLittleRangeBook.RangeEvents
                                                                 occurredUtc)
                                     .ConfigureAwait(false);
             reasons.AddRange(r1.Reasons);
-            Result<MlrbId> result = new Result<MlrbId>();
+            Result<MlrbId> result = new();
 
             if (r1.IsSuccess)
             {
@@ -78,6 +81,46 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             return result.WithReasons(reasons);
+        }
+
+        public async Task<Result> DisassociateFirearmFromRangeEvent(DapperCommandContext context, MlrbId rangeEventId,
+                                                                    MlrbId               firearmId)
+        {
+            List<IReason> reasons = [];
+            Result<SimpleRangeEvent> sre =
+                await _rangeEventService.GetAsync(context, rangeEventId).ConfigureAwait(false);
+            if (sre.IsFailed)
+            {
+                return new Result().WithReasons(sre.Reasons);
+            }
+
+            reasons.AddRange(sre.Reasons);
+
+            Result<FirearmAggregate?> fa = await _faRepo.GetAsync(context, firearmId).ConfigureAwait(false);
+            if (fa.IsFailed)
+            {
+                return new Result().WithReasons(fa.Reasons);
+            }
+
+            reasons.AddRange(fa.Reasons);
+
+            fa.Value!.DisassociatedWithRangeEvent(rangeEventId, sre.Value.OccurredUtc);
+            // [TO20260629] Not sure this is the best way to model this?
+            fa.Value!.MoreRoundsFired(-1 * sre.Value.RoundsFired, sre.Value.OccurredUtc);
+
+            Result r1 = await _faRepo.UpsertAsync(context, fa.Value).ConfigureAwait(false);
+            reasons.AddRange(r1.Reasons);
+            Result result = await _firearmsService.DisassociateFromRangeEvent(context, firearmId, rangeEventId)
+                                                  .ConfigureAwait(false);
+            reasons.AddRange(result.Reasons);
+
+            if (r1.IsSuccess && result.IsSuccess)
+            {
+                var su = new Success($"Disassociated the firearm '{fa.Value.Name}' from the range event '{sre.Value.Id}'.");
+                reasons.Add(su);
+            }
+
+            return new Result().WithReasons(reasons);
         }
 
         internal async Task<Result> UpsertFirearm(DapperCommandContext context, Firearm f)

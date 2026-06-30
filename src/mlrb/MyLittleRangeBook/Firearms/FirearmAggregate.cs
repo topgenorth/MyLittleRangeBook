@@ -101,6 +101,10 @@ namespace MyLittleRangeBook.Firearms
 
                     break;
 
+                case FirearmDisassociatedWithRangeEvent x:
+
+                    break;
+
                 case FirearmDischargeMoreRounds x:
                     RoundsFired += x.Rounds;
                     if (!string.IsNullOrWhiteSpace(x.AmmoDescription))
@@ -166,7 +170,6 @@ namespace MyLittleRangeBook.Firearms
             else
             {
                 StringBuilder newNotes = new StringBuilder(Notes)
-                                        .AppendLine()
                                         .AppendLine("--")
                                         .Append("Date: ")
                                         .AppendLine(Modified.ToString("O"))
@@ -192,6 +195,15 @@ namespace MyLittleRangeBook.Firearms
             Raise(new FirearmAssociatedWithRangeEvent(Id, assetId, utcNow));
 
         public void Cleaned(DateTimeOffset utcNow) => Raise(new FirearmCleaned(Id, utcNow));
+
+        /// <summary>
+        /// For some reason this firearm was no longer associated with a range event.
+        /// </summary>
+        /// <param name="assetId"></param>
+        /// <param name="roundsInRangeEvents"></param>
+        /// <param name="utcNow"></param>
+        public void DisassociatedWithRangeEvent(MlrbId assetId, DateTimeOffset utcNow) =>
+            Raise(new FirearmDisassociatedWithRangeEvent(Id, assetId, utcNow));
 
         /// <summary>
         ///     Record the discharge of rounds for this firearm.

@@ -9,6 +9,8 @@ namespace MyLittleRangeBook.Firearms
     /// </summary>
     public interface IFirearmsService
     {
+        Task<Result> AssociateWithRangeEvent(DapperCommandContext context, MlrbId firearmId, MlrbId rangeEventId);
+
         /// <summary>
         ///     Deletes the Firearm record from the database.
         /// </summary>
@@ -17,6 +19,8 @@ namespace MyLittleRangeBook.Firearms
         /// <returns></returns>
         Task<Result<bool>> DeleteAsync(DapperCommandContext context, Firearm firearm);
 
+        Task<Result> DisassociateFromRangeEvent(DapperCommandContext context, MlrbId firearmId,
+                                                MlrbId               rangeEventId);
 
         Task<Result<Firearm>> GetFirearmAsync(DapperCommandContext context, string id);
 
@@ -40,7 +44,5 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="firearmAggregate"></param>
         /// <returns>An <c cref="EntityId">EntityId</c> that holds the Nanoid and the RowId of the firearm in the database.</returns>
         Task<Result<EntityId>> UpsertAsync(DapperCommandContext context, FirearmAggregate firearmAggregate);
-
-        Task<Result> AssociateWithRangeEvent(DapperCommandContext context, MlrbId firearmId, MlrbId rangeEventId);
     }
 }

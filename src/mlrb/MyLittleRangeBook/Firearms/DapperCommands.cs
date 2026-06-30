@@ -35,11 +35,17 @@ namespace MyLittleRangeBook.Firearms
                                                           VALUES (@FirearmId, @SimpleRangeEventId)
                                                           ON CONFLICT DO NOTHING
                                                           """;
+            const string DISASSOCIATE_WITH_RANGE_EVENT_SQL = """
+                                                          DELETE FROM firearms_simple_range_events WHERE simple_range_event_id = @SimpleRangeEventId;
+                                                          """;
 
-            internal static readonly DapperCommand s_AssociateWithRangeEvent = new(ASSOCIATE_WITH_RANGE_EVENT_SQL);
+            internal static readonly DapperCommand s_associateWithRangeEvent = new(ASSOCIATE_WITH_RANGE_EVENT_SQL);
+
+            internal static readonly DapperCommand
+                s_disassociateWIthRangeEvent = new(DISASSOCIATE_WITH_RANGE_EVENT_SQL);
             internal static readonly DapperCommand s_selectAll               = new(SELECT_SQL);
             internal static readonly DapperCommand s_selectActive            = new(SELECT_ACTIVE_SQL);
-            public static readonly   DapperCommand s_selectById              = new(SELECT_BY_ID_SQL);
+            public static readonly   DapperCommand SelectById              = new(SELECT_BY_ID_SQL);
             internal static readonly DapperCommand s_deleteById              = new(DELETE_SQL);
             internal static readonly DapperCommand s_upsert                  = new(UPSERT_SQL);
         }
