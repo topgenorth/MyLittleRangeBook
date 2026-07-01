@@ -36,42 +36,43 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="12.0.4" />
-        <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.2"/>
+        <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.2" />
         <PackageReference Include="ConsoleAppFramework" Version="5.7.13">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="dbup" Version="5.0.41"/>
-        <PackageReference Include="dbup-sqlite" Version="6.0.4"/>
-        <PackageReference Include="FluentResults" Version="4.0.0"/>
+        <PackageReference Include="CsvHelper" Version="33.1.0" />
+        <PackageReference Include="dbup" Version="5.0.41" />
+        <PackageReference Include="dbup-sqlite" Version="6.0.4" />
+        <PackageReference Include="FluentResults" Version="4.0.0" />
         <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
         <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.9" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.9" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5"/>
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5"/>
-        <PackageReference Include="Serilog" Version="4.3.1"/>
-        <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1"/>
-        <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0"/>
-        <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0"/>
-        <PackageReference Include="Serilog.Exceptions" Version="8.4.0"/>
-        <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0"/>
-        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1"/>
-        <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0"/>
-        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0"/>
-        <PackageReference Include="Spectre.Console" Version="0.57.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
+        <PackageReference Include="Serilog" Version="4.3.1" />
+        <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+        <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" />
+        <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+        <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+        <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+        <PackageReference Include="Spectre.Console" Version="0.57.1" />
         <PackageReference Include="Spectre.Console.Analyzer" Version="1.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3"/>
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
     </ItemGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="AppIcon256.ico"/>
+        <AvaloniaResource Include="AppIcon256.ico" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\MyLittleRangeBook.FIT\MyLittleRangeBook.FIT.csproj"/>
+        <ProjectReference Include="..\MyLittleRangeBook.FIT\MyLittleRangeBook.FIT.csproj" />
         <ProjectReference Include="..\MyLittleRangeBook\MyLittleRangeBook.csproj" />
     </ItemGroup>
 
