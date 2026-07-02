@@ -21,6 +21,13 @@ namespace MyLittleRangeBook.RangeEvents
             base(logger, display, sqliteHelper) =>
             _simpleRangeEventProcessor = simpleRangeEventProcessor;
 
+        /// <summary>
+        /// Imports range events from a CSV file into the database. There are no "guard-rails" to prevent you from importing the
+        /// same file twice. Doing so will duplicate things.
+        /// </summary>
+        /// <param name="file">The file path to the CSV file containing range events.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <returns>An integer indicating the result code of the operation.</returns>
         [Command("import-from-csv")]
         [UsedImplicitly]
         public async Task<int> ImportFromCsvFile(string file, CancellationToken cancellationToken = default)

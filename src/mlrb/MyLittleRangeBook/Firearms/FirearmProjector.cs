@@ -132,7 +132,7 @@ namespace MyLittleRangeBook.Firearms
                                                                .ConfigureAwait(false);
                 fa = FirearmAggregate.Create(es);
             }
-            catch (InvalidOperationException e1)
+            catch (InvalidOperationException)
             {
                 fa = null;
             }

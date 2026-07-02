@@ -39,7 +39,7 @@ namespace MyLittleRangeBook.GUI.Properties
         } = ThemeVariant.Light.ToString();
 
 
-        public string LogsDirectory
+        public string? LogsDirectory
         {
             get;
             set => SetField(ref field, value);

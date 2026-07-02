@@ -4,8 +4,6 @@
              xmlns:controls="clr-namespace:SharedControls.Controls;assembly=SharedControls"
              xmlns:converters="clr-namespace:SharedControls.Converters;assembly=SharedControls"
              xmlns:themes="clr-namespace:SharedControls.Themes;assembly=SharedControls"
-             xmlns:viewModels1="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
-             xmlns:views1="clr-namespace:MyLittleRangeBook.GUI.Views"
              xmlns:viewModels="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              xmlns:properties="clr-namespace:MyLittleRangeBook.GUI.Properties"
              xmlns:views="clr-namespace:MyLittleRangeBook.GUI.Views"
@@ -70,6 +68,19 @@
             <Setter Property="FontSize" Value="18" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightAccentBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.h2">
+            <Setter Property="Margin" Value="5,15,0,5" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightAccentBrush}" />
+        </Style>
+
+        <Style Selector="controls|LabeledControl.ExtraInfo">
+            <Setter Property="Margin" Value="15,0,15,0" />
+            <Setter Property="FontStyle" Value="Italic" />
+            <Setter Property="FontSize" Value="12" />
         </Style>
 
         <Style Selector="ListBox">

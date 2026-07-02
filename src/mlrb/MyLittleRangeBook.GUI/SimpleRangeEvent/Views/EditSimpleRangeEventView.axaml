@@ -21,32 +21,14 @@
           RowSpacing="10">
         <ScrollViewer DataContext="{Binding Item}">
             <StackPanel Grid.IsSharedSizeScope="True" Spacing="5">
-                <!--  ID  -->
-                <controls:LabeledControl Header="ID">
-                    <TextBox IsReadOnly="True"
-                             Text="{Binding Id, Mode=OneWay}"
-                             HorizontalAlignment="Left"
-                             Watermark="The ID will be set after saving automatically." />
-                </controls:LabeledControl>
-
-                <!--  Event Date  -->
-                <controls:LabeledControl Header="Event Date">
-                    <CalendarDatePicker SelectedDate="{Binding EventDate}"
-                                        HorizontalAlignment="Left" />
-                </controls:LabeledControl>
 
                 <!--  Firearm  -->
                 <controls:LabeledControl Header="Firearm">
                     <TextBox x:Name="FirearmTextBox"
                              HorizontalAlignment="Left"
-                             Text="{Binding FirearmName}" Watermark="The name of the firearm" />
+                             Text="{Binding FirearmName}"
+                             PlaceholderText="The name of the firearm" />
                 </controls:LabeledControl>
-
-                <!--  Range   -->
-                <controls:LabeledControl Header="Range">
-                    <TextBox x:Name="RangeTextBox" Text="{Binding RangeName}" Watermark="The name of the range" />
-                </controls:LabeledControl>
-
 
                 <!--  Rounds   -->
                 <controls:LabeledControl Header="Rounds">
@@ -57,6 +39,19 @@
                                    FormatString="0"
                                    HorizontalAlignment="Left" />
                 </controls:LabeledControl>
+
+                <!--  Event Date  -->
+                <controls:LabeledControl Header="Event Date">
+                    <CalendarDatePicker SelectedDate="{Binding EventDate}"
+                                        HorizontalAlignment="Left" />
+                </controls:LabeledControl>
+
+
+                <!--  Range   -->
+                <controls:LabeledControl Header="Range">
+                    <TextBox x:Name="RangeTextBox" Text="{Binding RangeName}" PlaceholderText="The name of the range" />
+                </controls:LabeledControl>
+
 
                 <!--  Ammo  -->
                 <controls:LabeledControl Header="Ammo">
@@ -74,13 +69,19 @@
                 </controls:LabeledControl>
 
                 <!-- Some Infos -->
-                <TextBlock Text="Information" Classes="h1" />
-
-                <controls:LabeledControl Header="Created Date" Content="{Binding Created}"
-                                         VerticalContentAlignment="Center" />
-                <controls:LabeledControl Header="Last Updated"
-                                         Content="{Binding Modified, TargetNullValue='Not yet completed'}"
-                                         VerticalContentAlignment="Center" />
+                <StackPanel VerticalAlignment="Bottom"
+                            HorizontalAlignment="Stretch"
+                            Orientation="Horizontal">
+                    <controls:LabeledControl Header="Id" Classes="ExtraInfo"
+                                             Content="{Binding Id, TargetNullValue='Not yet completed'}"
+                                             VerticalContentAlignment="Center" />
+                    <controls:LabeledControl Header="Last Updated" Classes="ExtraInfo"
+                                             Content="{Binding Modified, StringFormat='{}{0:g}', TargetNullValue='Not yet completed'}"
+                                             VerticalContentAlignment="Center" />
+                    <controls:LabeledControl Classes="ExtraInfo"
+                                             Header="Created Date" Content="{Binding Created, StringFormat='{}{0:g}', TargetNullValue='Not yet completed'}"
+                                             VerticalContentAlignment="Center" />
+                </StackPanel>
 
             </StackPanel>
         </ScrollViewer>

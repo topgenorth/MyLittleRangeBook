@@ -90,7 +90,7 @@
                     <TextBox CornerRadius="8"
                              Width="300"
                              Text="{Binding FilterString}"
-                             Watermark="Find Items..." />
+                             PlaceholderText="Find Items..." />
                 </controls:LabeledControl>
 
                 <Separator VerticalAlignment="Stretch" Width="1" Height="NaN"
