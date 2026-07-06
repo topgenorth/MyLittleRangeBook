@@ -27,7 +27,7 @@
                 </MenuItem.Icon>
             </MenuItem>
 
-            <MenuItem Header="Edit Item"
+            <MenuItem Header="View Item"
                       Command="{Binding #Root.((viewModels1:ManageFirearmsViewModel)DataContext).EditFirearmCommand}"
                       CommandParameter="{Binding}">
                 <MenuItem.Icon>
@@ -133,7 +133,7 @@
             </ListBox.ItemContainerTheme>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Grid ColumnDefinitions="*, 1.5*, Auto"
+                    <Grid ColumnDefinitions="*, Auto"
                           ColumnSpacing="10">
 
                         <!-- Left Column: Name and Round Count -->
@@ -154,16 +154,8 @@
                                        Text="{Binding RoundsFired, StringFormat='Rounds: {0}'}" />
                         </Grid>
 
-                        <!-- Right Column: Notes -->
-                        <TextBlock Grid.Column="1"
-                                   FontStyle="Italic"
-                                   Opacity="0.8"
-                                   TextWrapping="Wrap"
-                                   VerticalAlignment="Center"
-                                   Text="{Binding Notes}" />
-
                         <!-- A Button that shows the ContextMenu (Useful esp. on mobile devices) -->
-                        <Button Grid.Column="2" Classes="toolBar"
+                        <Button Grid.Column="1" Classes="toolBar"
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Right"
                                 HorizontalContentAlignment="Right"
