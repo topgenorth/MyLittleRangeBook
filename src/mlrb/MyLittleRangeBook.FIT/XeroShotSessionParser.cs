@@ -13,8 +13,8 @@ namespace MyLittleRangeBook.FIT
     /// </summary>
     public class XeroShotSessionParser : IXeroShotSessionParser
     {
-        internal const int EXPECTED_FILE_TYPE = 54; // TODO [TO20260414] Change the name to a FITMessageType
-        readonly FitListener _fitListener = new();
+        internal const int         EXPECTED_FILE_TYPE = 54; // TODO [TO20260414] Change the name to a FITMessageType
+        readonly       FitListener _fitListener       = new();
 
         readonly ILogger _logger;
 #pragma warning disable CS0414 // Field is assigned but its value is never used
@@ -22,10 +22,7 @@ namespace MyLittleRangeBook.FIT
 #pragma warning restore CS0414 // Field is assigned but its value is never used
         ShotSession? _shotSession;
 
-        public XeroShotSessionParser(ILogger logger)
-        {
-            _logger = logger.ForContext<XeroShotSessionParser>();
-        }
+        public XeroShotSessionParser(ILogger logger) => _logger = logger.ForContext<XeroShotSessionParser>();
 
         /// <summary>
         ///     Decodes a FIT file into a ShotSession.
@@ -39,14 +36,14 @@ namespace MyLittleRangeBook.FIT
             try
             {
                 result = (await filePath.LoadFileBytesAsync(cancellationToken))
-                    .Bind(bytesFromFitFile =>
-                    {
-                        // TODO [TO20260405] Refactor this to get rid of the dependency on CommunityToolkit.HighPerformance
-                        using Stream stream = bytesFromFitFile.AsStream();
-                        _logger.Verbose("Loaded {bytes} bytes.", bytesFromFitFile.Length);
+                   .Bind(bytesFromFitFile =>
+                         {
+                             // TODO [TO20260405] Refactor this to get rid of the dependency on CommunityToolkit.HighPerformance
+                             using Stream stream = bytesFromFitFile.AsStream();
+                             _logger.Verbose("Loaded {bytes} bytes.", bytesFromFitFile.Length);
 
-                        return Decode(stream);
-                    });
+                             return Decode(stream);
+                         });
             }
             catch (Exception e)
             {
@@ -57,10 +54,7 @@ namespace MyLittleRangeBook.FIT
             return result;
         }
 
-        public Result<ShotSession> Decode(Stream input)
-        {
-            return Decode(input, null);
-        }
+        public Result<ShotSession> Decode(Stream input) => Decode(input, null);
 
         public Result<ShotSession> Decode(Stream input, ILogger? logger)
         {
@@ -76,12 +70,12 @@ namespace MyLittleRangeBook.FIT
             msgBroadcaster.FileIdMesgEvent += OnFileIdMsg;
 
             msgBroadcaster.DeviceInfoMesgEvent += OnDeviceInfoMsg;
-            decoder.MesgEvent += msgBroadcaster.OnMesg;
+            decoder.MesgEvent                  += msgBroadcaster.OnMesg;
 
-            msgBroadcaster.RecordMesgEvent += OnRecordMsg;
-            msgBroadcaster.ChronoShotDataMesgEvent += OnChronoShotMsg;
+            msgBroadcaster.RecordMesgEvent            += OnRecordMsg;
+            msgBroadcaster.ChronoShotDataMesgEvent    += OnChronoShotMsg;
             msgBroadcaster.ChronoShotSessionMesgEvent += OnChronoShotSessionMsg;
-            decoder.MesgEvent += _fitListener.OnMesg;
+            decoder.MesgEvent                         += _fitListener.OnMesg;
 
             LogContentsOfMessages(msgBroadcaster, logger);
 
@@ -90,8 +84,8 @@ namespace MyLittleRangeBook.FIT
                 if (decoder.Read(input))
                 {
                     return _shotSession is null
-                        ? Result.Fail(new FailedToParseFitFileError())
-                        : Result.Ok(_shotSession);
+                               ? Result.Fail(new FailedToParseFitFileError())
+                               : Result.Ok(_shotSession);
                 }
             }
             catch (Exception e)
@@ -113,73 +107,82 @@ namespace MyLittleRangeBook.FIT
             }
 
             msgBroadcaster.DeviceInfoMesgEvent += (_, e) =>
-            {
-                var msg = (DeviceInfoMesg)e.mesg;
-                _logger.Verbose("OnDeviceInfoMsg: {deviceInfo}", msg);
-                foreach (Field? field in msg.Fields)
-                {
-                    _logger.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
-                }
-            };
+                                                  {
+                                                      DeviceInfoMesg? msg = (DeviceInfoMesg)e.mesg;
+                                                      _logger.Verbose("OnDeviceInfoMsg: {deviceInfo}", msg);
+                                                      foreach (Field? field in msg.Fields)
+                                                      {
+                                                          _logger.Verbose("  Field: {field}, {fieldType}", field.Name,
+                                                                          field.Type);
+                                                      }
+                                                  };
 
             msgBroadcaster.FileIdMesgEvent += (_, e) =>
-            {
-                var msg = (FileIdMesg)e.mesg;
-                logger.Verbose("OnFileIdMsg: {fileIdMsg}", msg);
-                foreach (Field? field in msg.Fields)
-                {
-                    logger.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
-                }
-            };
+                                              {
+                                                  FileIdMesg? msg = (FileIdMesg)e.mesg;
+                                                  logger.Verbose("OnFileIdMsg: {fileIdMsg}", msg);
+                                                  foreach (Field? field in msg.Fields)
+                                                  {
+                                                      logger.Verbose("  Field: {field}, {fieldType}", field.Name,
+                                                                     field.Type);
+                                                  }
+                                              };
 
             msgBroadcaster.ChronoShotDataMesgEvent += (_, e) =>
-            {
-                var msg = (ChronoShotDataMesg)e.mesg;
-                _logger.Verbose("OnChronoShotMsg: {chronoShotMsg}", msg);
-                foreach (Field? field in msg.Fields)
-                {
-                    _logger.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
-                }
-            };
+                                                      {
+                                                          ChronoShotDataMesg? msg = (ChronoShotDataMesg)e.mesg;
+                                                          _logger.Verbose("OnChronoShotMsg: {chronoShotMsg}", msg);
+                                                          foreach (Field? field in msg.Fields)
+                                                          {
+                                                              _logger.Verbose("  Field: {field}, {fieldType}",
+                                                                              field.Name, field.Type);
+                                                          }
+                                                      };
 
             msgBroadcaster.ChronoShotSessionMesgEvent += (_, e) =>
-            {
-                var msg = (ChronoShotSessionMesg)e.mesg;
-                logger?.Verbose("OnChronoShotSessionMsg: {shotSessionMsg}", msg);
-                foreach (Field? field in msg.Fields)
-                {
-                    logger?.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
-                }
-            };
+                                                         {
+                                                             ChronoShotSessionMesg? msg = (ChronoShotSessionMesg)e.mesg;
+                                                             logger?.Verbose("OnChronoShotSessionMsg: {shotSessionMsg}",
+                                                                             msg);
+                                                             foreach (Field? field in msg.Fields)
+                                                             {
+                                                                 logger?.Verbose("  Field: {field}, {fieldType}",
+                                                                     field.Name, field.Type);
+                                                             }
+                                                         };
 
             msgBroadcaster.ActivityMesgEvent += (_, e) =>
-            {
-                var msg = (ActivityMesg)e.mesg;
-                logger?.Verbose("OnActivityMsg: {activityMsg}", msg);
-                foreach (Field? field in msg.Fields)
-                {
-                    logger?.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
-                }
-            };
+                                                {
+                                                    ActivityMesg? msg = (ActivityMesg)e.mesg;
+                                                    logger?.Verbose("OnActivityMsg: {activityMsg}", msg);
+                                                    foreach (Field? field in msg.Fields)
+                                                    {
+                                                        logger?.Verbose("  Field: {field}, {fieldType}", field.Name,
+                                                                        field.Type);
+                                                    }
+                                                };
             msgBroadcaster.DeveloperDataIdMesgEvent += (_, e) =>
-            {
-                var msg = (DeveloperDataIdMesg)e.mesg;
-                logger?.Verbose("OnDeveloperDataIdMsg: {developerDataIdMsg}", msg);
-                foreach (Field? field in msg.Fields)
-                {
-                    logger?.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
-                }
-            };
+                                                       {
+                                                           DeveloperDataIdMesg? msg = (DeveloperDataIdMesg)e.mesg;
+                                                           logger?.Verbose("OnDeveloperDataIdMsg: {developerDataIdMsg}",
+                                                                           msg);
+                                                           foreach (Field? field in msg.Fields)
+                                                           {
+                                                               logger?.Verbose("  Field: {field}, {fieldType}",
+                                                                               field.Name, field.Type);
+                                                           }
+                                                       };
 
             msgBroadcaster.ConnectivityMesgEvent += (_, e) =>
-            {
-                var msg = (ConnectivityMesg)e.mesg;
-                logger?.Verbose("OnConnectivityMsg: {connectivityMsg}", msg);
-                foreach (Field? field in msg.Fields)
-                {
-                    logger?.Verbose("  Field: {field}, {fieldType}", field.Name, field.Type);
-                }
-            };
+                                                    {
+                                                        ConnectivityMesg? msg = (ConnectivityMesg)e.mesg;
+                                                        logger?.Verbose("OnConnectivityMsg: {connectivityMsg}", msg);
+                                                        foreach (Field? field in msg.Fields)
+                                                        {
+                                                            logger?.Verbose("  Field: {field}, {fieldType}", field.Name,
+                                                                            field.Type);
+                                                        }
+                                                    };
         }
 
 
@@ -193,9 +196,9 @@ namespace MyLittleRangeBook.FIT
             }
 
             return new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .WriteTo.File(logFilePath)
-                .CreateLogger();
+                  .MinimumLevel.Verbose()
+                  .WriteTo.File(logFilePath)
+                  .CreateLogger();
         }
 
 
@@ -207,19 +210,19 @@ namespace MyLittleRangeBook.FIT
         /// <returns></returns>
         public async Task<Result<ShotSession>> ExploreFitFileAsync(string fitFile, CancellationToken cancellationToken)
         {
-            ILogger logger = CreateFileLogger(fitFile);
+            ILogger             logger = CreateFileLogger(fitFile);
             Result<ShotSession> result;
             try
             {
                 result = (await fitFile.LoadFileBytesAsync(cancellationToken))
-                    .Bind(bytesFromFitFile =>
-                    {
-                        // TODO [TO20260405] Refactor this to get rid of the dependency on CommunityToolkit.HighPerformance
-                        using Stream stream = bytesFromFitFile.AsStream();
-                        _logger.Verbose("Loaded {bytes} bytes.", bytesFromFitFile.Length);
+                   .Bind(bytesFromFitFile =>
+                         {
+                             // TODO [TO20260405] Refactor this to get rid of the dependency on CommunityToolkit.HighPerformance
+                             using Stream stream = bytesFromFitFile.AsStream();
+                             _logger.Verbose("Loaded {bytes} bytes.", bytesFromFitFile.Length);
 
-                        return Decode(stream, logger);
-                    });
+                             return Decode(stream, logger);
+                         });
             }
             catch (Exception e)
             {
@@ -233,35 +236,35 @@ namespace MyLittleRangeBook.FIT
 
         void OnChronoShotSessionMsg(object sender, MesgEventArgs e)
         {
-            var msg = (ChronoShotSessionMesg)e.mesg;
+            ChronoShotSessionMesg? msg = (ChronoShotSessionMesg)e.mesg;
 
             _shotSession!.DateTimeUtc = msg.GetTimestampUtc();
 
             _shotSession!.ProjectileWeight = Convert.ToInt32(msg.GetGrainWeight() ?? 0f);
-            _shotSession!.ProjectileType = msg.GetProjectileType().ToString() ?? "Unknown";
-            _shotSession.AverageSpeed = Convert.ToInt32(msg.GetAvgSpeed() ?? 0f);
-            _shotSession.MaxSpeed = Convert.ToInt32(msg.GetMaxSpeed() ?? 0f);
-            _shotSession.MinSpeed = Convert.ToInt32(msg.GetMinSpeed() ?? 0f);
+            _shotSession!.ProjectileType   = msg.GetProjectileType().ToString() ?? "Unknown";
+            _shotSession.AverageSpeed      = Convert.ToInt32(msg.GetAvgSpeed() ?? 0f);
+            _shotSession.MaxSpeed          = Convert.ToInt32(msg.GetMaxSpeed() ?? 0f);
+            _shotSession.MinSpeed          = Convert.ToInt32(msg.GetMinSpeed() ?? 0f);
             _shotSession.StandardDeviation = msg.GetStandardDeviation() ?? 0f;
-            _shotSession.ExtremeSpread = _shotSession.MaxSpeed - _shotSession.MinSpeed;
+            _shotSession.ExtremeSpread     = _shotSession.MaxSpeed - _shotSession.MinSpeed;
         }
 
         void OnChronoShotMsg(object sender, MesgEventArgs e)
         {
-            var msg = (ChronoShotDataMesg)e.mesg;
+            ChronoShotDataMesg? msg = (ChronoShotDataMesg)e.mesg;
 
             Shot shot = new()
-            {
-                ShotNumber = (int)msg.GetShotNum()!,
-                DateTimeUtc = msg.GetTimestampUtc(),
-                Speed = new ShotSpeed(msg.GetShotSpeed() ?? 0f)
-            };
+                        {
+                            ShotNumber  = (int)msg.GetShotNum()!,
+                            DateTimeUtc = msg.GetTimestampUtc(),
+                            Speed       = new ShotSpeed(msg.GetShotSpeed() ?? 0f),
+                        };
             _shotSession!.AddShot(shot);
         }
 
         void OnRecordMsg(object sender, MesgEventArgs e)
         {
-            var msg = (RecordMesg)e.mesg;
+            RecordMesg? msg = (RecordMesg)e.mesg;
             _logger.Verbose("OnRecordMsg: {onRecordMsg}", msg);
             foreach (Field? field in msg.Fields)
             {
@@ -284,28 +287,28 @@ namespace MyLittleRangeBook.FIT
 
         void OnFileIdMsg(object sender, MesgEventArgs e)
         {
-            var fileIdMesg = (FileIdMesg)e.mesg;
-            DynastreamFile? fitType = fileIdMesg.GetType();
+            FileIdMesg?     fileIdMesg = (FileIdMesg)e.mesg;
+            DynastreamFile? fitType    = fileIdMesg.GetType();
 
             if (EXPECTED_FILE_TYPE != (int)fitType!)
             {
                 throw new Exception($"Expected FIT File type {EXPECTED_FILE_TYPE}, received {fitType}.");
             }
 
-            _shotSession ??= new ShotSession(fileIdMesg);
-            _shotSession.SerialNumber = fileIdMesg.GetSerialNumber() ?? 0;
-            _shotSession.TimeCreated = fileIdMesg.GetTimeCreatedUtc();
-            _shotSession.Product = fileIdMesg.GetProduct();
-            _shotSession.Manufacturer = fileIdMesg.GetManufacturer();
-            _shotSession.Type = (byte)fitType;
+            _shotSession              ??= new ShotSession(fileIdMesg);
+            _shotSession.SerialNumber =   fileIdMesg.GetSerialNumber() ?? 0;
+            _shotSession.TimeCreated  =   fileIdMesg.GetTimeCreatedUtc();
+            _shotSession.Product      =   fileIdMesg.GetProduct();
+            _shotSession.Manufacturer =   fileIdMesg.GetManufacturer();
+            _shotSession.Type         =   (byte)fitType;
         }
 
         void OnDeviceInfoMsg(object sender, MesgEventArgs e)
         {
-            var msg = (DeviceInfoMesg)e.mesg;
+            DeviceInfoMesg? msg = (DeviceInfoMesg)e.mesg;
 
-            _shotSession ??= new ShotSession(msg);
-            _shotSession.SoftwareVersion = msg.GetSoftwareVersion().ToString() ?? "Unknown";
+            _shotSession                 ??= new ShotSession(msg);
+            _shotSession.SoftwareVersion =   msg.GetSoftwareVersion().ToString() ?? "Unknown";
         }
 
         // ReSharper disable CollectionNeverQueried.Local

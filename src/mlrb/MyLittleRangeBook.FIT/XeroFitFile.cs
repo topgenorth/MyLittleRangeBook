@@ -10,7 +10,7 @@ namespace MyLittleRangeBook.FIT
             Contents = contents;
         }
 
-        public string FileName { get; }
+        public string               FileName { get; }
         public ReadOnlyMemory<byte> Contents { get; }
 
 
@@ -25,8 +25,8 @@ namespace MyLittleRangeBook.FIT
         {
             try
             {
-                byte[] contents = await File.ReadAllBytesAsync(fileName, ct).ConfigureAwait(false);
-                var x = new XeroFitFile(fileName, contents);
+                byte[]      contents = await File.ReadAllBytesAsync(fileName, ct).ConfigureAwait(false);
+                XeroFitFile x        = new(fileName, contents);
 
                 return Result.Ok(x);
             }
@@ -43,9 +43,6 @@ namespace MyLittleRangeBook.FIT
         }
 
 
-        public override string ToString()
-        {
-            return FileName;
-        }
+        public override string ToString() => FileName;
     }
 }
