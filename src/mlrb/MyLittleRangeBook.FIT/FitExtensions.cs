@@ -15,31 +15,23 @@ namespace MyLittleRangeBook.FIT
 {
     public static class FitExtensions
     {
-        const double MetresToFeet = 3.2808399;
-        const byte TimestampFieldId = 253;
+        const double MetresToFeet     = 3.2808399;
+        const byte   TimestampFieldId = 253;
 
         public static DateTimeOffset FitEpoch = new(1989, 12, 31, 0, 0, 0, TimeSpan.Zero);
 
 
-        public static DateTimeOffset GetTimestampUtc(this ChronoShotSessionMesg msg)
-        {
-            return msg.GetTimestamp().GetDateTime().ToUniversalTime();
-        }
+        public static DateTimeOffset GetTimestampUtc(this ChronoShotSessionMesg msg) =>
+            msg.GetTimestamp().GetDateTime().ToUniversalTime();
 
-        public static DateTimeOffset GetTimestampUtc(this ChronoShotDataMesg msg)
-        {
-            return msg.GetTimestamp().GetDateTime().ToUniversalTime();
-        }
+        public static DateTimeOffset GetTimestampUtc(this ChronoShotDataMesg msg) =>
+            msg.GetTimestamp().GetDateTime().ToUniversalTime();
 
-        public static DateTimeOffset GetTimeCreatedUtc(this FileIdMesg msg)
-        {
-            return msg.GetTimeCreated().GetDateTime().ToUniversalTime();
-        }
+        public static DateTimeOffset GetTimeCreatedUtc(this FileIdMesg msg) =>
+            msg.GetTimeCreated().GetDateTime().ToUniversalTime();
 
-        public static DateTimeOffset GetTimestampUtc(this DeviceInfoMesg msg)
-        {
-            return msg.GetTimestamp().GetDateTime().ToUniversalTime();
-        }
+        public static DateTimeOffset GetTimestampUtc(this DeviceInfoMesg msg) =>
+            msg.GetTimestamp().GetDateTime().ToUniversalTime();
 
         /// <summary>
         ///     Converts a FIT DateTime to a .NET DateTimeOffset. Returns null if the input is null.
@@ -70,18 +62,15 @@ namespace MyLittleRangeBook.FIT
             }
 
             return TimeSpan.FromSeconds(
-                (int)activity.GetLocalTimestamp()! - (int)activity.GetTimestamp().GetTimeStamp());
+                                        (int)activity.GetLocalTimestamp()! -
+                                        (int)activity.GetTimestamp().GetTimeStamp());
         }
 
-        public static DateTimeOffset LocalTimestampAsDateTimeOffset(this ActivityMesg activity)
-        {
-            return FitEpoch.AddTicks((activity.GetLocalTimestamp() ?? 0) * 10000000L);
-        }
+        public static DateTimeOffset LocalTimestampAsDateTimeOffset(this ActivityMesg activity) =>
+            FitEpoch.AddTicks((activity.GetLocalTimestamp() ?? 0) * 10000000L);
 
-        public static DateTime LocalTimestampAsFitDateTime(this ActivityMesg activity)
-        {
-            return new DateTime(activity.GetLocalTimestamp() ?? 0);
-        }
+        public static DateTime LocalTimestampAsFitDateTime(this ActivityMesg activity) =>
+            new(activity.GetLocalTimestamp() ?? 0);
 
         public static DateTime? GetTimestamp(this Mesg mesg)
         {
@@ -132,14 +121,14 @@ namespace MyLittleRangeBook.FIT
                 return null;
             }
 
-            var data = (byte[])field.GetValue();
+            byte[]? data = (byte[])field.GetValue();
 
             return data != null ? Encoding.UTF8.GetString(data, 0, data.Length - 1) : null;
         }
 
         public static bool Overlaps(this Mesg mesg, SessionMesg session)
         {
-            if (mesg.GetStartTime() == null || mesg.GetEndTime() == null || session.GetStartTime() == null ||
+            if (mesg.GetStartTime()  == null || mesg.GetEndTime() == null || session.GetStartTime() == null ||
                 session.GetEndTime() == null)
             {
                 return false;
@@ -156,22 +145,16 @@ namespace MyLittleRangeBook.FIT
                 return false;
             }
 
-            return mesg.GetTimestamp()!.GetDateTime() >= session.GetStartTime().GetDateTime()
+            return mesg.GetTimestamp()!.GetDateTime()    >= session.GetStartTime().GetDateTime()
                    && mesg.GetTimestamp()!.GetDateTime() <= session.GetEndTime()!.GetDateTime();
         }
 
-        public static int ToFps(this int metresPerSecond)
-        {
-            return (int)Math.Round(metresPerSecond * MetresToFeet);
-        }
+        public static int ToFps(this int metresPerSecond) => (int)Math.Round(metresPerSecond * MetresToFeet);
 
-        public static double ToFps(this double metresPerSecond)
-        {
-            return metresPerSecond * MetresToFeet;
-        }
+        public static double ToFps(this double metresPerSecond) => metresPerSecond * MetresToFeet;
 
         public static async Task<Result<ReadOnlyMemory<byte>>> LoadFileBytesAsync(this string fileName,
-            CancellationToken ct = default)
+            CancellationToken                                                                 ct = default)
         {
             if (string.IsNullOrWhiteSpace(fileName))
             {
@@ -180,7 +163,7 @@ namespace MyLittleRangeBook.FIT
 
             try
             {
-                byte[] x = await File.ReadAllBytesAsync(fileName, ct).ConfigureAwait(false);
+                byte[]               x = await File.ReadAllBytesAsync(fileName, ct).ConfigureAwait(false);
                 ReadOnlyMemory<byte> y = x;
 
                 return Result.Ok(y);

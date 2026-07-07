@@ -18,17 +18,17 @@ namespace MyLittleRangeBook.FIT.Model
 
         public ShotSession(DeviceInfoMesg msg)
         {
-            FileName = string.Empty;
-            ProjectileType = "Rifle";
-            Notes = string.Empty;
+            FileName        = string.Empty;
+            ProjectileType  = "Rifle";
+            Notes           = string.Empty;
             ProjectileUnits = "grains";
-            VelocityUnits = "m/s";
+            VelocityUnits   = "m/s";
 
-            SerialNumber = msg.GetSerialNumber() ?? 0;
-            TimeCreated = msg.GetTimestampUtc();
-            Manufacturer = msg.GetManufacturer();
-            Product = msg.GetProduct();
-            Id = Ulid.New(TimeCreated);
+            SerialNumber    = msg.GetSerialNumber() ?? 0;
+            TimeCreated     = msg.GetTimestampUtc();
+            Manufacturer    = msg.GetManufacturer();
+            Product         = msg.GetProduct();
+            Id              = Ulid.New(TimeCreated);
             SoftwareVersion = msg.GetSoftwareVersion().ToString() ?? "Unknown";
         }
 
@@ -40,19 +40,19 @@ namespace MyLittleRangeBook.FIT.Model
                 throw new Exception($"Expected FIT File type {EXPECTED_FILE_TYPE}, received {fitType}.");
             }
 
-            FileName = string.Empty;
-            ProjectileType = "Rifle";
-            Notes = string.Empty;
+            FileName        = string.Empty;
+            ProjectileType  = "Rifle";
+            Notes           = string.Empty;
             ProjectileUnits = "grains";
-            VelocityUnits = "m/s";
+            VelocityUnits   = "m/s";
             SoftwareVersion = "Unknown";
 
             SerialNumber = fileIdMesg.GetSerialNumber() ?? 0;
-            TimeCreated = fileIdMesg.GetTimeCreatedUtc();
-            Product = fileIdMesg.GetProduct();
+            TimeCreated  = fileIdMesg.GetTimeCreatedUtc();
+            Product      = fileIdMesg.GetProduct();
             Manufacturer = fileIdMesg.GetManufacturer();
-            Type = (byte)fitType;
-            Id = Ulid.New(TimeCreated);
+            Type         = (byte)fitType;
+            Id           = Ulid.New(TimeCreated);
         }
 
         /// <summary>
@@ -60,14 +60,14 @@ namespace MyLittleRangeBook.FIT.Model
         /// <param name="id">Must be unique value to identify the shot session.</param>
         public ShotSession(string id)
         {
-            Id = id;
+            Id                = id;
             _xeroSerialNumber = 0; // TODO [TO20260405] Try to parse the serial number from the ID.
-            FileName = string.Empty;
-            ProjectileType = "Rifle";
-            Notes = string.Empty;
-            ProjectileUnits = "grains";
-            VelocityUnits = "m/s";
-            SoftwareVersion = "Unknown";
+            FileName          = string.Empty;
+            ProjectileType    = "Rifle";
+            Notes             = string.Empty;
+            ProjectileUnits   = "grains";
+            VelocityUnits     = "m/s";
+            SoftwareVersion   = "Unknown";
         }
 
 
@@ -75,10 +75,10 @@ namespace MyLittleRangeBook.FIT.Model
 
         public string FileName { get; set; }
 
-        public DateTimeOffset DateTimeUtc { get; set; }
-        public int ShotCount => Shots.Count;
-        public int ProjectileWeight { get; set; }
-        public string ProjectileType { get; set; }
+        public DateTimeOffset DateTimeUtc      { get; set; }
+        public int            ShotCount        => Shots.Count;
+        public int            ProjectileWeight { get; set; }
+        public string         ProjectileType   { get; set; }
 
         public int AverageSpeed { get; set; }
 
@@ -90,13 +90,13 @@ namespace MyLittleRangeBook.FIT.Model
 
         public uint SerialNumber { get; set; }
 
-        public ushort? Manufacturer { get; set; }
-        public ushort? Product { get; set; }
-        public byte? Type { get; set; }
-        public string SoftwareVersion { get; set; }
-        public DateTimeOffset TimeCreated { get; set; }
+        public ushort?        Manufacturer    { get; set; }
+        public ushort?        Product         { get; set; }
+        public byte?          Type            { get; set; }
+        public string         SoftwareVersion { get; set; }
+        public DateTimeOffset TimeCreated     { get; set; }
 
-        public string Notes { get; set; }
+        public string Notes           { get; set; }
         public string ProjectileUnits { get; set; }
 
         /// <summary>
@@ -119,10 +119,7 @@ namespace MyLittleRangeBook.FIT.Model
         }
 
 
-        public override string ToString()
-        {
-            return
-                $"{Shots.Count} shots. Avg: {AverageSpeed} {VelocityUnits}, Max: {MaxSpeed} {VelocityUnits}, Min: {MinSpeed} {VelocityUnits}, SD: {StandardDeviation:F1} {VelocityUnits}";
-        }
+        public override string ToString() =>
+            $"{Shots.Count} shots. Avg: {AverageSpeed} {VelocityUnits}, Max: {MaxSpeed} {VelocityUnits}, Min: {MinSpeed} {VelocityUnits}, SD: {StandardDeviation:F1} {VelocityUnits}";
     }
 }

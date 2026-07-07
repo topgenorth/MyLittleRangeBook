@@ -7,43 +7,34 @@ namespace MyLittleRangeBook.FIT.Model
     /// </summary>
     public class Shot
     {
-        public Shot()
-        {
-            Id = Ulid.New(DateTimeOffset.UtcNow);
-        }
+        public Shot() => Id = Ulid.New(DateTimeOffset.UtcNow);
 
-        public Shot(string shotId)
-        {
-            Id = shotId;
-        }
+        public Shot(string shotId) => Id = shotId;
 
 
         public Shot(Shot otherShot) : this()
         {
-            Id = otherShot.Id;
+            Id          = otherShot.Id;
             DateTimeUtc = otherShot.DateTimeUtc;
-            ShotNumber = otherShot.ShotNumber;
-            Speed = otherShot.Speed;
-            CleanBore = otherShot.CleanBore;
-            ColdBore = otherShot.ColdBore;
-            IgnoreShot = otherShot.IgnoreShot;
-            Notes = otherShot.Notes;
+            ShotNumber  = otherShot.ShotNumber;
+            Speed       = otherShot.Speed;
+            CleanBore   = otherShot.CleanBore;
+            ColdBore    = otherShot.ColdBore;
+            IgnoreShot  = otherShot.IgnoreShot;
+            Notes       = otherShot.Notes;
         }
 
-        public string Id { get; set; }
+        public string         Id          { get; set; }
         public DateTimeOffset DateTimeUtc { get; set; } = FitExtensions.FitEpoch;
-        public int ShotNumber { get; set; } = -1;
-        public ShotSpeed Speed { get; set; } = ShotSpeed.Zero;
+        public int            ShotNumber  { get; set; } = -1;
+        public ShotSpeed      Speed       { get; set; } = ShotSpeed.Zero;
 
-        public bool CleanBore { get; set; }
-        public bool ColdBore { get; set; }
-        public string? Notes { get; set; }
+        public bool    CleanBore { get; set; }
+        public bool    ColdBore  { get; set; }
+        public string? Notes     { get; set; }
 
         public bool IgnoreShot { get; set; }
 
-        public override string ToString()
-        {
-            return $"#{ShotNumber}: {Speed}";
-        }
+        public override string ToString() => $"#{ShotNumber}: {Speed}";
     }
 }

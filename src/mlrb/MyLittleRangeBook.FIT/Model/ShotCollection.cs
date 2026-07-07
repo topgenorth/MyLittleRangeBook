@@ -12,7 +12,7 @@ namespace MyLittleRangeBook.FIT.Model
         public Shot this[int i] => _shots[i];
 
         public IEnumerable<Shot> ActiveShots => from s in _shots where !s.Value.IgnoreShot select s.Value;
-        public string Units => _shots.Any() ? _shots.Values.First().Speed.Units : "m/s";
+        public string            Units       => _shots.Any() ? _shots.Values.First().Speed.Units : "m/s";
 
         public ShotSpeed StandardDeviation
         {
@@ -24,10 +24,10 @@ namespace MyLittleRangeBook.FIT.Model
                     return ShotSpeed.Zero;
                 }
 
-                float mean = shotValues.Average(s => s.Speed);
-                var squaredDistances = shotValues.Select(s => Math.Pow(Math.Abs(s.Speed - mean), 2)).ToList();
-                int shotCount = shotValues.Count();
-                double meanSquaredDistances = squaredDistances.Sum() / shotCount;
+                float        mean = shotValues.Average(s => s.Speed);
+                List<double> squaredDistances = shotValues.Select(s => Math.Pow(Math.Abs(s.Speed - mean), 2)).ToList();
+                int          shotCount = shotValues.Count();
+                double       meanSquaredDistances = squaredDistances.Sum() / shotCount;
 
                 double speed = Math.Sqrt(meanSquaredDistances);
 
@@ -51,7 +51,7 @@ namespace MyLittleRangeBook.FIT.Model
                 }
 
                 string units = _shots.First().Value.Speed.Units;
-                double avg = ActiveShots.Select(s => s).Average(s => s.Speed.Value);
+                double avg   = ActiveShots.Select(s => s).Average(s => s.Speed.Value);
 
                 return new ShotSpeed(avg, units);
             }
@@ -60,31 +60,16 @@ namespace MyLittleRangeBook.FIT.Model
         /// <summary>
         /// </summary>
         /// <returns>All of the shots, ignored or not.</returns>
-        public IEnumerator<Shot> GetEnumerator()
-        {
-            return _shots.Values.GetEnumerator();
-        }
+        public IEnumerator<Shot> GetEnumerator() => _shots.Values.GetEnumerator();
 
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public void Add(Shot item)
-        {
-            _shots[item.ShotNumber] = item;
-        }
+        public void Add(Shot item) => _shots[item.ShotNumber] = item;
 
-        public void Clear()
-        {
-            _shots.Clear();
-        }
+        public void Clear() => _shots.Clear();
 
-        public bool Contains(Shot item)
-        {
-            return _shots.ContainsKey(item.ShotNumber);
-        }
+        public bool Contains(Shot item) => _shots.ContainsKey(item.ShotNumber);
 
         public void CopyTo(Shot[] array, int arrayIndex)
         {
@@ -96,20 +81,15 @@ namespace MyLittleRangeBook.FIT.Model
             _shots.Values.CopyTo(array, arrayIndex);
         }
 
-        public bool Remove(Shot item)
-        {
-            return _shots.Remove(item.ShotNumber);
-        }
+        public bool Remove(Shot item) => _shots.Remove(item.ShotNumber);
 
         public int Count => ActiveShots.Count();
 
         public bool IsReadOnly => false;
 
-        public override string ToString()
-        {
-            return _shots.Any()
+        public override string ToString() =>
+            _shots.Any()
                 ? $"{Count} shots, Average {AverageSpeed}, SD {StandardDeviation}, ES {ExtremeSpread}, Max {MaxSpeed}, Min {MinSpeed}"
                 : "No shots";
-        }
     }
 }
