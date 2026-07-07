@@ -14,6 +14,7 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
         /// </summary>
         internal const int MAX_FILE_SIZE_FOR_SQLITE = 90 * 1024;
 
+
         readonly ILogger _logger;
 
         /// <summary>
@@ -29,15 +30,15 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
         public string Name => "Validate file exists";
 
         public async Task<Result> ExecuteAsync(
-            PipelineContext<MlrbAssetFile> context,
+            PipelineContext<MlrbAssetFile>                     context,
             Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
         {
             string filePath = context.Record.FileToImport;
 
             if (!File.Exists(filePath))
             {
-                var errorMessage = $"Asset file does not exist: '{filePath}'";
-                context.Metadata["FileExists"] = false;
+                string errorMessage = $"Asset file does not exist: '{filePath}'";
+                context.Metadata["FileExists"]      = false;
                 context.Metadata["ValidationError"] = errorMessage;
                 context.Record.Aggregate.Fail(errorMessage, DateTimeOffset.UtcNow);
                 _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
@@ -47,16 +48,16 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
             try
             {
                 // Store validation result in metadata
-                var fileInfo = new FileInfo(filePath);
-                string sha256 = await fileInfo.ComputeSha256HashAsync().ConfigureAwait(false);
-                context.Metadata["FileExists"] = true;
-                context.Metadata["FileSizeBytes"] = fileInfo.Length;
+                FileInfo fileInfo = new(filePath);
+                string   sha256   = await fileInfo.ComputeSha256HashAsync().ConfigureAwait(false);
+                context.Metadata["FileExists"]       = true;
+                context.Metadata["FileSizeBytes"]    = fileInfo.Length;
                 context.Metadata["FileLastModified"] = fileInfo.LastWriteTimeUtc;
-                context.Metadata["FileSha256"] = sha256;
+                context.Metadata["FileSha256"]       = sha256;
 
                 if (fileInfo.Length > MAX_FILE_SIZE_FOR_SQLITE)
                 {
-                    var errorMessage = $"File size exceeds limit: '{filePath}' is {fileInfo.Length} bytes";
+                    string errorMessage = $"File size exceeds limit: '{filePath}' is {fileInfo.Length} bytes";
                     _logger.Warning("Validation failed: {ErrorMessage}", errorMessage);
                 }
 
@@ -67,15 +68,15 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
                 context.Record.Aggregate.Parsed(mimeType, DateTimeOffset.UtcNow);
 
                 _logger.Verbose("File validation passed: {FilePath} ({FileSize} bytes)",
-                    filePath,
-                    fileInfo.Length);
+                                filePath,
+                                fileInfo.Length);
                 return await next(context);
             }
             catch (Exception ex)
             {
-                var errorMessage = $"Error validating file '{filePath}': {ex.Message}";
+                string errorMessage = $"Error validating file '{filePath}': {ex.Message}";
                 _logger.Error(ex, "File validation error: {ErrorMessage}", errorMessage);
-                context.Metadata["FileExists"] = false;
+                context.Metadata["FileExists"]      = false;
                 context.Metadata["ValidationError"] = ex.Message;
 
                 return Result.Fail(new Error(errorMessage).CausedBy(ex));

@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.Persistence.Sqlite;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.MlrbAssets;
 using MyLittleRangeBook.MlrbAssets.Handlers;
+using MyLittleRangeBook.Persistence.Sqlite;
 using static MyLittleRangeBook.MlrbAssets.MlrbAssetAggregate;
 
 namespace MyLittleRangeBook
@@ -13,9 +15,10 @@ namespace MyLittleRangeBook
     public static partial class ServiceCollectionExtensions
     {
         /// <summary>
-        /// This should match the JsonSerializeble attributes in MlrbJsonSerializerContext.cs
+        ///     This should match the JsonSerializeble attributes in MlrbJsonSerializerContext.cs
         /// </summary>
-        static readonly Type[] SupportedRangeAssetEvents = [
+        static readonly Type[] SupportedRangeAssetEvents =
+        [
             typeof(MlrbAssetCreated),
             typeof(MrlbAssetAssociatedWithFirearm),
             typeof(MlrbAssetAssociatedWithSimpleRangeEvent),
@@ -26,7 +29,7 @@ namespace MyLittleRangeBook
             typeof(MlrbAssetStoredInDatabase),
             typeof(MlrbAssetFingerprintComputed),
             typeof(MlrbAssetParsed),
-            typeof(MlrbAssetUpdatedFromFile)
+            typeof(MlrbAssetUpdatedFromFile),
         ];
 
         public static IServiceCollection RegisterRangeAssetEventSourcing(this IServiceCollection services)
@@ -55,7 +58,7 @@ namespace MyLittleRangeBook
         /// <example>
         ///     <code>
         /// services.RegisterRangeAssetHandlers();
-        /// 
+        ///
         /// var pipeline = serviceProvider.GetRequiredService&lt;IPipeline&lt;MlrbAssetFile&gt;&gt;();
         /// var result = await pipeline.ExecuteAsync(assetFile);
         /// </code>
@@ -65,40 +68,46 @@ namespace MyLittleRangeBook
             ArgumentNullException.ThrowIfNull(services);
 
             services.AddScoped<ValidateFileExistsHandler>(serviceProvider =>
-                new ValidateFileExistsHandler(serviceProvider.GetRequiredService<ILogger>()));
+                                                              new ValidateFileExistsHandler(serviceProvider
+                                                                 .GetRequiredService<ILogger>()));
 
             services.AddScoped<CopyMlrbAssetHandler>(serviceProvider =>
-                new CopyMlrbAssetHandler(serviceProvider.GetRequiredService<IConfiguration>()));
+                                                         new CopyMlrbAssetHandler(serviceProvider
+                                                            .GetRequiredService<IConfiguration>()));
 
             services.AddScoped<LoggingHandler>(serviceProvider =>
-                new LoggingHandler(serviceProvider.GetRequiredService<ILogger>()));
+                                                   new LoggingHandler(serviceProvider.GetRequiredService<ILogger>()));
 
             services.AddScoped<InsertAssetFileSqliteHandler>(serviceProvider =>
-                new InsertAssetFileSqliteHandler(serviceProvider.GetRequiredService<ISqliteHelper>()));
+                                                                 new InsertAssetFileSqliteHandler(serviceProvider
+                                                                    .GetRequiredService<ISqliteHelper>()));
 
+            services.TryAddScoped<IXeroCsvShotSessionParser, XeroCsvShotSessionParser>();
 
             // Register handlers by concrete type for the pipeline
             services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
-                sp.GetRequiredService<ValidateFileExistsHandler>());
+                                                                    sp.GetRequiredService<ValidateFileExistsHandler>());
             services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
-                sp.GetRequiredService<CopyMlrbAssetHandler>());
+                                                                    sp.GetRequiredService<CopyMlrbAssetHandler>());
             services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
-                sp.GetRequiredService<InsertAssetFileSqliteHandler>());
+                                                                    sp.GetRequiredService<
+                                                                        InsertAssetFileSqliteHandler>());
             services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
-                sp.GetRequiredService<LoggingHandler>());
+                                                                    sp.GetRequiredService<LoggingHandler>());
 
             // Register the pipeline with handlers in order
             services.AddScoped<IPipeline<MlrbAssetFile>>(serviceProvider =>
-            {
-                var pipeline = new Pipeline<MlrbAssetFile>(serviceProvider,
-                    serviceProvider.GetRequiredService<ILogger>());
+                                                         {
+                                                             Pipeline<MlrbAssetFile> pipeline = new(serviceProvider,
+                                                                 serviceProvider.GetRequiredService<ILogger>());
 
-                return pipeline
-                    .Add<ValidateFileExistsHandler>()
-                    .Add<CopyMlrbAssetHandler>()
-                    .Add<InsertAssetFileSqliteHandler>()
-                    .Add<LoggingHandler>(); // [TO20260525] Keep the logging handler for last.
-            });
+                                                             return pipeline
+                                                                   .Add<ValidateFileExistsHandler>()
+                                                                   .Add<CopyMlrbAssetHandler>()
+                                                                   .Add<InsertAssetFileSqliteHandler>()
+                                                                   .Add<GarminShotViewCsvHandler>()
+                                                                   .Add<LoggingHandler>(); // [TO20260525] Keep the logging handler for last.
+                                                         });
 
             return services;
         }

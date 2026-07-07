@@ -37,4 +37,8 @@
         <EmbeddedResource Include="Persistence\Sqlite\Scripts\*.sql"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\MyLittleRangeBook.FIT\MyLittleRangeBook.FIT.csproj" />
+    </ItemGroup>
+
 </Project>
