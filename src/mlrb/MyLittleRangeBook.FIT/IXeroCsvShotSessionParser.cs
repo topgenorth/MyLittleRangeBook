@@ -12,5 +12,13 @@ namespace MyLittleRangeBook.FIT
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task<Result<ShotSession>> ParseCsvFileAsync(string filePath, CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     Checks if the file is a ShotView CSV file.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        Task<bool> IsShotViewCsvAsync(string filePath, CancellationToken cancellationToken);
     }
 }

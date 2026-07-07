@@ -2,6 +2,8 @@
 using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.FIT;
+using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
@@ -17,17 +19,20 @@ namespace MyLittleRangeBook.MlrbAssets
         readonly IMlrbAssetAggregateRepository _aggregateRepo;
         readonly IPipeline<MlrbAssetFile>      _assetPipeline;
         readonly ISqliteHelper                 _sqliteHelper;
+        readonly IXeroCsvShotSessionParser     _csvParser;
 
         public MlrbAssetImportCommand(ILogger                       logger,
                                       ICliDisplay                   cliDisplay,
                                       IPipeline<MlrbAssetFile>      assetPipeline,
                                       IMlrbAssetAggregateRepository aggregateRepo,
-                                      ISqliteHelper                 sqliteHelper) : base(logger,
+                                      ISqliteHelper                 sqliteHelper,
+                                      IXeroCsvShotSessionParser     csvParser) : base(logger,
             cliDisplay)
         {
             _assetPipeline = assetPipeline;
             _aggregateRepo = aggregateRepo;
             _sqliteHelper  = sqliteHelper;
+            _csvParser     = csvParser;
         }
 
 
@@ -80,6 +85,12 @@ namespace MyLittleRangeBook.MlrbAssets
                 CliDisplay.PrintFailure("Could not process the file.");
                 returnCode = ReturnCodes.FAILURE;
                 goto ExitMethod;
+            }
+
+            if (await _csvParser.IsShotViewCsvAsync(file, ct).ConfigureAwait(false))
+            {
+                CliDisplay.PrintSuccess("Detected Garmin ShotView CSV file.");
+                assetFile.Aggregate.Parsed(FileExtensions.MIME_TYPE_GARMIN_SHOTVIEW_FILE, DateTimeOffset.UtcNow);
             }
 
             // TODO [TO20260527] Need to create a projector that will update the read-model from the events.

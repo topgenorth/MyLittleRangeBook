@@ -1,15 +1,13 @@
+using FluentResults;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.FIT.Model;
-using Serilog;
-using Shouldly;
-using NSubstitute;
 
 namespace MyLittleRangeBook.Tests.FIT
 {
     public class XeroCsvShotSessionParserTests
     {
-        private const string CSV_CONTENT = 
-@"Rifle Bullet 36.0 gr
+        const string CSV_CONTENT =
+            @"Rifle Bullet 36.0 gr
 ?#,Speed (FPS), Avg (FPS),KE (FT-LBS),Power Factor (kgrft/s),Time,Clean Bore,Cold Bore,Shot Notes
 1,""1,369.8"",-0.8,150.0,49.3,13:32:27,,,
 2,""1,402.0"",31.5,157.1,50.5,13:32:45,,,
@@ -34,19 +32,19 @@ Session Note,This is a test session,,,,,
         public async Task ParseCsvFileAsync_ShouldParseSampleCorrectly()
         {
             // Arrange
-            var logger = Substitute.For<ILogger>();
-            var parser = new XeroCsvShotSessionParser(logger);
-            var tempFile = Path.GetTempFileName() + "Rifle_Bullet_2026-07-05_13-30-54.csv";
+            ILogger?                 logger   = Substitute.For<ILogger>();
+            XeroCsvShotSessionParser parser   = new(logger);
+            string                   tempFile = Path.GetTempFileName() + "Rifle_Bullet_2026-07-05_13-30-54.csv";
             await File.WriteAllTextAsync(tempFile, CSV_CONTENT);
 
             try
             {
                 // Act
-                var result = await parser.ParseCsvFileAsync(tempFile, CancellationToken.None);
+                Result<ShotSession> result = await parser.ParseCsvFileAsync(tempFile, CancellationToken.None);
 
                 // Assert
                 result.IsSuccess.ShouldBeTrue();
-                var session = result.Value;
+                ShotSession? session = result.Value;
                 session.ProjectileType.ShouldBe("Rifle Bullet");
                 session.ProjectileWeight.ShouldBe(36);
                 session.ProjectileUnits.ShouldBe("gr");
@@ -58,14 +56,14 @@ Session Note,This is a test session,,,,,
                 session.VelocityUnits.ShouldBe("fps");
 
                 // Check first shot
-                var firstShot = session.Shots[1];
+                Shot firstShot = session.Shots[1];
                 firstShot.Speed.Value.ShouldBe(1370); // Rounded 1369.8
                 firstShot.Speed.Units.ShouldBe("fps");
 
                 // Check last shot
-                var lastShot = session.Shots[9];
+                Shot lastShot = session.Shots[9];
                 lastShot.Speed.Value.ShouldBe(1361); // Rounded 1361.3
-                
+
                 // Check date from filename
                 session.DateTimeUtc.Year.ShouldBe(2026);
                 session.DateTimeUtc.Month.ShouldBe(7);
@@ -76,7 +74,88 @@ Session Note,This is a test session,,,,,
             }
             finally
             {
-                if (File.Exists(tempFile)) File.Delete(tempFile);
+                if (File.Exists(tempFile))
+                {
+                    File.Delete(tempFile);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task IsShotViewCsvAsync_ShouldReturnTrueForValidCsv()
+        {
+            // Arrange
+            ILogger?                 logger   = Substitute.For<ILogger>();
+            XeroCsvShotSessionParser parser   = new(logger);
+            string                   tempFile = Path.GetTempFileName() + ".csv";
+            await File.WriteAllTextAsync(tempFile, CSV_CONTENT);
+
+            try
+            {
+                // Act
+                bool result = await parser.IsShotViewCsvAsync(tempFile, CancellationToken.None);
+
+                // Assert
+                result.ShouldBeTrue();
+            }
+            finally
+            {
+                if (File.Exists(tempFile))
+                {
+                    File.Delete(tempFile);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task IsShotViewCsvAsync_ShouldReturnFalseForInvalidCsv()
+        {
+            // Arrange
+            ILogger?                 logger   = Substitute.For<ILogger>();
+            XeroCsvShotSessionParser parser   = new(logger);
+            string                   tempFile = Path.GetTempFileName() + ".csv";
+            await File.WriteAllTextAsync(tempFile, "Some,Other,Csv,Content\n1,2,3,4");
+
+            try
+            {
+                // Act
+                bool result = await parser.IsShotViewCsvAsync(tempFile, CancellationToken.None);
+
+                // Assert
+                result.ShouldBeFalse();
+            }
+            finally
+            {
+                if (File.Exists(tempFile))
+                {
+                    File.Delete(tempFile);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task IsShotViewCsvAsync_ShouldReturnFalseForNonCsv()
+        {
+            // Arrange
+            ILogger?                 logger   = Substitute.For<ILogger>();
+            XeroCsvShotSessionParser parser   = new(logger);
+            string                   tempFile = Path.GetTempFileName() + ".txt";
+            await File.WriteAllTextAsync(tempFile, CSV_CONTENT);
+
+            try
+            {
+                // Act
+                bool result = await parser.IsShotViewCsvAsync(tempFile, CancellationToken.None);
+
+                // Assert
+                result.ShouldBeFalse();
+            }
+            finally
+            {
+                if (File.Exists(tempFile))
+                {
+                    File.Delete(tempFile);
+                }
             }
         }
     }

@@ -13,6 +13,45 @@ namespace MyLittleRangeBook.FIT
 
         public XeroCsvShotSessionParser(ILogger logger) => _logger = logger.ForContext<XeroCsvShotSessionParser>();
 
+        public async Task<bool> IsShotViewCsvAsync(string filePath, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    return false;
+                }
+
+                if (Path.GetExtension(filePath).ToLowerInvariant() != ".csv")
+                {
+                    return false;
+                }
+
+                using StreamReader reader = new(filePath);
+                string?            firstLine = await reader.ReadLineAsync(cancellationToken);
+                if (firstLine == null)
+                {
+                    return false;
+                }
+
+                string? secondLine = await reader.ReadLineAsync(cancellationToken);
+                if (secondLine == null)
+                {
+                    return false;
+                }
+
+                // Check for characteristic headers in the second line
+                return (secondLine.Contains("Speed (FPS)", StringComparison.OrdinalIgnoreCase) ||
+                        secondLine.Contains("Speed (MPS)", StringComparison.OrdinalIgnoreCase)) &&
+                       secondLine.Contains("KE (FT-LBS)",      StringComparison.OrdinalIgnoreCase) &&
+                       secondLine.Contains("Power Factor",     StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public async Task<Result<ShotSession>> ParseCsvFileAsync(string filePath, CancellationToken cancellationToken)
         {
             try
