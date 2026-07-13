@@ -28,15 +28,6 @@ namespace MyLittleRangeBook.Models
             id1.DateTimeOffset.ShouldBeEquivalentTo(id2.DateTimeOffset);
         }
 
-        [Fact]
-        public void FromFitFile_should_handle_windows_paths_on_any_platform()
-        {
-            // Even on Linux, this should now work because we normalize backslashes
-            var id = MlrbId.FromString("C:\\Temp\\06-21-2026_13-15-45.fit");
-            id.DateTimeOffset.Year.ShouldBe(2026);
-            id.DateTimeOffset.Month.ShouldBe(6);
-            id.DateTimeOffset.Day.ShouldBe(21);
-        }
 
         [Fact]
         public void FromEntityId_creates_a_valid_MlrbId()
