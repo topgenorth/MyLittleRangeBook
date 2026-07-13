@@ -110,7 +110,7 @@ public class DialogCommand : ICommand
     /// </summary>
     #pragma warning disable CS0067
     public event EventHandler? CanExecuteChanged;
-    #pragma warning enable CS0067
+    #pragma warning restore CS0067
 }
 
 /// <summary>

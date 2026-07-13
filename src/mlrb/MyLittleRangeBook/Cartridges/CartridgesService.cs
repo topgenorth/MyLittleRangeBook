@@ -25,12 +25,13 @@ namespace MyLittleRangeBook.Cartridges
 
             try
             {
-                if (cartridge.Id != null || cartridge.Id != MlrbId.Empty)
+                var cartridgeId = MlrbId.FromString(cartridge.Id);
+                if ( cartridgeId != MlrbId.Empty)
                 {
                     await using DapperCommandContext ctx =
                         await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken) with
                         {
-                            Arguments = new { cartridge.Id },
+                            Arguments = new { cartridgeId },
                         };
                     await Commands.DeleteCommand.ExecuteAsync(ctx).ConfigureAwait(false);
                 }

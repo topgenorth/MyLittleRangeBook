@@ -30,8 +30,8 @@ namespace MyLittleRangeBook.Tests.Sqlite
             await EnsureDatabaseExistsAsync();
 
             {
-                await using SqliteConnection conn = await SqliteHelper.GetDatabaseConnectionAsync();
-                await conn.ExecuteAsync($"CREATE TABLE {tableName} (Id INTEGER PRIMARY KEY, Val TEXT)");
+                await using ScopedSqliteConnection conn = await SqliteHelper.GetScopedDatabaseConnectionAsync();
+                await conn.Connection.ExecuteAsync($"CREATE TABLE {tableName} (Id INTEGER PRIMARY KEY, Val TEXT)");
             }
 
             {
@@ -47,8 +47,8 @@ namespace MyLittleRangeBook.Tests.Sqlite
 
             // Verify it was committed
             {
-                await using SqliteConnection conn = await SqliteHelper.GetDatabaseConnectionAsync();
-                int count = await conn.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM {tableName}");
+                await using var conn = await SqliteHelper.GetScopedDatabaseConnectionAsync();
+                int count = await conn.Connection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM {tableName}");
                 Assert.Equal(1, count);
             }
         }
@@ -60,25 +60,23 @@ namespace MyLittleRangeBook.Tests.Sqlite
             await EnsureDatabaseExistsAsync();
 
             {
-                await using SqliteConnection conn = await SqliteHelper.GetDatabaseConnectionAsync();
-                await conn.ExecuteAsync($"CREATE TABLE {tableName} (Id INTEGER PRIMARY KEY, Val TEXT)");
+                await using var  conn = await SqliteHelper.GetScopedDatabaseConnectionAsync();
+                await conn.Connection.ExecuteAsync($"CREATE TABLE {tableName} (Id INTEGER PRIMARY KEY, Val TEXT)");
             }
 
             {
-                await using (ScopedSqliteConnection scoped =
-                             await SqliteHelper.GetScopedDatabaseConnectionAsync(useTransaction: true))
-                {
-                    await scoped.Connection.ExecuteAsync($"INSERT INTO {tableName} (Val) VALUES (@Val)",
-                                                         new { Val = "Test" }, scoped.Transaction);
-                    await scoped.Transaction!.CommitAsync();
-                    // Transaction is now committed, DisposeAsync should not fail or re-commit
-                }
+                await using ScopedSqliteConnection scoped =
+                    await SqliteHelper.GetScopedDatabaseConnectionAsync(useTransaction: true);
+                await scoped.Connection.ExecuteAsync($"INSERT INTO {tableName} (Val) VALUES (@Val)",
+                                                     new { Val = "Test" }, scoped.Transaction);
+                await scoped.Transaction!.CommitAsync();
+                // Transaction is now committed, DisposeAsync should not fail or re-commit
             }
 
             // Verify it was committed
             {
-                await using SqliteConnection conn = await SqliteHelper.GetDatabaseConnectionAsync();
-                int count = await conn.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM {tableName}");
+                await using var conn = await SqliteHelper.GetScopedDatabaseConnectionAsync();
+                int count = await conn.Connection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM {tableName}");
                 Assert.Equal(1, count);
             }
         }
