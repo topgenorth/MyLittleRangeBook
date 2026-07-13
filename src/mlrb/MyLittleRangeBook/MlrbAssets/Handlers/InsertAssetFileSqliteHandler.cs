@@ -9,52 +9,51 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
     {
         readonly ISqliteHelper _sqliteHelper;
 
-        public InsertAssetFileSqliteHandler(ISqliteHelper sqliteHelper)
-        {
-            _sqliteHelper = sqliteHelper;
-        }
+        public InsertAssetFileSqliteHandler(ISqliteHelper sqliteHelper) => _sqliteHelper = sqliteHelper;
 
         public string Name => "Adding/updating MLRB asset in SQLite database.";
 
-        public async Task<Result> ExecuteAsync(PipelineContext<MlrbAssetFile> context,
-            Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
+        public async Task<Result> ExecuteAsync(PipelineContext<MlrbAssetFile>                     context,
+                                               Func<PipelineContext<MlrbAssetFile>, Task<Result>> next)
         {
             string fileExtension = Path.GetExtension(context.Record.FileToImport);
             context.Metadata["FileExtension"] = fileExtension;
 
             try
             {
-                var assetRow = new AssetRow(null,
-                    context.Record.Id.ToString(),
-                    context.Record.FileToImport,
-                    context.Record.DestinationFile,
-                    context.Record.MimeType,
-                    context.Record.FileContents,
-                    Created: context.Record.Created,
-                    Modified: context.Record.Modified);
+                AssetRow assetRow = new(null,
+                                        context.Record.Id.ToString(),
+                                        context.Record.FileToImport,
+                                        context.Record.DestinationFile,
+                                        context.Record.MimeType,
+                                        context.Record.FileContents,
+                                        Created: context.Record.Created,
+                                        Modified: context.Record.Modified,
+                                        Sha256: context.Record.SHA256);
 
                 await using SqliteConnection conn =
                     await _sqliteHelper.GetDatabaseConnectionAsync().ConfigureAwait(false);
                 await using DbTransaction trans =
                     await conn.BeginTransactionAsync(context.CancellationToken).ConfigureAwait(false);
 
-                // @Id, @OriginalFilename, @PathToRangeAssetFile, @MimeType, @FileContentBytes, @Created, @Modified
+                // @Id, @OriginalFilename, @PathToRangeAssetFile, @MimeType, @FileContentBytes, @Created, @Modified, @Sha256
                 var p = new
-                {
-                    assetRow.Id,
-                    OriginalFilename = assetRow.OriginalFileName,
-                    PathToRangeAssetFile = assetRow.PathToAssetFile,
-                    assetRow.MimeType,
-                    assetRow.FileContentBytes,
-                    assetRow.Created,
-                    Modified = assetRow.Modified
-                };
+                        {
+                            assetRow.Id,
+                            OriginalFilename     = assetRow.OriginalFileName,
+                            PathToRangeAssetFile = assetRow.PathToAssetFile,
+                            assetRow.MimeType,
+                            assetRow.FileContentBytes,
+                            assetRow.Created,
+                            assetRow.Modified,
+                            assetRow.Sha256,
+                        };
 
-                var dapperCtx = new DapperCommandContext(conn, trans, context.CancellationToken) { Arguments = p };
-                int i = await Commands.UpsertCommand
-                    .ExecuteAsync(dapperCtx)
-                    .ConfigureAwait(false);
-                if (i == 1)
+                DapperCommandContext dapperCtx = new(conn, trans, context.CancellationToken) { Arguments = p };
+                int i = await Commands.s_upsertCommand
+                                      .ExecuteAsync(dapperCtx)
+                                      .ConfigureAwait(false);
+                if (i is 1 or 0)
                 {
                     await trans.CommitAsync(context.CancellationToken).ConfigureAwait(false);
                     context.Metadata["InsertIntoSqlite"] = true;
@@ -63,8 +62,8 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
                 else
                 {
                     await trans.RollbackAsync(context.CancellationToken).ConfigureAwait(false);
-                    var msg = $"Expected to affect 1 row, but affected {i} rows.";
-                    context.Metadata["InsertIntoSqlite"] = false;
+                    string msg = $"Expected to affect 1 row, but affected {i} rows.";
+                    context.Metadata["InsertIntoSqlite"]      = false;
                     context.Metadata["InsertIntoSqliteError"] = msg;
                     context.Record.Aggregate.Fail(msg, DateTimeOffset.UtcNow);
 
@@ -73,7 +72,7 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
             }
             catch (Exception ex)
             {
-                context.Metadata["InsertIntoSqlite"] = false;
+                context.Metadata["InsertIntoSqlite"]      = false;
                 context.Metadata["InsertIntoSqliteError"] = ex.Message;
                 context.Record.Aggregate.Fail(ex, DateTimeOffset.UtcNow);
 
@@ -85,35 +84,39 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
 
         static class Commands
         {
-            const string UpsertSql = """
-                                     INSERT INTO asset_files (
-                                         id,
-                                         original_file_name,
-                                         path_to_asset_file,
-                                         mime_type,
-                                         file_content_bytes,
-                                         created,
-                                         modified
-                                     )
-                                     VALUES (
-                                         @Id, 
-                                         @OriginalFilename,
-                                         @PathToRangeAssetFile,
-                                         @MimeType,
-                                         @FileContentBytes,
-                                         @Created,
-                                         @Modified
-                                     )
-                                     ON CONFLICT (id) DO UPDATE SET
-                                         original_file_name = @OriginalFilename,
-                                         path_to_asset_file = @PathToRangeAssetFile,
-                                         mime_type          = @MimeType,
-                                         file_content_bytes = @FileContentBytes,
-                                         modified           = @Modified
-                                     ;
-                                     """;
+            const string UPSERT_ASSET_FILES_SQL = """
+                                                  INSERT INTO asset_files (
+                                                      id,
+                                                      original_file_name,
+                                                      path_to_asset_file,
+                                                      mime_type,
+                                                      file_content_bytes,
+                                                      created,
+                                                      modified,
+                                                      sha256
+                                                  )
+                                                  VALUES (
+                                                      @Id,
+                                                      @OriginalFilename,
+                                                      @PathToRangeAssetFile,
+                                                      @MimeType,
+                                                      @FileContentBytes,
+                                                      @Created,
+                                                      @Modified,
+                                                      @Sha256
+                                                  )
+                                                  ON CONFLICT (sha256) DO NOTHING
+                                                  ON CONFLICT (id) DO UPDATE SET
+                                                      original_file_name = @OriginalFilename,
+                                                      path_to_asset_file = @PathToRangeAssetFile,
+                                                      mime_type          = @MimeType,
+                                                      file_content_bytes = @FileContentBytes,
+                                                      modified           = @Modified,
+                                                      sha256             = @Sha256
+                                                  ;
+                                                  """;
 
-            internal static readonly DapperCommand UpsertCommand = new(UpsertSql);
+            internal static readonly DapperCommand s_upsertCommand = new(UPSERT_ASSET_FILES_SQL);
         }
 
         /// <summary>
@@ -125,15 +128,17 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
         /// <param name="PathToAssetFile">The full path to the asset file on disk.</param>
         /// <param name="MimeType">The MIME type of the file.</param>
         /// <param name="FileContentBytes">The contents of the file.</param>
+        /// <param name="Sha256">The SHA256 checksum of the file.</param>
         /// <param name="Created">The date and time when the file was created.</param>
         /// <param name="Modified">The date and time when the file was last modified.</param>
         record AssetRow(
-            long? RowId,
-            string Id,
-            string OriginalFileName,
-            string PathToAssetFile,
-            string MimeType,
-            byte[] FileContentBytes,
+            long?          RowId,
+            string         Id,
+            string         OriginalFileName,
+            string         PathToAssetFile,
+            string         MimeType,
+            byte[]         FileContentBytes,
+            string?        Sha256,
             DateTimeOffset Modified,
             DateTimeOffset Created);
     }
