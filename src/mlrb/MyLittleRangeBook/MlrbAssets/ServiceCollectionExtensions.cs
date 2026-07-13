@@ -37,7 +37,6 @@ namespace MyLittleRangeBook
         {
             ArgumentNullException.ThrowIfNull(services);
             services.AddScoped<IMlrbAssetAggregateRepository, MlrbAssetAggregateSqliteRepository>();
-            services.AddScoped<IRangeAssetProjector, AssociateMlrbAssetToRangeEventProjector>();
 
             return services;
         }

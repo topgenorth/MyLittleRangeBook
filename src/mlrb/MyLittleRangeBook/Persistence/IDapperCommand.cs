@@ -10,13 +10,6 @@ namespace MyLittleRangeBook.Persistence
         CommandType CommandType    { get; }
         int         CommandTimeout { get; }
 
-        /// <summary>
-        ///     Sets the parameters for the command. This can be used to provide parameters after the command has been created,
-        ///     allowing for more flexible command construction.
-        /// </summary>
-        /// <param name="p"></param>
-        /// <returns></returns>
-        DapperCommand Arguments(object? p);
 
         /// <summary>
         ///     Converts the current DapperCommand instance into a Dapper CommandDefinition object using the provided context.

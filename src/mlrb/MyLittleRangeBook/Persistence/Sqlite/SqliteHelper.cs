@@ -66,17 +66,17 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             await GetDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
 
         /// <summary>
-        /// Creates a new scoped SQLite connection and initializes it for usage.
+        ///     Creates a new scoped SQLite connection and initializes it for usage.
         /// </summary>
         /// <remarks>
-        /// The returned connection allows for optional transaction management. Ensure that the scoped connection is properly
-        /// disposed of after use to release database resources.
+        ///     The returned connection allows for optional transaction management. Ensure that the scoped connection is properly
+        ///     disposed of after use to release database resources.
         /// </remarks>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         /// <param name="useTransaction">Specifies whether a transaction should be started with the scoped connection.</param>
         /// <returns>A scoped SQLite connection, optionally with an active transaction.</returns>
         public async Task<ScopedSqliteConnection> GetScopedDatabaseConnectionAsync(CancellationToken cancellationToken =
-                default, bool useTransaction = false)
+                                                                                       default, bool useTransaction = false)
         {
             SqliteConnection connection = new(_connectionString);
             connection.AddFunctions();
@@ -100,7 +100,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// </remarks>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         /// <returns>The opened connection.</returns>
-        [Obsolete("Maybe use the GetScopedDatabaseConnectionAsync?")]
+        [Obsolete("Maybe use the GetScopedDatabaseConnectionAsync?", true)]
         public async Task<SqliteConnection> GetDatabaseConnectionAsync(CancellationToken cancellationToken = default)
         {
             SqliteConnection connection = new(_connectionString);
@@ -172,10 +172,12 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                 return Result.Ok();
             }
 
+            await using ScopedSqliteConnection conn =
+                await GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
+
             try
             {
-                await using SqliteConnection connection = await GetDatabaseConnectionAsync(cancellationToken);
-                await using SqliteCommand    cmd        = new(sql, connection);
+                await using SqliteCommand cmd = new(sql, conn.Connection);
                 await cmd.ExecuteNonQueryAsync(cancellationToken);
 
                 return Result.Ok();
@@ -306,8 +308,8 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             }
             else
             {
-                await using SqliteConnection conn = await GetDatabaseConnectionAsync(cancellationToken);
-                await conn.CloseAsync();
+                await using ScopedSqliteConnection conn =
+                    await GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
                 _logger.Debug("Created database {0}", sqliteDatabaseFile);
             }
 

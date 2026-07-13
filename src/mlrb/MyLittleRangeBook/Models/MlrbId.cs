@@ -217,7 +217,7 @@ namespace MyLittleRangeBook.Models
         /// </summary>
         /// <param name="fitFileName"></param>
         /// <returns></returns>
-        [Obsolete("Should just use FromFile")]
+        [Obsolete("Should just use FromFile", true)]
         public static MlrbId FromFitFile(string fitFileName)
         {
             const string FIT_FILENAME_FORMAT = "MM-dd-yyyy_HH-mm-ss";

@@ -5,7 +5,7 @@ namespace SharedControls.Controls;
 /// <summary>
 /// Represents a command used in a dialog (like Yes/No/OK/Cancel buttons).
 /// Implements ICommand so it can be bound to UI buttons.
-/// 
+///
 /// When a button using this command is clicked, either:
 /// - The specified Command is executed (e.g., a validation or save operation), OR
 /// - If no custom command is provided, the DialogResult value is returned to the dialog.
@@ -22,7 +22,7 @@ public class DialogCommand : ICommand
     /// Gets or sets the command to run when the button is clicked.
     /// If you assign a custom command (like a save or delete command),
     /// that command will execute when the button is pressed.
-    /// 
+    ///
     /// If not set, this command will use itself to trigger the DialogResult.
     /// The default implementation uses the internal executor for this case.
     /// </summary>
@@ -65,11 +65,11 @@ public class DialogCommand : ICommand
 
     /// <summary>
     /// Determines whether the button can be clicked right now.
-    /// 
+    ///
     /// This method asks the assigned Command (if any) whether it can execute.
     /// If no Command is set, or if the Command doesn't provide a decision,
     /// this method defaults to returning true (button is enabled).
-    /// 
+    ///
     /// This allows flexible behavior: if you assign a command that disables
     /// itself during a long-running operation (like saving), the dialog
     /// button will automatically reflect that state.
@@ -86,7 +86,7 @@ public class DialogCommand : ICommand
     /// Executes the command when the button is clicked.
     /// If a custom Command was assigned, it gets executed.
     /// Otherwise, the InternalCommandExecutor is invoked with DialogResult as the parameter.
-    /// 
+    ///
     /// Example: When the OK button is clicked, it might return DialogResult.OK.
     /// </summary>
     /// <param name="parameter">Optional parameter passed from the UI (not used directly here)</param>
@@ -108,7 +108,9 @@ public class DialogCommand : ICommand
     /// is never raised. In more advanced commands (e.g., only enabled
     /// when text is entered), this would fire when conditions change.
     /// </summary>
+    #pragma warning disable CS0067
     public event EventHandler? CanExecuteChanged;
+    #pragma warning enable CS0067
 }
 
 /// <summary>
@@ -116,7 +118,7 @@ public class DialogCommand : ICommand
 /// These are pre-configured for common scenarios like OK/Cancel dialogs.
 /// You can use them directly or customize them as needed.
 /// </summary>
-public static class DialogCommands 
+public static class DialogCommands
 {
     /// <summary>
     /// Gets a pre-configured Cancel button with caption "Cancel".
@@ -125,11 +127,11 @@ public static class DialogCommands
     /// </summary>
     public static DialogCommand Cancel { get; } = new DialogCommand
     {
-        Caption = "Cancel", 
-        IsCancel = true, 
+        Caption = "Cancel",
+        IsCancel = true,
         DialogResult = DialogResult.Cancel
     };
-    
+
     /// <summary>
     /// Gets a pre-configured OK button with caption "OK".
     /// When clicked, it returns DialogResult.OK.
@@ -139,11 +141,11 @@ public static class DialogCommands
     /// </summary>
     public static DialogCommand Ok { get; } = new DialogCommand
     {
-        Caption = "OK", 
-        IsDefault = true, 
+        Caption = "OK",
+        IsDefault = true,
         DialogResult = DialogResult.Ok
     };
-    
+
     /// <summary>
     /// Gets a pre-configured Yes button with caption "Yes".
     /// When clicked, it returns DialogResult.Yes.
@@ -151,7 +153,7 @@ public static class DialogCommands
     /// </summary>
     public static DialogCommand Yes { get; } = new DialogCommand
     {
-        Caption = "Yes", 
+        Caption = "Yes",
         IsDefault = true,
         DialogResult = DialogResult.Yes
     };
@@ -182,8 +184,8 @@ public static class DialogCommands
     /// Gets an array containing Yes, No, and Cancel buttons.
     /// Useful when the user must choose between multiple options.
     /// </summary>
-    public static DialogCommand[] YesNoCancel = [Cancel, No, Yes]; 
-    
+    public static DialogCommand[] YesNoCancel = [Cancel, No, Yes];
+
     /// <summary>
     /// Gets an array containing only Yes and No buttons.
     /// Ideal for simple Yes/No questions.

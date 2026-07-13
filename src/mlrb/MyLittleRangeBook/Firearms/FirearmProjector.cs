@@ -1,4 +1,5 @@
-﻿using MyLittleRangeBook.EventSourcing;
+﻿using System.Diagnostics;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
@@ -14,7 +15,6 @@ namespace MyLittleRangeBook.Firearms
         readonly     IEventSerializer            _eventSerializer;
         readonly     IFirearmsService            _firearmsService;
         readonly     ILogger                     _logger;
-        readonly     IFirearmAggregateRepository _repo;
 
         public FirearmProjector(
             IFirearmsService firearmsService,
@@ -27,7 +27,7 @@ namespace MyLittleRangeBook.Firearms
         }
 
         /// <summary>
-        ///     Load the event stream for the firearm, and then project the aggregate onto the firearms table.
+        ///     Load the event stream for the firearm and then project the aggregate onto the firearm table.
         /// </summary>
         /// <param name="context"></param>
         /// <param name="firearmId"></param>
@@ -56,6 +56,7 @@ namespace MyLittleRangeBook.Firearms
                     }
                 }
 
+                Debug.Assert(fa != null, nameof(fa) + " != null");
                 Result<EntityId> r1 = await _firearmsService.UpsertAsync(context, fa);
 
                 reasons.AddRange(r1.Reasons);
