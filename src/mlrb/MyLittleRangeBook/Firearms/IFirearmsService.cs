@@ -10,6 +10,7 @@ namespace MyLittleRangeBook.Firearms
     public interface IFirearmsService
     {
         Task<Result> AssociateWithRangeEvent(DapperCommandContext context, MlrbId firearmId, MlrbId rangeEventId);
+        Task<Result> AssociateWithAsset(DapperCommandContext      context, MlrbId firearmId, MlrbId assetId);
 
         /// <summary>
         ///     Deletes the Firearm record from the database.
@@ -21,6 +22,8 @@ namespace MyLittleRangeBook.Firearms
 
         Task<Result> DisassociateFromRangeEvent(DapperCommandContext context, MlrbId firearmId,
                                                 MlrbId               rangeEventId);
+
+        Task<Result> DisassociateWithAsset(DapperCommandContext context, MlrbId firearmId, MlrbId assetId);
 
         Task<Result<Firearm>> GetFirearmAsync(DapperCommandContext context, string id);
 

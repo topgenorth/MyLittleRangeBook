@@ -46,6 +46,11 @@ namespace MyLittleRangeBook.MlrbAssets
 
         public DateTimeOffset Modified => Aggregate.Modified;
 
+        /// <summary>
+        /// The name of the firearm to associate with the asset. Optional.
+        /// </summary>
+        public string? AssociatedFirearmName { get; set; } = null;
+
         public string? SHA256 => Aggregate.SHA256;
 
         public override string ToString()

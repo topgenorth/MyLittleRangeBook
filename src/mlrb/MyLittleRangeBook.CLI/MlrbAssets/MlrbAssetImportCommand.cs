@@ -59,6 +59,7 @@ namespace MyLittleRangeBook.MlrbAssets
                                                     string?           firearmName = null,
                                                     CancellationToken ct          = default)
         {
+            List<IReason>        reasons = [];
             int                  returnCode;
             FileInfo             fileInfo = new(file);
             DapperCommandContext context = await DapperCommandContext.NewAsync(_sqliteHelper, ct).ConfigureAwait(false);
@@ -72,6 +73,7 @@ namespace MyLittleRangeBook.MlrbAssets
 
             Result<MlrbAssetAggregate?> r     = await _aggregateRepo.GetAsync(context, fileInfo).ConfigureAwait(false);
             bool                        isNew = r.IsFailed || r.Value is null;
+            reasons.AddRange(r.Reasons);
 
             MlrbAssetAggregate aggregate;
             if (isNew)
@@ -86,7 +88,7 @@ namespace MyLittleRangeBook.MlrbAssets
                 // TODO [TO20260602] Maybe we want to have a "refresh" or a different type of "update" event?
             }
 
-            MlrbAssetFile assetFile = new(aggregate);
+            MlrbAssetFile assetFile = new(aggregate) { AssociatedFirearmName = firearmName };
 
             // TODO [TO20260527] Have to update the pipeline to create the events rather than doing things.
             Result result = await _assetPipeline.ExecuteAsync(assetFile, ct).ConfigureAwait(false);

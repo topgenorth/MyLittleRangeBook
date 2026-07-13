@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.MlrbAssets;
 using MyLittleRangeBook.MlrbAssets.Handlers;
@@ -69,25 +70,27 @@ namespace MyLittleRangeBook
 
             services.AddScoped<ValidateFileExistsHandler>(serviceProvider =>
                                                               new ValidateFileExistsHandler(serviceProvider
-                                                                 .GetRequiredService<ILogger>()));
+                                                                          .GetRequiredService<ILogger>()));
 
             services.AddScoped<CopyMlrbAssetHandler>(serviceProvider =>
                                                          new CopyMlrbAssetHandler(serviceProvider
-                                                            .GetRequiredService<IConfiguration>()));
+                                                                     .GetRequiredService<IConfiguration>()));
 
             services.AddScoped<LoggingHandler>(serviceProvider =>
                                                    new LoggingHandler(serviceProvider.GetRequiredService<ILogger>()));
 
             services.AddScoped<InsertAssetFileSqliteHandler>(serviceProvider =>
                                                                  new InsertAssetFileSqliteHandler(serviceProvider
-                                                                    .GetRequiredService<ISqliteHelper>()));
+                                                                             .GetRequiredService<ISqliteHelper>()));
 
             services.TryAddScoped<IXeroCsvShotSessionParser, XeroCsvShotSessionParser>();
             services.TryAddScoped<GarminShotViewCsvHandler>(sp =>
                                                                 new GarminShotViewCsvHandler(
-                                                                 sp.GetRequiredService<ILogger>(),
-                                                                 sp.GetRequiredService<
-                                                                     IXeroCsvShotSessionParser>()));
+                                                                     sp.GetRequiredService<ILogger>(),
+                                                                     sp.GetRequiredService<IXeroCsvShotSessionParser>(),
+                                                                     sp.GetRequiredService<IFirearmsService>(),
+                                                                     sp.GetRequiredService<ISqliteHelper>()
+                                                                    ));
 
             // Register handlers by concrete type for the pipeline
             services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp => sp
@@ -101,15 +104,14 @@ namespace MyLittleRangeBook
             services.AddScoped<IPipeline<MlrbAssetFile>>(serviceProvider =>
                                                          {
                                                              Pipeline<MlrbAssetFile> pipeline = new(serviceProvider,
-                                                                 serviceProvider.GetRequiredService<ILogger>());
+                                                                      serviceProvider.GetRequiredService<ILogger>());
 
                                                              return pipeline
                                                                    .Add<ValidateFileExistsHandler>()
                                                                    .Add<CopyMlrbAssetHandler>()
                                                                    .Add<InsertAssetFileSqliteHandler>()
                                                                    .Add<GarminShotViewCsvHandler>()
-                                                                   .Add<
-                                                                        LoggingHandler>(); // [TO20260525] Keep the logging handler for last.
+                                                                   .Add<LoggingHandler>();
                                                          });
 
             return services;
