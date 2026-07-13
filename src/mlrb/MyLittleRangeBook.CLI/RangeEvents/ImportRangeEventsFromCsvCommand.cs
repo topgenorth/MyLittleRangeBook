@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using ConsoleAppFramework;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -91,7 +92,7 @@ namespace MyLittleRangeBook.RangeEvents
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>An enumerable of SimpleRangeEvent objects.</returns>
         async IAsyncEnumerable<CsvRow> LoadRangeEventsFromCsv(string            csvFileName,
-                                                              CancellationToken cancellationToken)
+                                                              [EnumeratorCancellation]CancellationToken cancellationToken)
         {
             CsvConfiguration config = new(CultureInfo.InvariantCulture)
                                       {

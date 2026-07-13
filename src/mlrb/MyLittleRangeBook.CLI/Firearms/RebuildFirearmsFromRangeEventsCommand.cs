@@ -1,4 +1,5 @@
-﻿using ConsoleAppFramework;
+﻿using System.Diagnostics;
+using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Persistence;
@@ -30,6 +31,7 @@ namespace MyLittleRangeBook
                    .ThenBy(e => e.EventDate)
                    .GroupBy(e => e.FirearmName);
 
+                Debug.Assert(rangeEventsByFirearm != null, nameof(rangeEventsByFirearm) + " != null");
                 foreach (IGrouping<string, SimpleRangeEvent> x in rangeEventsByFirearm)
                 {
                     CliDisplay.PrintInfo($"Processing range events for firearm {x.Key}");

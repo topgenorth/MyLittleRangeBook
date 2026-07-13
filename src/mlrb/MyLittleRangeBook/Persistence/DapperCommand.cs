@@ -27,7 +27,6 @@ namespace MyLittleRangeBook.Persistence
             Parameters = parameters;
         }
 
-        [Obsolete("Pass in the arguments using the DapperCommandContext.")]
         public object? Parameters { get; private set; }
 
         public string Sql { get; }
@@ -36,20 +35,7 @@ namespace MyLittleRangeBook.Persistence
         public CommandType CommandType { get; }
         public int CommandTimeout { get; }
 
-        /// <summary>
-        ///     Sets the parameters for the command. This can be used to provide parameters after the command has been created,
-        ///     allowing for more flexible command construction.
-        /// </summary>
-        /// <param name="p"></param>
-        /// <returns></returns>
-        [Obsolete("Pass in the arguments using the DapperCommandContext.")]
-        public DapperCommand Arguments(object? p)
-        {
-            ArgumentNullException.ThrowIfNull(p);
-            Parameters = p;
 
-            return this;
-        }
 
         public CommandDefinition ToDefinition(DapperCommandContext ctx)
         {
