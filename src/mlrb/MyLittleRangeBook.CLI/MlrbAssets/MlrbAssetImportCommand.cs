@@ -1,7 +1,10 @@
 ﻿using ConsoleAppFramework;
 using FluentResults;
 using JetBrains.Annotations;
+using Microsoft.Extensions.DependencyInjection;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.EventSourcing;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Persistence;
@@ -18,21 +21,27 @@ namespace MyLittleRangeBook.MlrbAssets
     {
         readonly IMlrbAssetAggregateRepository _aggregateRepo;
         readonly IPipeline<MlrbAssetFile>      _assetPipeline;
-        readonly ISqliteHelper                 _sqliteHelper;
         readonly IXeroCsvShotSessionParser     _csvParser;
+        readonly IFirearmAggregateRepository   _faRepo;
+        readonly ISqliteHelper                 _sqliteHelper;
+        readonly IProjector                    _firearmsProjector;
 
         public MlrbAssetImportCommand(ILogger                       logger,
                                       ICliDisplay                   cliDisplay,
                                       IPipeline<MlrbAssetFile>      assetPipeline,
                                       IMlrbAssetAggregateRepository aggregateRepo,
                                       ISqliteHelper                 sqliteHelper,
-                                      IXeroCsvShotSessionParser     csvParser) : base(logger,
-            cliDisplay)
+                                      IFirearmAggregateRepository   faRepo,
+                                      IXeroCsvShotSessionParser     csvParser,
+                                      IProjector firearmsProjector) : base(logger,
+                                                                                                                    cliDisplay)
         {
-            _assetPipeline = assetPipeline;
-            _aggregateRepo = aggregateRepo;
-            _sqliteHelper  = sqliteHelper;
-            _csvParser     = csvParser;
+            _assetPipeline          = assetPipeline;
+            _aggregateRepo          = aggregateRepo;
+            _sqliteHelper           = sqliteHelper;
+            _faRepo                 = faRepo;
+            _csvParser              = csvParser;
+            _firearmsProjector = firearmsProjector;
         }
 
 
@@ -40,15 +49,17 @@ namespace MyLittleRangeBook.MlrbAssets
         ///     Copy the file to the asset directory for the range event.
         /// </summary>
         /// <param name="file">The name of the file to import into the MLRB assets.</param>
+        /// <param name="firearmName">The name of the firearm to associate with the imported asset.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
         [Command("import")]
         [UsedImplicitly]
         // ReSharper disable once AsyncMethodWithoutAwait
         public async Task<int> ImportRangeAssetFile(string            file,
-                                                    CancellationToken ct = default)
+                                                    string?           firearmName = null,
+                                                    CancellationToken ct          = default)
         {
-            int                  returnCode ;
+            int                  returnCode;
             FileInfo             fileInfo = new(file);
             DapperCommandContext context = await DapperCommandContext.NewAsync(_sqliteHelper, ct).ConfigureAwait(false);
             if (!fileInfo.Exists)
@@ -120,6 +131,20 @@ namespace MyLittleRangeBook.MlrbAssets
             await _aggregateRepo.SaveAsync(context, assetFile.Aggregate).ConfigureAwait(false);
             Logger.Verbose("Updated the event stream {id}, v{version}", aggregate.Id, aggregate.Version);
 
+            if (!string.IsNullOrEmpty(firearmName))
+            {
+                Result r2 = await AssociateWithFirearm(context, assetFile.Aggregate.Id, firearmName!)
+                               .ConfigureAwait(false);
+                if (r2.IsSuccess)
+                {
+                    CliDisplay.PrintInfo($"{file} was associated with {firearmName}.");
+                }
+                else
+                {
+                    CliDisplay.PrintWarning($"{file} could not be associated with {firearmName}.");
+                }
+            }
+
             CliDisplay.PrintSuccess($"{file} was imported to assets.");
             returnCode = ReturnCodes.SUCCESS;
 
@@ -131,6 +156,23 @@ namespace MyLittleRangeBook.MlrbAssets
 
             PressEnterToContinue();
             return returnCode;
+        }
+
+        async Task<Result> AssociateWithFirearm(DapperCommandContext context, MlrbId assetId, string firearmName)
+        {
+            List<IReason> reasons = [];
+            Result<FirearmAggregate> r1 =
+                await _faRepo.GetOrCreateByNameAsync(context, firearmName).ConfigureAwait(false);
+            reasons.AddRange(r1.Reasons);
+
+            FirearmAggregate? fa = r1.Value;
+            fa.AssociatedWithAsset(assetId, DateTimeOffset.UtcNow);
+            Result r2 = await _faRepo.UpsertAsync(context, fa).ConfigureAwait(false);
+            reasons.AddRange(r2.Reasons);
+
+
+
+            return new Result().WithReasons(reasons);
         }
     }
 }

@@ -83,17 +83,19 @@ namespace MyLittleRangeBook
                                                                     .GetRequiredService<ISqliteHelper>()));
 
             services.TryAddScoped<IXeroCsvShotSessionParser, XeroCsvShotSessionParser>();
+            services.TryAddScoped<GarminShotViewCsvHandler>(sp =>
+                                                                new GarminShotViewCsvHandler(
+                                                                 sp.GetRequiredService<ILogger>(),
+                                                                 sp.GetRequiredService<
+                                                                     IXeroCsvShotSessionParser>()));
 
             // Register handlers by concrete type for the pipeline
-            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
-                                                                    sp.GetRequiredService<ValidateFileExistsHandler>());
-            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
-                                                                    sp.GetRequiredService<CopyMlrbAssetHandler>());
-            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
-                                                                    sp.GetRequiredService<
-                                                                        InsertAssetFileSqliteHandler>());
-            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp =>
-                                                                    sp.GetRequiredService<LoggingHandler>());
+            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp => sp
+                                                                   .GetRequiredService<ValidateFileExistsHandler>());
+            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp => sp.GetRequiredService<CopyMlrbAssetHandler>());
+            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp => sp
+                                                                   .GetRequiredService<InsertAssetFileSqliteHandler>());
+            services.AddScoped<IPipelineHandler<MlrbAssetFile>>(sp => sp.GetRequiredService<LoggingHandler>());
 
             // Register the pipeline with handlers in order
             services.AddScoped<IPipeline<MlrbAssetFile>>(serviceProvider =>
@@ -106,7 +108,8 @@ namespace MyLittleRangeBook
                                                                    .Add<CopyMlrbAssetHandler>()
                                                                    .Add<InsertAssetFileSqliteHandler>()
                                                                    .Add<GarminShotViewCsvHandler>()
-                                                                   .Add<LoggingHandler>(); // [TO20260525] Keep the logging handler for last.
+                                                                   .Add<
+                                                                        LoggingHandler>(); // [TO20260525] Keep the logging handler for last.
                                                          });
 
             return services;

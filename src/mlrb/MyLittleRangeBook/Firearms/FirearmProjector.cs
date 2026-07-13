@@ -39,18 +39,16 @@ namespace MyLittleRangeBook.Firearms
         {
             try
             {
-                string               fid = firearmId.ToString();
-                DapperCommandContext ctx = context with { Arguments = new { StreamId = fid } };
+                List<IReason>        reasons = [];
+                string               fid     = firearmId.ToString();
+                DapperCommandContext ctx     = context with { Arguments = new { StreamId = fid } };
                 (FirearmAggregate? fa, IEnumerable<IDomainEvent> events) =
                     await LoadEventStreamIncludeNewEvents(ctx).ConfigureAwait(false);
-
-
-
 
                 List<DapperCommandContext> upserts = [];
                 foreach (IDomainEvent evt in events)
                 {
-                    fa.Apply(evt);
+                    fa!.Apply(evt);
                     if (evt is FirearmAggregate.FirearmAssociatedWithRangeEvent @event)
                     {
                         var p = new { FirearmId = fid, SimpleRangeEventId = @event.RangeEventId };
@@ -60,7 +58,7 @@ namespace MyLittleRangeBook.Firearms
 
                 Result<EntityId> r1 = await _firearmsService.UpsertAsync(context, fa);
 
-                List<IReason> reasons = new(r1.Reasons);
+                reasons.AddRange(r1.Reasons);
 
                 if (!r1.IsSuccess)
                 {
@@ -94,6 +92,17 @@ namespace MyLittleRangeBook.Firearms
                 return Result.Fail(err);
             }
         }
+
+
+        async Task AssociateWithSimpleRangeEvent(DapperCommandContext context,
+                                                 MlrbId               firearmId,
+                                                 IEnumerable<FirearmAggregate.FirearmAssociatedWithRangeEvent>
+                                                     uncommittedDomainEvents) { }
+
+        async Task AssociateWithAssetFiles(DapperCommandContext context,
+                                           MlrbId               firearmId,
+                                           IEnumerable<FirearmAggregate.FirearmAssociatedWithAsset>
+                                               uncommittedDomainEvents) { }
 
         /// <summary>
         ///     Loads the event stream for the specified firearm aggregate and combines it with optional uncommitted domain events.
@@ -143,6 +152,13 @@ namespace MyLittleRangeBook.Firearms
 
         static class Commands
         {
+            const string UPSERT_ASSET_FILES_FIREARMS_SQL = """
+                                                           INSERT INTO main.asset_files_firearms (firearm_id, asset_id)
+                                                           VALUES (@FirearmId, @AssetId)
+                                                           ON CONFLICT DO NOTHING
+                                                           RETURNING row_id;
+                                                           """;
+
             const string UPSERT_FIREARM_SIMPLE_RANGE_EVENTS_SQL = """
                                                                   INSERT INTO firearms_simple_range_events (firearm_id, simple_range_event_id)
                                                                   VALUES (@FirearmId, @SimpleRangeEventId)
@@ -152,6 +168,9 @@ namespace MyLittleRangeBook.Firearms
 
             internal static readonly DapperCommand s_addAssociationToRangeEvent =
                 new(UPSERT_FIREARM_SIMPLE_RANGE_EVENTS_SQL);
+
+            internal static readonly DapperCommand s_addAssociationToAsset =
+                new(UPSERT_ASSET_FILES_FIREARMS_SQL);
         }
     }
 }
