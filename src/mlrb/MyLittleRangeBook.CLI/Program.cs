@@ -65,9 +65,6 @@ ConsoleApp.ConsoleAppBuilder app = ConsoleApp.Create();
 
 ILogger logger = host.Services.GetRequiredService<ILogger>();
 logger.Debug("MyLittleRangeBook CLI v{AppVersion}", typeof(ReturnCodes).Assembly.GetAssemblyVersionInformation());
-#if DEBUG
-logger.Debug("Serilog configured.");
-#endif
 
 await app.RunAsync(args).ConfigureAwait(false);
 
