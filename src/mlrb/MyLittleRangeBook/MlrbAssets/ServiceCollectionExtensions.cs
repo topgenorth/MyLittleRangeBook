@@ -81,15 +81,14 @@ namespace MyLittleRangeBook
 
             services.AddScoped<InsertAssetFileSqliteHandler>(serviceProvider =>
                                                                  new InsertAssetFileSqliteHandler(serviceProvider
-                                                                             .GetRequiredService<ISqliteHelper>()));
+                                                                             .GetRequiredService<ISqliteHelper>(),
+                                                                      serviceProvider.GetRequiredService<IFirearmsService>()));
 
             services.TryAddScoped<IXeroCsvShotSessionParser, XeroCsvShotSessionParser>();
             services.TryAddScoped<GarminShotViewCsvHandler>(sp =>
                                                                 new GarminShotViewCsvHandler(
                                                                      sp.GetRequiredService<ILogger>(),
-                                                                     sp.GetRequiredService<IXeroCsvShotSessionParser>(),
-                                                                     sp.GetRequiredService<IFirearmsService>(),
-                                                                     sp.GetRequiredService<ISqliteHelper>()
+                                                                     sp.GetRequiredService<IXeroCsvShotSessionParser>()
                                                                     ));
 
             // Register handlers by concrete type for the pipeline

@@ -9,20 +9,14 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
 {
     public class GarminShotViewCsvHandler : IPipelineHandler<MlrbAssetFile>
     {
-        readonly IFirearmsService          _firearmService;
         readonly ILogger                   _logger;
         readonly IXeroCsvShotSessionParser _parser;
-        readonly ISqliteHelper             _sqliteHelper;
 
         public GarminShotViewCsvHandler(ILogger                   logger,
-                                        IXeroCsvShotSessionParser parser,
-                                        IFirearmsService          firearmService,
-                                        ISqliteHelper             sqliteHelper)
+                                        IXeroCsvShotSessionParser parser)
         {
             _logger         = logger;
             _parser         = parser;
-            _firearmService = firearmService;
-            _sqliteHelper   = sqliteHelper;
         }
 
         public string Name => "Parse Garmin Shot View CSV";
@@ -36,26 +30,10 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
             if (await _parser.IsShotViewCsvAsync(filePath, context.CancellationToken))
             {
                 reasons.Add(new Success($"File is a valid Garmin Shot View CSV: '{filePath}'"));
-                Result<ShotSession> x = await _parser.ParseCsvFileAsync(filePath, context.CancellationToken)
+                Result<ShotSession> r1 = await _parser.ParseCsvFileAsync(filePath, context.CancellationToken)
                                                      .ConfigureAwait(false);
-                reasons.AddRange(x.Reasons);
-                context.Metadata["ShotviewCSV"] = x.Value;
-
-                if (!string.IsNullOrWhiteSpace(context.Record.AssociatedFirearmName))
-                {
-                    MlrbId assetId   = context.Record.Aggregate.Id;
-                    MlrbId firearmId = MlrbId.FromString(context.Record.AssociatedFirearmName!);
-                    context.Metadata["AssociatedFirearm"] = context.Record.AssociatedFirearmName!;
-
-                    await using ScopedSqliteConnection db = await _sqliteHelper
-                                                     .GetScopedDatabaseConnectionAsync(context.CancellationToken)
-                                                     .ConfigureAwait(false);
-                    DapperCommandContext dapperCtx = new(db, context.CancellationToken);
-
-                    Result r = await _firearmService.AssociateWithAsset(dapperCtx, firearmId, assetId)
-                                                    .ConfigureAwait(false);
-                    reasons.AddRange(r.Reasons);
-                }
+                reasons.AddRange(r1.Reasons);
+                context.Metadata["ShotViewSession"] = r1.Value;
             }
             else
             {

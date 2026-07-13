@@ -1,5 +1,7 @@
 ﻿using System.Data.Common;
 using Microsoft.Data.Sqlite;
+using MyLittleRangeBook.Firearms;
+using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
@@ -7,9 +9,14 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
 {
     public class InsertAssetFileSqliteHandler : IPipelineHandler<MlrbAssetFile>
     {
-        readonly ISqliteHelper _sqliteHelper;
+        readonly IFirearmsService _firearmsService;
+        readonly ISqliteHelper    _sqliteHelper;
 
-        public InsertAssetFileSqliteHandler(ISqliteHelper sqliteHelper) => _sqliteHelper = sqliteHelper;
+        public InsertAssetFileSqliteHandler(ISqliteHelper sqliteHelper, IFirearmsService firearmsService)
+        {
+            _sqliteHelper    = sqliteHelper;
+            _firearmsService = firearmsService;
+        }
 
         public string Name => "Adding/updating MLRB asset in SQLite database.";
 
@@ -18,6 +25,11 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
         {
             string fileExtension = Path.GetExtension(context.Record.FileToImport);
             context.Metadata["FileExtension"] = fileExtension;
+            await using SqliteConnection conn =
+                await _sqliteHelper.GetDatabaseConnectionAsync().ConfigureAwait(false);
+            await using DbTransaction trans =
+                await conn.BeginTransactionAsync(context.CancellationToken).ConfigureAwait(false);
+            DapperCommandContext dapperCtx = new(conn, trans, context.CancellationToken);
 
             try
             {
@@ -29,53 +41,75 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
                                         context.Record.FileContents,
                                         Created: context.Record.Created,
                                         Modified: context.Record.Modified,
-                                        Sha256: context.Record.SHA256);
+                                        Sha256: context.Record.SHA256!);
 
-                await using SqliteConnection conn =
-                    await _sqliteHelper.GetDatabaseConnectionAsync().ConfigureAwait(false);
-                await using DbTransaction trans =
-                    await conn.BeginTransactionAsync(context.CancellationToken).ConfigureAwait(false);
 
                 // @Id, @OriginalFilename, @PathToRangeAssetFile, @MimeType, @FileContentBytes, @Created, @Modified, @Sha256
-                var p = new
-                        {
-                            assetRow.Id,
-                            OriginalFilename     = assetRow.OriginalFileName,
-                            PathToRangeAssetFile = assetRow.PathToAssetFile,
-                            assetRow.MimeType,
-                            assetRow.FileContentBytes,
-                            assetRow.Created,
-                            assetRow.Modified,
-                            assetRow.Sha256,
-                        };
+                var p1 = new
+                         {
+                             assetRow.Id,
+                             OriginalFilename     = assetRow.OriginalFileName,
+                             PathToRangeAssetFile = assetRow.PathToAssetFile,
+                             assetRow.MimeType,
+                             assetRow.FileContentBytes,
+                             assetRow.Created,
+                             assetRow.Modified,
+                             assetRow.Sha256,
+                         };
 
-                DapperCommandContext dapperCtx = new(conn, trans, context.CancellationToken) { Arguments = p };
+                DapperCommandContext ctx1 = dapperCtx with { Arguments = p1 };
                 int i = await Commands.s_upsertCommand
-                                      .ExecuteAsync(dapperCtx)
+                                      .ExecuteAsync(ctx1)
                                       .ConfigureAwait(false);
-                if (i is 1 or 0)
-                {
-                    await trans.CommitAsync(context.CancellationToken).ConfigureAwait(false);
-                    context.Metadata["InsertIntoSqlite"] = true;
-                    context.Record.Aggregate.StoredInDatabase(assetRow.FileContentBytes, DateTimeOffset.UtcNow);
-                }
-                else
-                {
-                    await trans.RollbackAsync(context.CancellationToken).ConfigureAwait(false);
-                    string msg = $"Expected to affect 1 row, but affected {i} rows.";
-                    context.Metadata["InsertIntoSqlite"]      = false;
-                    context.Metadata["InsertIntoSqliteError"] = msg;
-                    context.Record.Aggregate.Fail(msg, DateTimeOffset.UtcNow);
 
-                    return Result.Fail(msg);
+                MlrbId assetId;
+                switch (i)
+                {
+                    case 1:
+                        assetId                              = assetRow.Id;
+                        context.Metadata["InsertIntoSqlite"] = true;
+                        context.Record.Aggregate.StoredInDatabase(assetRow.FileContentBytes, DateTimeOffset.UtcNow);
+                        break;
+                    case 0:
+                        // Odds are that this file was already inserted (SHA256).
+                        var p2 = new { assetRow.Sha256 };
+                        DapperCommandContext ctx2 = dapperCtx with { Arguments = p2 };
+                        string? x = await Commands.s_getAssetId.ExecuteScalarAsync<string>(ctx2).ConfigureAwait(false);
+                        assetId                                   = MlrbId.FromString(x!);
+                        context.Metadata["InsertIntoSqlite"]      = false;
+                        context.Metadata["InsertIntoSqliteError"] = "File already exists in database.";
+                        break;
+                    default:
+                    {
+                        await trans.RollbackAsync(context.CancellationToken).ConfigureAwait(false);
+                        string msg = $"Expected to affect 1 row, but affected {i} rows.";
+                        context.Metadata["InsertIntoSqlite"]      = false;
+                        context.Metadata["InsertIntoSqliteError"] = msg;
+                        context.Record.Aggregate.Fail(msg, DateTimeOffset.UtcNow);
+
+                        return Result.Fail(msg);
+                    }
                 }
+
+                if (!string.IsNullOrWhiteSpace(context.Record.AssociatedFirearmName))
+                {
+                    MlrbId firearmId = MlrbId.FromString(context.Record.AssociatedFirearmName!);
+                    Result r2 = await _firearmsService.AssociateWithAsset(dapperCtx, firearmId, assetId)
+                                                      .ConfigureAwait(false);
+                    if (r2.IsSuccess)
+                    {
+                        context.Record.Aggregate.AssociatedWithFirearm(firearmId, DateTimeOffset.UtcNow);
+                    }
+                }
+
+                await trans.CommitAsync(context.CancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
+                await trans.RollbackAsync(context.CancellationToken).ConfigureAwait(false);
                 context.Metadata["InsertIntoSqlite"]      = false;
                 context.Metadata["InsertIntoSqliteError"] = ex.Message;
                 context.Record.Aggregate.Fail(ex, DateTimeOffset.UtcNow);
-
                 return Result.Fail(ex.ToString());
             }
 
@@ -84,6 +118,10 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
 
         static class Commands
         {
+            const string GET_ASSET_ID_VIA_SHA256_SQL = """
+                                                        SELECT id from main.asset_files WHERE sha256=@Sha256;
+                                                       """;
+
             const string UPSERT_ASSET_FILES_SQL = """
                                                   INSERT INTO asset_files (
                                                       id,
@@ -117,6 +155,7 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
                                                   """;
 
             internal static readonly DapperCommand s_upsertCommand = new(UPSERT_ASSET_FILES_SQL);
+            internal static readonly DapperCommand s_getAssetId    = new(GET_ASSET_ID_VIA_SHA256_SQL);
         }
 
         /// <summary>
@@ -138,7 +177,7 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
             string         PathToAssetFile,
             string         MimeType,
             byte[]         FileContentBytes,
-            string?        Sha256,
+            string         Sha256,
             DateTimeOffset Modified,
             DateTimeOffset Created);
     }
