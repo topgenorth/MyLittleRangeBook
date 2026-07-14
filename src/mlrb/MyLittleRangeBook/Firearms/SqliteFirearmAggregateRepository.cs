@@ -50,23 +50,5 @@ namespace MyLittleRangeBook.Firearms
 
             return Result.Ok(fa);
         }
-
-
-        public async Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default)
-        {
-            await using DapperCommandContext ctx =
-                await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken, true);
-            Result r1 = await UpsertAsync(ctx, aggregate);
-            if (r1.IsSuccess)
-            {
-                await ctx.CommitAsync().ConfigureAwait(false);
-            }
-            else
-            {
-                await ctx.RollbackAsync().ConfigureAwait(false);
-            }
-
-            return r1;
-        }
     }
 }

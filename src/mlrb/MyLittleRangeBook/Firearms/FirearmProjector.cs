@@ -1,4 +1,5 @@
-﻿using MyLittleRangeBook.EventSourcing;
+﻿using System.Diagnostics;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
@@ -37,6 +38,11 @@ namespace MyLittleRangeBook.Firearms
         {
             try
             {
+                if (uncommittedDomainEvents is null)
+                {
+                    return new Result().WithReasons([new Success("No domain events to project.")]);
+                }
+
                 List<IReason> reasons = [];
                 foreach (IDomainEvent evt in uncommittedDomainEvents)
                 {

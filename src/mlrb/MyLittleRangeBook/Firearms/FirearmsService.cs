@@ -5,24 +5,7 @@ namespace MyLittleRangeBook.Firearms
 {
     public partial class FirearmsService : IFirearmsService
     {
-        public async Task<Result> AssociateWithAsset(DapperCommandContext context, MlrbId firearmId, MlrbId assetId)
-        {
-            var                  args    = new { FirearmId = firearmId, AssetId = assetId };
-            DapperCommandContext ctx     = context with { Arguments = args };
-            List<IReason>        reasons = [];
-            try
-            {
-                await Commands.s_associateWithAsset.ExecuteAsync(ctx).ConfigureAwait(false);
-                reasons.Add(new Success($"Firearm {firearmId} associated with asset {assetId}."));
-            }
-            catch (Exception e)
-            {
-                Error err = e.ToError($"Failed to associate firearm {firearmId} with asset {assetId}");
-                reasons.Add(err);
-            }
 
-            return new Result().WithReasons(reasons);
-        }
 
         public async Task<Result<bool>> DeleteAsync(DapperCommandContext context, Firearm firearm)
         {
@@ -94,60 +77,6 @@ namespace MyLittleRangeBook.Firearms
             return await UpsertAsync(context, f).ConfigureAwait(false);
         }
 
-        public async Task<Result> AssociateWithRangeEvent(DapperCommandContext context, MlrbId firearmId,
-                                                          MlrbId               rangeEventId)
-        {
-            try
-            {
-                var args = new { FirearmId = firearmId.ToString(), SimpleRangeEventId = rangeEventId.ToString() };
-                DapperCommandContext ctx = context with { Arguments = args };
-
-                int     l       = await Commands.s_associateWithRangeEvent.ExecuteAsync(ctx).ConfigureAwait(false);
-                Success success = new($"Associated firearm {firearmId} with range event {rangeEventId} - {l}.");
-                return Result.Ok().WithSuccess(success);
-            }
-            catch (Exception ex)
-            {
-                return Result.Fail(ex.ToError());
-            }
-        }
-
-        public async Task<Result> DisassociateFromRangeEvent(DapperCommandContext context, MlrbId firearmId,
-                                                             MlrbId               rangeEventId)
-        {
-            try
-            {
-                var args = new { FirearmId = firearmId.ToString(), SimpleRangeEventId = rangeEventId.ToString() };
-                DapperCommandContext ctx = context with { Arguments = args };
-
-                int     l       = await Commands.s_disassociateFromRangeEvent.ExecuteAsync(ctx).ConfigureAwait(false);
-                Success success = new($"Disassociated firearm {firearmId} with range event {rangeEventId} - {l}.");
-                return Result.Ok().WithSuccess(success);
-            }
-            catch (Exception ex)
-            {
-                return Result.Fail(ex.ToError());
-            }
-        }
-
-        public async Task<Result> DisassociateWithAsset(DapperCommandContext context, MlrbId firearmId, MlrbId assetId)
-        {
-            var                  args    = new { FirearmId = firearmId, AssetId = assetId };
-            DapperCommandContext ctx     = context with { Arguments = args };
-            List<IReason>        reasons = [];
-            try
-            {
-                await Commands.s_disassociateFromAsset.ExecuteAsync(ctx).ConfigureAwait(false);
-                reasons.Add(new Success($"Firearm {firearmId} disassociated from asset {assetId}."));
-            }
-            catch (Exception e)
-            {
-                Error err = e.ToError($"Failed to disassociate firearm {firearmId} from asset {assetId}");
-                reasons.Add(err);
-            }
-
-            return new Result().WithReasons(reasons);
-        }
 
         public async Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(
             DapperCommandContext context,
@@ -172,7 +101,7 @@ namespace MyLittleRangeBook.Firearms
 
         public async Task<Result<Firearm>> GetFirearmAsync(DapperCommandContext context, string id)
         {
-            DapperCommand        cmd = Commands.SelectById;
+            DapperCommand        cmd = Commands.s_selectById;
             DapperCommandContext ctx = context with { Arguments = new { Id = id } };
             try
             {
