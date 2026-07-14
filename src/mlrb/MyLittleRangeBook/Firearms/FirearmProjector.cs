@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using MyLittleRangeBook.EventSourcing;
+﻿using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
@@ -8,13 +7,12 @@ namespace MyLittleRangeBook.Firearms
     /// <summary>
     ///     Update the round count for a given firearm.
     /// </summary>
-    [Obsolete("Don't need this right now.", true)]
     public class FirearmProjector : IProjector
     {
-        public const string                      DI_KEY = "firearm-projector";
-        readonly     IEventSerializer            _eventSerializer;
-        readonly     IFirearmsService            _firearmsService;
-        readonly     ILogger                     _logger;
+        public const string           DI_KEY = "firearm-projector";
+        readonly     IEventSerializer _eventSerializer;
+        readonly     IFirearmsService _firearmsService;
+        readonly     ILogger          _logger;
 
         public FirearmProjector(
             IFirearmsService firearmsService,
@@ -39,48 +37,50 @@ namespace MyLittleRangeBook.Firearms
         {
             try
             {
-                List<IReason>        reasons = [];
-                string               fid     = firearmId.ToString();
-                DapperCommandContext ctx     = context with { Arguments = new { StreamId = fid } };
-                (FirearmAggregate? fa, IEnumerable<IDomainEvent> events) =
-                    await LoadEventStreamIncludeNewEvents(ctx).ConfigureAwait(false);
-
-                List<DapperCommandContext> upserts = [];
-                foreach (IDomainEvent evt in events)
+                List<IReason> reasons = [];
+                foreach (IDomainEvent evt in uncommittedDomainEvents)
                 {
-                    fa!.Apply(evt);
-                    if (evt is FirearmAggregate.FirearmAssociatedWithRangeEvent @event)
+                    switch (evt)
                     {
-                        var p = new { FirearmId = fid, SimpleRangeEventId = @event.RangeEventId };
-                        upserts.Add(context with { Arguments = p });
-                    }
-                }
+                        case FirearmAggregate.FirearmAssociatedWithAsset e1:
+                            DapperCommandContext ctx1 = context with
+                                                        {
+                                                            Arguments = new { FirearmId = firearmId, e1.AssetId },
+                                                        };
+                            await Commands.s_addAssociationToAsset.ExecuteAsync(ctx1).ConfigureAwait(false);
+                            ;
+                            break;
+                        case FirearmAggregate.FirearmDisassociatedFromAsset e4:
+                            DapperCommandContext ctx4 = context with
+                                                        {
+                                                            Arguments = new { FirearmId = firearmId, e4.AssetId },
+                                                        };
+                            await Commands.s_removeAssociationFromAsset.ExecuteAsync(ctx4).ConfigureAwait(false);
+                            break;
+                        case FirearmAggregate.FirearmDisassociatedFromRangeEvent e2:
+                            DapperCommandContext ctx2 = context with
+                                                        {
+                                                            Arguments = new
+                                                                        {
+                                                                            FirearmId = firearmId, e2.RangeEventId,
+                                                                        },
+                                                        };
+                            await Commands.s_removeAssociationFromRangeEvent.ExecuteAsync(ctx2).ConfigureAwait(false);
+                            break;
+                        case FirearmAggregate.FirearmAssociatedWithRangeEvent e3:
+                            DapperCommandContext ctx3 = context with
+                                                        {
+                                                            Arguments = new
+                                                                        {
+                                                                            FirearmId = firearmId, e3.RangeEventId,
+                                                                        },
+                                                        };
+                            await Commands.s_addAssociationToRangeEvent.ExecuteAsync(ctx3).ConfigureAwait(false);
+                            break;
 
-                Debug.Assert(fa != null, nameof(fa) + " != null");
-                Result<EntityId> r1 = await _firearmsService.UpsertAsync(context, fa);
-
-                reasons.AddRange(r1.Reasons);
-
-                if (!r1.IsSuccess)
-                {
-                    return new Result().WithReasons(reasons);
-                }
-
-                foreach (DapperCommandContext u in upserts)
-                {
-                    dynamic args         = u.Arguments!;
-                    MlrbId  rangeEventId = args.SimpleRangeEventId;
-                    try
-                    {
-                        await Commands.s_addAssociationToRangeEvent.ExecuteAsync(u).ConfigureAwait(false);
-                        reasons.Add(new Success($"Associate the firearm {firearmId} and the event {rangeEventId}."));
-                    }
-                    catch (Exception e)
-                    {
-                        reasons.Add(e.ToError($"Unexpected exception trying to associate the firearm {firearmId} and the event {rangeEventId}"));
-                        _logger.Error(e,
-                                      "Unexpected exception try to associate the firearm {firearmId} and the event {rangeEventId}.",
-                                      firearmId, rangeEventId);
+                        default:
+                            reasons.Add(new Error($"Unknown domain event {evt.GetType().Name}."));
+                            break;
                     }
                 }
 
@@ -93,17 +93,6 @@ namespace MyLittleRangeBook.Firearms
                 return Result.Fail(err);
             }
         }
-
-
-        async Task AssociateWithSimpleRangeEvent(DapperCommandContext context,
-                                                 MlrbId               firearmId,
-                                                 IEnumerable<FirearmAggregate.FirearmAssociatedWithRangeEvent>
-                                                     uncommittedDomainEvents) { }
-
-        async Task AssociateWithAssetFiles(DapperCommandContext context,
-                                           MlrbId               firearmId,
-                                           IEnumerable<FirearmAggregate.FirearmAssociatedWithAsset>
-                                               uncommittedDomainEvents) { }
 
         /// <summary>
         ///     Loads the event stream for the specified firearm aggregate and combines it with optional uncommitted domain events.
@@ -154,7 +143,7 @@ namespace MyLittleRangeBook.Firearms
         static class Commands
         {
             const string UPSERT_ASSET_FILES_FIREARMS_SQL = """
-                                                           INSERT INTO main.asset_files_firearms (firearm_id, asset_id)
+                                                           INSERT INTO asset_files_firearms (firearm_id, asset_id)
                                                            VALUES (@FirearmId, @AssetId)
                                                            ON CONFLICT DO NOTHING
                                                            RETURNING row_id;
@@ -167,11 +156,27 @@ namespace MyLittleRangeBook.Firearms
                                                                   RETURNING row_id;
                                                                   """;
 
+            const string DISASSOCIATE_FIREARM_FROM_ASSET_SQL = """
+                                                               DELETE FROM asset_files_firearms
+                                                               WHERE firearm_id = @FirearmId AND asset_id = @AssetId
+                                                               """;
+
+            const string DISASSOCIATE_FIREARM_FROM_RANGE_EVENT_SQL = """
+                                                                     DELETE FROM firearms_simple_range_events
+                                                                     WHERE firearm_id = @FirearmId AND simple_range_event_id = @SimpleRangeEventId
+                                                                     """;
+
             internal static readonly DapperCommand s_addAssociationToRangeEvent =
                 new(UPSERT_FIREARM_SIMPLE_RANGE_EVENTS_SQL);
 
             internal static readonly DapperCommand s_addAssociationToAsset =
                 new(UPSERT_ASSET_FILES_FIREARMS_SQL);
+
+            internal static readonly DapperCommand s_removeAssociationFromAsset =
+                new(DISASSOCIATE_FIREARM_FROM_ASSET_SQL);
+
+            internal static readonly DapperCommand s_removeAssociationFromRangeEvent =
+                new(DISASSOCIATE_FIREARM_FROM_RANGE_EVENT_SQL);
         }
     }
 }

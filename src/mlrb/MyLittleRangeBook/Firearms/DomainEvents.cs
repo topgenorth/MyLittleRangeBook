@@ -219,8 +219,8 @@ namespace MyLittleRangeBook.Firearms
         )
             : IDomainEvent;
 
-        [EventType("range-event-disassociated-with-firearm")]
-        public record struct FirearmDisassociatedWithRangeEvent(
+        [EventType("range-event-disassociated-from-firearm")]
+        public record struct FirearmDisassociatedFromRangeEvent(
             MlrbId                     StreamId,
             MlrbId                     RangeEventId,
             DateTimeOffset             OccurredUtc,
@@ -245,6 +245,28 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("asset-associated-with-firearm")]
         public record struct FirearmAssociatedWithAsset(
+            MlrbId         StreamId,
+            MlrbId         AssetId,
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null)
+            : IDomainEvent;
+
+        /// <summary>
+        ///     Represents an event indicating that a firearm has been associated with an asset in the domain.
+        ///     This event carries information pertaining to the unique identifiers of both the firearm and the asset, as well as
+        ///     the timestamp of when the event occurred.
+        /// </summary>
+        /// <param name="StreamId">
+        ///     The unique identifier of the firearm associated with the asset.
+        /// </param>
+        /// <param name="AssetId">
+        ///     The unique identifier of the asset being associated with the firearm.
+        /// </param>
+        /// <param name="OccurredUtc">
+        ///     The UTC timestamp when the association event occurred.
+        /// </param>
+        [EventType("asset-disassociated-from-firearm")]
+        public record struct FirearmDisassociatedFromAsset(
             MlrbId         StreamId,
             MlrbId         AssetId,
             DateTimeOffset OccurredUtc,
