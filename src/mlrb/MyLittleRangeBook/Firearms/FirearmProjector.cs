@@ -39,13 +39,15 @@ namespace MyLittleRangeBook.Firearms
             {
                 return new Result().WithReasons([new Success("No domain events to project.")]);
             }
+
             IDomainEvent[] domainEvents = uncommittedDomainEvents as IDomainEvent[] ??
                                           uncommittedDomainEvents.ToArray();
             if (domainEvents.Length == 0)
             {
                 return new Result().WithReasons([new Success("No domain events to project.")]);
             }
-            List<IReason> reasons        = [];
+
+            List<IReason> reasons = [];
 
 
             try
@@ -56,7 +58,7 @@ namespace MyLittleRangeBook.Firearms
                     return Result.Fail("Unable to project the domain events to a firearm record.");
                 }
 
-                List<Task>    tasksToExecute = [];
+                List<Task> tasksToExecute = [];
                 foreach (IDomainEvent evt in domainEvents)
                 {
                     switch (evt)
@@ -112,7 +114,8 @@ namespace MyLittleRangeBook.Firearms
                                                         {
                                                             Arguments = new
                                                                         {
-                                                                            FirearmId = streamId, e2.RangeEventId,
+                                                                            FirearmId          = streamId,
+                                                                            SimpleRangeEventId = e2.RangeEventId,
                                                                         },
                                                         };
                             tasksToExecute.Add(Commands.s_removeAssociationFromRangeEvent.ExecuteAsync(ctx2));
@@ -122,7 +125,8 @@ namespace MyLittleRangeBook.Firearms
                                                         {
                                                             Arguments = new
                                                                         {
-                                                                            FirearmId = streamId, e3.RangeEventId,
+                                                                            FirearmId          = streamId,
+                                                                            SimpleRangeEventId = e3.RangeEventId,
                                                                         },
                                                         };
                             tasksToExecute.Add(Commands.s_addAssociationToRangeEvent.ExecuteAsync(ctx3));
@@ -135,7 +139,7 @@ namespace MyLittleRangeBook.Firearms
                 }
 
                 Task<Result<EntityId>> upsertFirearmTask = _firearmsService.UpsertAsync(context, f!);
-                Result<EntityId> r1 = await upsertFirearmTask.ConfigureAwait(true);
+                Result<EntityId>       r1                = await upsertFirearmTask.ConfigureAwait(true);
                 if (upsertFirearmTask.IsCompletedSuccessfully && r1.IsSuccess)
                 {
                     await Task.WhenAll(tasksToExecute).ConfigureAwait(false);
@@ -154,12 +158,14 @@ namespace MyLittleRangeBook.Firearms
         /// <summary>
         ///     Will try and load a record from the firearm table.
         /// </summary>
-        /// <remarks>If we detect that the firearm isn't in the firearms table, then we will created a new <c cref="Firearm"/>
-        /// object but only if we have a <c cref="FirearmAggregate.FirearmCreated"/> event.</remarks>
+        /// <remarks>
+        ///     If we detect that the firearm isn't in the firearms table, then we will created a new <c cref="Firearm" />
+        ///     object but only if we have a <c cref="FirearmAggregate.FirearmCreated" /> event.
+        /// </remarks>
         /// <param name="context"></param>
         /// <param name="firearmId"></param>
         /// <param name="domainEvents"></param>
-        /// <returns>A <c cref="Firearm"/> instance from the firearms table, or an instance for a new record in the table.</returns>
+        /// <returns>A <c cref="Firearm" /> instance from the firearms table, or an instance for a new record in the table.</returns>
         async Task<Firearm?> LoadFirearmFromDatabase(DapperCommandContext context,
                                                      MlrbId               firearmId,
                                                      IDomainEvent[]       domainEvents)

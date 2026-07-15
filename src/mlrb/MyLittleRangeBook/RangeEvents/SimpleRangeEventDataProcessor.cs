@@ -1,6 +1,4 @@
 ﻿using JetBrains.Annotations;
-using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
@@ -141,13 +139,13 @@ namespace MyLittleRangeBook.RangeEvents
             return new Result<SimpleRangeEvent>().WithValue(sre).WithReasons(reasons);
         }
 
-        internal async Task<Result<Firearm>> UpdateFirearmEventStream(DapperCommandContext            context,
-                                                                      string                          firearmName,
-                                                                      [ValueRange(-10000, 10000)] int roundsFired,
-                                                                      string                          rangeName,
-                                                                      string                          ammoDescription,
-                                                                      string                          notes,
-                                                                      DateTimeOffset                  eventDateUtc)
+        async Task<Result<Firearm>> UpdateFirearmEventStream(DapperCommandContext            context,
+                                                             string                          firearmName,
+                                                             [ValueRange(-10000, 10000)] int roundsFired,
+                                                             string                          rangeName,
+                                                             string                          ammoDescription,
+                                                             string                          notes,
+                                                             DateTimeOffset                  eventDateUtc)
         {
             List<IReason> reasons = [];
             Result<FirearmAggregate> r1 = await _faRepo.GetOrCreateByNameAsync(context, firearmName, eventDateUtc)
