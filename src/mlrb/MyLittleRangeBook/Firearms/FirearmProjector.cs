@@ -28,35 +28,34 @@ namespace MyLittleRangeBook.Firearms
         ///     Load the event stream for the firearm and then project the aggregate onto the firearm table.
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="firearmId"></param>
+        /// <param name="streamId"></param>
         /// <param name="uncommittedDomainEvents">Ignored for now.</param>
         /// <returns>A successful Result if the projection succeeded, an failed Result if there was a problem.</returns>
         public async Task<Result> ProjectAggregateAsync(DapperCommandContext       context,
-                                                        MlrbId                     firearmId,
+                                                        MlrbId                     streamId,
                                                         IEnumerable<IDomainEvent>? uncommittedDomainEvents = null)
         {
+            if (uncommittedDomainEvents is null)
+            {
+                return new Result().WithReasons([new Success("No domain events to project.")]);
+            }
+            IDomainEvent[] domainEvents = uncommittedDomainEvents as IDomainEvent[] ??
+                                          uncommittedDomainEvents.ToArray();
+            if (domainEvents.Length == 0)
+            {
+                return new Result().WithReasons([new Success("No domain events to project.")]);
+            }
+            List<IReason> reasons        = [];
+
+
             try
             {
-                if (uncommittedDomainEvents is null)
-                {
-                    return new Result().WithReasons([new Success("No domain events to project.")]);
-                }
-
-                IDomainEvent[] domainEvents = uncommittedDomainEvents as IDomainEvent[] ??
-                                              uncommittedDomainEvents.ToArray();
-                if (domainEvents.Length == 0)
-                {
-                    return new Result().WithReasons([new Success("No domain events to project.")]);
-                }
-
-                Firearm? f = await LoadFirearmFromDatabase(context, firearmId, domainEvents).ConfigureAwait(false);
+                Firearm? f = await LoadFirearmFromDatabase(context, streamId, domainEvents).ConfigureAwait(false);
                 if (f is null)
                 {
                     return Result.Fail("Unable to project the domain events to a firearm record.");
                 }
 
-
-                List<IReason> reasons        = [];
                 List<Task>    tasksToExecute = [];
                 foreach (IDomainEvent evt in domainEvents)
                 {
@@ -92,7 +91,7 @@ namespace MyLittleRangeBook.Firearms
                         case FirearmAggregate.FirearmAssociatedWithAsset e1:
                             DapperCommandContext ctx1 = context with
                                                         {
-                                                            Arguments = new { FirearmId = firearmId, e1.AssetId },
+                                                            Arguments = new { FirearmId = streamId, e1.AssetId },
                                                         };
                             tasksToExecute.Add(Commands.s_addAssociationToAsset.ExecuteAsync(ctx1));
                             break;
@@ -104,7 +103,7 @@ namespace MyLittleRangeBook.Firearms
                         case FirearmAggregate.FirearmDisassociatedFromAsset e4:
                             DapperCommandContext ctx4 = context with
                                                         {
-                                                            Arguments = new { FirearmId = firearmId, e4.AssetId },
+                                                            Arguments = new { FirearmId = streamId, e4.AssetId },
                                                         };
                             await Commands.s_removeAssociationFromAsset.ExecuteAsync(ctx4).ConfigureAwait(false);
                             break;
@@ -113,7 +112,7 @@ namespace MyLittleRangeBook.Firearms
                                                         {
                                                             Arguments = new
                                                                         {
-                                                                            FirearmId = firearmId, e2.RangeEventId,
+                                                                            FirearmId = streamId, e2.RangeEventId,
                                                                         },
                                                         };
                             tasksToExecute.Add(Commands.s_removeAssociationFromRangeEvent.ExecuteAsync(ctx2));
@@ -123,7 +122,7 @@ namespace MyLittleRangeBook.Firearms
                                                         {
                                                             Arguments = new
                                                                         {
-                                                                            FirearmId = firearmId, e3.RangeEventId,
+                                                                            FirearmId = streamId, e3.RangeEventId,
                                                                         },
                                                         };
                             tasksToExecute.Add(Commands.s_addAssociationToRangeEvent.ExecuteAsync(ctx3));
@@ -136,18 +135,10 @@ namespace MyLittleRangeBook.Firearms
                 }
 
                 Task<Result<EntityId>> upsertFirearmTask = _firearmsService.UpsertAsync(context, f!);
-                try
+                Result<EntityId> r1 = await upsertFirearmTask.ConfigureAwait(true);
+                if (upsertFirearmTask.IsCompletedSuccessfully && r1.IsSuccess)
                 {
-                    Result<EntityId> r1 = await upsertFirearmTask.ConfigureAwait(true);
-                    if (upsertFirearmTask.IsCompletedSuccessfully && r1.IsSuccess)
-                    {
-                        await Task.WhenAll(tasksToExecute).ConfigureAwait(false);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error(ex, "Error executing firearm upsert or association tasks.");
-                    reasons.Add(ex.ToError().Enrich(firearmId));
+                    await Task.WhenAll(tasksToExecute).ConfigureAwait(false);
                 }
 
                 return new Result().WithReasons(reasons);
@@ -155,18 +146,20 @@ namespace MyLittleRangeBook.Firearms
             catch (Exception e)
             {
                 _logger.Error(e, "Unexpected error trying to project the firearm aggregate.");
-                Error err = e.ToError().Enrich(firearmId);
+                Error err = e.ToError().Enrich(streamId);
                 return Result.Fail(err);
             }
         }
 
         /// <summary>
-        ///     Will try and load a firearm record from the firearms table.
+        ///     Will try and load a record from the firearm table.
         /// </summary>
+        /// <remarks>If we detect that the firearm isn't in the firearms table, then we will created a new <c cref="Firearm"/>
+        /// object but only if we have a <c cref="FirearmAggregate.FirearmCreated"/> event.</remarks>
         /// <param name="context"></param>
         /// <param name="firearmId"></param>
         /// <param name="domainEvents"></param>
-        /// <returns></returns>
+        /// <returns>A <c cref="Firearm"/> instance from the firearms table, or an instance for a new record in the table.</returns>
         async Task<Firearm?> LoadFirearmFromDatabase(DapperCommandContext context,
                                                      MlrbId               firearmId,
                                                      IDomainEvent[]       domainEvents)
@@ -184,9 +177,17 @@ namespace MyLittleRangeBook.Firearms
                 return null;
             }
 
-            FirearmAggregate.FirearmCreated e = domainEvents.OfType<FirearmAggregate.FirearmCreated>()
-                                                            .FirstOrDefault();
-            return Firearm.New(e.Name);
+            FirearmAggregate.FirearmCreated? created =
+                domainEvents.OfType<FirearmAggregate.FirearmCreated>()
+                            .Cast<FirearmAggregate.FirearmCreated?>()
+                            .FirstOrDefault();
+
+            if (created is null || string.IsNullOrWhiteSpace(created.Value.Name))
+            {
+                return null;
+            }
+
+            return Firearm.New(created.Value.Name);
         }
 
         /// <summary>

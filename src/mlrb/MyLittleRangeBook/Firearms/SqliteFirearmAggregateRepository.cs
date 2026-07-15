@@ -1,4 +1,5 @@
-﻿using MyLittleRangeBook.EventSourcing;
+﻿using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
@@ -20,11 +21,14 @@ namespace MyLittleRangeBook.Firearms
     {
         public SqliteFirearmAggregateRepository(ISqliteHelper         sqliteHelper,
                                                 IEventSerializer      eventSerializer,
-                                                IEventSourcingService eventSourcingService) :
+                                                IEventSourcingService eventSourcingService,
+                                                [FromKeyedServices(FirearmProjector.DI_KEY)]
+                                                IProjector projector) :
             base(sqliteHelper,
                  eventSerializer,
                  FirearmAggregate.STREAM_TYPE,
-                 FirearmAggregate.Create, eventSourcingService) { }
+                 FirearmAggregate.Create, eventSourcingService,
+                 projector) { }
 
         public async Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(DapperCommandContext ctx,
                                                                            string               firearmName,
