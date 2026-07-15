@@ -166,10 +166,6 @@ namespace MyLittleRangeBook.EventSourcing
                     reasons.Add(new Success($"Inserted event {evt.GetType().Name} with version {nextVersion}"));
                     nextVersion++;
                 }
-
-
-
-
             }
             catch (Exception e)
             {

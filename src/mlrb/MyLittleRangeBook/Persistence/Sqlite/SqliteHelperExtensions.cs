@@ -20,7 +20,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
     public static class SqliteHelperExtensions
     {
         // ReSharper disable once MemberCanBePrivate.Global
-        public const string DI_KEYS_SQLITE = "sqlite";
+        public const string DI_KEY = "sqlite";
 
         /// <summary>
         ///     The name of the default database.
@@ -132,7 +132,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
 
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
 
-            services.TryAddKeyedScoped<ISimpleRangeEventService, SqliteSimpleRangeEventService>(DI_KEYS_SQLITE);
+            services.TryAddKeyedScoped<ISimpleRangeEventService, SqliteSimpleRangeEventService>(DI_KEY);
             services.TryAddScoped<ISimpleRangeEventService, SqliteSimpleRangeEventService>();
 
 

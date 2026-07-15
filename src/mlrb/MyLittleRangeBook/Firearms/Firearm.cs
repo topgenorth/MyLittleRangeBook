@@ -4,6 +4,16 @@ namespace MyLittleRangeBook.Firearms
 {
     public record Firearm
     {
+        public Firearm(string firearmName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
+            Id   = MlrbId.FromString(firearmName);
+            Name = firearmName;
+        }
+
+        /// <summary>
+        ///     prefer to use to firearmName constructor.
+        /// </summary>
         public Firearm() => Id = new MlrbId().ToString();
 
         /// <summary>
@@ -44,8 +54,7 @@ namespace MyLittleRangeBook.Firearms
         /// <exception cref="ArgumentException">Thrown when the <paramref name="name" /> is null, empty, or whitespace.</exception>
         public static Firearm New(string name)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(name);
-            return new Firearm { Id = MlrbId.FromString(name).ToString(), Name = name };
+            return new Firearm(name);
         }
 
         public override string ToString() => $"{Id ?? "N/A"}{Name}";

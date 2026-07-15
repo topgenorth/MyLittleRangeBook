@@ -3,10 +3,17 @@ using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.Firearms
 {
+    public class FirearmDoesNotExistError : Error
+    {
+        public FirearmDoesNotExistError(string mlrbId)
+            : base($"Firearm with id `{mlrbId}` was not found")
+        {
+            Metadata.Add("MlrbId", mlrbId);
+        }
+    }
+
     public partial class FirearmsService : IFirearmsService
     {
-
-
         public async Task<Result<bool>> DeleteAsync(DapperCommandContext context, Firearm firearm)
         {
             if (firearm.RowId is null)
@@ -99,6 +106,15 @@ namespace MyLittleRangeBook.Firearms
             }
         }
 
+        /// <summary>
+        ///     Retrieve the firearm record from the database.  Task
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="id"></param>
+        /// <returns>
+        ///     A successful result with the Firearm object. If there is an error or the firearm does not exist, a failed
+        ///     result is returned. If the firearm does not exist then the result will have an <c cref="FirearmDoesNotExistError" />.
+        /// </returns>
         public async Task<Result<Firearm>> GetFirearmAsync(DapperCommandContext context, string id)
         {
             DapperCommand        cmd = Commands.s_selectById;
@@ -108,20 +124,18 @@ namespace MyLittleRangeBook.Firearms
                 Firearm? f = await cmd.QuerySingleAsync<Firearm?>(ctx).ConfigureAwait(false);
 
                 return f is null
-                           ? Result.Fail<Firearm>(new Error($"Firearm with id `{id}` not found").Enrich(id, null))
+                           ? Result.Fail<Firearm>(new FirearmDoesNotExistError(id))
                            : Result.Ok(f);
             }
             catch (InvalidOperationException ioex)
             {
-                // [TO20260610] This probably means that the firearm doesn't exist.
-                Error? err = new Error($"Firearm with id `{id}` not found.").Enrich(id, null).CausedBy(ioex);
+                var err = new FirearmDoesNotExistError(id).CausedBy(ioex);
                 return Result.Fail<Firearm>(err);
             }
             catch (Exception e)
             {
-                Error? err = new Error($"Unexpected error trying to retrieve firearm  id `{id}`.").Enrich(id, null)
-                   .CausedBy(e);
-                return Result.Fail<Firearm>(err);
+                Error er = e.ToError().Enrich(id, null);
+                return Result.Fail<Firearm>(er);
             }
         }
     }

@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using MyLittleRangeBook.EventSourcing;
+﻿using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
@@ -31,7 +30,7 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="context"></param>
         /// <param name="firearmId"></param>
         /// <param name="uncommittedDomainEvents">Ignored for now.</param>
-        /// <returns></returns>
+        /// <returns>A successful Result if the projection succeeded, an failed Result if there was a problem.</returns>
         public async Task<Result> ProjectAggregateAsync(DapperCommandContext       context,
                                                         MlrbId                     firearmId,
                                                         IEnumerable<IDomainEvent>? uncommittedDomainEvents = null)
@@ -43,19 +42,65 @@ namespace MyLittleRangeBook.Firearms
                     return new Result().WithReasons([new Success("No domain events to project.")]);
                 }
 
-                List<IReason> reasons = [];
-                foreach (IDomainEvent evt in uncommittedDomainEvents)
+                IDomainEvent[] domainEvents = uncommittedDomainEvents as IDomainEvent[] ??
+                                              uncommittedDomainEvents.ToArray();
+                if (domainEvents.Length == 0)
+                {
+                    return new Result().WithReasons([new Success("No domain events to project.")]);
+                }
+
+                Firearm? f = await LoadFirearmFromDatabase(context, firearmId, domainEvents).ConfigureAwait(false);
+                if (f is null)
+                {
+                    return Result.Fail("Unable to project the domain events to a firearm record.");
+                }
+
+
+                List<IReason> reasons        = [];
+                List<Task>    tasksToExecute = [];
+                foreach (IDomainEvent evt in domainEvents)
                 {
                     switch (evt)
                     {
+                        case FirearmAggregate.FirearmActive:
+                            f.IsActive = true;
+                            break;
+                        case FirearmAggregate.FirearmBarrelChanged:
+                            // TODO [20260714] Add a note...
+                            break;
+                        case FirearmAggregate.FirearmCleaned:
+                            // TODO [20260714] Add a note...
+                            break;
+
+                        case FirearmAggregate.FirearmCreated:
+                            // TODO [20260714] Add a note...
+                            break;
+                        case FirearmAggregate.FirearmInactive:
+                            f.IsActive = false;
+                            break;
+                        case FirearmAggregate.FirearmModified:
+                            // TODO [20260714] Add a note...
+                            break;
+
+                        case FirearmAggregate.FirearmRoundCountAltered e5:
+                            f.RoundsFired += e5.Rounds;
+                            break;
+                        case FirearmAggregate.FirearmNoteAdded:
+                            // TODO [20260714] Add a note...
+                            break;
+
                         case FirearmAggregate.FirearmAssociatedWithAsset e1:
                             DapperCommandContext ctx1 = context with
                                                         {
                                                             Arguments = new { FirearmId = firearmId, e1.AssetId },
                                                         };
-                            await Commands.s_addAssociationToAsset.ExecuteAsync(ctx1).ConfigureAwait(false);
-                            ;
+                            tasksToExecute.Add(Commands.s_addAssociationToAsset.ExecuteAsync(ctx1));
                             break;
+
+                        case FirearmAggregate.FirearmSightingSystemChanged:
+                            // TODO [20260714] Add a note...
+                            break;
+
                         case FirearmAggregate.FirearmDisassociatedFromAsset e4:
                             DapperCommandContext ctx4 = context with
                                                         {
@@ -71,7 +116,7 @@ namespace MyLittleRangeBook.Firearms
                                                                             FirearmId = firearmId, e2.RangeEventId,
                                                                         },
                                                         };
-                            await Commands.s_removeAssociationFromRangeEvent.ExecuteAsync(ctx2).ConfigureAwait(false);
+                            tasksToExecute.Add(Commands.s_removeAssociationFromRangeEvent.ExecuteAsync(ctx2));
                             break;
                         case FirearmAggregate.FirearmAssociatedWithRangeEvent e3:
                             DapperCommandContext ctx3 = context with
@@ -81,13 +126,28 @@ namespace MyLittleRangeBook.Firearms
                                                                             FirearmId = firearmId, e3.RangeEventId,
                                                                         },
                                                         };
-                            await Commands.s_addAssociationToRangeEvent.ExecuteAsync(ctx3).ConfigureAwait(false);
+                            tasksToExecute.Add(Commands.s_addAssociationToRangeEvent.ExecuteAsync(ctx3));
                             break;
 
                         default:
                             reasons.Add(new Error($"Unknown domain event {evt.GetType().Name}."));
                             break;
                     }
+                }
+
+                Task<Result<EntityId>> upsertFirearmTask = _firearmsService.UpsertAsync(context, f!);
+                try
+                {
+                    Result<EntityId> r1 = await upsertFirearmTask.ConfigureAwait(true);
+                    if (upsertFirearmTask.IsCompletedSuccessfully && r1.IsSuccess)
+                    {
+                        await Task.WhenAll(tasksToExecute).ConfigureAwait(false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Error executing firearm upsert or association tasks.");
+                    reasons.Add(ex.ToError().Enrich(firearmId));
                 }
 
                 return new Result().WithReasons(reasons);
@@ -98,6 +158,35 @@ namespace MyLittleRangeBook.Firearms
                 Error err = e.ToError().Enrich(firearmId);
                 return Result.Fail(err);
             }
+        }
+
+        /// <summary>
+        ///     Will try and load a firearm record from the firearms table.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="firearmId"></param>
+        /// <param name="domainEvents"></param>
+        /// <returns></returns>
+        async Task<Firearm?> LoadFirearmFromDatabase(DapperCommandContext context,
+                                                     MlrbId               firearmId,
+                                                     IDomainEvent[]       domainEvents)
+        {
+            Result<Firearm> firearmResult = await _firearmsService
+                                                 .GetFirearmAsync(context, firearmId)
+                                                 .ConfigureAwait(false);
+            if (firearmResult.IsSuccess)
+            {
+                return firearmResult.Value;
+            }
+
+            if (!firearmResult.HasError<FirearmDoesNotExistError>())
+            {
+                return null;
+            }
+
+            FirearmAggregate.FirearmCreated e = domainEvents.OfType<FirearmAggregate.FirearmCreated>()
+                                                            .FirstOrDefault();
+            return Firearm.New(e.Name);
         }
 
         /// <summary>
