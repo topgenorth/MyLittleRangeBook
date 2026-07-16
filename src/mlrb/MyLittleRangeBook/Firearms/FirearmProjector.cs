@@ -49,7 +49,6 @@ namespace MyLittleRangeBook.Firearms
 
             List<IReason> reasons = [];
 
-
             try
             {
                 Firearm? f = await LoadFirearmFromDatabase(context, streamId, domainEvents).ConfigureAwait(false);
@@ -139,11 +138,9 @@ namespace MyLittleRangeBook.Firearms
                 }
 
                 Task<Result<EntityId>> upsertFirearmTask = _firearmsService.UpsertAsync(context, f!);
-                Result<EntityId>       r1                = await upsertFirearmTask.ConfigureAwait(true);
-                if (upsertFirearmTask.IsCompletedSuccessfully && r1.IsSuccess)
-                {
-                    await Task.WhenAll(tasksToExecute).ConfigureAwait(false);
-                }
+                tasksToExecute.Add(upsertFirearmTask);
+                // Result<EntityId>       upsertFirearmResult                = await upsertFirearmTask.ConfigureAwait(true);
+                await Task.WhenAll(tasksToExecute).ConfigureAwait(false);
 
                 return new Result().WithReasons(reasons);
             }
@@ -244,14 +241,14 @@ namespace MyLittleRangeBook.Firearms
 
         static class Commands
         {
-            const string UPSERT_ASSET_FILES_FIREARMS_SQL = """
+            const string ASSOCIATE_FIREARM_WITH_ASSET_SQL = """
                                                            INSERT INTO asset_files_firearms (firearm_id, asset_id)
                                                            VALUES (@FirearmId, @AssetId)
                                                            ON CONFLICT DO NOTHING
                                                            RETURNING row_id;
                                                            """;
 
-            const string UPSERT_FIREARM_SIMPLE_RANGE_EVENTS_SQL = """
+            const string ASSOCIATE_FIREARM_WITH_SIMPLE_RANGE_EVENTS_SQL = """
                                                                   INSERT INTO firearms_simple_range_events (firearm_id, simple_range_event_id)
                                                                   VALUES (@FirearmId, @SimpleRangeEventId)
                                                                   ON CONFLICT DO NOTHING
@@ -269,10 +266,10 @@ namespace MyLittleRangeBook.Firearms
                                                                      """;
 
             internal static readonly DapperCommand s_addAssociationToRangeEvent =
-                new(UPSERT_FIREARM_SIMPLE_RANGE_EVENTS_SQL);
+                new(ASSOCIATE_FIREARM_WITH_SIMPLE_RANGE_EVENTS_SQL);
 
             internal static readonly DapperCommand s_addAssociationToAsset =
-                new(UPSERT_ASSET_FILES_FIREARMS_SQL);
+                new(ASSOCIATE_FIREARM_WITH_ASSET_SQL);
 
             internal static readonly DapperCommand s_removeAssociationFromAsset =
                 new(DISASSOCIATE_FIREARM_FROM_ASSET_SQL);
