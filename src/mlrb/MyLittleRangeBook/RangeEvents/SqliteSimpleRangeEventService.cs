@@ -3,12 +3,19 @@ using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.RangeEvents
 {
+
+
+    public class DeletedEventStreamReason(MlrbId firearmId)
+        : Success($"The event stream was deleted (ID: {firearmId})")
+    {
+        public MlrbId FirearmId = firearmId;
+    }
     /// <summary>
     ///     Provides SQLite-specific implementation for managing SimpleRangeEvent data.
     /// </summary>
     /// <remarks>
     ///     This service offers functionalities for creating, updating, deleting, and retrieving
-    ///     SimpleRangeEvent records from a SQLite database. It interacts with the database using
+    ///     SimpleRangeEvent records from an SQLite database. It interacts with the database using
     ///     provided connection and transaction parameters, supporting asynchronous operations.
     /// </remarks>
     public class SqliteSimpleRangeEventService : ISimpleRangeEventService
@@ -17,6 +24,8 @@ namespace MyLittleRangeBook.RangeEvents
         {
             try
             {
+                // TODO Delete any firearms that might be associated.
+
                 var                  p   = new { Id = simpleRangeEvent.Id! };
                 DapperCommandContext ctx = context with { Arguments = p };
                 int result = await Commands.s_deleteCommand
@@ -31,23 +40,7 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
-        public async Task<Result> DisassociateFromFirearm(DapperCommandContext context, MlrbId firearmId,
-                                                          MlrbId               rangeEventId)
-        {
-            try
-            {
-                var args = new { FirearmId = firearmId.ToString(), SimpleRangeEventId = rangeEventId.ToString() };
-                DapperCommandContext ctx = context with { Arguments = args };
 
-                int     l       = await Commands.s_disassociateFromFirearm.ExecuteAsync(ctx).ConfigureAwait(false);
-                Success success = new($"Disassociated firearm {firearmId} with range event {rangeEventId} - {l}.");
-                return Result.Ok().WithSuccess(success);
-            }
-            catch (Exception ex)
-            {
-                return Result.Fail(ex.ToError());
-            }
-        }
 
         public async Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId)
         {
@@ -175,15 +168,10 @@ namespace MyLittleRangeBook.RangeEvents
 
             const string DELETE_SQL = "DELETE FROM simple_range_events WHERE id = @Id;";
 
-            const string DISASSOCIATE_FROM_FIREARM_SQL = """
-                                                         DELETE FROM firearms_simple_range_events WHERE simple_range_event_id = @SimpleRangeEventId;
-                                                         """;
-
             internal static readonly DapperCommand s_upsertCommand           = new(UPSERT_SQL);
             internal static readonly DapperCommand s_deleteCommand           = new(DELETE_SQL);
             internal static readonly DapperCommand s_selectAll               = new(SELECT_SQL);
             internal static readonly DapperCommand s_selectById              = new(SELECT_BY_ID_SQL);
-            internal static readonly DapperCommand s_disassociateFromFirearm = new(DISASSOCIATE_FROM_FIREARM_SQL);
         }
     }
 }

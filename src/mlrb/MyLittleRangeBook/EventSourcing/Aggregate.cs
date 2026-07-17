@@ -54,8 +54,6 @@ namespace MyLittleRangeBook.EventSourcing
             return events;
         }
 
-        public void ClearUncommittedEvents() => _uncommitted.Clear();
-
         /// <summary>
         ///     Initializes the aggregate from an existing event stream (used during rehydration).
         /// </summary>

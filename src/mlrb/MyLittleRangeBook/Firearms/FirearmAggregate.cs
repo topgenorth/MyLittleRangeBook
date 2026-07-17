@@ -101,7 +101,7 @@ namespace MyLittleRangeBook.Firearms
 
                     break;
 
-                case FirearmDisassociatedWithRangeEvent x:
+                case FirearmDisassociatedFromRangeEvent x:
 
                     break;
 
@@ -204,7 +204,7 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="utcNow"></param>
         public void DisassociatedWithRangeEvent(MlrbId assetId, DateTimeOffset utcNow)
         {
-            Raise(new FirearmDisassociatedWithRangeEvent(Id, assetId, utcNow));
+            Raise(new FirearmDisassociatedFromRangeEvent(Id, assetId, utcNow));
         }
 
         /// <summary>

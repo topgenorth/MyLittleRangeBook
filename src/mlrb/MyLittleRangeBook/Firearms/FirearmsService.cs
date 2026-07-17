@@ -3,27 +3,17 @@ using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.Firearms
 {
+    public class FirearmDoesNotExistError : Error
+    {
+        public FirearmDoesNotExistError(string mlrbId)
+            : base($"Firearm with id `{mlrbId}` was not found")
+        {
+            Metadata.Add("MlrbId", mlrbId);
+        }
+    }
+
     public partial class FirearmsService : IFirearmsService
     {
-        public async Task<Result> AssociateWithAsset(DapperCommandContext context, MlrbId firearmId, MlrbId assetId)
-        {
-            var                  args    = new { FirearmId = firearmId, AssetId = assetId };
-            DapperCommandContext ctx     = context with { Arguments = args };
-            List<IReason>        reasons = [];
-            try
-            {
-                await Commands.s_associateWithAsset.ExecuteAsync(ctx).ConfigureAwait(false);
-                reasons.Add(new Success($"Firearm {firearmId} associated with asset {assetId}."));
-            }
-            catch (Exception e)
-            {
-                Error err = e.ToError($"Failed to associate firearm {firearmId} with asset {assetId}");
-                reasons.Add(err);
-            }
-
-            return new Result().WithReasons(reasons);
-        }
-
         public async Task<Result<bool>> DeleteAsync(DapperCommandContext context, Firearm firearm)
         {
             if (firearm.RowId is null)
@@ -94,60 +84,6 @@ namespace MyLittleRangeBook.Firearms
             return await UpsertAsync(context, f).ConfigureAwait(false);
         }
 
-        public async Task<Result> AssociateWithRangeEvent(DapperCommandContext context, MlrbId firearmId,
-                                                          MlrbId               rangeEventId)
-        {
-            try
-            {
-                var args = new { FirearmId = firearmId.ToString(), SimpleRangeEventId = rangeEventId.ToString() };
-                DapperCommandContext ctx = context with { Arguments = args };
-
-                int     l       = await Commands.s_associateWithRangeEvent.ExecuteAsync(ctx).ConfigureAwait(false);
-                Success success = new($"Associated firearm {firearmId} with range event {rangeEventId} - {l}.");
-                return Result.Ok().WithSuccess(success);
-            }
-            catch (Exception ex)
-            {
-                return Result.Fail(ex.ToError());
-            }
-        }
-
-        public async Task<Result> DisassociateFromRangeEvent(DapperCommandContext context, MlrbId firearmId,
-                                                             MlrbId               rangeEventId)
-        {
-            try
-            {
-                var args = new { FirearmId = firearmId.ToString(), SimpleRangeEventId = rangeEventId.ToString() };
-                DapperCommandContext ctx = context with { Arguments = args };
-
-                int     l       = await Commands.s_disassociateFromRangeEvent.ExecuteAsync(ctx).ConfigureAwait(false);
-                Success success = new($"Disassociated firearm {firearmId} with range event {rangeEventId} - {l}.");
-                return Result.Ok().WithSuccess(success);
-            }
-            catch (Exception ex)
-            {
-                return Result.Fail(ex.ToError());
-            }
-        }
-
-        public async Task<Result> DisassociateWithAsset(DapperCommandContext context, MlrbId firearmId, MlrbId assetId)
-        {
-            var                  args    = new { FirearmId = firearmId, AssetId = assetId };
-            DapperCommandContext ctx     = context with { Arguments = args };
-            List<IReason>        reasons = [];
-            try
-            {
-                await Commands.s_disassociateFromAsset.ExecuteAsync(ctx).ConfigureAwait(false);
-                reasons.Add(new Success($"Firearm {firearmId} disassociated from asset {assetId}."));
-            }
-            catch (Exception e)
-            {
-                Error err = e.ToError($"Failed to disassociate firearm {firearmId} from asset {assetId}");
-                reasons.Add(err);
-            }
-
-            return new Result().WithReasons(reasons);
-        }
 
         public async Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(
             DapperCommandContext context,
@@ -170,29 +106,36 @@ namespace MyLittleRangeBook.Firearms
             }
         }
 
+        /// <summary>
+        ///     Retrieve the firearm record from the database.  Task
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="id"></param>
+        /// <returns>
+        ///     A successful result with the Firearm object. If there is an error or the firearm does not exist, a failed
+        ///     result is returned. If the firearm does not exist then the result will have an <c cref="FirearmDoesNotExistError" />.
+        /// </returns>
         public async Task<Result<Firearm>> GetFirearmAsync(DapperCommandContext context, string id)
         {
-            DapperCommand        cmd = Commands.SelectById;
+            DapperCommand        cmd = Commands.s_selectById;
             DapperCommandContext ctx = context with { Arguments = new { Id = id } };
             try
             {
                 Firearm? f = await cmd.QuerySingleAsync<Firearm?>(ctx).ConfigureAwait(false);
 
                 return f is null
-                           ? Result.Fail<Firearm>(new Error($"Firearm with id `{id}` not found").Enrich(id, null))
+                           ? Result.Fail<Firearm>(new FirearmDoesNotExistError(id))
                            : Result.Ok(f);
             }
             catch (InvalidOperationException ioex)
             {
-                // [TO20260610] This probably means that the firearm doesn't exist.
-                Error? err = new Error($"Firearm with id `{id}` not found.").Enrich(id, null).CausedBy(ioex);
+                var err = new FirearmDoesNotExistError(id).CausedBy(ioex);
                 return Result.Fail<Firearm>(err);
             }
             catch (Exception e)
             {
-                Error? err = new Error($"Unexpected error trying to retrieve firearm  id `{id}`.").Enrich(id, null)
-                   .CausedBy(e);
-                return Result.Fail<Firearm>(err);
+                Error er = e.ToError().Enrich(id, null);
+                return Result.Fail<Firearm>(er);
             }
         }
     }

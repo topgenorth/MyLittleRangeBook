@@ -10,7 +10,7 @@ namespace MyLittleRangeBook
     {
         public static IServiceCollection RegisterCartridges(this IServiceCollection services)
         {
-            services.TryAddKeyedScoped<ICartridgesService, CartridgesService>(SqliteHelperExtensions.DI_KEYS_SQLITE);
+            services.TryAddKeyedScoped<ICartridgesService, CartridgesService>(SqliteHelperExtensions.DI_KEY);
             services.TryAddScoped<ICartridgesService, CartridgesService>();
             return services;
         }

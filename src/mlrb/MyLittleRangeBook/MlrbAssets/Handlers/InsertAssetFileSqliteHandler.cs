@@ -91,16 +91,6 @@ namespace MyLittleRangeBook.MlrbAssets.Handlers
                     }
                 }
 
-                if (!string.IsNullOrWhiteSpace(context.Record.AssociatedFirearmName))
-                {
-                    MlrbId firearmId = MlrbId.FromString(context.Record.AssociatedFirearmName!);
-                    Result r2 = await _firearmsService.AssociateWithAsset(dapperCtx, firearmId, assetId)
-                                                      .ConfigureAwait(false);
-                    if (r2.IsSuccess)
-                    {
-                        context.Record.Aggregate.AssociatedWithFirearm(firearmId, DateTimeOffset.UtcNow);
-                    }
-                }
 
                 await trans.CommitAsync(context.CancellationToken).ConfigureAwait(false);
             }

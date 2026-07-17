@@ -31,7 +31,7 @@ namespace MyLittleRangeBook.EventSourcing
                                                      modified_utc as ModifiedUtc
                                                  FROM main.events
                                                  WHERE stream_id = @StreamId
-                                                 ORDER BY row_id;
+                                                 ORDER BY version;
                                                  """;
 
         const string SELECT_EVENTS_SQL = """
