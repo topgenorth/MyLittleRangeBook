@@ -38,18 +38,33 @@ namespace MyLittleRangeBook.Firearms
             (FirearmAggregate? fa, IEnumerable<IDomainEvent> allEvents) =
                 await LoadFirearmAggregateIncludeNewEvents(context, streamId, uncommittedDomainEvents)
                    .ConfigureAwait(false);
-            IDomainEvent[] domainEvents = allEvents.ToArray();
+
+            IDomainEvent[] allDomainEvents = allEvents
+                                            .OrderBy(evt => evt.OccurredUtc)
+                                            .ToArray();
+
+            IDomainEvent? latestRangeEventAssociationEvent = allDomainEvents
+                                                            .Where(evt => evt is FirearmAggregate.FirearmAssociatedWithRangeEvent
+                                                                       or FirearmAggregate.FirearmDisassociatedFromRangeEvent)
+                                                            .MaxBy(evt => evt.OccurredUtc);
+
+            IDomainEvent[] domainEvents = allDomainEvents
+                                         .Where(evt => evt is not FirearmAggregate.FirearmAssociatedWithRangeEvent
+                                                    and not FirearmAggregate.FirearmDisassociatedFromRangeEvent
+                                                    || ReferenceEquals(evt, latestRangeEventAssociationEvent))
+                                         .ToArray();
+
             if (domainEvents.Length == 0)
             {
-                return new Result().WithReasons([new Success("No domain events to project.")]);
+                return new Result().WithReasons([new FirearmEventStreamProjectionSuccess("unknown", streamId)]);
             }
 
-            List<IReason> reasons     = [];
-            Firearm       f           = new() { Id = streamId };
-            string?       firearmName = null;
+            List<IReason> reasons      = [];
+            Firearm       f            = new() { Id = streamId };
+            string?       firearmName  = null;
+            List<Result>  tasksResults = [];
             try
             {
-                List<Task> tasksToExecute = [];
                 foreach (IDomainEvent evt in domainEvents)
                 {
                     fa!.Apply(evt);
@@ -59,11 +74,13 @@ namespace MyLittleRangeBook.Firearms
                             f.IsActive = true;
                             break;
                         case FirearmAggregate.FirearmAssociatedWithAsset e1:
-                            tasksToExecute.Add(AssociateAsset(context, streamId, e1.AssetId));
+                            tasksResults.Add(await AssociateAsset(context, streamId, e1.AssetId).ConfigureAwait(false));
+
                             break;
 
                         case FirearmAggregate.FirearmAssociatedWithRangeEvent e3:
-                            tasksToExecute.Add(AssociateRangeEvent(context, streamId, e3.RangeEventId));
+                            tasksResults.Add(await AssociateRangeEvent(context, streamId, e3.RangeEventId).ConfigureAwait(false));
+
                             break;
 
                         case FirearmAggregate.FirearmBarrelChanged:
@@ -76,13 +93,15 @@ namespace MyLittleRangeBook.Firearms
                         case FirearmAggregate.FirearmCreated e8:
                             // TODO [20260714] Add a note...
                             firearmName = e8.Name;
+                            f.Name      = e8.Name;
                             break;
 
                         case FirearmAggregate.FirearmDisassociatedFromAsset e4:
-                            tasksToExecute.Add(DisassociateAsset(context, streamId, e4.AssetId));
+                            tasksResults.Add(await DisassociateAsset(context, streamId, e4.AssetId).ConfigureAwait(false));
                             break;
                         case FirearmAggregate.FirearmDisassociatedFromRangeEvent e2:
-                            tasksToExecute.Add(DisassociateRangeEvent(context, streamId, e2.RangeEventId));
+                            tasksResults.Add(await DisassociateRangeEvent(context, streamId, e2.RangeEventId).ConfigureAwait(false));
+
                             break;
 
                         case FirearmAggregate.FirearmInactive:
@@ -109,9 +128,8 @@ namespace MyLittleRangeBook.Firearms
                     }
                 }
 
-                Task<Result<EntityId>> upsertFirearmTask = _firearmsService.UpsertAsync(context, f);
-                tasksToExecute.Add(upsertFirearmTask);
-                await Task.WhenAll(tasksToExecute).ConfigureAwait(false);
+                var x = await _firearmsService.UpsertAsync(context, f);
+
 
                 reasons.Add(new FirearmEventStreamProjectionSuccess(firearmName!, streamId).Enrich(streamId));
                 return new Result().WithReasons(reasons);
@@ -145,7 +163,7 @@ namespace MyLittleRangeBook.Firearms
                                                                     .QueryAsync<EventRow>(ctx)
                                                                     .ConfigureAwait(false);
             Func<EventRow, IDomainEvent> selector = row => (IDomainEvent)_eventSerializer.Deserialize(row.EventType,
-                                                                                                      row.DataJson);
+                                                        row.DataJson);
             IEnumerable<IDomainEvent> commitedDomainEvents = rows.Select(selector);
             IEnumerable<IDomainEvent> allEvents;
             if (uncommittedDomainEvents is not null)

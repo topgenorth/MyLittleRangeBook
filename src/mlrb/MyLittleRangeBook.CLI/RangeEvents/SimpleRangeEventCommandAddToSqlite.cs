@@ -61,17 +61,17 @@ namespace MyLittleRangeBook.RangeEvents
                 await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken, true)
                                           .ConfigureAwait(false);
 
-            Result<MlrbId> r1 = await _rangeEventDataProcessor
+            Result<MlrbId> rProcess = await _rangeEventDataProcessor
                                      .ProcessSimpleRangeEventData(context, firearm, rounds, range, ammo, notes,
                                                                   eventDate)
                                      .ConfigureAwait(false);
 
             int returnValue;
-            if (r1.IsSuccess)
+            if (rProcess.IsSuccess)
             {
                 await context.CommitAsync().ConfigureAwait(false);
                 returnValue = SUCCESS;
-                Result<SimpleRangeEvent> sre = await _simpleRangeEventService.GetAsync(context, r1.Value)
+                Result<SimpleRangeEvent> sre = await _simpleRangeEventService.GetAsync(context, rProcess.Value)
                                                                              .ConfigureAwait(false);
 
                 _simpleRangeEventPrinter.Print(AnsiConsole.Console, sre.Value, quiet);

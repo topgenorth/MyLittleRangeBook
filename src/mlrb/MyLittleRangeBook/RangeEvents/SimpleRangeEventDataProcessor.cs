@@ -106,14 +106,14 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
 
-        internal async Task<Result<SimpleRangeEvent>> UpsertSimpleRangeEvent(DapperCommandContext context,
-                                                                             string               firearmName,
-                                                                             [ValueRange(-10000, 10000)]
-                                                                             int roundsFired,
-                                                                             string         rangeName,
-                                                                             string?        ammoDescription,
-                                                                             string?        notes,
-                                                                             DateTimeOffset eventDate)
+        async Task<Result<SimpleRangeEvent>> UpsertSimpleRangeEvent(DapperCommandContext context,
+                                                                    string               firearmName,
+                                                                    [ValueRange(-10000, 10000)]
+                                                                    int roundsFired,
+                                                                    string         rangeName,
+                                                                    string?        ammoDescription,
+                                                                    string?        notes,
+                                                                    DateTimeOffset eventDate)
         {
             SimpleRangeEvent sre = new(eventDate)
                                    {

@@ -5,6 +5,7 @@ CREATE TEMP TABLE temp_firearm_ids AS
 SELECT id
 FROM firearms
 WHERE name = 'Test Gun';
+INSERT INTO temp_firearm_ids VALUES( '5KR60EYQNZVCXGY505M8W9KFYD');
 
 SELECT *
 FROM simple_range_events
