@@ -17,7 +17,7 @@ namespace MyLittleRangeBook.Cartridges
 
         public CartridgeCommands(ILogger logger,
             ICliDisplay cliDisplay,
-            [FromKeyedServices(SqliteHelperExtensions.DI_KEYS_SQLITE)] ICartridgesService cartridgesService,
+            [FromKeyedServices(SqliteHelperExtensions.DI_KEY)] ICartridgesService cartridgesService,
             ISqliteHelper sqliteHelper) : base(logger, cliDisplay)
         {
             _cartridgesService = cartridgesService;

@@ -1,4 +1,5 @@
-﻿using MyLittleRangeBook.EventSourcing;
+﻿using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
@@ -20,11 +21,14 @@ namespace MyLittleRangeBook.Firearms
     {
         public SqliteFirearmAggregateRepository(ISqliteHelper         sqliteHelper,
                                                 IEventSerializer      eventSerializer,
-                                                IEventSourcingService eventSourcingService) :
+                                                IEventSourcingService eventSourcingService,
+                                                [FromKeyedServices(FirearmProjector.DI_KEY)]
+                                                IProjector projector) :
             base(sqliteHelper,
                  eventSerializer,
                  FirearmAggregate.STREAM_TYPE,
-                 FirearmAggregate.Create, eventSourcingService) { }
+                 FirearmAggregate.Create, eventSourcingService,
+                 projector) { }
 
         public async Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(DapperCommandContext ctx,
                                                                            string               firearmName,
@@ -32,41 +36,33 @@ namespace MyLittleRangeBook.Firearms
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
 
-            MlrbId                    streamId         = MlrbId.FromString(firearmName);
-            Result<FirearmAggregate?> firearmAggregate = await GetAsync(ctx, streamId);
+            MlrbId                    streamId          = MlrbId.FromString(firearmName);
+            DateTimeOffset            createdUtc        = createUtc ?? DateTimeOffset.UtcNow;
+            Result<FirearmAggregate>  result;
 
-            if (firearmAggregate.IsFailed)
+            Result<FirearmAggregate?> rFirearmAggregate = await GetAsync(ctx, streamId);
+            if (rFirearmAggregate.HasError<EventStreamDoesNotExistError>())
             {
-                return Result.Fail(firearmAggregate.Errors);
+                FirearmAggregate fa = FirearmAggregate.New(firearmName, createdUtc);
+                result = Result.Ok(fa).WithReason(new FirearmEventStreamCreatedReason(firearmName, streamId));
             }
-
-            if (firearmAggregate.Value is not null)
+            else if (rFirearmAggregate.IsFailed)
             {
-                return Result.Ok(firearmAggregate.Value);
+                FailedToGetFirearmEventStream err = new(firearmName, streamId);
+                result = Result.Fail(err.Message).WithReasons(rFirearmAggregate.Reasons);
             }
-
-            DateTimeOffset   createdUtc = createUtc ?? DateTimeOffset.UtcNow;
-            FirearmAggregate fa         = FirearmAggregate.New(firearmName, createdUtc);
-
-            return Result.Ok(fa);
-        }
-
-
-        public async Task<Result> SaveAsync(FirearmAggregate aggregate, CancellationToken cancellationToken = default)
-        {
-            await using DapperCommandContext ctx =
-                await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken, true);
-            Result r1 = await UpsertAsync(ctx, aggregate);
-            if (r1.IsSuccess)
+            else if (rFirearmAggregate.Value is not null)
             {
-                await ctx.CommitAsync().ConfigureAwait(false);
+                FirearmAggregate? fa = rFirearmAggregate.Value;
+                result = Result.Ok(fa)
+                               .WithReason(new FirearmEventStreamCreatedReason(firearmName, streamId));
             }
             else
             {
-                await ctx.RollbackAsync().ConfigureAwait(false);
+                result = Result.Fail<FirearmAggregate>(new FailedToGetFirearmEventStream(firearmName, streamId));
             }
 
-            return r1;
+            return result;
         }
     }
 }
