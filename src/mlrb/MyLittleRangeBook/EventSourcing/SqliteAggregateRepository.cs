@@ -4,6 +4,24 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.EventSourcing
 {
+    public class EventStreamLoadedSuccess(MlrbId streamId, string? message = null)
+        : Success(message ?? $"Event stream loaded (ID: {streamId})")
+    {
+        public MlrbId StreamId = streamId;
+    }
+
+    public class FailedToLoadEventStreamError(MlrbId streamId)
+        : Error($"Failed to load the event stream (ID: {streamId})")
+    {
+        public MlrbId StreamId = streamId;
+    }
+
+    public class EventStreamDoesNotExistError(MlrbId streamId)
+        : Error($"Event stream does not exist (ID: {streamId})")
+    {
+        public MlrbId StreamId = streamId;
+    }
+
     /// <summary>
     ///     Generic SQLite-backed repository for any <see cref="Aggregate" /> subclass. It persists
     ///     uncommitted events to the <c>events</c> table and upserts the corresponding row in the
@@ -16,9 +34,9 @@ namespace MyLittleRangeBook.EventSourcing
         readonly           Func<EventStreamRow, TAggregate> _createFromStream;
         readonly           IEventSerializer                 _eventSerializer;
         readonly           IEventSourcingService            _eventSourcingService;
+        readonly           IProjector                       _projector;
         readonly           string                           _streamType;
         protected readonly ISqliteHelper                    SqliteHelper;
-        readonly           IProjector                      _projector;
 
         /// <param name="sqliteHelper">SQLite connection factory.</param>
         /// <param name="eventSerializer">Serializer used to (de)serialize <see cref="IDomainEvent" /> instances.</param>
@@ -31,14 +49,14 @@ namespace MyLittleRangeBook.EventSourcing
                                             string                           streamType,
                                             Func<EventStreamRow, TAggregate> createFromStream,
                                             IEventSourcingService            eventSourcingService,
-                                            IProjector projector)
+                                            IProjector                       projector)
         {
             SqliteHelper          = sqliteHelper;
             _eventSerializer      = eventSerializer;
             _streamType           = streamType;
             _createFromStream     = createFromStream;
             _eventSourcingService = eventSourcingService;
-            _projector       = projector;
+            _projector            = projector;
         }
 
         /// <summary>
@@ -54,21 +72,20 @@ namespace MyLittleRangeBook.EventSourcing
                 EventStreamRow? stream = await _eventSourcingService.GetEventStream(context, id).ConfigureAwait(false);
                 if (stream is null)
                 {
-                    // [TO20260530] We couldn't find the stream; this is okay because it means this is a new thing.
-                    Success reason = new Success("No event stream found").Enrich(id);
+                    EventStreamDoesNotExistError reason = new(id);
                     return new Result<TAggregate?>()
                           .WithValue(null)
                           .WithReason(reason);
                 }
 
                 TAggregate aggregate = _createFromStream(stream.Value);
-
-                IEnumerable<IDomainEvent> domainEvents =
+                IEnumerable<IDomainEvent> events =
                     await _eventSourcingService.GetDomainEvents(context, id).ConfigureAwait(false);
+                IEnumerable<IDomainEvent> domainEvents = events as IDomainEvent[] ?? events.ToArray();
                 if (!domainEvents.Any())
                 {
                     // [TO20260530] No events; this is okay because it means this is a new thing.
-                    Success reason = new Success("No events found").Enrich(id);
+                    Success reason = new EventStreamLoadedSuccess(id, "No events found").Enrich(id);
                     return new Result<TAggregate?>()
                           .WithValue(null)
                           .WithReason(reason);
@@ -84,7 +101,8 @@ namespace MyLittleRangeBook.EventSourcing
             }
             catch (Exception e)
             {
-                return e.FailWithException();
+                FailedToLoadEventStreamError err = new(id);
+                return Result.Fail(err).WithReason(e.ToError());
             }
         }
 
@@ -99,8 +117,8 @@ namespace MyLittleRangeBook.EventSourcing
             }
             catch (Exception e)
             {
-                Error err = e.ToError().Enrich(streamId);
-                return Result.Fail(err);
+                FailedToLoadEventStreamError err = new FailedToLoadEventStreamError(streamId);
+                return Result.Fail(err).WithReason(e.ToError());
             }
         }
 
@@ -113,9 +131,9 @@ namespace MyLittleRangeBook.EventSourcing
         /// <param name="aggregate">The aggregate entity to upsert.</param>
         /// <param name="metadataJson">Metadata for the event stream, in JSON format.</param>
         /// <returns>A result indicating the success or failure of the operation.</returns>
-        public virtual  async Task<Result> UpsertAsync(DapperCommandContext context,
-                                              TAggregate           aggregate,
-                                              string?              metadataJson = null)
+        public virtual async Task<Result> UpsertAsync(DapperCommandContext context,
+                                                      TAggregate           aggregate,
+                                                      string?              metadataJson = null)
         {
             IReadOnlyList<IDomainEvent> pendingEvents = aggregate.DequeueUncommittedEvents();
             if (pendingEvents.Count == 0)
@@ -129,9 +147,9 @@ namespace MyLittleRangeBook.EventSourcing
             {
                 int? currentVersion = await GetStreamVersion(context, streamId).ConfigureAwait(false);
                 Result<int> nextEventVersionResult = GetNextEventVersion(currentVersion,
-                                                                              aggregate.Version,
-                                                                              pendingEvents.Count,
-                                                                              streamId);
+                                                                         aggregate.Version,
+                                                                         pendingEvents.Count,
+                                                                         streamId);
 
                 reasons.AddRange(nextEventVersionResult.Reasons);
                 if (nextEventVersionResult.IsFailed)
@@ -142,16 +160,15 @@ namespace MyLittleRangeBook.EventSourcing
                 int nextVersion = nextEventVersionResult.Value;
 
                 await _eventSourcingService.UpsertEventStream(context,
-                                                                  aggregate,
-                                                                  _streamType,
-                                                                  nextVersion,
-                                                                  metadataJson
-                                                                 )
+                                                              aggregate,
+                                                              _streamType,
+                                                              nextVersion,
+                                                              metadataJson
+                                                             )
                                            .ConfigureAwait(false);
 
                 foreach (IDomainEvent evt in pendingEvents)
                 {
-
                     await _eventSourcingService.InsertDomainEvent(context,
                                                                   streamId,
                                                                   _streamType,
@@ -162,7 +179,8 @@ namespace MyLittleRangeBook.EventSourcing
                     nextVersion++;
                 }
 
-                var projectionResult = await _projector.ProjectAggregateAsync(context, streamId, pendingEvents).ConfigureAwait(false);
+                Result projectionResult = await _projector.ProjectAggregateAsync(context, streamId, pendingEvents)
+                                                          .ConfigureAwait(false);
                 reasons.AddRange(projectionResult.Reasons);
             }
             catch (Exception e)
@@ -176,9 +194,9 @@ namespace MyLittleRangeBook.EventSourcing
 
 
         static Result<int> GetNextEventVersion(int?   currentVersion,
-                                                   int    aggregateVersion,
-                                                   int    pendingEventCount,
-                                                   MlrbId streamId)
+                                               int    aggregateVersion,
+                                               int    pendingEventCount,
+                                               MlrbId streamId)
         {
             int           expectedVersion = aggregateVersion - pendingEventCount;
             List<IReason> reasons         = [];
@@ -188,7 +206,7 @@ namespace MyLittleRangeBook.EventSourcing
                 if (expectedVersion != -1)
                 {
                     reasons.Add(new Error(
-                                        $"Concurrency conflict detected for new stream {streamId}. Expected no existing stream, but aggregate expected version {expectedVersion}."));
+                                          $"Concurrency conflict detected for new stream {streamId}. Expected no existing stream, but aggregate expected version {expectedVersion}."));
 
                     return new Result<int>().WithReasons(reasons);
                 }
@@ -202,12 +220,12 @@ namespace MyLittleRangeBook.EventSourcing
             if (actualVersion != expectedVersion)
             {
                 reasons.Add(new Error(
-                                $"Concurrency conflict detected for stream {streamId}. Expected version {expectedVersion}, but actual version is {actualVersion}."));
+                                      $"Concurrency conflict detected for stream {streamId}. Expected version {expectedVersion}, but actual version is {actualVersion}."));
 
                 return new Result<int>().WithReasons(reasons);
             }
 
-            reasons.Add(new Success("Event source version check passed."));
+            reasons.Add(new Success("Event source version check passed.").Enrich(streamId));
             return new Result<int>().WithValue(actualVersion + 1).WithReasons(reasons);
         }
 

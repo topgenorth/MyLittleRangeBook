@@ -39,27 +39,21 @@ namespace MyLittleRangeBook.RangeEvents
             MlrbId         firearmId    = MlrbId.FromString(sre.FirearmName);
             MlrbId         rangeEventId = sre.Id!;
 
-            Task<Result> deleteTask = _rangeEventService.DeleteAsync(context, sre);
-            Task<Result> disassociateTask =
-                _rangeEventService.DisassociateFromFirearm(context, firearmId, rangeEventId);
-            Result<FirearmAggregate?> rGetFirearmAggregate = await _faRepo.GetAsync(context, firearmId).ConfigureAwait(false);
-            Result[] operationResults = await Task
-                                             .WhenAll(deleteTask, disassociateTask)
-                                             .ConfigureAwait(false);
-            Result<IEnumerable<FirearmAggregate?>>? r1 =
-                Result.Merge(operationResults[0], operationResults[1], rGetFirearmAggregate);
-
-            Result finalResult = new Result().WithReasons(r1.Reasons);
-            if (r1.IsSuccess)
+            Result rDelete = await _rangeEventService.DeleteAsync(context, sre).ConfigureAwait(false);
+            if (!rDelete.IsSuccess)
             {
-                FirearmAggregate fa = rGetFirearmAggregate.Value!;
-                fa.FirearmRoundCountChanged(-1 * sre.RoundsFired, offsetUtc, sre.AmmoDescription);
-                fa.DisassociatedWithRangeEvent(rangeEventId, offsetUtc);
-                Result r2 = await _faRepo.UpsertAsync(context, fa).ConfigureAwait(false);
-                finalResult.Reasons.AddRange(r2.Reasons);
+                return rDelete;
             }
 
-            return finalResult;
+            Result<FirearmAggregate?> rGetFirearmAggregate =
+                await _faRepo.GetAsync(context, firearmId).ConfigureAwait(false);
+
+            FirearmAggregate fa = rGetFirearmAggregate.Value!;
+            fa.FirearmRoundCountChanged(-1 * sre.RoundsFired, offsetUtc, sre.AmmoDescription);
+            fa.DisassociatedWithRangeEvent(rangeEventId, offsetUtc);
+            Result rSaveEventStream = await _faRepo.UpsertAsync(context, fa).ConfigureAwait(false);
+
+            return Result.Merge(rDelete, rSaveEventStream);
         }
 
         public async Task<Result<MlrbId>> ProcessSimpleRangeEventData(DapperCommandContext            context,
@@ -70,24 +64,24 @@ namespace MyLittleRangeBook.RangeEvents
                                                                       string                          notes,
                                                                       DateOnly?                       dateOfEvent)
         {
-            List<IReason> reasons = [];
             (DateOnly _, DateTimeOffset occurredUtc) = GetEventDate(dateOfEvent);
             Result<MlrbId> result = new();
 
-            Result<SimpleRangeEvent> upsertRangeEventResult = await UpsertSimpleRangeEvent(context,
-                                                                       firearmName,
-                                                                       roundsFired,
-                                                                       rangeName,
-                                                                       ammoDescription,
-                                                                       notes,
-                                                                       occurredUtc).ConfigureAwait(false);
-            reasons.AddRange(upsertRangeEventResult.Reasons);
+            Result<SimpleRangeEvent> rUpsertRangeEvent = await UpsertSimpleRangeEvent(context,
+                                                             firearmName,
+                                                             roundsFired,
+                                                             rangeName,
+                                                             ammoDescription,
+                                                             notes,
+                                                             occurredUtc).ConfigureAwait(false);
+
+            result.Reasons.AddRange(rUpsertRangeEvent.Reasons);
             MlrbId? rangeEventId = null;
-            if (upsertRangeEventResult.IsSuccess)
+            if (rUpsertRangeEvent.IsSuccess)
             {
                 Success x = new("Saved the range range event that occured on " + occurredUtc.ToString("O"));
-                reasons.Add(x);
-                rangeEventId = upsertRangeEventResult.Value.Id;
+                result.Reasons.Add(x);
+                rangeEventId = rUpsertRangeEvent.Value.Id!;
             }
 
 
@@ -95,36 +89,31 @@ namespace MyLittleRangeBook.RangeEvents
                                                                      firearmName,
                                                                      roundsFired,
                                                                      rangeName,
-                                                                ammoDescription,
-                                                                notes,
-                                                                occurredUtc,
-                                                                      rangeEventId)
-                                    .ConfigureAwait(false);
-            reasons.AddRange(upsertFirearmEventStreamResult.Reasons);
+                                                                     ammoDescription,
+                                                                     notes,
+                                                                     occurredUtc,
+                                                                     rangeEventId)
+                                                                .ConfigureAwait(false);
+
+            result = Result.Merge(result, upsertFirearmEventStreamResult);
 
             if (upsertFirearmEventStreamResult.IsSuccess)
             {
-                Success x = new("Updated the firearm stream.");
-                reasons.Add(x);
-                result = result.WithValue(upsertRangeEventResult.Value.Id!);
-            }
-            else
-            {
-                Error x = new ("Failed to update the firearm stream.");
-                reasons.Add(x);
+                result = result.WithValue(rUpsertRangeEvent.Value.Id!);
             }
 
-            return result.WithReasons(reasons);
+            return result;
         }
 
 
-        internal async Task<Result<SimpleRangeEvent>> UpsertSimpleRangeEvent(DapperCommandContext       context,
-                                                                             string                     firearmName,
-                                                                             [ValueRange(0, 10000)] int roundsFired,
-                                                                             string                     rangeName,
-                                                                             string?                    ammoDescription,
-                                                                             string?                    notes,
-                                                                             DateTimeOffset             eventDate)
+        internal async Task<Result<SimpleRangeEvent>> UpsertSimpleRangeEvent(DapperCommandContext context,
+                                                                             string               firearmName,
+                                                                             [ValueRange(-10000, 10000)]
+                                                                             int roundsFired,
+                                                                             string         rangeName,
+                                                                             string?        ammoDescription,
+                                                                             string?        notes,
+                                                                             DateTimeOffset eventDate)
         {
             SimpleRangeEvent sre = new(eventDate)
                                    {
@@ -136,7 +125,7 @@ namespace MyLittleRangeBook.RangeEvents
                                    };
 
             Result<MlrbId> rUpsertRangeEvent = await _rangeEventService.UpsertAsync(context, sre)
-                                                        .ConfigureAwait(false);
+                                                                       .ConfigureAwait(false);
             List<IReason> reasons = [];
             reasons.AddRange(rUpsertRangeEvent.Reasons);
 
@@ -154,17 +143,19 @@ namespace MyLittleRangeBook.RangeEvents
             return new Result<SimpleRangeEvent>().WithValue(sre).WithReasons(reasons);
         }
 
-        async Task<Result<Firearm>> UpdateFirearmEventStream(DapperCommandContext context,
-                                                             string firearmName,
+        async Task<Result<Firearm>> UpdateFirearmEventStream(DapperCommandContext            context,
+                                                             string                          firearmName,
                                                              [ValueRange(-10000, 10000)] int roundsFired,
-                                                             string rangeName,
-                                                             string ammoDescription,
-                                                             string notes,
-                                                             DateTimeOffset eventDateUtc, MlrbId? rangeEventId)
+                                                             string                          rangeName,
+                                                             string                          ammoDescription,
+                                                             string                          notes,
+                                                             DateTimeOffset                  eventDateUtc,
+                                                             MlrbId?                         rangeEventId)
         {
             List<IReason> reasons = [];
-            Result<FirearmAggregate> rGetFirearmAggregate = await _faRepo.GetOrCreateByNameAsync(context, firearmName, eventDateUtc)
-                                                       .ConfigureAwait(false);
+            Result<FirearmAggregate> rGetFirearmAggregate =
+                await _faRepo.GetOrCreateByNameAsync(context, firearmName, eventDateUtc)
+                             .ConfigureAwait(false);
 
             if (rGetFirearmAggregate.IsFailed)
             {

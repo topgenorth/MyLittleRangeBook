@@ -36,23 +36,33 @@ namespace MyLittleRangeBook.Firearms
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
 
-            MlrbId                    streamId         = MlrbId.FromString(firearmName);
-            Result<FirearmAggregate?> firearmAggregate = await GetAsync(ctx, streamId);
+            MlrbId                    streamId          = MlrbId.FromString(firearmName);
+            DateTimeOffset            createdUtc        = createUtc ?? DateTimeOffset.UtcNow;
+            Result<FirearmAggregate>  result;
 
-            if (firearmAggregate.IsFailed)
+            Result<FirearmAggregate?> rFirearmAggregate = await GetAsync(ctx, streamId);
+            if (rFirearmAggregate.HasError<EventStreamDoesNotExistError>())
             {
-                return Result.Fail(firearmAggregate.Errors);
+                FirearmAggregate fa = FirearmAggregate.New(firearmName, createdUtc);
+                result = Result.Ok(fa).WithReason(new FirearmEventStreamCreatedReason(firearmName, streamId));
+            }
+            else if (rFirearmAggregate.IsFailed)
+            {
+                FailedToGetFirearmEventStream err = new(firearmName, streamId);
+                result = Result.Fail(err.Message).WithReasons(rFirearmAggregate.Reasons);
+            }
+            else if (rFirearmAggregate.Value is not null)
+            {
+                FirearmAggregate? fa = rFirearmAggregate.Value;
+                result = Result.Ok(fa)
+                               .WithReason(new FirearmEventStreamCreatedReason(firearmName, streamId));
+            }
+            else
+            {
+                result = Result.Fail<FirearmAggregate>(new FailedToGetFirearmEventStream(firearmName, streamId));
             }
 
-            if (firearmAggregate.Value is not null)
-            {
-                return Result.Ok(firearmAggregate.Value);
-            }
-
-            DateTimeOffset   createdUtc = createUtc ?? DateTimeOffset.UtcNow;
-            FirearmAggregate fa         = FirearmAggregate.New(firearmName, createdUtc);
-
-            return Result.Ok(fa);
+            return result;
         }
     }
 }
