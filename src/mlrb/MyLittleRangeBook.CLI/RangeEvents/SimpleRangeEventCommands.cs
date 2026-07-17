@@ -26,6 +26,40 @@ namespace MyLittleRangeBook.RangeEvents
             _simpleRangeEventService = simpleRangeEventService;
         }
 
+        [Command("export-to-csv")]
+        [UsedImplicitly]
+        public async Task<int> ExportToCsv(string? file = null, bool quiet = false, CancellationToken cancellationToken = default)
+        {
+            CliDisplay.PrintCommandHeader("Export range events to CSV.");
+            DapperCommandContext context = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken).ConfigureAwait(false);
+
+
+            int    returnCode;
+            string csvFileName = file ?? Path.GetTempFileName();
+            try
+            {
+                Result r = await _simpleRangeEventService.ExportToCsv(context,csvFileName).ConfigureAwait(false);
+
+                returnCode = r.IsSuccess ? SUCCESS : FAILURE;
+            }
+            catch (Exception ex)
+            {
+                CliDisplay.PrintFailure(ex.Message);
+                returnCode = FAILURE;
+            }
+
+            if (returnCode == SUCCESS)
+            {
+                CliDisplay.PrintSuccess($"Range events exported to CSV successfully {csvFileName}.");
+            }
+            else
+            {
+                CliDisplay.PrintFailure("Failed to export range events to CSV.");
+            }
+
+            return returnCode;
+
+        }
         /// <summary>
         ///     Display a single range event.
         /// </summary>
@@ -136,6 +170,7 @@ namespace MyLittleRangeBook.RangeEvents
         [UsedImplicitly]
         public async Task<int> DeleteRangeEvent(string id, bool quiet = false, CancellationToken ct = default)
         {
+            // TODO [TO20260717] Need to delete the association with any firearms.
             if (!quiet)
             {
                 CliDisplay.PrintCommandHeader($"Delete range event {id}");

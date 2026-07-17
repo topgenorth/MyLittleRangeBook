@@ -20,5 +20,15 @@ namespace MyLittleRangeBook.RangeEvents
 
         Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(DapperCommandContext context);
 
+        Task<Result> DisassociateFromFirearm(DapperCommandContext context, MlrbId firearmId,
+                                             MlrbId               rangeEventId);
+
+        /// <summary>
+        /// Exports range event records to a CSV file.
+        /// </summary>
+        /// <param name="context">The command context containing connection and transaction details.</param>
+        /// <param name="csvFileName">The name of the CSV file to which the range event data will be exported.</param>
+        /// <returns>A result indicating the success or failure of the operation.</returns>
+        Task<Result> ExportToCsv(DapperCommandContext context, string csvFileName);
     }
 }
