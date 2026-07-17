@@ -49,6 +49,8 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
+        public Task<Result> ExportToCsv(DapperCommandContext context, string csvFileName) => throw new NotImplementedException();
+
         public async Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId)
         {
             try
