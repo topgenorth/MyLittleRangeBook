@@ -1,8 +1,30 @@
-﻿using MyLittleRangeBook.Models;
+﻿using System.Globalization;
+using CsvHelper;
+using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.RangeEvents
 {
+    public sealed class SimpleRangeEventsExportedToCsvSuccess : Success
+    {
+        public SimpleRangeEventsExportedToCsvSuccess(string csvFileName, int rowCount) :
+            base($"Exported {rowCount} simple range event(s) to CSV file `{csvFileName}`.")
+        {
+            Metadata.Add(nameof(csvFileName), csvFileName);
+            Metadata.Add(nameof(rowCount),    rowCount);
+        }
+    }
+
+    public sealed class SimpleRangeEventsExportToCsvError : Error
+    {
+        public SimpleRangeEventsExportToCsvError(string csvFileName, Exception exception) :
+            base($"Could not export simple range events to CSV file `{csvFileName}`.")
+        {
+            Metadata.Add(nameof(csvFileName), csvFileName);
+            CausedBy(exception);
+        }
+    }
+
     /// <summary>
     ///     Provides SQLite-specific implementation for managing SimpleRangeEvent data.
     /// </summary>
@@ -49,7 +71,36 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
-        public Task<Result> ExportToCsv(DapperCommandContext context, string csvFileName) => throw new NotImplementedException();
+        public async Task<Result> ExportToCsv(DapperCommandContext context, string csvFileName)
+        {
+            try
+            {
+                if (File.Exists(csvFileName))
+                {
+                    File.Delete(csvFileName);
+                }
+
+                IEnumerable<SimpleRangeEvent> rangeEvents = await Commands.s_selectAll
+                                                                          .QueryAsync<SimpleRangeEvent>(context)
+                                                                          .ConfigureAwait(false);
+
+                await using StreamWriter writer = new(csvFileName);
+                await using CsvWriter    csv    = new(writer, CultureInfo.InvariantCulture);
+
+                await csv.WriteRecordsAsync(rangeEvents.OrderBy(x => x.EventDate), context.CancellationToken)
+                         .ConfigureAwait(false);
+
+                SimpleRangeEventsExportedToCsvSuccess success = new(csvFileName, rangeEvents.Count());
+                return Result.Ok().WithSuccess(success);
+            }
+            catch (Exception ex)
+            {
+                SimpleRangeEventsExportToCsvError error = new(csvFileName, ex);
+                error.CausedBy(ex);
+
+                return Result.Fail(error);
+            }
+        }
 
         public async Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId)
         {

@@ -26,27 +26,35 @@ namespace MyLittleRangeBook.RangeEvents
             _simpleRangeEventService = simpleRangeEventService;
         }
 
-        [Command("export")]
+        [Command("export-to-csv")]
         [UsedImplicitly]
-        public async Task<int> ExportToCsv(bool quiet = false, CancellationToken cancellationToken = default)
+        public async Task<int> ExportToCsv(string? file = null, bool quiet = false, CancellationToken cancellationToken = default)
         {
             CliDisplay.PrintCommandHeader("Export range events to CSV.");
             DapperCommandContext context = await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken).ConfigureAwait(false);
 
 
             int    returnCode;
-            string csvFileName = Path.GetTempFileName();
+            string csvFileName = file ?? Path.GetTempFileName();
             try
             {
                 Result r = await _simpleRangeEventService.ExportToCsv(context,csvFileName).ConfigureAwait(false);
 
-                returnCode = SUCCESS;
-                CliDisplay.PrintSuccess($"Range events exported to CSV successfully {csvFileName}.");
+                returnCode = r.IsSuccess ? SUCCESS : FAILURE;
             }
             catch (Exception ex)
             {
                 CliDisplay.PrintFailure(ex.Message);
                 returnCode = FAILURE;
+            }
+
+            if (returnCode == SUCCESS)
+            {
+                CliDisplay.PrintSuccess($"Range events exported to CSV successfully {csvFileName}.");
+            }
+            else
+            {
+                CliDisplay.PrintFailure("Failed to export range events to CSV.");
             }
 
             return returnCode;
