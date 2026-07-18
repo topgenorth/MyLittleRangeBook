@@ -6,10 +6,22 @@ using MyLittleRangeBook.Persistence;
 namespace MyLittleRangeBook.RangeEvents
 {
     /// <summary>
-    ///     Takes the data from a simple range event and processes it
+    ///     Takes the data from a simple range event, saves the raw data to the simple_range_events table, updates the event
+    ///     stream for the firearm, and the projection in the firearms table.
     /// </summary>
     public interface ISimpleRangeEventDataProcessor
     {
+        /// <summary>
+        /// Process the simple range event.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="firearmName"></param>
+        /// <param name="roundsFired">An integer between -10,000 and 10,000</param>
+        /// <param name="rangeName"></param>
+        /// <param name="ammoDescription"></param>
+        /// <param name="notes"></param>
+        /// <param name="dateOfEvent">The date (and only the date) of the event.  If omitted, then it will default to the current date.</param>
+        /// <returns></returns>
         Task<Result<MlrbId>> ProcessSimpleRangeEventData(DapperCommandContext            context,
                                                          string                          firearmName,
                                                          [ValueRange(-10000, 10000)] int roundsFired,
@@ -18,9 +30,18 @@ namespace MyLittleRangeBook.RangeEvents
                                                          string                          notes,
                                                          DateOnly?                       dateOfEvent);
 
+        /// <summary>
+        /// Delete's the simple range event and dis-associates it from any firearm.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="sre"></param>
+        /// <returns></returns>
         Task<Result> DeleteSimpleRangeEvent(DapperCommandContext context, SimpleRangeEvent sre);
     }
 
+    /// <summary>
+    /// An SQLite implementation of a SimpleRangeEventDataProcessor.
+    /// </summary>
     public class SimpleRangeEventDataProcessor : ISimpleRangeEventDataProcessor
     {
         readonly IFirearmAggregateRepository _faRepo;
@@ -106,14 +127,13 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
 
-        async Task<Result<SimpleRangeEvent>> UpsertSimpleRangeEvent(DapperCommandContext context,
-                                                                    string               firearmName,
-                                                                    [ValueRange(-10000, 10000)]
-                                                                    int roundsFired,
-                                                                    string         rangeName,
-                                                                    string?        ammoDescription,
-                                                                    string?        notes,
-                                                                    DateTimeOffset eventDate)
+        async Task<Result<SimpleRangeEvent>> UpsertSimpleRangeEvent(DapperCommandContext            context,
+                                                                    string                          firearmName,
+                                                                    [ValueRange(-10000, 10000)] int roundsFired,
+                                                                    string                          rangeName,
+                                                                    string?                         ammoDescription,
+                                                                    string?                         notes,
+                                                                    DateTimeOffset                  eventDate)
         {
             SimpleRangeEvent sre = new(eventDate)
                                    {

@@ -18,6 +18,11 @@ namespace MyLittleRangeBook.RangeEvents
         /// <returns></returns>
         Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent);
 
+        /// <summary>
+        /// Fetches all simple range events
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(DapperCommandContext context);
 
         /// <summary>
