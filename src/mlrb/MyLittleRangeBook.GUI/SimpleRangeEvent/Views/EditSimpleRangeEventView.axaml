@@ -24,10 +24,12 @@
 
                 <!--  Firearm  -->
                 <controls:LabeledControl Header="Firearm">
-                    <TextBox x:Name="FirearmTextBox"
-                             HorizontalAlignment="Left"
-                             Text="{Binding FirearmName}"
-                             PlaceholderText="The name of the firearm" />
+                    <AutoCompleteBox x:Name="FirearmAutoCompleteBox"
+                                     HorizontalAlignment="Left"
+                                     Text="{Binding FirearmName}"
+                                     ItemsSource="{Binding $parent[UserControl].((viewModels:EditSimpleRangeEventViewModel)DataContext).FirearmNames}"
+                                     FilterMode="Contains"
+                                     PlaceholderText="The name of the firearm" />
                 </controls:LabeledControl>
 
                 <!--  Rounds   -->
