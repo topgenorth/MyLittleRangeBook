@@ -1,7 +1,7 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -20,15 +20,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
 {
     public partial class EditSimpleRangeEventViewModel : ViewModelBase, IDialogParticipant
     {
-        readonly IDialogService                 _dialogService;
-        readonly ILogger                        _logger;
-        readonly ISimpleRangeEventDataProcessor _simpleRangeEventDataProcessor;
-        readonly ISimpleRangeEventService       _simpleRangeEventService;
-        readonly ISqliteHelper                  _sqliteHelper;
-        readonly IFirearmsService               _firearmsService;
-
-        [ObservableProperty]
-        private IEnumerable<string> _firearmNames = [];
+        readonly             IDialogService                 _dialogService;
+        readonly             IFirearmsService               _firearmsService;
+        readonly             ILogger                        _logger;
+        readonly             ISimpleRangeEventDataProcessor _simpleRangeEventDataProcessor;
+        readonly             ISimpleRangeEventService       _simpleRangeEventService;
+        readonly             ISqliteHelper                  _sqliteHelper;
+        [ObservableProperty] IEnumerable<string>            _ammoDescription = [];
+        [ObservableProperty] IEnumerable<string>            _firearmNames    = [];
+        [ObservableProperty] IEnumerable<string>            _rangeNames      = [];
 
         /// <summary>
         ///     ViewModel responsible for editing a simple range event.
@@ -51,10 +51,47 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _simpleRangeEventService       = simpleRangeEventService;
             _firearmsService               = firearmsService;
 
+
             _ = LoadFirearmNamesAsync();
+            _ = LoadAmmoDescriptionsAsync();
+            _ = LoadRangeNamesAsync();
         }
 
-        private async Task LoadFirearmNamesAsync()
+        public SimpleRangeEventViewModel Item { get; }
+
+        async Task LoadRangeNamesAsync()
+        {
+            await using DapperCommandContext ctx  = await DapperCommandContext.NewAsync(_sqliteHelper);
+            Result<IEnumerable<string>>      list = await _simpleRangeEventService.GetRangeNames(ctx);
+            if (list.IsSuccess)
+            {
+                RangeNames = list.Value;
+            }
+            else
+            {
+                _logger.Warning("Failed to load a list of range names.");
+            }
+        }
+
+        async Task LoadAmmoDescriptionsAsync()
+        {
+            await using DapperCommandContext ctx =
+                await DapperCommandContext.NewAsync(_sqliteHelper).ConfigureAwait(false);
+
+            Result<IEnumerable<string>> ammoDescriptions =
+                await _simpleRangeEventService.GetAmmoDescriptions(ctx).ConfigureAwait(false);
+
+            if (ammoDescriptions.IsSuccess)
+            {
+                AmmoDescription = ammoDescriptions.Value;
+            }
+            else
+            {
+                _logger.Warning("Failed to load a list of ammo descriptions.");
+            }
+        }
+
+        async Task LoadFirearmNamesAsync()
         {
             await using DapperCommandContext ctx =
                 await DapperCommandContext.NewAsync(_sqliteHelper).ConfigureAwait(false);
@@ -66,9 +103,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
             {
                 FirearmNames = firearmsResult.Value.Select(f => f.Name).ToList();
             }
+            else
+            {
+                _logger.Warning("Failed to load a list of firearm names.");
+            }
         }
-
-        public SimpleRangeEventViewModel Item { get; }
 
 
         [RelayCommand]
@@ -108,10 +147,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
                     SimpleRangeEventViewModel updatedViewModel = new(sre);
                     _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
                     WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
-                                                         Item.RowId == null
-                                                             ? UpdateAction.Added
-                                                             : UpdateAction.Updated,
-                                                         sre));
+                                                             Item.RowId == null
+                                                                 ? UpdateAction.Added
+                                                                 : UpdateAction.Updated,
+                                                             sre));
                 }
                 else
                 {
@@ -136,9 +175,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             DialogCommand[] commands = [DialogCommands.No, DialogCommands.Yes];
             DialogResult userResponse = await _dialogService.ShowOverlayDialogAsync<DialogResult>(
-                                         "Cancel editing?",
-                                         "Do you want to discard your changes?",
-                                         commands);
+                                             "Cancel editing?",
+                                             "Do you want to discard your changes?",
+                                             commands);
 
             switch (userResponse)
             {

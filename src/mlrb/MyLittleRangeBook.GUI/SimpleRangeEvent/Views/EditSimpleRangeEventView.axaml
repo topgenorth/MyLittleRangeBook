@@ -51,15 +51,23 @@
 
                 <!--  Range   -->
                 <controls:LabeledControl Header="Range">
-                    <TextBox x:Name="RangeTextBox" Text="{Binding RangeName}" PlaceholderText="The name of the range" />
+                    <AutoCompleteBox x:Name="RangeAutoCompleteBox"
+                                     HorizontalAlignment="Left"
+                                     Text="{Binding RangeName}"
+                                     ItemsSource="{Binding $parent[UserControl].((viewModels:EditSimpleRangeEventViewModel)DataContext).RangeNames}"
+                                     FilterMode="Contains"
+                                     PlaceholderText="The name of the range." />
                 </controls:LabeledControl>
 
 
                 <!--  Ammo  -->
                 <controls:LabeledControl Header="Ammo">
-                    <TextBox Text="{Binding AmmoDescription}"
-                             AcceptsReturn="True"
-                             MaxHeight="200" />
+                    <AutoCompleteBox x:Name="AmmoAutoCompleteBox"
+                                     HorizontalAlignment="Left"
+                                     Text="{Binding AmmoDescription}"
+                                     ItemsSource="{Binding $parent[UserControl].((viewModels:EditSimpleRangeEventViewModel)DataContext).AmmoDescription}"
+                                     FilterMode="Contains"
+                                     PlaceholderText="Description of the ammo." />
                 </controls:LabeledControl>
 
 
@@ -81,7 +89,8 @@
                                              Content="{Binding Modified, StringFormat='{}{0:g}', TargetNullValue='Not yet completed'}"
                                              VerticalContentAlignment="Center" />
                     <controls:LabeledControl Classes="ExtraInfo"
-                                             Header="Created Date" Content="{Binding Created, StringFormat='{}{0:g}', TargetNullValue='Not yet completed'}"
+                                             Header="Created Date"
+                                             Content="{Binding Created, StringFormat='{}{0:g}', TargetNullValue='Not yet completed'}"
                                              VerticalContentAlignment="Center" />
                 </StackPanel>
 
