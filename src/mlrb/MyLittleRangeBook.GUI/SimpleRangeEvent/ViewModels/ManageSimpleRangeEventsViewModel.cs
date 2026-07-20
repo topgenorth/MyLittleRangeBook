@@ -14,6 +14,7 @@ using DynamicData;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using FluentResults;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.Models;
@@ -52,6 +53,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         readonly ReadOnlyObservableCollection<SimpleRangeEventViewModel> _simpleRangeEvents;
         readonly ISimpleRangeEventService _simpleRangeEventService;
+        readonly IFirearmsService         _firearmsService;
 
         /// <summary>
         ///     Source cache for managing ManageSimpleRangeEventsVM instances with reactive updates.
@@ -66,11 +68,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                                 Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                                 ISqliteHelper sqliteHelper,
                                                 ISimpleRangeEventDataProcessor simpleRangeEventDataProcessor,
-                                                ISimpleRangeEventService simpleRangeEventService)
+                                                ISimpleRangeEventService simpleRangeEventService,
+                                                IFirearmsService firearmsService)
         {
             _sqliteHelper                  = sqliteHelper;
             _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
             _simpleRangeEventService       = simpleRangeEventService;
+            _firearmsService               = firearmsService;
             _dialogServiceFactory          = dialogServiceFactory;
             _dialogService                 = dialogServiceFactory(this);
             _logger                        = logger;
@@ -299,7 +303,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                                    _dialogServiceFactory,
                                                    _sqliteHelper,
                                                    _simpleRangeEventDataProcessor,
-                                                   _simpleRangeEventService);
+                                                   _simpleRangeEventService,
+                                                   _firearmsService);
 
             SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
                                                  "Edit the Range Event",

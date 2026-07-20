@@ -102,7 +102,6 @@ namespace MyLittleRangeBook.Config
                     .AddJsonFile("appsettings.json", true, true)
                     .AddJsonFile($"appsettings.{env}.json", true, true);
                 builder.Configuration.AddJsonFile(DefaultAppSettingsFile.FullName, true, true);
-                // builder.Services.AddPostgresHelper(builder.Configuration);
             }
 
             // [TO20260425] Leave out the environment variables for now.

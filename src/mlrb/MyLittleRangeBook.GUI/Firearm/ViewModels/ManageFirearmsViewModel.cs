@@ -193,7 +193,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                                    _dialogServiceFactory,
                                                    _sqliteHelper,
                                                    _simpleRangeEventDataProcessor,
-                                                   _simpleRangeEventService);
+                                                   _simpleRangeEventService,
+                                                   _firearmsDbService);
 
             await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
                                                                          "Add Range Event",

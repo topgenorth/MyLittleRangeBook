@@ -1,8 +1,12 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using FluentResults;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.Models;
@@ -21,6 +25,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly ISimpleRangeEventDataProcessor _simpleRangeEventDataProcessor;
         readonly ISimpleRangeEventService       _simpleRangeEventService;
         readonly ISqliteHelper                  _sqliteHelper;
+        readonly IFirearmsService               _firearmsService;
+
+        [ObservableProperty]
+        private IEnumerable<string> _firearmNames = [];
 
         /// <summary>
         ///     ViewModel responsible for editing a simple range event.
@@ -32,7 +40,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                              Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                              ISqliteHelper                            sqliteHelper,
                                              ISimpleRangeEventDataProcessor           simpleRangeEventDataProcessor,
-                                             ISimpleRangeEventService                 simpleRangeEventService)
+                                             ISimpleRangeEventService                 simpleRangeEventService,
+                                             IFirearmsService                         firearmsService)
         {
             Item                           = simpleRangeEvent;
             _dialogService                 = dialogServiceFactory(this);
@@ -40,6 +49,23 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _sqliteHelper                  = sqliteHelper;
             _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
             _simpleRangeEventService       = simpleRangeEventService;
+            _firearmsService               = firearmsService;
+
+            _ = LoadFirearmNamesAsync();
+        }
+
+        private async Task LoadFirearmNamesAsync()
+        {
+            await using DapperCommandContext ctx =
+                await DapperCommandContext.NewAsync(_sqliteHelper).ConfigureAwait(false);
+
+            Result<IEnumerable<Firearm>> firearmsResult =
+                await _firearmsService.GetFirearmsAsync(ctx).ConfigureAwait(false);
+
+            if (firearmsResult.IsSuccess)
+            {
+                FirearmNames = firearmsResult.Value.Select(f => f.Name).ToList();
+            }
         }
 
         public SimpleRangeEventViewModel Item { get; }
