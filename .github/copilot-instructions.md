@@ -1,23 +1,22 @@
 ﻿## MyLittleRangeBook – .NET 10 Shooting Logbook
 
-**Project**: A multi-platform logbook application for tracking range trips, Garmin Xero FIT files, and ballistic data. Compiled as single-file self-contained executables on Windows and Linux.
+**Project**: A multi-platform logbook application for tracking range trips, Garmin Xero FIT files, and ballistic data. Targets include a CLI (Windows/Linux) and an Avalonia-based GUI.
 
 **Tech Stack**:
-- **.NET 10** with implicit usings and nullable reference types enabled
-- **ConsoleAppFramework** – Attribute-routed CLI with command dispatch
-- **Spectre.Console** – Rich TUI formatting (CLI only)
-- **Dapper** – Micro-ORM without LINQ; hand-written SQL required
-- **DBUp** – Schema migration framework (scripts in MyLittleRangeBook.Sqlite/Scripts/)
-- **FluentResults**  – Railway-oriented error handling (all service methods return `Result<T>`)
-- **Serilog** – Structured logging to console/debug
-- **Garmin.FIT.SDK** – Xero FIT file parsing
-- **Microsoft.Data.Sqlite** + **SQLitePCLRaw** – SQLite driver
+- **.NET 10** with implicit usings and nullable reference types enabled.
+- **Avalonia** – Cross-platform UI framework (GUI only).
+- **ConsoleAppFramework** – Attribute-routed CLI with command dispatch.
+- **Spectre.Console** – Rich TUI formatting (CLI only).
+- **Dapper** – Micro-ORM using custom `DapperCommand` and `DapperCommandContext` abstractions.
+- **Event Sourcing** – Pattern used for domain aggregates (e.g., `Firearm`), including `Aggregate`, `DomainEvent`, and `Projector` components.
+- **DBUp** – Schema migration framework (scripts in `MyLittleRangeBook/Persistence/Sqlite/Scripts/`).
+- **FluentResults**  – Railway-oriented error handling (all service methods return `Result<T>`).
+- **Serilog** – Structured logging.
+- **Microsoft.Data.Sqlite** – SQLite driver for local persistence.
 
 ### Build & Restore
 
 **Always run before building**: `dotnet restore` from repository root.
-
-This ensures all transitive dependencies and AOT generators are available. Failure to restore can cause Dapper.AOT codegen errors.
 
 Build commands:
 ```bash
@@ -27,158 +26,110 @@ dotnet build
 # Release build (optimized, trimmed, self-contained)
 dotnet build -c Release
 
-# CLI only
-dotnet build src/mlrb/MyLittleRangeBook.CLI -c Release
-
-# Publish as single-file executable
-dotnet publish src/mlrb/MyLittleRangeBook.CLI -c Release -r win-x64 \
+# Publish as single-file executable (example for CLI)
+dotnet publish MyLittleRangeBook.CLI -c Release -r win-x64 \
   -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained
 ```
 
 ### Critical: Dapper.AOT Purge Requirement
 
-**If build fails with "Dapper.AOT" or "trimming" errors**, execute **one of**:
+**If build fails with "Dapper.AOT" or "trimming" errors**, execute the provided purge script from `src/mlrb/`:
+- Windows: `./purge-clean.ps1`
+- Unix: `./purge-clean.sh`
 
-PowerShell:
-```powershell
-Get-ChildItem . -include bin,obj -Recurse | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-dotnet clean && dotnet restore && dotnet build
-```
-
-Bash/Zsh/Linux:
-```bash
-find . -type d -name "bin" -o -name "obj" | xargs rm -rf
-dotnet clean && dotnet restore && dotnet build
-```
-
-Or run the provided script: `./src/mlrb/purge-clean.ps1` (Windows) or `./src/mlrb/purge-clean.sh` (Unix).
-
-**Why?** Dapper code generation for AOT compilation caches state in build artifacts. Partial cleans can leave stale artifacts.
+**Why?** Dapper code generation for AOT compilation caches state in build artifacts. Partial cleans can leave stale artifacts that cause compilation failures.
 
 ### Database Architecture
 
 **Multi-Database Abstraction via Keyed Dependency Injection**:
 
-All data operations are abstracted through interfaces in `MyLittleRangeBook/Services/`:
-- `ISimpleRangeLogService` – Query operations (read-heavy)
-- `ISimpleRangeEventRepository` – CRUD operations
-- `IFirearmsService` – Firearm definitions
+All data operations are abstracted through interfaces and implemented using Dapper.
+- `ISimpleRangeEventService` – Management of simple range log events.
+- `IFirearmsService` – Projection-based firearms management.
+- `ISqliteHelper` – Provides scoped SQLite connections.
 
-Concrete implementations:
-- `MyLittleRangeBook.Sqlite/` – SQLite implementations (local default)
-
-**Registration** (see `SqliteHelperExtensions.AddMyLittleRangeBookSqlite()`):
-```csharp
-services.TryAddKeyedSingleton<ISimpleRangeLogService, SqliteSimpleRangeEventService>(SQLITE_KEY);
-```
+Concrete implementations and persistence logic are located in `MyLittleRangeBook/Persistence/`.
 
 **Never directly reference concrete database classes** in CLI/GUI code—always depend on interfaces.
 
 ### Data Layer Rules
 
 1. **All DB operations are async**: Use `async Task<Result<T>>`, never sync I/O.
-2. **All operations return FluentResults**: Methods return `Result<T>` or `Result<bool>`, never throw:
+2. **Use DapperCommandContext**: Methods should accept a `DapperCommandContext` which encapsulates the connection, transaction, and cancellation token.
+3. **All operations return FluentResults**: Methods return `Result<T>` or `Result`, never throw for expected domain errors.
    ```csharp
-   public async Task<Result<bool>> DeleteAsync(IDbConnection connection, SimpleRangeEvent evt, ...)
+   public async Task<Result> DeleteAsync(DapperCommandContext context, SimpleRangeEvent evt)
    {
-       if (evt.RowId is null) return Result.Ok().WithSuccess(new Success("..."));
-       try { /* operation */ }
-       catch (Exception ex) { return Result.Fail(new Error(ex.Message)); }
+       try { 
+           DapperCommandContext ctx = context with { Arguments = new { evt.Id } };
+           await Commands.s_delete.ExecuteAsync(ctx).ConfigureAwait(false);
+           return Result.Ok();
+       }
+       catch (Exception ex) { return Result.Fail(ex.ToError()); }
    }
    ```
-
-3. **Parameterized Dapper queries only**:
-   ```csharp
-   const string DeleteSql = "DELETE FROM SimpleRangeEvents WHERE Id = @Id;";
-   var cmd = new SqliteCommand(DeleteSql, (SqliteConnection)connection);
-   cmd.Parameters.AddWithValue("@Id", evt.Id);
-   ```
-
 4. **Model IDs**: 
-   - `Id` (ULID string, immutable) – for cross-system references.  See MlrbId for details on how these are implemented.
-   - `RowId` (nullable long) – SQLite ROWID for internal lookups
-   - `Created` / `Modified` (DateTimeOffset) – always set by database via SQL (use `utcnow()` function). These must always be in UTC.
+   - `Id` (`MlrbId` / ULID string) – Immutable identifier for cross-system references.
+   - `RowId` (nullable long) – SQLite `ROWID` for internal lookups and upsert tracking.
+   - `Created` / `Modified` (DateTimeOffset) – Managed as UTC.
 
-5. **Custom Dapper functions** (registered in `SqliteHelperExtensions.AddFunctions()`):
-   - `nanoid()` – generates unique ID
-   - `utcnow()` – UTC timestamp
+### Event Sourcing
 
-### Environment Configuration
-
-Configuration paths defined in `MyLittleRangeBook/Config/ConfigurationExtensions.cs`:
-
-- **Production**: Reads `appsettings.json` from OS app data folder:
-  - Windows: `AppData\Local\MyLittleRangeBook\`
-  - Linux/macOS: `~/.local/share/mylittlerangebook/`
-- **Development**: Reads from local `appsettings.Development.json` + environment variables
-
-Database filenames auto-suffixed with environment (e.g., `mlrb.Development.db` in dev mode).
-
-### Testing
-
-```bash
-# Run all tests
-dotnet test
-
-# Run specific test class
-dotnet test --filter "ClassName=DatabaseTypeHandlerTests"
-
-# Verbose output
-dotnet test --logger "console;verbosity=detailed"
-```
-
-**Note**: GUI tests disabled in CI (see `.github/workflows/build-simplerangelog.yml` lines 93–98). Core tests use xUnit + in-memory SQLite connections.
-
-### Code Style
-
-- **Nullable refs enabled**: Expect compiler warnings on unhandled nulls—resolve them.
-- **ImplicitUsings enabled**: Global namespaces from `GlobalUsings.cs` reduce boilerplate.
-- **var keyword**: Use where type is obvious from right side (`var items = GetList()` ✓; `var x = 5` – prefer `int`).
-- **Method size**: Keep methods < 20 lines; extract helper methods for clarity.
-- **No async void**: All async methods return `Task` or `Task<T>`, never `void`.
-- **Editor config**: `.editorconfig` enforces formatting; run `dotnet format` before committing.
+For domain aggregates like `Firearm`, the system uses an Event Sourcing pattern:
+- **Aggregate**: Base class for domain entities that accumulate state from events.
+- **DomainEvent**: Immutable records representing state changes.
+- **Projector**: Responsible for updating read models from the event stream.
+- **AggregateRepository**: Handles loading/saving aggregates from/to the event store.
 
 ### Project Structure Reference
 
 ```
 src/mlrb/
-├── MyLittleRangeBook/            # Core models, interfaces, config
-├── MyLittleRangeBook.CLI/        # CLI entry point (Program.cs, ConsoleAppFramework)
-├── MyLittleRangeBook.FIT/        # Garmin FIT parsing (custom error types)
-├── MyLittleRangeBook.Tests/      # Unit tests (xUnit)
-
+├── MyLittleRangeBook/            # Core logic, models, and persistence
+│   ├── Cartridges/               # Cartridge and caliber management
+│   ├── Config/                   # Environment and application configuration
+│   ├── EventSourcing/            # Base ES abstractions (Aggregate, DomainEvent)
+│   ├── Firearms/                 # Firearm aggregate, events, and service
+│   ├── IO/                       # Import/Export logic (CSV, FIT)
+│   ├── MlrbAssets/               # Handling of binary assets (images, files)
+│   ├── Models/                   # Domain models and identity (MlrbId)
+│   ├── Persistence/              # Dapper and SQLite implementation
+│   │   └── Sqlite/               # SQLite specific logic and DBUp scripts
+│   └── RangeEvents/              # Simple range event logic
+├── MyLittleRangeBook.CLI/        # CLI entry point and commands
+├── MyLittleRangeBook.GUI/        # Avalonia GUI project
+├── MyLittleRangeBook.GUI.Tests/  # Tests for the GUI project
+├── MyLittleRangeBook.FIT/        # Garmin FIT parsing (C# implementation)
+├── MyLittleRangeBook.Tests/      # Core and Service unit tests
+├── SharedControls/               # Shared Avalonia UI components
+├── SharedControlsTests/          # Tests for shared UI components
+├── fit-reader/                   # Go-based FIT parsing utility
+├── hatcher/                      # AI prompt templates and samples
+├── sql-scripts/                  # Utility SQL scripts for maintenance
+└── supabase/                     # Supabase configuration and migrations
 ```
 
-### Linting & Formatting
+### Code Style
 
-```bash
-# Check formatting without modifying
-dotnet format verify-no-changes
-
-# Auto-fix formatting
-dotnet format
-
-# Check specific project
-dotnet format src/mlrb/MyLittleRangeBook.CLI
-```
-
-Follow `.editorconfig` indentation (4 spaces, Unix line endings for cross-platform builds).
+- **Nullable refs enabled**: Mandatory handling of nulls.
+- **ImplicitUsings enabled**: Reduces boilerplate for common namespaces.
+- **var keyword**: Use where type is obvious from the right side.
+- **Method size**: Aim for small, focused methods (< 25 lines).
+- **No async void**: All async methods must return `Task` or `ValueTask`.
 
 ### Debugging Tips
 
-1. **DI not working?** Check `AddMyLittleRangeBookSqlite()` or `AddPostgresHelper()` calls—missing registration = null reference at runtime.
-2. **AOT trimming errors?** Run `purge-clean` script—partial builds corrupt Dapper generators.
-3. **Environment detection wrong?** Verify `EnvironmentHelper.IsProduction` logic; defaults to Release mode.
-4. **Serilog not logging?** Check `.MinimumLevel` configuration in `Program.cs`—dev uses Verbose, prod uses Warning.
-5. **Connection string issues?** Validate via `ConfigurationExtensions.DefaultSqliteDatabaseName()` in debugger.
+1. **DI issues?** Check registration in `ServiceCollectionExtensions` partial classes (e.g., in `MyLittleRangeBook/Firearms/`, `MyLittleRangeBook/Persistence/Sqlite/`, etc.).
+2. **AOT errors?** Run the `purge-clean` script immediately.
+3. **Connection issues?** Verify `SqliteConnection` string in `appsettings.json` or environment variables.
 
 ### Key Files to Reference
 
 | File | Purpose |
 |------|---------|
-| `MyLittleRangeBook.CLI/Program.cs` | Entry point; HostApplicationBuilder setup, DI registration |
-| `MyLittleRangeBook.Sqlite/SqliteHelperExtensions.cs` | Keyed DI pattern, SQLite provider initialization |
-| `MyLittleRangeBook.Sqlite/SqliteSimpleRangeEventService.cs` | Dapper CRUD pattern example + FluentResults |
-| `MyLittleRangeBook/Config/ConfigurationExtensions.cs` | Environment-aware paths, file naming |
-| `.github/workflows/build-simplerangelog.yml` | CI/CD behavior—build matrix, publish settings, version computation |
-| `MyLittleRangeBook/Models/SimpleRangeEvent.cs` | Core data model (Id + RowId pattern) |
+| `MyLittleRangeBook.CLI/Program.cs` | CLI entry point and DI registration |
+| `MyLittleRangeBook.GUI/Program.cs` | GUI entry point and Avalonia initialization |
+| `MyLittleRangeBook/Persistence/Sqlite/SqliteHelperExtensions.cs` | SQLite provider setup |
+| `MyLittleRangeBook/Firearms/FirearmAggregate.cs` | Event Sourcing aggregate example |
+| `MyLittleRangeBook/Persistence/DapperCommandContext.cs` | Context pattern for database operations |
+| `MyLittleRangeBook/Models/MlrbId.cs` | ULID-based identity implementation |
