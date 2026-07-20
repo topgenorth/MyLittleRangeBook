@@ -19,6 +19,7 @@ The main purpose of the application is to act as a marksman log book:
 - Import and process CSV files from the Garmin ShotView app.
 - Import and process pictures of target.
 - Store and query firearms, range events, and FIT-derived data.
+- Use Event Sourcing for core aggregates (e.g., Firearms).
 
 ## Project priorities
 
@@ -31,9 +32,10 @@ Follow these priorities in order:
 5. Reuse existing abstractions and patterns before introducing new ones.
 6. Keep the solution cross-platform for Windows, Ubuntu Linux, and macOS.
 7. Preserve single-file, self-contained app compatibility.
-8. Use Dapper for data access.
-9. Support SQLite and PostgreSQL where the feature naturally applies. If the feature is not supported, then return a clear error message explaining that.
-10. Directories that start with an _ are for file organization only and are not to be used as a namespace provider. For example, files in the directory MyLittleRangeBook.CLI/_Commands/_Firearms belong in the namespace MyLittleRangeBook, and not MyLittleRangeBook/Commands/Firearms.
+8. Use Dapper for data access, usually via `DapperCommandContext`.
+9. Use the Result pattern (via `FluentResults`) for all service and repository operations.
+10. SQLite is the primary database. Ignore PostgreSQL/Supabase unless explicitly requested.
+11. Directories that start with an _ are for file organization only and are not to be used as a namespace provider. For example, files in the directory MyLittleRangeBook.CLI/_Commands/_Firearms belong in the namespace MyLittleRangeBook, and not MyLittleRangeBook/Commands/Firearms.
 
 ## Solution structure
 
@@ -49,6 +51,8 @@ Important projects under `src/mlrb` include:
 ### General
 
 - Match existing naming, file placement, and namespace conventions.
+- Use `MlrbId` for all entity and aggregate identifiers.
+- Use `Result<T>` or `Result` (from `FluentResults`) for return types in services and repositories.
 - Do not introduce unnecessary architectural layers.
 - Favor extending existing services, repositories, printers, and command groups.
 - Keep methods focused and composable.
@@ -76,7 +80,7 @@ When implementing CLI features:
 When implementing persistence:
 
 - Prefer existing service/repository interfaces first.
-- Use Dapper.
+- Use Dapper via `DapperCommandContext`.
 - Prefer async methods such as:
   - `OpenAsync`
   - `ExecuteAsync`
@@ -85,10 +89,19 @@ When implementing persistence:
 - Parameterize SQL; never build SQL by concatenating untrusted input.
 - Keep SQL close to the repository/service that owns it.
 - For SQLite changes, check whether a migration script is needed in:
-  - `MyLittleRangeBook.Sqlite/Scripts/`
-- For PostgreSQL changes, check whether a migration script is needed in:
-  - `MyLittleRangeBook.PgSQL/Scripts/`
-- If adding a feature that should exist in both SQLite and PostgreSQL, keep the shared contract in a common project and implement provider-specific details in each database project.
+  - `MyLittleRangeBook/Persistence/Sqlite/Scripts/`
+- If adding a feature that should exist in both SQLite and PostgreSQL, keep the shared contract in a common project and implement provider-specific details in each database project (though SQLite is the current priority).
+
+### Event Sourcing rules
+
+When working with Event Sourced aggregates (e.g., `FirearmAggregate`):
+
+- Inherit from `Aggregate`.
+- Use `SqliteAggregateRepository<TAggregate>` for persistence.
+- Define domain events as nested classes within the Aggregate class.
+- Implement `Apply` methods for each event to update internal state.
+- Use Projectors (`IProjector`) to update read models in the database.
+- Register projectors with a unique `DI_KEY`.
 
 ### FIT import rules
 
@@ -121,29 +134,30 @@ Before making changes, inspect relevant existing files and imitate their style.
 
 Look at examples such as:
 
+- `MyLittleRangeBook.CLI/RangeEvents/SimpleRangeEventCommandAddToSqlite.cs`
 - `MyLittleRangeBook.CLI/Commands/GarminFitFileCommands.cs`
 - `MyLittleRangeBook.CLI/Commands/ImportFitFileToSqliteCommand.cs`
-- `MyLittleRangeBook.CLI/Commands/ImportFitFileToPostgresqlCommand.cs`
-- `MyLittleRangeBook.CLI/Commands/SimpleRangeEvents/*.cs`
 - `MyLittleRangeBook.CLI/Console/*.cs`
 
 ### SQLite patterns
 
 Look at:
 
-- `MyLittleRangeBook.Sqlite/SqliteFitFilesDbService.cs`
-- `MyLittleRangeBook.Sqlite/SqliteSimpleRangeEventRepository.cs`
-- `MyLittleRangeBook.Sqlite/SqliteSimpleRangeEventService.cs`
-- `MyLittleRangeBook.Sqlite/SqliteHelper.cs`
-- `MyLittleRangeBook.Sqlite/Scripts/*.sql`
+- `MyLittleRangeBook/Persistence/Sqlite/SqliteHelper.cs`
+- `MyLittleRangeBook/RangeEvents/SqliteSimpleRangeEventService.cs`
+- `MyLittleRangeBook/MlrbAssets/Handlers/InsertAssetFileSqliteHandler.cs`
+- `MyLittleRangeBook/Persistence/Sqlite/Scripts/*.sql`
 
-### PostgreSQL patterns
+### Event Sourcing patterns
 
 Look at:
 
-- `MyLittleRangeBook.PgSQL/PostgresHelper.cs`
-- `MyLittleRangeBook.PgSQL/PostgresHelperExtensions.cs`
-- `MyLittleRangeBook.Sqlite/Scripts/*.sql`
+- `MyLittleRangeBook/EventSourcing/Aggregate.cs`
+- `MyLittleRangeBook/EventSourcing/SqliteAggregateRepository.cs`
+- `MyLittleRangeBook/Firearms/FirearmAggregate.cs`
+- `MyLittleRangeBook/Firearms/SqliteFirearmAggregateRepository.cs`
+- `MyLittleRangeBook/Firearms/FirearmProjector.cs`
+- `MyLittleRangeBook/MlrbAssets/MlrbAssetAggregate.cs`
 
 ### FIT patterns
 
