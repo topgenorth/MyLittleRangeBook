@@ -26,12 +26,12 @@ namespace MyLittleRangeBook.RangeEvents
     }
 
 
-
     public class DeletedEventStreamReason(MlrbId firearmId)
         : Success($"The event stream was deleted (ID: {firearmId})")
     {
         public MlrbId FirearmId = firearmId;
     }
+
     /// <summary>
     ///     Provides SQLite-specific implementation for managing SimpleRangeEvent data.
     /// </summary>
@@ -63,7 +63,6 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
 
-
         public async Task<Result> ExportToCsv(DapperCommandContext context, string csvFileName)
         {
             try
@@ -92,6 +91,21 @@ namespace MyLittleRangeBook.RangeEvents
                 error.CausedBy(ex);
 
                 return Result.Fail(error);
+            }
+        }
+
+        public async Task<Result<IEnumerable<string>>> GetAmmoDescriptions(DapperCommandContext context)
+        {
+            try
+            {
+                IEnumerable<string> list = await Commands.s_ammoDescriptionCommand.QueryAsync<string>(context)
+                                                         .ConfigureAwait(false);
+                return Result.Ok(list);
+            }
+            catch (Exception ex)
+            {
+                Error err = ex.ToError();
+                return Result.Fail<IEnumerable<string>>(err);
             }
         }
 
@@ -173,6 +187,10 @@ namespace MyLittleRangeBook.RangeEvents
 
         static class Commands
         {
+            const string AMMO_DESCRIPTIONS_SQL = """
+                                                 SELECT DISTINCT ammo_description FROM main.simple_range_events ORDER BY ammo_description;
+                                                 """;
+
             const string UPSERT_SQL = """
                                       INSERT INTO simple_range_events (id, event_date, firearm_name, range_name, rounds_fired, ammo_description, notes, created, modified)
                                       VALUES (@Id, @EventDate, @FirearmName, @RangeName, @RoundsFired, @AmmoDescription, @Notes, @Created, @Modified)
@@ -221,10 +239,11 @@ namespace MyLittleRangeBook.RangeEvents
 
             const string DELETE_SQL = "DELETE FROM simple_range_events WHERE id = @Id;";
 
-            internal static readonly DapperCommand s_upsertCommand           = new(UPSERT_SQL);
-            internal static readonly DapperCommand s_deleteCommand           = new(DELETE_SQL);
-            internal static readonly DapperCommand s_selectAll               = new(SELECT_SQL);
-            internal static readonly DapperCommand s_selectById              = new(SELECT_BY_ID_SQL);
+            internal static readonly DapperCommand s_upsertCommand          = new(UPSERT_SQL);
+            internal static readonly DapperCommand s_deleteCommand          = new(DELETE_SQL);
+            internal static readonly DapperCommand s_selectAll              = new(SELECT_SQL);
+            internal static readonly DapperCommand s_selectById             = new(SELECT_BY_ID_SQL);
+            internal static readonly DapperCommand s_ammoDescriptionCommand = new(AMMO_DESCRIPTIONS_SQL);
         }
     }
 }
