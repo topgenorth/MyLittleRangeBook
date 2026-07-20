@@ -51,7 +51,12 @@
 
                 <!--  Range   -->
                 <controls:LabeledControl Header="Range">
-                    <TextBox x:Name="RangeTextBox" Text="{Binding RangeName}" PlaceholderText="The name of the range" />
+                    <AutoCompleteBox x:Name="RangeAutoCompleteBox"
+                                     HorizontalAlignment="Left"
+                                     Text="{Binding RangeName}"
+                                     ItemsSource="{Binding $parent[UserControl].((viewModels:EditSimpleRangeEventViewModel)DataContext).RangeNames}"
+                                     FilterMode="Contains"
+                                     PlaceholderText="The name of the range." />
                 </controls:LabeledControl>
 
 

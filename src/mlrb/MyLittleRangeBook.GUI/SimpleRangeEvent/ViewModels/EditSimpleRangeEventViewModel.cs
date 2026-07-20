@@ -27,8 +27,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly             ISimpleRangeEventService       _simpleRangeEventService;
         readonly             ISqliteHelper                  _sqliteHelper;
         [ObservableProperty] IEnumerable<string>            _ammoDescription = [];
-
-        [ObservableProperty] IEnumerable<string> _firearmNames = [];
+        [ObservableProperty] IEnumerable<string>            _firearmNames    = [];
+        [ObservableProperty] IEnumerable<string>            _rangeNames      = [];
 
         /// <summary>
         ///     ViewModel responsible for editing a simple range event.
@@ -51,11 +51,27 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _simpleRangeEventService       = simpleRangeEventService;
             _firearmsService               = firearmsService;
 
+
             _ = LoadFirearmNamesAsync();
             _ = LoadAmmoDescriptionsAsync();
+            _ = LoadRangeNamesAsync();
         }
 
         public SimpleRangeEventViewModel Item { get; }
+
+        async Task LoadRangeNamesAsync()
+        {
+            await using DapperCommandContext ctx  = await DapperCommandContext.NewAsync(_sqliteHelper);
+            Result<IEnumerable<string>>      list = await _simpleRangeEventService.GetRangeNames(ctx);
+            if (list.IsSuccess)
+            {
+                RangeNames = list.Value;
+            }
+            else
+            {
+                _logger.Warning("Failed to load a list of range names.");
+            }
+        }
 
         async Task LoadAmmoDescriptionsAsync()
         {
@@ -68,6 +84,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
             if (ammoDescriptions.IsSuccess)
             {
                 AmmoDescription = ammoDescriptions.Value;
+            }
+            else
+            {
+                _logger.Warning("Failed to load a list of ammo descriptions.");
             }
         }
 
@@ -82,6 +102,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
             if (firearmsResult.IsSuccess)
             {
                 FirearmNames = firearmsResult.Value.Select(f => f.Name).ToList();
+            }
+            else
+            {
+                _logger.Warning("Failed to load a list of firearm names.");
             }
         }
 
@@ -123,10 +147,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
                     SimpleRangeEventViewModel updatedViewModel = new(sre);
                     _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
                     WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
-                                                         Item.RowId == null
-                                                             ? UpdateAction.Added
-                                                             : UpdateAction.Updated,
-                                                         sre));
+                                                             Item.RowId == null
+                                                                 ? UpdateAction.Added
+                                                                 : UpdateAction.Updated,
+                                                             sre));
                 }
                 else
                 {
@@ -151,9 +175,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             DialogCommand[] commands = [DialogCommands.No, DialogCommands.Yes];
             DialogResult userResponse = await _dialogService.ShowOverlayDialogAsync<DialogResult>(
-                                         "Cancel editing?",
-                                         "Do you want to discard your changes?",
-                                         commands);
+                                             "Cancel editing?",
+                                             "Do you want to discard your changes?",
+                                             commands);
 
             switch (userResponse)
             {

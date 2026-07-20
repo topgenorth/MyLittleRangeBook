@@ -109,6 +109,21 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
+        public async Task<Result<IEnumerable<string>>> GetRangeNames(DapperCommandContext context)
+        {
+            try
+            {
+                var list= await Commands.s_rangeNamesCommand.QueryAsync<string>(context)
+                                                         .ConfigureAwait(false);
+                return Result.Ok(list);
+            }
+            catch (Exception ex)
+            {
+                Error err = ex.ToError();
+                return Result.Fail<IEnumerable<string>>(err);
+            }
+        }
+
         public async Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId)
         {
             try
@@ -187,8 +202,24 @@ namespace MyLittleRangeBook.RangeEvents
 
         static class Commands
         {
+
+            const string FIREARM_NAMES_SQL= """
+                                            SELECT DISTINCT TRIM(simple_range_events.firearm_name) AS fn
+                                            FROM simple_range_events
+                                            WHERE length(trim(firearm_name)) > 0
+                                            ORDER BY firearm_name COLLATE NOCASE;
+                                            """;
+            const string RANGE_NAMES_SQL = """
+                                           SELECT DISTINCT TRIM(simple_range_events.range_name) AS rn
+                                           FROM simple_range_events
+                                           WHERE length(trim(range_name)) > 0
+                                           ORDER BY range_name COLLATE NOCASE;
+                                           """;
             const string AMMO_DESCRIPTIONS_SQL = """
-                                                 SELECT DISTINCT ammo_description FROM main.simple_range_events ORDER BY ammo_description;
+                                                 SELECT DISTINCT TRIM(simple_range_events.ammo_description) AS ad
+                                                 FROM simple_range_events
+                                                 WHERE length(trim(ammo_description)) > 0
+                                                 ORDER BY ammo_description COLLATE NOCASE;
                                                  """;
 
             const string UPSERT_SQL = """
@@ -244,6 +275,7 @@ namespace MyLittleRangeBook.RangeEvents
             internal static readonly DapperCommand s_selectAll              = new(SELECT_SQL);
             internal static readonly DapperCommand s_selectById             = new(SELECT_BY_ID_SQL);
             internal static readonly DapperCommand s_ammoDescriptionCommand = new(AMMO_DESCRIPTIONS_SQL);
+            internal static readonly DapperCommand s_rangeNamesCommand      = new(RANGE_NAMES_SQL);
         }
     }
 }

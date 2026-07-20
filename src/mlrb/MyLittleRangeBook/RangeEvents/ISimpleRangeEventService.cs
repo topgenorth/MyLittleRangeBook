@@ -52,10 +52,17 @@ namespace MyLittleRangeBook.RangeEvents
         Task<Result> ExportToCsv(DapperCommandContext context, string csvFileName);
 
         /// <summary>
-        ///     Retrieves a collection of ammo descriptions that were used in simple range trips.
+        ///     Retrieves a collection of ammo descriptions that were used so far.
         /// </summary>
         /// <param name="context">The command context containing database connection, transaction, and other configurations.</param>
         /// <returns>A task that represents the asynchronous operation, containing the result of a collection of ammo descriptions.</returns>
         Task<Result<IEnumerable<string>>> GetAmmoDescriptions(DapperCommandContext context);
+
+        /// <summary>
+        ///     Retrieves a collection of range names that have been used so far.
+        /// </summary>
+        /// <param name="context">The command context containing connection, transaction, and other configurations.</param>
+        /// <returns>A task that represents the asynchronous operation, containing an enumerable of range names.</returns>
+        Task<Result<IEnumerable<string>>> GetRangeNames(DapperCommandContext context);
     }
 }
