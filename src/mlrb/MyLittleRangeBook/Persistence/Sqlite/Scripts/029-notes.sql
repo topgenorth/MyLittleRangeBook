@@ -1,5 +1,5 @@
 ﻿DROP TABLE IF EXISTS firearms_notes;
-DROP TABLE IF EXISTS simple_range_event_notes;
+DROP TABLE IF EXISTS simple_range_events_notes;
 DROP TABLE IF EXISTS asset_files_notes;
 DROP TABLE IF EXISTS notes;
 
@@ -32,20 +32,20 @@ CREATE TABLE firearms_notes
     CONSTRAINT UQ_firearms_notes_firearm_id_note_id UNIQUE (firearm_id, note_id)
 );
 
-CREATE TABLE simple_range_event_notes
+CREATE TABLE simple_range_events_notes
 (
     row_id                INTEGER PRIMARY KEY AUTOINCREMENT,
     simple_range_event_id TEXT NOT NULL
-        CONSTRAINT FK_simple_range_event_notes_simple_range_event
+        CONSTRAINT FK_simple_range_events_notes_simple_range_event
             REFERENCES simple_range_events (id)
             ON UPDATE CASCADE
             ON DELETE CASCADE,
     note_id               TEXT NOT NULL
-        CONSTRAINT FK_simple_range_event_notes_note
+        CONSTRAINT FK_simple_range_events_notes_note
             REFERENCES notes (id)
             ON UPDATE CASCADE
             ON DELETE CASCADE,
-    CONSTRAINT UQ_simple_range_event_notes_event_id_note_id UNIQUE (simple_range_event_id, note_id)
+    CONSTRAINT UQ_simple_range_events_notes_event_id_note_id UNIQUE (simple_range_event_id, note_id)
 );
 
 CREATE TABLE asset_files_notes
