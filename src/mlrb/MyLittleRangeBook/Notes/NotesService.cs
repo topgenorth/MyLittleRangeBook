@@ -17,7 +17,7 @@ namespace MyLittleRangeBook.Notes
             try
             {
                 DapperCommandContext ctx = context with { Arguments = new { note.Id } };
-                await Commands.DeleteCommand.ExecuteAsync(ctx).ConfigureAwait(false);
+                await Commands.s_deleteCommand.ExecuteAsync(ctx).ConfigureAwait(false);
                 return Result.Ok();
             }
             catch (Exception e)
@@ -32,10 +32,9 @@ namespace MyLittleRangeBook.Notes
 
         public async Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context, Note note)
         {
-            note.ModifiedUtc = DateTimeOffset.UtcNow;
-
             try
             {
+                note.ModifiedUtc = DateTimeOffset.UtcNow;
                 var p = new
                         {
                             note.Id,
@@ -45,7 +44,7 @@ namespace MyLittleRangeBook.Notes
                             note.ModifiedUtc,
                         };
                 DapperCommandContext ctx = context with { Arguments = p };
-                long rowId = await Commands.UpsertCommand.ExecuteScalarAsync<long>(ctx).ConfigureAwait(false);
+                long rowId = await Commands.s_upsertCommand.ExecuteScalarAsync<long>(ctx).ConfigureAwait(false);
 
                 note.RowId = rowId;
 
@@ -66,7 +65,7 @@ namespace MyLittleRangeBook.Notes
             try
             {
                 DapperCommandContext ctx = context with { Arguments = new { Id = (string)noteId } };
-                Note? note = await Commands.SelectByIdCommand.QuerySingleOrDefaultAsync<Note>(ctx)
+                Note? note = await Commands.s_selectByIdCommand.QuerySingleOrDefaultAsync<Note>(ctx)
                                            .ConfigureAwait(false);
 
                 return note is null
@@ -89,12 +88,12 @@ namespace MyLittleRangeBook.Notes
 
                 if (noteType is not null)
                 {
-                    cmd = Commands.SelectByNoteTypeCommand;
+                    cmd = Commands.s_selectByNoteTypeCommand;
                     ctx = context with { Arguments = new { NoteType = noteType } };
                 }
                 else
                 {
-                    cmd = Commands.SelectAllCommand;
+                    cmd = Commands.s_selectAllCommand;
                     ctx = context;
                 }
 
@@ -112,9 +111,9 @@ namespace MyLittleRangeBook.Notes
 
         static class Commands
         {
-            const string DeleteSql = "DELETE FROM notes WHERE id = @Id";
+            const string DELETE_SQL = "DELETE FROM notes WHERE id = @Id";
 
-            const string SelectAllSql = """
+            const string SELECT_ALL_SQL = """
                                         SELECT
                                             row_id       AS RowId,
                                             id           AS Id,
@@ -126,7 +125,7 @@ namespace MyLittleRangeBook.Notes
                                         ORDER BY modified_utc DESC;
                                         """;
 
-            const string SelectByIdSql = """
+            const string SELECT_BY_ID_SQL = """
                                          SELECT
                                              row_id       AS RowId,
                                              id           AS Id,
@@ -138,7 +137,7 @@ namespace MyLittleRangeBook.Notes
                                          WHERE id = @Id;
                                          """;
 
-            const string SelectByNoteTypeSql = """
+            const string SELECT_BY_NOTE_TYPE_SQL = """
                                                SELECT
                                                    row_id       AS RowId,
                                                    id           AS Id,
@@ -151,7 +150,7 @@ namespace MyLittleRangeBook.Notes
                                                ORDER BY modified_utc DESC;
                                                """;
 
-            const string UpsertSql = """
+            const string UPSERT_SQL = """
                                      INSERT INTO notes (id, note_type, content, created_utc, modified_utc)
                                      VALUES (@Id, @NoteType, @Content, @CreatedUtc, @ModifiedUtc)
                                      ON CONFLICT(id) DO
@@ -161,11 +160,11 @@ namespace MyLittleRangeBook.Notes
                                      RETURNING row_id
                                      """;
 
-            internal static readonly DapperCommand DeleteCommand           = new(DeleteSql);
-            internal static readonly DapperCommand UpsertCommand           = new(UpsertSql);
-            internal static readonly DapperCommand SelectAllCommand        = new(SelectAllSql);
-            internal static readonly DapperCommand SelectByIdCommand       = new(SelectByIdSql);
-            internal static readonly DapperCommand SelectByNoteTypeCommand = new(SelectByNoteTypeSql);
+            internal static readonly DapperCommand s_deleteCommand           = new(DELETE_SQL);
+            internal static readonly DapperCommand s_upsertCommand           = new(UPSERT_SQL);
+            internal static readonly DapperCommand s_selectAllCommand        = new(SELECT_ALL_SQL);
+            internal static readonly DapperCommand s_selectByIdCommand       = new(SELECT_BY_ID_SQL);
+            internal static readonly DapperCommand s_selectByNoteTypeCommand = new(SELECT_BY_NOTE_TYPE_SQL);
         }
     }
 }

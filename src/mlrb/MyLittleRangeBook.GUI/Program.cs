@@ -72,7 +72,8 @@ namespace MyLittleRangeBook.GUI
                     .RegisterRangeAssetHandlers()
                     .RegisterDomainEventSerializers()
                     .RegisterRangeAssetEventSourcing()
-                    .RegisterFirearmEventSourcing();
+                    .RegisterFirearmEventSourcing()
+                    .RegisterNotes();
 
             services.AddSingleton<Func<IDialogParticipant, IDialogService>>(provider =>
                                                                                 participant =>
