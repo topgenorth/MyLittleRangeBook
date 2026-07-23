@@ -4,11 +4,11 @@ namespace MyLittleRangeBook.Notes
 {
     public record Note
     {
-        public Note() => Id = new MlrbId().ToString();
+        public Note() => Id = new MlrbId();
 
         public long? RowId { get; set; }
 
-        public string Id { get; set; }
+        public MlrbId Id { get; set; }
 
         public string NoteType { get; set; } = "note";
 
@@ -18,6 +18,6 @@ namespace MyLittleRangeBook.Notes
 
         public DateTimeOffset ModifiedUtc { get; set; } = DateTimeOffset.UtcNow;
 
-        public override string ToString() => $"{Id ?? "N/A"} [{NoteType}]";
+        public override string ToString() => $"{Id} [{NoteType}]";
     }
 }
