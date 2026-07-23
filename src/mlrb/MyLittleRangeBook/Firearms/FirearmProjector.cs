@@ -1,5 +1,7 @@
-﻿using MyLittleRangeBook.EventSourcing;
+﻿using System.Reflection;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Notes;
 using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.Firearms
@@ -13,14 +15,17 @@ namespace MyLittleRangeBook.Firearms
         readonly     IEventSerializer _eventSerializer;
         readonly     IFirearmsService _firearmsService;
         readonly     ILogger          _logger;
+        readonly     INotesService    _notesService;
 
         public FirearmProjector(
             IFirearmsService firearmsService,
+            INotesService    notesService,
             ILogger          logger,
             IEventSerializer eventSerializer)
         {
             _logger          = logger;
             _firearmsService = firearmsService;
+            _notesService    = notesService;
             _eventSerializer = eventSerializer;
         }
 
@@ -83,15 +88,24 @@ namespace MyLittleRangeBook.Firearms
 
                             break;
 
-                        case FirearmAggregate.FirearmBarrelChanged:
-                            // TODO [20260714] Add a note...
+                        case FirearmAggregate.FirearmBarrelChanged e:
+                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
+                                GetNoteType(e.GetType()),
+                                $"Barrel changed from '{e.OldBarrel}' to '{e.NewBarrel}'.",
+                                e.OccurredUtc).ConfigureAwait(false));
                             break;
                         case FirearmAggregate.FirearmCleaned e7:
-                            // TODO [20260714] Add a note...
+                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
+                                GetNoteType(e7.GetType()),
+                                "Firearm cleaned.",
+                                e7.OccurredUtc).ConfigureAwait(false));
                             break;
 
                         case FirearmAggregate.FirearmCreated e8:
-                            // TODO [20260714] Add a note...
+                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
+                                GetNoteType(e8.GetType()),
+                                $"Firearm '{e8.Name}' was created.",
+                                e8.OccurredUtc).ConfigureAwait(false));
                             firearmName = e8.Name;
                             f.Name      = e8.Name;
                             break;
@@ -104,21 +118,36 @@ namespace MyLittleRangeBook.Firearms
 
                             break;
 
-                        case FirearmAggregate.FirearmInactive:
+                        case FirearmAggregate.FirearmInactive e9:
+                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
+                                GetNoteType(e9.GetType()),
+                                "Firearm marked as inactive.",
+                                e9.OccurredUtc).ConfigureAwait(false));
                             f.IsActive = false;
                             break;
-                        case FirearmAggregate.FirearmModified:
-                            // TODO [20260714] Add a note...
+
+                        case FirearmAggregate.FirearmModified e10:
+                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
+                                GetNoteType(e10.GetType()),
+                                $"Firearm modified: {e10.Description}",
+                                e10.OccurredUtc).ConfigureAwait(false));
                             break;
                         case FirearmAggregate.FirearmNoteAdded e6:
+                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
+                                GetNoteType(e6.GetType()),
+                                e6.Text,
+                                e6.OccurredUtc).ConfigureAwait(false));
                             break;
 
                         case FirearmAggregate.FirearmRoundCountAltered e5:
                             f.RoundsFired += e5.Rounds;
                             break;
 
-                        case FirearmAggregate.FirearmSightingSystemChanged:
-                            // TODO [20260714] Add a note...
+                        case FirearmAggregate.FirearmSightingSystemChanged e11:
+                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
+                                GetNoteType(e11.GetType()),
+                                $"Sighting system changed from '{e11.OldAimingSystem}' to '{e11.NewAimingSystem}'.",
+                                e11.OccurredUtc).ConfigureAwait(false));
                             break;
 
                         default:
@@ -272,6 +301,46 @@ namespace MyLittleRangeBook.Firearms
         }
 
 
+        static string GetNoteType(Type eventType)
+            => eventType.GetCustomAttribute<EventTypeAttribute>()?.Name ?? "note";
+
+        async Task<Result> AddFirearmNoteAsync(
+            DapperCommandContext context,
+            MlrbId               firearmId,
+            string               noteType,
+            string               content,
+            DateTimeOffset       occurredUtc)
+        {
+            try
+            {
+                string noteId = $"{firearmId}:{noteType}:{occurredUtc.UtcTicks}";
+                Note   note   = new()
+                                {
+                                    Id         = noteId,
+                                    NoteType   = noteType,
+                                    Content    = content,
+                                    CreatedUtc = occurredUtc,
+                                };
+
+                Result<MlrbId> upsertResult = await _notesService.UpsertAsync(context, note).ConfigureAwait(false);
+                if (upsertResult.IsFailed)
+                {
+                    return upsertResult.ToResult();
+                }
+
+                DapperCommandContext ctx = context with
+                                           {
+                                               Arguments = new { FirearmId = firearmId, NoteId = noteId },
+                                           };
+                await Commands.s_associateNoteWithFirearm.ExecuteAsync(ctx).ConfigureAwait(false);
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(ex.ToError("Failed to add note to firearm."));
+            }
+        }
+
         static class Commands
         {
             const string ASSOCIATE_FIREARM_WITH_ASSET_SQL = """
@@ -309,6 +378,16 @@ namespace MyLittleRangeBook.Firearms
 
             internal static readonly DapperCommand s_removeAssociationFromRangeEvent =
                 new(DISASSOCIATE_FIREARM_FROM_RANGE_EVENT_SQL);
+
+            const string ASSOCIATE_FIREARM_WITH_NOTE_SQL = """
+                                                           INSERT INTO firearms_notes (firearm_id, note_id)
+                                                           VALUES (@FirearmId, @NoteId)
+                                                           ON CONFLICT DO NOTHING
+                                                           RETURNING row_id;
+                                                           """;
+
+            internal static readonly DapperCommand s_associateNoteWithFirearm =
+                new(ASSOCIATE_FIREARM_WITH_NOTE_SQL);
         }
     }
 }
