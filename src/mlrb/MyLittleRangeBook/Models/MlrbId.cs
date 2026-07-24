@@ -55,6 +55,17 @@ namespace MyLittleRangeBook.Models
         {
         }
 
+        public MlrbId(byte[] sha256, DateTimeOffset? utcNow = null)
+        {
+            if (utcNow is null)
+            {
+                _id = Ulid.New(DateTimeOffset.UtcNow, sha256);
+            }
+            else
+            {
+                _id = Ulid.New(utcNow.Value, sha256);
+            }
+        }
         public MlrbId(DateTimeOffset dto)
         {
             _id = Ulid.New(dto, DefaultOptions);
@@ -63,41 +74,6 @@ namespace MyLittleRangeBook.Models
         public DateTime DateTimeLocal => _id.Time.ToLocalTime().DateTime;
 
         public DateTimeOffset DateTimeOffset => _id.Time;
-
-        /// <summary>
-        ///     Creates a new <see cref="Ulid" /> that is sortable by timestamp and incorporates a deterministic hash of a given
-        ///     filename.
-        /// </summary>
-        /// <param name="filename">
-        ///     The name of the file, which will be hashed for deterministic randomness in the ULID generation.
-        ///     This value must not be null, empty, or consist solely of whitespace.
-        /// </param>
-        /// <param name="timestamp">
-        ///     The point in time that will be used as the basis for the timestamp portion of the ULID.
-        ///     This ensures that the generated ULID is chronologically sortable.
-        /// </param>
-        /// <returns>
-        ///     A new <see cref="Ulid" /> instance that contains a timestamp generated from the provided
-        ///     <paramref name="timestamp" />
-        ///     and a deterministic randomness derived from the hashed <paramref name="filename" />.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        ///     Thrown when <paramref name="filename" /> is null, empty, or contains only whitespace characters.
-        /// </exception>
-        static Ulid CreateFileUlid(string filename, DateTimeOffset timestamp)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(filename);
-
-            // The timestamp (first 48 bits) ensures chronological sortability
-            // Hash the filename to get deterministic randomness (remaining 80 bits)
-            byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(filename));
-            Span<byte> randomness = stackalloc byte[10];
-            hash[..10].CopyTo(randomness);
-
-            // ULID struct: [48-bit timestamp][80-bit randomness]
-            // Sorting is by timestamp first, then randomness
-            return Ulid.New(timestamp, randomness);
-        }
 
         /// <summary>
         ///     Creates a new <see cref="MlrbId" /> instance from an existing <see cref="EntityId" />.
@@ -114,11 +90,13 @@ namespace MyLittleRangeBook.Models
         /// <exception cref="ArgumentException">
         ///     Thrown if the string ID in <paramref name="eid" /> is null, empty, or not a valid ULID.
         /// </exception>
+        [Obsolete("Just use EntityId.Id")]
         public static MlrbId From(EntityId eid)
         {
             return new MlrbId(FromString(eid.Id));
         }
 
+        [Obsolete("Use the constructor.")]
         public static MlrbId FromSha256(byte[] sha256)
         {
             var ulid = Ulid.New(DateTimeOffset.UtcNow, sha256);
@@ -182,34 +160,10 @@ namespace MyLittleRangeBook.Models
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <returns></returns>
+        [Obsolete("Don't use this.")]
         public static MlrbId FromFile(FileInfo fileInfo)
         {
             return new MlrbId();
-            // [TO20260602] This was an experiment to try and relate/influence MrlbId with the contents of the file.
-            // Ulid ulid;
-            // try
-            // {
-            //     if (fileInfo.Exists)
-            //     {
-            //         var dto = new DateTimeOffset(fileInfo.LastWriteTimeUtc);
-            //         // [TO20260521] This is a bit of a hack to get the file bytes synchronously.  We need the file bytes to create the hash, and we don't want to change the method signature to be async.
-            //         Result<ReadOnlyMemory<byte>> fileContents = fileInfo.LoadFileBytesAsync().GetAwaiter().GetResult();
-            //         bool useFileContents = fileContents is { IsSuccess: true, Value.Length: > 0 };
-            //         ulid = useFileContents
-            //             ? Ulid.New(dto, fileContents.Value.ToArray())
-            //             : Ulid.New(DateTimeOffset.UtcNow, DefaultOptions);
-            //     }
-            //     else
-            //     {
-            //         ulid = Ulid.New(DateTimeOffset.UtcNow, DefaultOptions);
-            //     }
-            // }
-            // catch (Exception)
-            // {
-            //     ulid = Ulid.New(DateTimeOffset.UtcNow, DefaultOptions);
-            // }
-            //
-            // return new MlrbId(ulid);
         }
 
         /// <summary>
