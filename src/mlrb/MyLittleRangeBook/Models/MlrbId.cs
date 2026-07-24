@@ -1,10 +1,7 @@
-﻿using System.Globalization;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using ByteAether.Ulid;
-using MyLittleRangeBook.IO;
 
 namespace MyLittleRangeBook.Models
 {
@@ -16,21 +13,6 @@ namespace MyLittleRangeBook.Models
     public readonly record struct EntityId(string Id, long? RowId);
 
 
-    public class MlrbIdJsonConverter : JsonConverter<MlrbId>
-    {
-        public override MlrbId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            string ulidString = reader.GetString() ?? throw new JsonException("Expected a string value for MlrbId.");
-
-            return MlrbId.FromString(ulidString);
-        }
-
-        public override void Write(Utf8JsonWriter writer, MlrbId value, JsonSerializerOptions options)
-        {
-            writer.WriteStringValue(value.ToString());
-        }
-    }
-
     /// <summary>
     ///     This is a unique ID value that is sortable by time.
     /// </summary>
@@ -38,22 +20,18 @@ namespace MyLittleRangeBook.Models
     public readonly record struct MlrbId
     {
         internal static readonly Ulid.GenerationOptions DefaultOptions = new()
-        {
-            Monotonicity = Ulid.GenerationOptions.MonotonicityOptions.MonotonicIncrement
-        };
+                                                                         {
+                                                                             Monotonicity = Ulid.GenerationOptions
+                                                                                .MonotonicityOptions.MonotonicIncrement,
+                                                                         };
 
         public static readonly MlrbId Empty = new(Ulid.Empty);
 
         readonly Ulid _id;
 
-        internal MlrbId(Ulid id)
-        {
-            _id = id;
-        }
+        internal MlrbId(Ulid id) => _id = id;
 
-        public MlrbId() : this(DateTimeOffset.UtcNow)
-        {
-        }
+        public MlrbId() : this(DateTimeOffset.UtcNow) { }
 
         public MlrbId(byte[] sha256, DateTimeOffset? utcNow = null)
         {
@@ -66,10 +44,8 @@ namespace MyLittleRangeBook.Models
                 _id = Ulid.New(utcNow.Value, sha256);
             }
         }
-        public MlrbId(DateTimeOffset dto)
-        {
-            _id = Ulid.New(dto, DefaultOptions);
-        }
+
+        public MlrbId(DateTimeOffset dto) => _id = Ulid.New(dto, DefaultOptions);
 
         public DateTime DateTimeLocal => _id.Time.ToLocalTime().DateTime;
 
@@ -91,15 +67,12 @@ namespace MyLittleRangeBook.Models
         ///     Thrown if the string ID in <paramref name="eid" /> is null, empty, or not a valid ULID.
         /// </exception>
         [Obsolete("Just use EntityId.Id")]
-        public static MlrbId From(EntityId eid)
-        {
-            return new MlrbId(FromString(eid.Id));
-        }
+        public static MlrbId From(EntityId eid) => new(FromString(eid.Id));
 
         [Obsolete("Use the constructor.")]
         public static MlrbId FromSha256(byte[] sha256)
         {
-            var ulid = Ulid.New(DateTimeOffset.UtcNow, sha256);
+            Ulid ulid = Ulid.New(DateTimeOffset.UtcNow, sha256);
 
             return new MlrbId(ulid);
         }
@@ -123,11 +96,11 @@ namespace MyLittleRangeBook.Models
 
             // [TO20260516] We're assuming that the dateOnly is in the current timezone.  We will make
             // a DateTimeOffset by combining the DateOnly with the time right now.
-            TimeZoneInfo zone = TimeZoneInfo.Local;
-            var now = TimeOnly.FromDateTime(DateTime.Now);
-            var dt = dateOnly.ToDateTime(now);
-            TimeSpan offset = zone.GetUtcOffset(dt);
-            DateTimeOffset dto = new(dt, offset);
+            TimeZoneInfo   zone   = TimeZoneInfo.Local;
+            TimeOnly       now    = TimeOnly.FromDateTime(DateTime.Now);
+            DateTime       dt     = dateOnly.ToDateTime(now);
+            TimeSpan       offset = zone.GetUtcOffset(dt);
+            DateTimeOffset dto    = new(dt, offset);
 
             return new MlrbId(dto);
         }
@@ -145,25 +118,18 @@ namespace MyLittleRangeBook.Models
         {
             // [TO20260516] Perhaps overly explicity, but assume any .Unspecified is local time.
             DateTimeOffset dto = dateTime.Kind switch
-            {
-                DateTimeKind.Utc => new DateTimeOffset(dateTime, TimeSpan.Zero),
-                DateTimeKind.Local => new DateTimeOffset(dateTime, TimeZoneInfo.Local.GetUtcOffset(dateTime)),
-                DateTimeKind.Unspecified => new DateTimeOffset(dateTime, TimeZoneInfo.Local.GetUtcOffset(dateTime)),
-                _ => throw new InvalidOperationException($"Unexpected DateTimeKind: {dateTime.Kind}")
-            };
+                                 {
+                                     DateTimeKind.Utc => new DateTimeOffset(dateTime, TimeSpan.Zero),
+                                     DateTimeKind.Local => new DateTimeOffset(dateTime,
+                                                                              TimeZoneInfo.Local
+                                                                                 .GetUtcOffset(dateTime)),
+                                     DateTimeKind.Unspecified => new DateTimeOffset(dateTime,
+                                         TimeZoneInfo.Local.GetUtcOffset(dateTime)),
+                                     _ => throw new
+                                              InvalidOperationException($"Unexpected DateTimeKind: {dateTime.Kind}"),
+                                 };
 
             return new MlrbId(dto);
-        }
-
-        /// <summary>
-        ///     New a MlrbId from a FileInfo object. We will try to use the contents of the file, otherwise use the filename.
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <returns></returns>
-        [Obsolete("Don't use this.")]
-        public static MlrbId FromFile(FileInfo fileInfo)
-        {
-            return new MlrbId();
         }
 
         /// <summary>
@@ -202,44 +168,20 @@ namespace MyLittleRangeBook.Models
             return new MlrbId(ulid);
         }
 
-        public static implicit operator EntityId(MlrbId d)
-        {
-            return new EntityId(d._id.ToString(), null);
-        }
+        public static implicit operator EntityId(MlrbId d) => new(d._id.ToString(), null);
 
-        public static implicit operator string(MlrbId d)
-        {
-            return d._id.ToString();
-        }
+        public static implicit operator string(MlrbId d) => d._id.ToString();
 
-        public static implicit operator byte[](MlrbId d)
-        {
-            return d._id.ToByteArray();
-        }
+        public static implicit operator byte[](MlrbId d) => d._id.ToByteArray();
 
-        public static implicit operator Ulid(MlrbId d)
-        {
-            return d._id;
-        }
+        public static implicit operator Ulid(MlrbId d) => d._id;
 
-        public override string ToString()
-        {
-            return _id.ToString();
-        }
+        public override string ToString() => _id.ToString();
 
-        public static implicit operator MlrbId(string ulidString)
-        {
-            return new MlrbId(FromString(ulidString));
-        }
+        public static implicit operator MlrbId(string ulidString) => new(FromString(ulidString));
 
-        public static implicit operator MlrbId(Ulid ulid)
-        {
-            return new MlrbId(ulid);
-        }
+        public static implicit operator MlrbId(Ulid ulid) => new(ulid);
 
-        public byte[] ToByteArray()
-        {
-            return _id.ToByteArray();
-        }
+        public byte[] ToByteArray() => _id.ToByteArray();
     }
 }

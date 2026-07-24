@@ -49,14 +49,16 @@ namespace MyLittleRangeBook.Firearms
                                             .ToArray();
 
             IDomainEvent? latestRangeEventAssociationEvent = allDomainEvents
-                                                            .Where(evt => evt is FirearmAggregate.FirearmAssociatedWithRangeEvent
-                                                                       or FirearmAggregate.FirearmDisassociatedFromRangeEvent)
+                                                            .Where(evt => evt is FirearmAggregate
+                                                                                 .FirearmAssociatedWithRangeEvent
+                                                                           or FirearmAggregate
+                                                                                 .FirearmDisassociatedFromRangeEvent)
                                                             .MaxBy(evt => evt.OccurredUtc);
 
             IDomainEvent[] domainEvents = allDomainEvents
                                          .Where(evt => evt is not FirearmAggregate.FirearmAssociatedWithRangeEvent
-                                                    and not FirearmAggregate.FirearmDisassociatedFromRangeEvent
-                                                    || ReferenceEquals(evt, latestRangeEventAssociationEvent))
+                                                          and not FirearmAggregate.FirearmDisassociatedFromRangeEvent
+                                                       || ReferenceEquals(evt, latestRangeEventAssociationEvent))
                                          .ToArray();
 
             if (domainEvents.Length == 0)
@@ -64,10 +66,11 @@ namespace MyLittleRangeBook.Firearms
                 return new Result().WithReasons([new FirearmEventStreamProjectionSuccess("unknown", streamId)]);
             }
 
-            List<IReason> reasons      = [];
-            Firearm       f            = new() { Id = streamId };
-            string?       firearmName  = null;
-            List<Result>  tasksResults = [];
+            List<IReason>      reasons         = [];
+            Firearm            f               = new() { Id = streamId };
+            string?            firearmName     = null;
+            List<Result>       tasksResults    = [];
+            List<Task<Result>> postUpsertTests = [];
             try
             {
                 foreach (IDomainEvent evt in domainEvents)
@@ -84,59 +87,62 @@ namespace MyLittleRangeBook.Firearms
                             break;
 
                         case FirearmAggregate.FirearmAssociatedWithRangeEvent e3:
-                            tasksResults.Add(await AssociateRangeEvent(context, streamId, e3.RangeEventId).ConfigureAwait(false));
+                            tasksResults.Add(await AssociateRangeEvent(context, streamId, e3.RangeEventId)
+                                                .ConfigureAwait(false));
 
                             break;
 
                         case FirearmAggregate.FirearmBarrelChanged e:
-                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
-                                GetNoteType(e.GetType()),
-                                $"Barrel changed from '{e.OldBarrel}' to '{e.NewBarrel}'.",
-                                e.OccurredUtc).ConfigureAwait(false));
+                            postUpsertTests.Add(AddFirearmNoteAsync(context, streamId,
+                                                                    "barrel-change",
+                                                                    $"Barrel changed from '{e.OldBarrel}' to '{e.NewBarrel}'.",
+                                                                    e.OccurredUtc));
                             break;
                         case FirearmAggregate.FirearmCleaned e7:
-                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
-                                GetNoteType(e7.GetType()),
-                                "Firearm cleaned.",
-                                e7.OccurredUtc).ConfigureAwait(false));
+                            postUpsertTests.Add(AddFirearmNoteAsync(context, streamId,
+                                                                    "cleaned",
+                                                                    "Firearm cleaned.",
+                                                                    e7.OccurredUtc));
                             break;
 
                         case FirearmAggregate.FirearmCreated e8:
-                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
-                                GetNoteType(e8.GetType()),
-                                $"Firearm '{e8.Name}' was created.",
-                                e8.OccurredUtc).ConfigureAwait(false));
+                            // tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
+                            //     GetNoteType(e8.GetType()),
+                            //     $"Firearm '{e8.Name}' was created.",
+                            //     e8.OccurredUtc).ConfigureAwait(false));
                             firearmName = e8.Name;
                             f.Name      = e8.Name;
                             break;
 
                         case FirearmAggregate.FirearmDisassociatedFromAsset e4:
-                            tasksResults.Add(await DisassociateAsset(context, streamId, e4.AssetId).ConfigureAwait(false));
+                            tasksResults.Add(await DisassociateAsset(context, streamId, e4.AssetId)
+                                                .ConfigureAwait(false));
                             break;
                         case FirearmAggregate.FirearmDisassociatedFromRangeEvent e2:
-                            tasksResults.Add(await DisassociateRangeEvent(context, streamId, e2.RangeEventId).ConfigureAwait(false));
+                            tasksResults.Add(await DisassociateRangeEvent(context, streamId, e2.RangeEventId)
+                                                .ConfigureAwait(false));
 
                             break;
 
                         case FirearmAggregate.FirearmInactive e9:
-                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
-                                GetNoteType(e9.GetType()),
-                                "Firearm marked as inactive.",
-                                e9.OccurredUtc).ConfigureAwait(false));
+                            postUpsertTests.Add(AddFirearmNoteAsync(context, streamId,
+                                                                    "inactive",
+                                                                    "Firearm marked as inactive.",
+                                                                    e9.OccurredUtc));
                             f.IsActive = false;
                             break;
 
                         case FirearmAggregate.FirearmModified e10:
-                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
-                                GetNoteType(e10.GetType()),
-                                $"Firearm modified: {e10.Description}",
-                                e10.OccurredUtc).ConfigureAwait(false));
+                            postUpsertTests.Add(AddFirearmNoteAsync(context, streamId,
+                                                                    "modified",
+                                                                    $"Firearm modified: {e10.Description}",
+                                                                    e10.OccurredUtc));
                             break;
                         case FirearmAggregate.FirearmNoteAdded e6:
-                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
-                                GetNoteType(e6.GetType()),
-                                e6.Text,
-                                e6.OccurredUtc).ConfigureAwait(false));
+                            postUpsertTests.Add(AddFirearmNoteAsync(context, streamId,
+                                                                    "note",
+                                                                    e6.Text,
+                                                                    e6.OccurredUtc));
                             break;
 
                         case FirearmAggregate.FirearmRoundCountAltered e5:
@@ -144,10 +150,10 @@ namespace MyLittleRangeBook.Firearms
                             break;
 
                         case FirearmAggregate.FirearmSightingSystemChanged e11:
-                            tasksResults.Add(await AddFirearmNoteAsync(context, streamId,
-                                GetNoteType(e11.GetType()),
-                                $"Sighting system changed from '{e11.OldAimingSystem}' to '{e11.NewAimingSystem}'.",
-                                e11.OccurredUtc).ConfigureAwait(false));
+                            postUpsertTests.Add(AddFirearmNoteAsync(context, streamId,
+                                                                    "sighting-system-changed",
+                                                                    $"Sighting system changed from '{e11.OldAimingSystem}' to '{e11.NewAimingSystem}'.",
+                                                                    e11.OccurredUtc));
                             break;
 
                         default:
@@ -157,8 +163,13 @@ namespace MyLittleRangeBook.Firearms
                     }
                 }
 
-                var x = await _firearmsService.UpsertAsync(context, f);
-
+                Result<EntityId> upsertResult = await _firearmsService.UpsertAsync(context, f);
+                reasons.AddRange(upsertResult.Reasons);
+                if (upsertResult.IsSuccess)
+                {
+                    Result[] postUpsertResults = await Task.WhenAll(postUpsertTests);
+                    reasons.AddRange(Result.Merge(postUpsertResults).Reasons);
+                }
 
                 reasons.Add(new FirearmEventStreamProjectionSuccess(firearmName!, streamId).Enrich(streamId));
                 return new Result().WithReasons(reasons);
@@ -306,21 +317,19 @@ namespace MyLittleRangeBook.Firearms
 
         async Task<Result> AddFirearmNoteAsync(
             DapperCommandContext context,
-            MlrbId               firearmId,
+            MlrbId               eventId,
             string               noteType,
             string               content,
             DateTimeOffset       occurredUtc)
         {
+            // [TO20260723] We need a deterministic ID for the node. Hopefully this is strong enough.
+            MlrbId noteId = MlrbId.FromString($"{eventId}:{noteType}:{occurredUtc.UtcTicks}");
             try
             {
-                string noteId = $"{firearmId}:{noteType}:{occurredUtc.UtcTicks}";
-                Note   note   = new()
-                                {
-                                    Id         = noteId,
-                                    NoteType   = noteType,
-                                    Content    = content,
-                                    CreatedUtc = occurredUtc,
-                                };
+                Note note = new()
+                            {
+                                Id = noteId, NoteType = noteType, Content = content, CreatedUtc = occurredUtc,
+                            };
 
                 Result<MlrbId> upsertResult = await _notesService.UpsertAsync(context, note).ConfigureAwait(false);
                 if (upsertResult.IsFailed)
@@ -328,18 +337,14 @@ namespace MyLittleRangeBook.Firearms
                     return upsertResult.ToResult();
                 }
 
-                DapperCommandContext ctx = context with
-                                           {
-                                               Arguments = new { FirearmId = firearmId, NoteId = noteId },
-                                           };
+                DapperCommandContext ctx = context with { Arguments = new { FirearmId = eventId, NoteId = noteId } };
                 await Commands.s_associateNoteWithFirearm.ExecuteAsync(ctx).ConfigureAwait(false);
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                return Result.Fail(ex.ToError("Failed to add note to firearm."));
+                return Result.Fail(ex.ToError($"Failed to add note {noteId} of type {noteType} to firearm {eventId}."));
             }
         }
-
     }
 }
