@@ -89,29 +89,36 @@ namespace MyLittleRangeBook.Firearms
 
         async Task<Result> AddFirearmNoteAsync(
             DapperCommandContext context,
-            MlrbId               eventId,
+            MlrbId               firearmId,
             string               noteType,
             string               content,
             DateTimeOffset       occurredUtc)
         {
-            Note note = new() { NoteType = noteType, Content = content, CreatedUtc = occurredUtc };
+            Note   note   = new() { NoteType = noteType, Content = content, CreatedUtc = occurredUtc };
+            Result result = new();
             try
             {
                 Result<MlrbId> upsertResult = await _notesService.UpsertAsync(context, note).ConfigureAwait(false);
-                if (upsertResult.IsFailed)
-                {
-                    return upsertResult.ToResult();
-                }
-
-                DapperCommandContext ctx = context with { Arguments = new { FirearmId = eventId, NoteId = note.Id } };
-                await FirearmsService.Commands.s_associateNoteWithFirearm.ExecuteAsync(ctx).ConfigureAwait(false);
-                return Result.Ok();
+                result.Reasons.AddRange(upsertResult.Reasons);
             }
             catch (Exception ex)
             {
                 return
-                    Result.Fail(ex.ToError($"Failed to add note {note.Id} of type {noteType} to firearm {eventId}."));
+                    Result.Fail(ex.ToError($"Failed to add note {note.Id} of type {noteType} to firearm {firearmId}."));
             }
+
+            try
+            {
+                DapperCommandContext ctx = context with { Arguments = new { FirearmId = firearmId, NoteId = note.Id } };
+                await FirearmsService.Commands.s_associateNoteWithFirearm.ExecuteAsync(ctx).ConfigureAwait(false);
+                result.Reasons.Add(new FirearmAssociatedWithNoteSuccess(firearmId, note.Id));
+            }
+            catch (Exception ex2)
+            {
+                result.Reasons.Add(new FirearmAssociatedWithNoteError(firearmId, note.Id).CausedBy(ex2));
+            }
+
+            return result;
         }
     }
 }

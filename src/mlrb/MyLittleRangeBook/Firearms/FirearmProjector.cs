@@ -51,44 +51,32 @@ namespace MyLittleRangeBook.Firearms
             (FirearmAggregate? fa, IDomainEvent[] allEvents) =
                 await LoadFirearmAggregateIncludeNewEvents(context, streamId, uncommittedDomainEvents)
                    .ConfigureAwait(false);
+            Result result = new();
 
-            if (allEvents.Length == 0)
+            if (allEvents.Length > 0)
             {
-                return new Result().WithReasons([new FirearmEventStreamProjectionSuccess("unknown", streamId)]);
+                result.Reasons.Add(new FirearmEventStreamLoadedSuccess(streamId));
             }
 
-            Result<Firearm> projectFirearmResult =
-                await ProjectOntoFirearmsTable(context, streamId, allEvents, fa).ConfigureAwait(false);
+            Result<Firearm> rProjectFirearm = await ProjectOntoFirearmsTable(context, streamId, allEvents)
+                                                      .ConfigureAwait(false);
 
-            if (projectFirearmResult.IsSuccess)
+            if (!rProjectFirearm.IsSuccess)
             {
-                Result associationResults = await ProjectAssociations(context, streamId, allEvents)
-                                               .ConfigureAwait(false);
-                Result projectNewNotes = await _firearmNotesProjector
-                                              .ProjectAggregateAsync(context, streamId, uncommittedDomainEvents)
-                                              .ConfigureAwait(false);
-
-                Result result = Result.Merge(associationResults, projectNewNotes);
-
-                if (result.IsSuccess)
-                {
-                    result.Reasons.Add(new FirearmEventStreamProjectionSuccess(fa!.Name, streamId)
-                                          .Enrich(streamId));
-                }
-                else
-                {
-                    Error err2 =
-                        new FailedToProjectFirearmStreamError(streamId, fa?.Name ?? "Unknown").Enrich(streamId);
-                    result.Reasons.Add(err2);
-                }
-
+                Error err1 = new FirearmsTableUpdatedFromEventStreamError(streamId).Enrich(streamId);
+                result.Reasons.Add(err1);
                 return result;
             }
 
-            Error err1 = new FailedToProjectFirearmStreamError(streamId, fa?.Name ?? "Unknown").Enrich(streamId);
-            projectFirearmResult.Reasons.Add(err1);
+            Result rNewNotes = await _firearmNotesProjector
+                                          .ProjectAggregateAsync(context, streamId, uncommittedDomainEvents)
+                                          .ConfigureAwait(false);
 
-            return Result.Fail(err1).WithReasons(projectFirearmResult.Reasons);
+            Result rMakeAssociations = await ProjectAssociations(context, streamId, allEvents)
+                                           .ConfigureAwait(false);
+
+
+            return  Result.Merge(result, rMakeAssociations, rNewNotes);
         }
 
         static IDomainEvent EventRowToIDomainEvent(IEventSerializer eventSerializer, EventRow row) =>
@@ -145,24 +133,16 @@ namespace MyLittleRangeBook.Firearms
         /// <returns></returns>
         async Task<Result<Firearm>> ProjectOntoFirearmsTable(DapperCommandContext      context,
                                                              MlrbId                    firearmId,
-                                                             IEnumerable<IDomainEvent> domainEvents,
-                                                             FirearmAggregate?         fa)
+                                                             IEnumerable<IDomainEvent> domainEvents)
         {
             Firearm         f      = new() { Id = firearmId, Modified = DateTimeOffset.UtcNow };
             Result<Firearm> result = new Result<Firearm>().WithValue(f);
-            if (fa is null)
-            {
-                f.Name = "INVALID";
-                return result.WithError($"There is no event stream for the firearm ${firearmId}.");
-            }
-
 
             foreach (IDomainEvent evt in domainEvents)
             {
-                fa!.Apply(evt);
                 switch (evt)
                 {
-                    case FirearmAggregate.FirearmCreated e1 :
+                    case FirearmAggregate.FirearmCreated e1:
                         f.Name     = e1.Name;
                         f.Created  = e1.OccurredUtc;
                         f.Modified = e1.OccurredUtc;
@@ -178,17 +158,18 @@ namespace MyLittleRangeBook.Firearms
                     case FirearmAggregate.FirearmRoundCountAltered e2:
                         f.RoundsFired += e2.Rounds;
                         break;
-
-                    default:
-                        result.Reasons
-                              .Add(new
-                                       Success($"Don't know how to project the domain event {evt.GetType().Name} onto a firearm."));
-                        break;
                 }
             }
 
             Result<EntityId> upsertResult = await _firearmsService.UpsertAsync(context, f);
             result.Reasons.AddRange(upsertResult.Reasons);
+
+            if (upsertResult.IsSuccess)
+            {
+                f.RowId = upsertResult.Value.RowId;
+                result.Reasons.Add(new FirearmsTableUpdatedFromEventStreamSuccess(f.Name, f.Id));
+            }
+
             return result;
         }
 
@@ -206,6 +187,9 @@ namespace MyLittleRangeBook.Firearms
                 MlrbId                     firearmId,
                 IEnumerable<IDomainEvent>? uncommittedDomainEvents = null)
         {
+            IDomainEvent[]    allEvents;
+            FirearmAggregate? fa;
+
             #region Combine the saved events with any new events.
             DapperCommandContext ctx = context with { Arguments = new { StreamId = firearmId } };
             IEnumerable<EventRow> rows = await EventSourcingCommands.s_getEventStreamByRowId
@@ -213,10 +197,10 @@ namespace MyLittleRangeBook.Firearms
                                                                     .ConfigureAwait(false);
             IEnumerable<IDomainEvent> commitedDomainEvents =
                 rows.Select((Func<EventRow, IDomainEvent>)(row => EventRowToIDomainEvent(_eventSerializer, row)));
-            IDomainEvent[] allEvents;
             if (uncommittedDomainEvents is not null)
             {
-                allEvents = commitedDomainEvents.Concat(uncommittedDomainEvents).OrderBy(e => e.OccurredUtc)
+                allEvents = commitedDomainEvents.Concat(uncommittedDomainEvents)
+                                                .OrderBy(e => e.OccurredUtc)
                                                 .ToArray();
             }
             else
@@ -226,7 +210,6 @@ namespace MyLittleRangeBook.Firearms
             #endregion
 
 
-            FirearmAggregate? fa;
             try
             {
                 DapperCommandContext ctx2 = context with { Arguments = new { StreamId = firearmId } };
@@ -253,12 +236,12 @@ namespace MyLittleRangeBook.Firearms
                                            };
                 int l = await FirearmsService.Commands.s_addAssociationToAsset
                                              .ExecuteAsync(ctx).ConfigureAwait(false);
-                Success success = new($"Associated firearm {firearmId} with asset {assetId} - {l}.");
-                return Result.Ok().WithSuccess(success);
+                return Result.Ok().WithSuccess(new FirearmAssociatedWithAssetSuccess(firearmId, assetId));
             }
             catch (Exception ex)
             {
-                return Result.Fail(ex.ToError("Failed to associate asset with firearm.").Enrich(firearmId));
+                Error err = new FirearmAssociatedWithAssetError(firearmId, assetId).CausedBy(ex);
+                return Result.Fail(err);
             }
         }
 
@@ -276,12 +259,13 @@ namespace MyLittleRangeBook.Firearms
                                            };
                 int l = await FirearmsService.Commands.s_addAssociationToRangeEvent.ExecuteAsync(ctx)
                                              .ConfigureAwait(false);
-                Success success = new($"Associated firearm {firearmId} with range event {rangeEventId} - {l}.");
+                Success success = new FirearmAssociatedWithRangeEventSuccess(firearmId, rangeEventId);
                 return Result.Ok().WithSuccess(success);
             }
             catch (Exception ex)
             {
-                return Result.Fail(ex.ToError("Failed to associate range event to firearm.").Enrich(firearmId));
+                Error err1 = new FirearmAssociatedToRangeEventError(firearmId, rangeEventId).CausedBy(ex);
+                return Result.Fail(err1);
             }
         }
 
@@ -295,12 +279,11 @@ namespace MyLittleRangeBook.Firearms
                                            };
                 int l = await FirearmsService.Commands.s_removeAssociationFromAsset.ExecuteAsync(ctx)
                                              .ConfigureAwait(false);
-                Success success = new($"Disassociated firearm {firearmId} with asset {assetId} - {l}.");
-                return Result.Ok().WithSuccess(success);
+                return Result.Ok().WithSuccess(new FirearmDisassociatedFromAssetSuccess(firearmId, assetId));
             }
             catch (Exception ex)
             {
-                return Result.Fail(ex.ToError("Failed to disassociate asset from firearm.").Enrich(firearmId));
+                return Result.Fail(new FirearmDisassociatedFromAssetError(firearmId, assetId).CausedBy(ex));
             }
         }
 
@@ -315,12 +298,12 @@ namespace MyLittleRangeBook.Firearms
 
                 int l = await FirearmsService.Commands.s_removeAssociationFromRangeEvent.ExecuteAsync(ctx)
                                              .ConfigureAwait(false);
-                Success success = new($"Disassociated firearm {firearmId} with range event {rangeEventId} - {l}.");
-                return Result.Ok().WithSuccess(success);
+
+                return Result.Ok().WithSuccess(new FirearmDisassociatedFromRangeEventSuccess(firearmId, rangeEventId));
             }
             catch (Exception ex)
             {
-                return Result.Fail(ex.ToError("Failed to disassociate firearm from range event").Enrich(firearmId));
+                return Result.Fail(new FirearmDisassociatedFromRangeEventError(firearmId, rangeEventId).CausedBy(ex));
             }
         }
     }

@@ -2,6 +2,7 @@
 using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 using static MyLittleRangeBook.ReturnCodes;
@@ -11,9 +12,22 @@ namespace MyLittleRangeBook.RangeEvents
     /// <summary>
     ///     Allows us to create a new Range Event from the CLI, and optionally the FIT file that goes with it.
     /// </summary>
-    [RegisterCommands("rangeevent"), UsedImplicitly]
+    [RegisterCommands("rangeevent")]
+    [UsedImplicitly]
     public class SimpleRangeEventCommandAddToSqlite : MlrbSqliteCommandBase
     {
+        /// <summary>
+        /// A list of <c ref="IReason" />'s that should be ignored when decided to commit the changes from the simple range event.
+        /// </summary>
+        public static readonly Func<IReason, bool> s_reasonsThatDontCount = evt => evt is FirearmAssociatedWithNoteError
+                                                                              or
+                                                                                FirearmDisassociatedWithNoteError or
+                                                                                FirearmAssociatedToRangeEventError or
+                                                                                FirearmDisassociatedFromRangeEventError
+                                                                              or
+                                                                                FirearmAssociatedWithAssetError or
+                                                                                FirearmDisassociatedFromAssetError;
+
         readonly ISimpleRangeEventDataProcessor _rangeEventDataProcessor;
         readonly ISimpleRangeEventPrinter       _simpleRangeEventPrinter;
         readonly ISimpleRangeEventService       _simpleRangeEventService;
@@ -46,7 +60,8 @@ namespace MyLittleRangeBook.RangeEvents
         /// <param name="quiet">If this parameter is provided, then the command will display minimal output to the console.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("add"), UsedImplicitly]
+        [Command("add")]
+        [UsedImplicitly]
         public async Task<int> AddSimpleRangeEventAsync(string                          firearm,
                                                         int                             rounds,
                                                         string                          range,
@@ -62,27 +77,43 @@ namespace MyLittleRangeBook.RangeEvents
                                           .ConfigureAwait(false);
 
             Result<MlrbId> rProcess = await _rangeEventDataProcessor
-                                     .ProcessSimpleRangeEventData(context, firearm, rounds, range, ammo, notes,
-                                                                  eventDate)
-                                     .ConfigureAwait(false);
+                                           .ProcessSimpleRangeEventData(context, firearm, rounds, range, ammo, notes,
+                                                                        eventDate)
+                                           .ConfigureAwait(false);
 
             int returnValue;
-            if (rProcess.IsSuccess)
+
+            var warnings = rProcess.Reasons.Where(s_reasonsThatDontCount);
+            foreach (var w in warnings)
+            {
+                Logger.Debug(w.Message);
+                CliDisplay.PrintWarning(w.Message);
+            }
+
+            var rFiltered = new Result().WithReasons(rProcess.Reasons.Except(warnings));
+
+            if (rFiltered.IsSuccess)
             {
                 await context.CommitAsync().ConfigureAwait(false);
                 returnValue = SUCCESS;
-                Result<SimpleRangeEvent> sre = await _simpleRangeEventService.GetAsync(context, rProcess.Value)
-                                                                             .ConfigureAwait(false);
-
-                _simpleRangeEventPrinter.Print(AnsiConsole.Console, sre.Value, quiet);
-
-                CliDisplay.PrintSuccess("Finished.");
+                // Result<SimpleRangeEvent> sre = await _simpleRangeEventService.GetAsync(context, rProcess.Value)
+                //                                                              .ConfigureAwait(false);
+                //
+                // _simpleRangeEventPrinter.Print(AnsiConsole.Console, sre.Value, quiet);
+                Logger.Information("Processed simple range event.");
+                CliDisplay.PrintSuccess("Processed simple range event.");
             }
             else
             {
                 await context.RollbackAsync().ConfigureAwait(false);
                 returnValue = RANGE_EVENT_FAILED_TO_CREATE;
-                CliDisplay.PrintFailure("Things didn't work.");
+                foreach (IError err in rProcess.Errors)
+                {
+                    Logger.Error(err.Message);
+                    CliDisplay.PrintFailure(err.Message);
+                }
+
+                Logger.Error("Could not process simple range event.");
             }
 
             PressEnterToContinue();
