@@ -18,9 +18,7 @@ namespace MyLittleRangeBook.MlrbAssets
     {
         public const string DEFAULT_STREAM_TYPE_NAME = "mlrb-asset";
 
-        MlrbAssetAggregate()
-        {
-        }
+        MlrbAssetAggregate() { }
 
         public override string DefaultStreamType => DEFAULT_STREAM_TYPE_NAME;
 
@@ -47,7 +45,7 @@ namespace MyLittleRangeBook.MlrbAssets
         public string MimeType { get; private set; } = "application/octet-stream";
 
         public DateTimeOffset Modified { get; set; }
-        public string? SHA256 { get; private set; }
+        public string?        SHA256   { get; private set; }
 
         /// <summary>
         ///     The path to the asset that is being imported.
@@ -67,7 +65,7 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <returns></returns>
         public static MlrbAssetAggregate New(MlrbId streamId)
         {
-            var agg = new MlrbAssetAggregate();
+            MlrbAssetAggregate agg = new();
             agg.Raise(new MlrbAssetCreated(streamId, DateTimeOffset.UtcNow));
 
             return agg;
@@ -82,9 +80,7 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <returns></returns>
         public static MlrbAssetAggregate New(string sourcePath, DateTimeOffset utcNow)
         {
-            var fileInfo = new FileInfo(sourcePath);
-            var id = MlrbId.FromFile(fileInfo);
-
+            MlrbId             id  = new();
             MlrbAssetAggregate agg = New(id);
 
             agg.Raise(new MlrbAssetImportStarted(agg.Id, sourcePath, utcNow));
@@ -99,7 +95,7 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <returns>A new instance of <see cref="MlrbAssetAggregate" />.</returns>
         public static MlrbAssetAggregate Create(EventStreamRow streamRow)
         {
-            var agg = new MlrbAssetAggregate();
+            MlrbAssetAggregate agg = new();
             agg.Hydrate(streamRow);
 
             return agg;
@@ -117,15 +113,15 @@ namespace MyLittleRangeBook.MlrbAssets
                     // [TO20260604] Do we need this?
                     break;
                 case MlrbAssetCreated x:
-                    Id = x.StreamId;
-                    Status = "Created";
+                    Id      = x.StreamId;
+                    Status  = "Created";
                     Created = x.OccurredUtc;
 
                     break;
                 case MlrbAssetImportStarted x:
-                    Id = x.StreamId;
+                    Id         = x.StreamId;
                     SourceFile = x.SourcePath;
-                    Status = "Started";
+                    Status     = "Started";
 
                     break;
                 case MlrbAssetFingerprintComputed x:
@@ -135,18 +131,18 @@ namespace MyLittleRangeBook.MlrbAssets
                     break;
                 case MlrbAssetFileCopied x:
                     DestinationPath = x.DestinationPath;
-                    Status = "FileCopied";
-                    FileContents = x.FileContents;
+                    Status          = "FileCopied";
+                    FileContents    = x.FileContents;
 
                     break;
                 case MlrbAssetParsed x:
                     MimeType = x.MimeType;
-                    Status = "Parsed";
+                    Status   = "Parsed";
 
                     break;
                 case MlrbAssetImportFailed x:
                     FailureReason = x.Reason;
-                    Status = "Failed";
+                    Status        = "Failed";
 
                     break;
 
@@ -156,14 +152,14 @@ namespace MyLittleRangeBook.MlrbAssets
 
                 case MlrbAssetImportCompleted x:
                     Modified = x.OccurredUtc;
-                    Status = "Completed";
+                    Status   = "Completed";
 
                     break;
 
                 case MlrbAssetUpdatedFromFile x:
-                    Modified = x.OccurredUtc;
-                    Status = "Updated";
-                    SourceFile = x.FileName;
+                    Modified     = x.OccurredUtc;
+                    Status       = "Updated";
+                    SourceFile   = x.FileName;
                     FileContents = x.FileContents;
 
                     break;
@@ -172,58 +168,42 @@ namespace MyLittleRangeBook.MlrbAssets
             }
         }
 
-        public void Copied(string destinationPath, byte[] contents, DateTimeOffset nowUtc)
-        {
+        public void Copied(string destinationPath, byte[] contents, DateTimeOffset nowUtc) =>
             Raise(new MlrbAssetFileCopied(Id, destinationPath, contents, nowUtc));
-        }
 
-        public void Fail(Exception ex, DateTimeOffset nowUtc)
-        {
+        public void Fail(Exception ex, DateTimeOffset nowUtc) =>
             Raise(new MlrbAssetImportFailed(Id, ex.Message, nowUtc));
-        }
 
-        public void Fail(string reason, DateTimeOffset nowUtc)
-        {
-            Raise(new MlrbAssetImportFailed(Id, reason, nowUtc));
-        }
+        public void Fail(string reason, DateTimeOffset nowUtc) => Raise(new MlrbAssetImportFailed(Id, reason, nowUtc));
 
-        public void FileFingerprinted(string sha256, long fileSize, DateTimeOffset nowUtc)
-        {
+        public void FileFingerprinted(string sha256, long fileSize, DateTimeOffset nowUtc) =>
             Raise(new MlrbAssetFingerprintComputed(Id, sha256, fileSize, nowUtc));
-        }
 
-        public void ImportComplete(DateTimeOffset nowUtc)
-        {
-            Raise(new MlrbAssetImportCompleted(Id, nowUtc));
-        }
+        public void ImportComplete(DateTimeOffset nowUtc) => Raise(new MlrbAssetImportCompleted(Id, nowUtc));
 
-        public void Parsed(string mimeType, DateTimeOffset nowUtc)
-        {
-            Raise(new MlrbAssetParsed(Id, mimeType, nowUtc));
-        }
+        public void Parsed(string mimeType, DateTimeOffset nowUtc) => Raise(new MlrbAssetParsed(Id, mimeType, nowUtc));
 
-        public void StoredInDatabase(byte[] fileContents, DateTimeOffset nowUtc)
-        {
+        public void StoredInDatabase(byte[] fileContents, DateTimeOffset nowUtc) =>
             Raise(new MlrbAssetStoredInDatabase(Id, fileContents, nowUtc));
-        }
 
         public MlrbAssetRow ToMlrbAssetRow()
         {
-            var row = new MlrbAssetRow(Id,
-                SourceFile,
-                DestinationPath,
-                MimeType,
-                FileContents,
-                Created,
-                Modified);
+            MlrbAssetRow row = new(Id,
+                                   SourceFile,
+                                   DestinationPath,
+                                   MimeType,
+                                   FileContents,
+                                   Created,
+                                   Modified);
 
             return row;
         }
 
-        public void AssociatedWithFirearm(string firearmId, DateTimeOffset occurredUtc)
-        {
+        public void AssociatedWithFirearm(string firearmId, DateTimeOffset occurredUtc) =>
             Raise(new MrlbAssetAssociatedWithFirearm(Id, firearmId, occurredUtc));
-        }
+
+        public void AssociatedWithSimpleRangeEvent(MlrbId simpleRangeEventId, DateTimeOffset utcNow) =>
+            Raise(new MlrbAssetAssociatedWithSimpleRangeEvent(Id, simpleRangeEventId, utcNow));
 
 
         /// <summary>
@@ -232,7 +212,7 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <param name="StreamId"></param>
         /// <param name="OccurredUtc"></param>
         [EventType("mlrb-asset-created")]
-        public record struct MlrbAssetCreated(MlrbId StreamId, DateTimeOffset OccurredUtc,string? MetadataJson = null)
+        public record struct MlrbAssetCreated(MlrbId StreamId, DateTimeOffset OccurredUtc, string? MetadataJson = null)
             : IDomainEvent;
 
         /// <summary>
@@ -242,7 +222,11 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <param name="SourcePath"></param>
         /// <param name="OccurredUtc"></param>
         [EventType("mlrb-asset-import-started")]
-        public record struct MlrbAssetImportStarted(MlrbId StreamId, string SourcePath, DateTimeOffset OccurredUtc,string? MetadataJson = null)
+        public record struct MlrbAssetImportStarted(
+            MlrbId         StreamId,
+            string         SourcePath,
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null)
             : IDomainEvent;
 
         [EventType("mlrb-asset-copied")]
@@ -250,17 +234,23 @@ namespace MyLittleRangeBook.MlrbAssets
             MlrbId         StreamId,
             string         DestinationPath,
             byte[]         FileContents,
-            DateTimeOffset OccurredUtc,string? MetadataJson = null)
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null)
             : IDomainEvent;
 
         [EventType("mlrb-asset-stored-in-database")]
         public record struct MlrbAssetStoredInDatabase(
             MlrbId         StreamId,
             byte[]         FileContents,
-            DateTimeOffset OccurredUtc,string? MetadataJson = null) : IDomainEvent;
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null) : IDomainEvent;
 
         [EventType("mlrb-asset-parsed")]
-        public record struct MlrbAssetParsed(MlrbId StreamId, string MimeType, DateTimeOffset OccurredUtc,string? MetadataJson = null)
+        public record struct MlrbAssetParsed(
+            MlrbId         StreamId,
+            string         MimeType,
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null)
             : IDomainEvent;
 
         [EventType("mlrb-asset-fingerprint-computed")]
@@ -268,26 +258,36 @@ namespace MyLittleRangeBook.MlrbAssets
             MlrbId         StreamId,
             string         Sha256,
             long           FileSize,
-            DateTimeOffset OccurredUtc,string? MetadataJson = null)
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null)
             : IDomainEvent;
 
         [EventType("mlrb-asset-associated-with-firearm")]
         public record struct MrlbAssetAssociatedWithFirearm(
             MlrbId         StreamId,
             MlrbId         FirearmId,
-            DateTimeOffset OccurredUtc,string? MetadataJson = null) : IDomainEvent;
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null) : IDomainEvent;
 
         [EventType("mlrb-asset-associated-with-simple-range-event")]
         public record struct MlrbAssetAssociatedWithSimpleRangeEvent(
             MlrbId         StreamId,
             MlrbId         SimpleRangEventId,
-            DateTimeOffset OccurredUtc,string? MetadataJson = null) : IDomainEvent;
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null) : IDomainEvent;
 
         [EventType("mlrb-asset-import-completed")]
-        public record struct MlrbAssetImportCompleted(MlrbId StreamId, DateTimeOffset OccurredUtc,string? MetadataJson = null) : IDomainEvent;
+        public record struct MlrbAssetImportCompleted(
+            MlrbId         StreamId,
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null) : IDomainEvent;
 
         [EventType("mlrb-asset-import-failed")]
-        public record struct MlrbAssetImportFailed(MlrbId StreamId, string Reason, DateTimeOffset OccurredUtc,string? MetadataJson = null)
+        public record struct MlrbAssetImportFailed(
+            MlrbId         StreamId,
+            string         Reason,
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null)
             : IDomainEvent;
 
         [EventType("mlrb-asset-updated-from-file")]
@@ -295,11 +295,7 @@ namespace MyLittleRangeBook.MlrbAssets
             MlrbId         StreamId,
             string         FileName,
             byte[]         FileContents,
-            DateTimeOffset OccurredUtc,string? MetadataJson = null) : IDomainEvent;
-
-        public void AssociatedWithSimpleRangeEvent(MlrbId simpleRangeEventId, DateTimeOffset utcNow)
-        {
-            Raise(new MlrbAssetAssociatedWithSimpleRangeEvent(Id, simpleRangeEventId, utcNow));
-        }
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null) : IDomainEvent;
     }
 }

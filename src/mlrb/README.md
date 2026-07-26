@@ -1,4 +1,4 @@
-### Fix all Dapper.AOT errors by puring all bin &amp; and obj directories:
+### Fix all Dapper.AOT errors by deleting all bin &amp; and obj directories:
 
 * Powershell &mdash;
   `Get-ChildItem . -include bin,obj -Recurse | ForEach-Object { Remove-Item $_.FullName -Force -Recurse }`

@@ -55,6 +55,7 @@ builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration)
        .RegisterDomainEventSerializers()
        .RegisterRangeAssetEventSourcing()
        .RegisterFirearmEventSourcing()
+       .RegisterNotes()
     ;
 
 using IHost         host  = builder.Build();

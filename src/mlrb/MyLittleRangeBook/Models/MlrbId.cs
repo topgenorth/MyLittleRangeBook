@@ -1,10 +1,7 @@
-﻿using System.Globalization;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using ByteAether.Ulid;
-using MyLittleRangeBook.IO;
 
 namespace MyLittleRangeBook.Models
 {
@@ -16,21 +13,6 @@ namespace MyLittleRangeBook.Models
     public readonly record struct EntityId(string Id, long? RowId);
 
 
-    public class MlrbIdJsonConverter : JsonConverter<MlrbId>
-    {
-        public override MlrbId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            string ulidString = reader.GetString() ?? throw new JsonException("Expected a string value for MlrbId.");
-
-            return MlrbId.FromString(ulidString);
-        }
-
-        public override void Write(Utf8JsonWriter writer, MlrbId value, JsonSerializerOptions options)
-        {
-            writer.WriteStringValue(value.ToString());
-        }
-    }
-
     /// <summary>
     ///     This is a unique ID value that is sortable by time.
     /// </summary>
@@ -38,66 +20,36 @@ namespace MyLittleRangeBook.Models
     public readonly record struct MlrbId
     {
         internal static readonly Ulid.GenerationOptions DefaultOptions = new()
-        {
-            Monotonicity = Ulid.GenerationOptions.MonotonicityOptions.MonotonicIncrement
-        };
+                                                                         {
+                                                                             Monotonicity = Ulid.GenerationOptions
+                                                                                .MonotonicityOptions.MonotonicIncrement,
+                                                                         };
 
         public static readonly MlrbId Empty = new(Ulid.Empty);
 
         readonly Ulid _id;
 
-        internal MlrbId(Ulid id)
+        internal MlrbId(Ulid id) => _id = id;
+
+        public MlrbId() : this(DateTimeOffset.UtcNow) { }
+
+        public MlrbId(byte[] sha256, DateTimeOffset? utcNow = null)
         {
-            _id = id;
+            if (utcNow is null)
+            {
+                _id = Ulid.New(DateTimeOffset.UtcNow, sha256);
+            }
+            else
+            {
+                _id = Ulid.New(utcNow.Value, sha256);
+            }
         }
 
-        public MlrbId() : this(DateTimeOffset.UtcNow)
-        {
-        }
-
-        public MlrbId(DateTimeOffset dto)
-        {
-            _id = Ulid.New(dto, DefaultOptions);
-        }
+        public MlrbId(DateTimeOffset dto) => _id = Ulid.New(dto, DefaultOptions);
 
         public DateTime DateTimeLocal => _id.Time.ToLocalTime().DateTime;
 
         public DateTimeOffset DateTimeOffset => _id.Time;
-
-        /// <summary>
-        ///     Creates a new <see cref="Ulid" /> that is sortable by timestamp and incorporates a deterministic hash of a given
-        ///     filename.
-        /// </summary>
-        /// <param name="filename">
-        ///     The name of the file, which will be hashed for deterministic randomness in the ULID generation.
-        ///     This value must not be null, empty, or consist solely of whitespace.
-        /// </param>
-        /// <param name="timestamp">
-        ///     The point in time that will be used as the basis for the timestamp portion of the ULID.
-        ///     This ensures that the generated ULID is chronologically sortable.
-        /// </param>
-        /// <returns>
-        ///     A new <see cref="Ulid" /> instance that contains a timestamp generated from the provided
-        ///     <paramref name="timestamp" />
-        ///     and a deterministic randomness derived from the hashed <paramref name="filename" />.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        ///     Thrown when <paramref name="filename" /> is null, empty, or contains only whitespace characters.
-        /// </exception>
-        static Ulid CreateFileUlid(string filename, DateTimeOffset timestamp)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(filename);
-
-            // The timestamp (first 48 bits) ensures chronological sortability
-            // Hash the filename to get deterministic randomness (remaining 80 bits)
-            byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(filename));
-            Span<byte> randomness = stackalloc byte[10];
-            hash[..10].CopyTo(randomness);
-
-            // ULID struct: [48-bit timestamp][80-bit randomness]
-            // Sorting is by timestamp first, then randomness
-            return Ulid.New(timestamp, randomness);
-        }
 
         /// <summary>
         ///     Creates a new <see cref="MlrbId" /> instance from an existing <see cref="EntityId" />.
@@ -114,14 +66,13 @@ namespace MyLittleRangeBook.Models
         /// <exception cref="ArgumentException">
         ///     Thrown if the string ID in <paramref name="eid" /> is null, empty, or not a valid ULID.
         /// </exception>
-        public static MlrbId From(EntityId eid)
-        {
-            return new MlrbId(FromString(eid.Id));
-        }
+        [Obsolete("Just use EntityId.Id")]
+        public static MlrbId From(EntityId eid) => new(FromString(eid.Id));
 
+        [Obsolete("Use the constructor.")]
         public static MlrbId FromSha256(byte[] sha256)
         {
-            var ulid = Ulid.New(DateTimeOffset.UtcNow, sha256);
+            Ulid ulid = Ulid.New(DateTimeOffset.UtcNow, sha256);
 
             return new MlrbId(ulid);
         }
@@ -145,11 +96,11 @@ namespace MyLittleRangeBook.Models
 
             // [TO20260516] We're assuming that the dateOnly is in the current timezone.  We will make
             // a DateTimeOffset by combining the DateOnly with the time right now.
-            TimeZoneInfo zone = TimeZoneInfo.Local;
-            var now = TimeOnly.FromDateTime(DateTime.Now);
-            var dt = dateOnly.ToDateTime(now);
-            TimeSpan offset = zone.GetUtcOffset(dt);
-            DateTimeOffset dto = new(dt, offset);
+            TimeZoneInfo   zone   = TimeZoneInfo.Local;
+            TimeOnly       now    = TimeOnly.FromDateTime(DateTime.Now);
+            DateTime       dt     = dateOnly.ToDateTime(now);
+            TimeSpan       offset = zone.GetUtcOffset(dt);
+            DateTimeOffset dto    = new(dt, offset);
 
             return new MlrbId(dto);
         }
@@ -167,49 +118,18 @@ namespace MyLittleRangeBook.Models
         {
             // [TO20260516] Perhaps overly explicity, but assume any .Unspecified is local time.
             DateTimeOffset dto = dateTime.Kind switch
-            {
-                DateTimeKind.Utc => new DateTimeOffset(dateTime, TimeSpan.Zero),
-                DateTimeKind.Local => new DateTimeOffset(dateTime, TimeZoneInfo.Local.GetUtcOffset(dateTime)),
-                DateTimeKind.Unspecified => new DateTimeOffset(dateTime, TimeZoneInfo.Local.GetUtcOffset(dateTime)),
-                _ => throw new InvalidOperationException($"Unexpected DateTimeKind: {dateTime.Kind}")
-            };
+                                 {
+                                     DateTimeKind.Utc => new DateTimeOffset(dateTime, TimeSpan.Zero),
+                                     DateTimeKind.Local => new DateTimeOffset(dateTime,
+                                                                              TimeZoneInfo.Local
+                                                                                 .GetUtcOffset(dateTime)),
+                                     DateTimeKind.Unspecified => new DateTimeOffset(dateTime,
+                                         TimeZoneInfo.Local.GetUtcOffset(dateTime)),
+                                     _ => throw new
+                                              InvalidOperationException($"Unexpected DateTimeKind: {dateTime.Kind}"),
+                                 };
 
             return new MlrbId(dto);
-        }
-
-        /// <summary>
-        ///     New a MlrbId from a FileInfo object. We will try to use the contents of the file, otherwise use the filename.
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <returns></returns>
-        public static MlrbId FromFile(FileInfo fileInfo)
-        {
-            return new MlrbId();
-            // [TO20260602] This was an experiment to try and relate/influence MrlbId with the contents of the file.
-            // Ulid ulid;
-            // try
-            // {
-            //     if (fileInfo.Exists)
-            //     {
-            //         var dto = new DateTimeOffset(fileInfo.LastWriteTimeUtc);
-            //         // [TO20260521] This is a bit of a hack to get the file bytes synchronously.  We need the file bytes to create the hash, and we don't want to change the method signature to be async.
-            //         Result<ReadOnlyMemory<byte>> fileContents = fileInfo.LoadFileBytesAsync().GetAwaiter().GetResult();
-            //         bool useFileContents = fileContents is { IsSuccess: true, Value.Length: > 0 };
-            //         ulid = useFileContents
-            //             ? Ulid.New(dto, fileContents.Value.ToArray())
-            //             : Ulid.New(DateTimeOffset.UtcNow, DefaultOptions);
-            //     }
-            //     else
-            //     {
-            //         ulid = Ulid.New(DateTimeOffset.UtcNow, DefaultOptions);
-            //     }
-            // }
-            // catch (Exception)
-            // {
-            //     ulid = Ulid.New(DateTimeOffset.UtcNow, DefaultOptions);
-            // }
-            //
-            // return new MlrbId(ulid);
         }
 
         /// <summary>
@@ -248,44 +168,20 @@ namespace MyLittleRangeBook.Models
             return new MlrbId(ulid);
         }
 
-        public static implicit operator EntityId(MlrbId d)
-        {
-            return new EntityId(d._id.ToString(), null);
-        }
+        public static implicit operator EntityId(MlrbId d) => new(d._id.ToString(), null);
 
-        public static implicit operator string(MlrbId d)
-        {
-            return d._id.ToString();
-        }
+        public static implicit operator string(MlrbId d) => d._id.ToString();
 
-        public static implicit operator byte[](MlrbId d)
-        {
-            return d._id.ToByteArray();
-        }
+        public static implicit operator byte[](MlrbId d) => d._id.ToByteArray();
 
-        public static implicit operator Ulid(MlrbId d)
-        {
-            return d._id;
-        }
+        public static implicit operator Ulid(MlrbId d) => d._id;
 
-        public override string ToString()
-        {
-            return _id.ToString();
-        }
+        public override string ToString() => _id.ToString();
 
-        public static implicit operator MlrbId(string ulidString)
-        {
-            return new MlrbId(FromString(ulidString));
-        }
+        public static implicit operator MlrbId(string ulidString) => new(FromString(ulidString));
 
-        public static implicit operator MlrbId(Ulid ulid)
-        {
-            return new MlrbId(ulid);
-        }
+        public static implicit operator MlrbId(Ulid ulid) => new(ulid);
 
-        public byte[] ToByteArray()
-        {
-            return _id.ToByteArray();
-        }
+        public byte[] ToByteArray() => _id.ToByteArray();
     }
 }

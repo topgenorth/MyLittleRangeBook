@@ -1,14 +1,15 @@
 ﻿-- Helpful script to clean out stuff associated with 'Test Gun'
-
 BEGIN TRANSACTION;
 
 -- Cache the firearm IDs to avoid repeated subqueries
 CREATE TEMP TABLE temp_firearm_ids AS
 SELECT id
 FROM firearms
-WHERE name = 'Test Gun';
+WHERE name LIKE 'Test Gun%';
 
-INSERT INTO temp_firearm_ids (id) VALUES ('5KR60EYQNZVCXGY505M8W9KFYD');
+-- INSERT INTO temp_firearm_ids (id) VALUES ('5KR60EYQNZVCXGY505M8W9KFYD');
+
+SELECT * FROM temp_firearm_ids;
 
 -- Delete in correct order respecting foreign key constraints
 DELETE
@@ -25,15 +26,18 @@ WHERE firearm_id IN (SELECT id FROM temp_firearm_ids);
 
 DELETE
 FROM main.simple_range_events
-WHERE firearm_name = 'Test Gun';
+WHERE firearm_name  LIKE 'Test Gun%';
 
 DELETE
 FROM main.event_streams
 WHERE id IN (SELECT id FROM temp_firearm_ids);
 
+DELETE FROM firearms_notes
+WHERE firearms_notes.firearm_id  IN (SELECT id FROM temp_firearm_ids);
+
 DELETE
 FROM firearms
-WHERE name = 'Test Gun';
+WHERE name LIKE 'Test Gun%';
 
 -- Clean up temp table
 DROP TABLE temp_firearm_ids;
