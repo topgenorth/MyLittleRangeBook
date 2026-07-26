@@ -96,10 +96,15 @@ namespace MyLittleRangeBook.RangeEvents
             {
                 await context.CommitAsync().ConfigureAwait(false);
                 returnValue = SUCCESS;
-                // Result<SimpleRangeEvent> sre = await _simpleRangeEventService.GetAsync(context, rProcess.Value)
-                //                                                              .ConfigureAwait(false);
-                //
-                // _simpleRangeEventPrinter.Print(AnsiConsole.Console, sre.Value, quiet);
+
+                if (rProcess.IsSuccess)
+                {
+                    Result<SimpleRangeEvent> sre = await _simpleRangeEventService.GetAsync(context, rProcess.Value)
+                                                                                 .ConfigureAwait(false);
+
+                    _simpleRangeEventPrinter.Print(AnsiConsole.Console, sre.Value, quiet);
+
+                }
                 Logger.Information("Processed simple range event.");
                 CliDisplay.PrintSuccess("Processed simple range event.");
             }
