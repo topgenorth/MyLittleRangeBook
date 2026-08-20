@@ -28,8 +28,14 @@ elseif ($IsLinux) {
     $cliExecutableName = "mlrb"
     $guiExecutableName = "mlrb-gui"
 }
+elseif ($IsMacOS) {
+    $destinationDir = Join-Path ([Environment]::GetFolderPath("UserProfile")) ".local/bin"
+    $artifactPattern = "*-macos-executables"
+    $cliExecutableName = "mlrb"
+    $guiExecutableName = "mlrb-gui"
+}
 else {
-    throw "Unsupported platform. This script supports Windows and Linux only."
+    throw "Unsupported platform. This script supports Windows, Linux, and macOS only."
 }
 
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "mlrb-cli-install"
@@ -93,7 +99,7 @@ $guiDestinationPath = Join-Path $destinationDir $guiExecutableName
 Copy-Item -Path $cliExecutable.FullName -Destination $cliDestinationPath -Force
 Copy-Item -Path $guiExecutable.FullName -Destination $guiDestinationPath -Force
 
-if ($IsLinux) {
+if ($IsLinux -or $IsMacOS) {
     & chmod +x $cliDestinationPath
     & chmod +x $guiDestinationPath
 }

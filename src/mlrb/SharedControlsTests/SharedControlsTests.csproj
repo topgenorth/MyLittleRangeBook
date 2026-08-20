@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="12.0.4" />
+        <PackageReference Include="Avalonia" Version="12.1.1" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
         <PackageReference Include="XUnit.v3" Version="3.2.2"/>
         <PackageReference Include="Avalonia.Headless.XUnit" Version="12.0.4" />
