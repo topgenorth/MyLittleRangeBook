@@ -3,8 +3,10 @@ using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.Persistence.Sqlite;
 
+
 namespace MyLittleRangeBook.Cartridges
 {
+    [Obsolete("This class is deprecated and will be removed in a future version.")]
     public class CartridgesService : ICartridgesService
     {
         readonly ISqliteHelper _sqliteHelper;

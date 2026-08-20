@@ -114,6 +114,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             return connection;
         }
 
+
         /// <summary>
         ///     Register the necessary things in DI as keyed services.
         /// </summary>
@@ -126,7 +127,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             SetSqlite3ProviderAndInit();
 
             //ConnectionStrings:SqliteConnection
-
             string connectionString = configuration.GetConnectionString("SqliteConnection")!;
 
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
@@ -142,9 +142,28 @@ namespace MyLittleRangeBook.Persistence.Sqlite
 
             services.AddFisher(opts =>
                 {
+                    // [TO20260820] https://fisher.jasperfx.net/configuration/hostbuilder#registration-overloads
                     opts.Connection(connectionString);
+
+                    opts.Schema.For<Cartridge>()
+                        .Index(x => x.CommonName)
+                        .UniqueIndex(x => x.Name)
+                        .UniqueIndex(x => x.RowId)
+                        .SoftDeleted();
+
+                    opts.Schema.For<SimpleRangeEvent>()
+                        .Index(x => x.EventDate)
+                        .UseNumericRevisions()
+                       .SoftDeleted();
                 })
                 .ApplyAllDatabaseChangesOnStartup();
+
+            // [TO20260820] https://fisher.jasperfx.net/configuration/multiple-stores.html
+            // services.AddFisherStore<IFisherSimpleRangeEventService>(opts =>
+            //                                                         {
+            //                                                             opts.Connection(connectionString);
+            //
+            //                                                         });
             return services;
         }
 

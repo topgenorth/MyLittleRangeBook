@@ -1,4 +1,5 @@
 using ConsoleAppFramework;
+using Fisher;
 using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
@@ -14,15 +15,18 @@ namespace MyLittleRangeBook.Cartridges
         readonly ICartridgesService _cartridgesService;
         readonly CartridgesTablePrinter _printer;
         readonly ISqliteHelper _sqliteHelper;
+        readonly IDocumentSession _documentSession;
 
-        public CartridgeCommands(ILogger logger,
-            ICliDisplay cliDisplay,
+        public CartridgeCommands(ILogger                                          logger,
+            ICliDisplay                                                           cliDisplay,
             [FromKeyedServices(SqliteHelperExtensions.DI_KEY)] ICartridgesService cartridgesService,
-            ISqliteHelper sqliteHelper) : base(logger, cliDisplay)
+            ISqliteHelper                                                         sqliteHelper,
+            IDocumentSession documentSession) : base(logger, cliDisplay)
         {
-            _cartridgesService = cartridgesService;
-            _sqliteHelper = sqliteHelper;
-            _printer = new CartridgesTablePrinter();
+            _cartridgesService    = cartridgesService;
+            _sqliteHelper         = sqliteHelper;
+            _documentSession = documentSession;
+            _printer              = new CartridgesTablePrinter();
         }
 
         /// <summary>
@@ -92,21 +96,21 @@ namespace MyLittleRangeBook.Cartridges
                 SuitableForRifle = rifle,
                 SuitableForPistol = pistol
             };
-            await using ScopedSqliteConnection scoped =
-                await _sqliteHelper.GetScopedDatabaseConnectionAsync(cancellationToken).ConfigureAwait(false);
-            await using SqliteConnection conn = scoped.Connection;
-            Result<EntityId> result = await _cartridgesService
-                .UpsertAsync(conn, cartridge, cancellationToken)
-                .ConfigureAwait(false);
-            if (result.IsFailed)
-            {
-                Logger.Warning("Failed to add cartridge.");
-                CliDisplay.PrintFailure("Failed to add cartridge.");
 
+
+            _documentSession.Store(cartridge);
+
+            try
+            {
+                await _documentSession.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (SqliteException ex)
+            {
+                CliDisplay.PrintFailure($"Failed to add cartridge: {ex.Message}");
                 return ReturnCodes.FAILURE;
             }
 
-            CliDisplay.PrintSuccess($"Cartridge '{name}' added with ID {result.Value.Id}.");
+            CliDisplay.PrintSuccess($"Cartridge '{name}' added with ID {cartridge.Id}.");
 
             return ReturnCodes.SUCCESS;
         }

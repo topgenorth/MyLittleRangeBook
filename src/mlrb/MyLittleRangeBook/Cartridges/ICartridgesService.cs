@@ -3,6 +3,7 @@ using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Cartridges
 {
+    [Obsolete("This interface is deprecated and will be removed in a future version.")]
     public interface ICartridgesService
     {
         Task<Result> DeleteAsync(IDbConnection connection,
