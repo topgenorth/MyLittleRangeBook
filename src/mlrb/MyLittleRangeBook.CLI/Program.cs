@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using ConsoleAppFramework;
+using Fisher;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -57,6 +58,8 @@ builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration)
        .RegisterFirearmEventSourcing()
        .RegisterNotes()
     ;
+
+
 
 using IHost         host  = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();

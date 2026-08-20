@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using Dapper;
+using Fisher;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -124,6 +125,10 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         {
             SetSqlite3ProviderAndInit();
 
+            //ConnectionStrings:SqliteConnection
+
+            string connectionString = configuration.GetConnectionString("SqliteConnection")!;
+
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(MlrbId), new SqliteMlrbIdHandler());
@@ -135,7 +140,11 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             services.TryAddKeyedScoped<ISimpleRangeEventService, SqliteSimpleRangeEventService>(DI_KEY);
             services.TryAddScoped<ISimpleRangeEventService, SqliteSimpleRangeEventService>();
 
-
+            services.AddFisher(opts =>
+                {
+                    opts.Connection(connectionString);
+                })
+                .ApplyAllDatabaseChangesOnStartup();
             return services;
         }
 
