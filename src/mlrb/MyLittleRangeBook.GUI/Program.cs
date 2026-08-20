@@ -68,7 +68,6 @@ namespace MyLittleRangeBook.GUI
             services.RegisterMyLittleRangeBookSqlite(configuration)
                     .RegisterRangeEventStuff()
                     .RegisterEventSourcingStuff()
-                    .RegisterCartridges()
                     .RegisterRangeAssetHandlers()
                     .RegisterDomainEventSerializers()
                     .RegisterRangeAssetEventSourcing()

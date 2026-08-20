@@ -51,7 +51,6 @@ builder.Services.AddTransient<IXeroCsvShotSessionParser, XeroCsvShotSessionParse
 builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration)
        .RegisterEventSourcingStuff()
        .RegisterRangeEventStuff()
-       .RegisterCartridges()
        .RegisterRangeAssetHandlers()
        .RegisterDomainEventSerializers()
        .RegisterRangeAssetEventSourcing()
