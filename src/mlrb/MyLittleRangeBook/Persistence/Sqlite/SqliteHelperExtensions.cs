@@ -153,17 +153,12 @@ namespace MyLittleRangeBook.Persistence.Sqlite
 
                     opts.Schema.For<SimpleRangeEvent>()
                         .Index(x => x.EventDate)
+                        .Index(x => x.FirearmName)
                         .UseNumericRevisions()
                        .SoftDeleted();
                 })
                 .ApplyAllDatabaseChangesOnStartup();
 
-            // [TO20260820] https://fisher.jasperfx.net/configuration/multiple-stores.html
-            // services.AddFisherStore<IFisherSimpleRangeEventService>(opts =>
-            //                                                         {
-            //                                                             opts.Connection(connectionString);
-            //
-            //                                                         });
             return services;
         }
 
