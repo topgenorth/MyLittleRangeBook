@@ -68,7 +68,6 @@ namespace MyLittleRangeBook.GUI
             services.RegisterMyLittleRangeBookSqlite(configuration)
                     .RegisterRangeEventStuff()
                     .RegisterEventSourcingStuff()
-                    .RegisterCartridges()
                     .RegisterRangeAssetHandlers()
                     .RegisterDomainEventSerializers()
                     .RegisterRangeAssetEventSourcing()
@@ -97,7 +96,6 @@ namespace MyLittleRangeBook.GUI
                                 !RuntimeFeature.IsDynamicCodeCompiled,
                                 Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
                                );
-
                 BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
             }
             catch (Exception ex)

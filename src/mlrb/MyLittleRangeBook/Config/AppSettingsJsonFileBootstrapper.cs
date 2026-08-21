@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Nodes;
+﻿using System.Diagnostics;
+using System.Text.Json.Nodes;
 
 namespace MyLittleRangeBook.Config
 {
@@ -104,6 +105,10 @@ namespace MyLittleRangeBook.Config
 
             if (file.Exists)
             {
+                if (EnvironmentExtensions.IsDevelopment)
+                {
+                    Debug.WriteLine($"App settings file already exists at {file.FullName}");
+                }
                 return Result.Ok();
             }
 

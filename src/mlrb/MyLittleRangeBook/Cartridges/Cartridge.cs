@@ -1,4 +1,5 @@
-﻿using MyLittleRangeBook.Models;
+﻿using JasperFx;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Cartridges
 {
@@ -9,6 +10,11 @@ namespace MyLittleRangeBook.Cartridges
             Id = new MlrbId().ToString();
         }
 
+        /// <summary>
+        /// Creates a new Cartridge instance, with the ID related to the name of the cartridge.  SAAMI name is a good choice.
+        /// </summary>
+        /// <param name="uniqueName"></param>
+        /// <exception cref="ArgumentException"></exception>
         public Cartridge(string uniqueName)
         {
            ArgumentException.ThrowIfNullOrWhiteSpace(uniqueName);
@@ -19,12 +25,13 @@ namespace MyLittleRangeBook.Cartridges
         /// <summary>
         ///     An ID to uniquely identify the Cartridge.
         /// </summary>
-        public string Id { get; set; }
+        public string Id { get; set; } = "";
 
         /// <summary>
         ///     The database row ID of the Cartridge. Will be null for a new record.
         /// </summary>
-        public long? RowId { get; set; }
+        [Obsolete]
+        public long? RowId { get; set; } = -1;
 
         /// <summary>
         ///     The name of the Cartridge. This must be unique across all cartridges.
@@ -49,12 +56,12 @@ namespace MyLittleRangeBook.Cartridges
         /// <summary>
         ///     Whether the cartridge is suitable for rifles.
         /// </summary>
-        public bool SuitableForRifle { get; set; }
+        public bool SuitableForRifle { get; set; } = true;
 
         /// <summary>
         ///     Whether the cartridge is suitable for pistols.
         /// </summary>
-        public bool SuitableForPistol { get; set; }
+        public bool SuitableForPistol { get; set; } = true;
 
         /// <summary>
         ///     The time (UTC) that the record was created.

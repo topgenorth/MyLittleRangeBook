@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using Dapper;
+using Fisher;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -113,6 +114,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             return connection;
         }
 
+
         /// <summary>
         ///     Register the necessary things in DI as keyed services.
         /// </summary>
@@ -123,6 +125,9 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             IConfiguration configuration)
         {
             SetSqlite3ProviderAndInit();
+
+            //ConnectionStrings:SqliteConnection
+            string connectionString = configuration.GetConnectionString("SqliteConnection")!;
 
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
@@ -135,6 +140,24 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             services.TryAddKeyedScoped<ISimpleRangeEventService, SqliteSimpleRangeEventService>(DI_KEY);
             services.TryAddScoped<ISimpleRangeEventService, SqliteSimpleRangeEventService>();
 
+            services.AddFisher(opts =>
+                {
+                    // [TO20260820] https://fisher.jasperfx.net/configuration/hostbuilder#registration-overloads
+                    opts.Connection(connectionString);
+
+                    opts.Schema.For<Cartridge>()
+                        .Index(x => x.CommonName)
+                        .UniqueIndex(x => x.Name)
+                        .UniqueIndex(x => x.RowId)
+                        .SoftDeleted();
+
+                    opts.Schema.For<SimpleRangeEvent>()
+                        .Index(x => x.EventDate)
+                        .Index(x => x.FirearmName)
+                        .UseNumericRevisions()
+                       .SoftDeleted();
+                })
+                .ApplyAllDatabaseChangesOnStartup();
 
             return services;
         }
