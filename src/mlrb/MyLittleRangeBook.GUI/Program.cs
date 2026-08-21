@@ -96,7 +96,6 @@ namespace MyLittleRangeBook.GUI
                                 !RuntimeFeature.IsDynamicCodeCompiled,
                                 Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
                                );
-
                 BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
             }
             catch (Exception ex)
