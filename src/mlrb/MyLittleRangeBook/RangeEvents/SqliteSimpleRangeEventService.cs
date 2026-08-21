@@ -1,37 +1,11 @@
 ﻿using System.Globalization;
 using CsvHelper;
+using Fisher;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.RangeEvents
 {
-    public sealed class SimpleRangeEventsExportedToCsvSuccess : Success
-    {
-        public SimpleRangeEventsExportedToCsvSuccess(string csvFileName, int rowCount) :
-            base($"Exported {rowCount} simple range event(s) to CSV file `{csvFileName}`.")
-        {
-            Metadata.Add(nameof(csvFileName), csvFileName);
-            Metadata.Add(nameof(rowCount),    rowCount);
-        }
-    }
-
-    public sealed class SimpleRangeEventsExportToCsvError : Error
-    {
-        public SimpleRangeEventsExportToCsvError(string csvFileName, Exception exception) :
-            base($"Could not export simple range events to CSV file `{csvFileName}`.")
-        {
-            Metadata.Add(nameof(csvFileName), csvFileName);
-            CausedBy(exception);
-        }
-    }
-
-
-    public class DeletedEventStreamReason(MlrbId firearmId)
-        : Success($"The event stream was deleted (ID: {firearmId})")
-    {
-        public MlrbId FirearmId = firearmId;
-    }
-
     /// <summary>
     ///     Provides SQLite-specific implementation for managing SimpleRangeEvent data.
     /// </summary>
@@ -40,8 +14,17 @@ namespace MyLittleRangeBook.RangeEvents
     ///     SimpleRangeEvent records from an SQLite database. It interacts with the database using
     ///     provided connection and transaction parameters, supporting asynchronous operations.
     /// </remarks>
+    [Obsolete]
     public class SqliteSimpleRangeEventService : ISimpleRangeEventService
     {
+        readonly IDocumentSession _session;
+        readonly ILogger          _logger;
+        public SqliteSimpleRangeEventService(IDocumentSession session, ILogger logger)
+        {
+            _session     = session;
+            _logger = logger;
+        }
+
         public async Task<Result> DeleteAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
         {
             try
@@ -124,20 +107,51 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
-        public async Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId)
+        public async Task<Result<SimpleRangeEvent?>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId)
         {
+            Result<SimpleRangeEvent?> result;
+            try
+            {
+                var sre = await _session.LoadAsync<SimpleRangeEvent>(simpleRangeEventId).ConfigureAwait(false);
+                if (sre is null)
+                {
+                    _logger.Warning("Could not find a document in Fisher for the simple range event, will try to load from the table.");
+                }
+                else
+                {
+                    result = new Result<SimpleRangeEvent?>().WithValue(sre);
+                    return result;
+                }
+            }
+            catch (Exception e1)
+            {
+                _logger.Warning(e1, "Will try to load the simple range event from the table.");
+            }
+
             try
             {
                 DapperCommandContext ctx = context with { Arguments = new { Id = simpleRangeEventId } };
                 SimpleRangeEvent sre = await Commands.s_selectById.QuerySingleAsync<SimpleRangeEvent>(ctx)
                                                      .ConfigureAwait(false);
-                return sre;
+                result = new Result<SimpleRangeEvent?>().WithValue(sre);
             }
             catch (Exception e)
             {
-                Error err = e.ToError().Enrich(simpleRangeEventId);
-                return Result.Fail(err);
+                if (e is InvalidOperationException && e.Message.Contains("Sequence contains no elements"))
+                {
+                    _logger.Warning("Simple range event not found.");
+                    result = new Result<SimpleRangeEvent?>().WithSuccess("Could not find simple range event.");
+                }
+                else
+                {
+                    _logger.Error(e, "An error occurred while fetching the simple range event.");
+                    Error err = e.ToError().Enrich(simpleRangeEventId);
+                    result = new Result<SimpleRangeEvent?>().WithError(err);
+                }
+
             }
+
+            return result;
         }
 
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(DapperCommandContext ctx)
@@ -162,11 +176,13 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context,
                                                       SimpleRangeEvent     simpleRangeEvent)
         {
+            Result<MlrbId> result = new();
             simpleRangeEvent.Modified = DateTimeOffset.UtcNow;
             if (simpleRangeEvent.RowId == null)
             {
                 simpleRangeEvent.Id = MlrbId.From(simpleRangeEvent.EventDate);
             }
+
 
             try
             {
@@ -183,21 +199,31 @@ namespace MyLittleRangeBook.RangeEvents
                             simpleRangeEvent.Modified,
                         };
                 DapperCommandContext ctx = context with { Arguments = p };
-                long result = await Commands.s_upsertCommand.ExecuteScalarAsync<long>(ctx).ConfigureAwait(false);
-
-                simpleRangeEvent.RowId = result;
-
+                simpleRangeEvent.RowId = await Commands.s_upsertCommand.ExecuteScalarAsync<long>(ctx).ConfigureAwait(false);
 
                 Success reason = new($"SimpleRangeEvent `{simpleRangeEvent.Id}` saved.");
                 reason.Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId);
-                return Result.Ok((MlrbId)simpleRangeEvent.Id!).WithSuccess(reason);
+                result.Reasons.Add(reason);
             }
             catch (Exception e)
             {
                 Error err = e.ToError().Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId);
-
-                return Result.Fail(err);
+                result.Reasons.Add(err);
             }
+
+            try
+            {
+                _session.Store(simpleRangeEvent);
+                await _session.SaveChangesAsync();
+                result.Reasons.Add(new Success("Saved simple range event to document store."));
+            }
+            catch (Exception e1)
+            {
+                // [TO20260821] We don't consider this an error yet.
+                _logger.Warning(e1, "Failed to save simple range event document store.");
+            }
+
+            return result;
         }
 
         static class Commands

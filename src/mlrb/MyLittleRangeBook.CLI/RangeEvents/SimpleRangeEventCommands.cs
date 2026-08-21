@@ -94,6 +94,11 @@ namespace MyLittleRangeBook.RangeEvents
                     CliDisplay.PrintFailure("Could not find the request range event.");
                     returnCode = FAILURE;
                 }
+                else if (result.Value is null)
+                {
+                    CliDisplay.PrintWarning("Simple range event not found.");
+                    returnCode = FAILURE;
+                }
                 else
                 {
                     SimpleRangeEventPrinter2 p = new();

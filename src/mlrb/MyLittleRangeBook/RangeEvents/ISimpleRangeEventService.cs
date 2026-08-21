@@ -7,6 +7,7 @@ namespace MyLittleRangeBook.RangeEvents
     ///     Defines methods for managing simple range events. Provides functionality for
     ///     creating, retrieving, updating, deleting, and exporting simple range event records.
     /// </summary>
+    [Obsolete("This interface is deprecated and will be removed in a future version.")]
     public interface ISimpleRangeEventService
     {
         /// <summary>

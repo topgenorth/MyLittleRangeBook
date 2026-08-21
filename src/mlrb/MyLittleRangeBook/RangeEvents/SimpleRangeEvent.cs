@@ -34,6 +34,7 @@ namespace MyLittleRangeBook.RangeEvents
         /// <summary>
         ///     The database row ID of the SimpleRangeEvent. Will be null for a new record.
         /// </summary>
+        [Obsolete("This will be removed.")]
         public long? RowId { get; set; }
 
         /// <summary>
@@ -62,7 +63,7 @@ namespace MyLittleRangeBook.RangeEvents
         /// <summary>
         ///     How many rounds were fired.
         /// </summary>
-        [ValueRange(0, 10000)]
+        [ValueRange(-10000, 10000)]
         public int RoundsFired { get; set; }
 
         /// <summary>
@@ -101,7 +102,7 @@ namespace MyLittleRangeBook.RangeEvents
         /// </param>
         /// <returns>A new instance of the <see cref="SimpleRangeEvent" /> class with the provided details.</returns>
         public static SimpleRangeEvent New(string                     firearm,
-                                           [ValueRange(0, 10000)] int rounds,
+                                           [ValueRange(-10000, 10000)] int rounds,
                                            string                     range,
                                            string                     ammo,
                                            string                     notes,
