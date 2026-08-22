@@ -30,18 +30,18 @@ namespace MyLittleRangeBook.RangeEvents
 
         readonly ISimpleRangeEventDataProcessor _rangeEventDataProcessor;
         readonly ISimpleRangeEventPrinter       _simpleRangeEventPrinter;
-        readonly ISimpleRangeEventService       _simpleRangeEventService;
+        readonly ISimpleRangeEventDocumentService       _simpleRangeEventDocumentService;
 
         public SimpleRangeEventCommandAddToSqlite(ILogger                        logger,
                                                   ICliDisplay                    cliDisplay,
                                                   ISimpleRangeEventDataProcessor simpleRangeEventProcessor,
                                                   ISqliteHelper                  sqliteHelper,
                                                   ISimpleRangeEventPrinter       simpleRangeEventPrinter,
-                                                  ISimpleRangeEventService       simpleRangeEventService) :
+                                                  ISimpleRangeEventDocumentService       simpleRangeEventDocumentService) :
             base(logger, cliDisplay, sqliteHelper)
         {
             _simpleRangeEventPrinter = simpleRangeEventPrinter;
-            _simpleRangeEventService = simpleRangeEventService;
+            _simpleRangeEventDocumentService = simpleRangeEventDocumentService;
             _rangeEventDataProcessor = simpleRangeEventProcessor;
         }
 
@@ -99,7 +99,7 @@ namespace MyLittleRangeBook.RangeEvents
 
                 if (rProcess.IsSuccess)
                 {
-                    Result<SimpleRangeEvent> sre = await _simpleRangeEventService.GetAsync(context, rProcess.Value)
+                    Result<SimpleRangeEvent> sre = await _simpleRangeEventDocumentService.GetAsync(context, rProcess.Value)
                                                                                  .ConfigureAwait(false);
 
                     _simpleRangeEventPrinter.Print(AnsiConsole.Console, sre.Value, quiet);

@@ -13,17 +13,17 @@ namespace MyLittleRangeBook.RangeEvents
     public class SimpleRangeEventCommands : MlrbSqliteCommandBase
     {
         readonly ISimpleRangeEventListPrinter _printer;
-        readonly ISimpleRangeEventService     _simpleRangeEventService;
+        readonly ISimpleRangeEventDocumentService     _simpleRangeEventDocumentService;
 
         public SimpleRangeEventCommands(ILogger                      logger,
                                         ISqliteHelper                sqlitehelper,
                                         ICliDisplay                  cliDisplay,
                                         ISimpleRangeEventListPrinter printer,
-                                        ISimpleRangeEventService     simpleRangeEventService) :
+                                        ISimpleRangeEventDocumentService     simpleRangeEventDocumentService) :
             base(logger, cliDisplay, sqlitehelper)
         {
             _printer                 = printer;
-            _simpleRangeEventService = simpleRangeEventService;
+            _simpleRangeEventDocumentService = simpleRangeEventDocumentService;
         }
 
         [Command("export-to-csv")]
@@ -38,7 +38,7 @@ namespace MyLittleRangeBook.RangeEvents
             string csvFileName = file ?? Path.GetTempFileName();
             try
             {
-                Result r = await _simpleRangeEventService.ExportToCsv(context,csvFileName).ConfigureAwait(false);
+                Result r = await _simpleRangeEventDocumentService.ExportToCsv(context,csvFileName).ConfigureAwait(false);
 
                 returnCode = r.IsSuccess ? SUCCESS : FAILURE;
             }
@@ -86,7 +86,7 @@ namespace MyLittleRangeBook.RangeEvents
             try
             {
                 Result<SimpleRangeEvent> result =
-                    await _simpleRangeEventService.GetAsync(context, id).ConfigureAwait(false);
+                    await _simpleRangeEventDocumentService.GetAsync(context, id).ConfigureAwait(false);
 
                 if (result.IsFailed)
                 {
@@ -132,7 +132,7 @@ namespace MyLittleRangeBook.RangeEvents
             DapperCommandContext context =
                 await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken).ConfigureAwait(false);
             Result<IEnumerable<SimpleRangeEvent>> rangeEvents =
-                await _simpleRangeEventService.GetSimpleRangeEventsAsync(context)
+                await _simpleRangeEventDocumentService.GetSimpleRangeEventsAsync(context)
                                               .ConfigureAwait(false);
             if (rangeEvents.IsFailed)
             {
@@ -187,7 +187,7 @@ namespace MyLittleRangeBook.RangeEvents
             {
                 // First, retrieve the event to ensure it exists
                 Result<SimpleRangeEvent> getResult =
-                    await _simpleRangeEventService.GetAsync(context, id).ConfigureAwait(false);
+                    await _simpleRangeEventDocumentService.GetAsync(context, id).ConfigureAwait(false);
 
                 if (getResult.IsFailed)
                 {
@@ -198,7 +198,7 @@ namespace MyLittleRangeBook.RangeEvents
                 else
                 {
                     // Delete the event
-                    Result<bool> deleteResult = await _simpleRangeEventService.DeleteAsync(context, getResult.Value)
+                    Result<bool> deleteResult = await _simpleRangeEventDocumentService.DeleteAsync(context, getResult.Value)
                                                                               .ConfigureAwait(false);
 
                     if (deleteResult.IsSuccess)

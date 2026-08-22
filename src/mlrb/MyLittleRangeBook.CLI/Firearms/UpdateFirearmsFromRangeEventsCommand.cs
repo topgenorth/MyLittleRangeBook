@@ -14,7 +14,7 @@ namespace MyLittleRangeBook
     public partial class UpdateFirearmsFromRangeEventsCommand : MlrbFirearmsCommandBase
     {
         readonly IEventSourcingService _eventSourcingService;
-        readonly ISimpleRangeEventService _simpleRangeEventService;
+        readonly ISimpleRangeEventDocumentService _simpleRangeEventDocumentService;
 
         public UpdateFirearmsFromRangeEventsCommand(ILogger                     logger,
                                                     ICliDisplay                 display,
@@ -22,12 +22,12 @@ namespace MyLittleRangeBook
                                                     IFirearmsService            firearmsService,
                                                     IFirearmAggregateRepository firearmAggregateRepo,
                                                     IEventSourcingService       eventSourcingService,
-                                                    ISimpleRangeEventService simpleRangeEventService) : base(logger, display,
+                                                    ISimpleRangeEventDocumentService simpleRangeEventDocumentService) : base(logger, display,
                                                                                                                                                                sqliteHelper,
                                                                                                                                                                firearmsService, firearmAggregateRepo)
         {
             _eventSourcingService         = eventSourcingService;
-            _simpleRangeEventService = simpleRangeEventService;
+            _simpleRangeEventDocumentService = simpleRangeEventDocumentService;
         }
 
         /// <summary>

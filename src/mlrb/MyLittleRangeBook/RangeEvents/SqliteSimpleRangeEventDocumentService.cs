@@ -16,25 +16,32 @@ namespace MyLittleRangeBook.RangeEvents
     ///     provided connection and transaction parameters, supporting asynchronous operations.
     /// </remarks>
     [Obsolete]
-    public class SqliteSimpleRangeEventService : ISimpleRangeEventService
+    public class SqliteSimpleRangeEventDocumentService : ISimpleRangeEventDocumentService
     {
         readonly ILogger          _logger;
         readonly IQuerySession    _querySession;
         readonly IDocumentSession _session;
 
-        public SqliteSimpleRangeEventService(ILogger logger, IDocumentSession session, IQuerySession querySession)
+        public SqliteSimpleRangeEventDocumentService(ILogger       logger, IDocumentSession session,
+                                                     IQuerySession querySession)
         {
             _session      = session;
             _logger       = logger;
             _querySession = querySession;
         }
 
-        public async Task<Result> DeleteAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent)
+        [Obsolete("This method is deprecated and will be removed in a future version.")]
+        public Task<Result> DeleteAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent) =>
+            throw new NotImplementedException();
+
+        public Task<Result> DeleteAsync(SimpleRangeEvent simpleRangeEvent) => DeleteAsync(simpleRangeEvent.Id!);
+
+        public async Task<Result> DeleteAsync(MlrbId simpleRangeEventId)
         {
             Result result;
-            if (await _session.CheckExistsAsync<SimpleRangeEvent>(simpleRangeEvent.Id!))
+            if (await _session.CheckExistsAsync<SimpleRangeEvent>(simpleRangeEventId))
             {
-                _session.Delete<SimpleRangeEvent>(simpleRangeEvent.Id!);
+                _session.Delete<SimpleRangeEvent>(simpleRangeEventId);
                 await _session.SaveChangesAsync();
                 result = Result.Ok().WithSuccess("Deleted the simple range event.");
             }
@@ -47,6 +54,10 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
 
+        public Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync() =>
+            throw new NotImplementedException();
+
+        [Obsolete("This method is deprecated and will be removed in a future version.")]
         public async Task<Result> ExportToCsv(DapperCommandContext context, string csvFileName)
         {
             try
@@ -78,6 +89,9 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
+        public Task<Result> ExportToCsv(string csvFileName) => throw new NotImplementedException();
+
+        [Obsolete("This method is deprecated and will be removed in a future version.")]
         public async Task<Result<IEnumerable<string>>> GetAmmoDescriptions(DapperCommandContext context)
         {
             try
@@ -93,6 +107,9 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
+        public Task<Result<IEnumerable<string>>> GetAmmoDescriptions() => throw new NotImplementedException();
+
+        [Obsolete("This method is deprecated and will be removed in a future version.")]
         public async Task<Result<IEnumerable<string>>> GetRangeNames(DapperCommandContext context)
         {
             try
@@ -108,6 +125,9 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
+        public Task<Result<IEnumerable<string>>> GetRangeNames() => throw new NotImplementedException();
+
+        [Obsolete("This method is deprecated and will be removed in a future version.")]
         public async Task<Result<SimpleRangeEvent?>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId)
         {
             Result<SimpleRangeEvent?> result;
@@ -120,32 +140,20 @@ namespace MyLittleRangeBook.RangeEvents
             else
             {
                 _logger.Debug("Could not find a Fisher document for simple range event.");
-                try
-                {
-                    DapperCommandContext ctx = context with { Arguments = new { Id = simpleRangeEventId } };
-                    SimpleRangeEvent sre = await Commands.s_selectById.QuerySingleAsync<SimpleRangeEvent>(ctx)
-                                                         .ConfigureAwait(false);
-                    result = new Result<SimpleRangeEvent?>().WithValue(sre);
-                }
-                catch (Exception e)
-                {
-                    if (e is InvalidOperationException && e.Message.Contains("Sequence contains no elements"))
-                    {
-                        _logger.Warning("Simple range event not found.");
-                        result = new Result<SimpleRangeEvent?>().WithSuccess("Could not find simple range event.");
-                    }
-                    else
-                    {
-                        _logger.Error(e, "An error occurred while fetching the simple range event.");
-                        Error err = e.ToError().Enrich(simpleRangeEventId);
-                        result = new Result<SimpleRangeEvent?>().WithError(err);
-                    }
-                }
+                result = new Result<SimpleRangeEvent?>().WithValue(null)
+                                                        .WithSuccess("Could not find the simple range event.");
             }
 
             return result;
         }
 
+        public Task<Result<SimpleRangeEvent>> GetAsync(MlrbId simpleRangeEventId) =>
+            throw new NotImplementedException();
+
+        public Task<Result<MlrbId>> UpsertAsync(SimpleRangeEvent simpleRangeEvent) =>
+            throw new NotImplementedException();
+
+        [Obsolete("This method is deprecated and will be removed in a future version.")]
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(DapperCommandContext ctx)
         {
             Result<IEnumerable<SimpleRangeEvent>> result;
@@ -164,63 +172,14 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             return result;
-
-            // try
-            // {
-            //     IEnumerable<SimpleRangeEvent> rangeEvents = await Commands.s_selectAll
-            //                                                               .QueryAsync<SimpleRangeEvent>(ctx)
-            //                                                               .ConfigureAwait(false);
-            //
-            //     return Result.Ok(rangeEvents);
-            // }
-            // catch (Exception e)
-            // {
-            //     Error err = new($"Could not retrieve SimpleRangeEvents from database: {e.Message}");
-            //     err.CausedBy(e);
-            //
-            //     return Result.Fail(err);
-            // }
         }
 
+        [Obsolete("This method is deprecated and will be removed in a future version.")]
         public async Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context,
                                                       SimpleRangeEvent     simpleRangeEvent)
         {
             Result<MlrbId> result = new();
             simpleRangeEvent.Modified = DateTimeOffset.UtcNow;
-            if (simpleRangeEvent.RowId == null)
-            {
-                simpleRangeEvent.Id = MlrbId.From(simpleRangeEvent.EventDate);
-            }
-
-
-            try
-            {
-                var p = new
-                        {
-                            Id = simpleRangeEvent.Id!,
-                            simpleRangeEvent.EventDate,
-                            simpleRangeEvent.FirearmName,
-                            simpleRangeEvent.RangeName,
-                            simpleRangeEvent.RoundsFired,
-                            simpleRangeEvent.AmmoDescription,
-                            simpleRangeEvent.Notes,
-                            simpleRangeEvent.Created,
-                            simpleRangeEvent.Modified,
-                        };
-                DapperCommandContext ctx = context with { Arguments = p };
-                simpleRangeEvent.RowId =
-                    await Commands.s_upsertCommand.ExecuteScalarAsync<long>(ctx).ConfigureAwait(false);
-
-                Success reason = new($"SimpleRangeEvent `{simpleRangeEvent.Id}` saved.");
-                reason.Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId);
-                result.Reasons.Add(reason);
-            }
-            catch (Exception e1)
-            {
-                Error err = e1.ToError().Enrich(simpleRangeEvent.Id!, simpleRangeEvent.RowId);
-                result.Reasons.Add(err);
-            }
-
             try
             {
                 _session.Store(simpleRangeEvent);

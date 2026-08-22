@@ -52,7 +52,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     Automatically updated through the reactive pipeline.
         /// </summary>
         readonly ReadOnlyObservableCollection<SimpleRangeEventViewModel> _simpleRangeEvents;
-        readonly ISimpleRangeEventService _simpleRangeEventService;
+        readonly ISimpleRangeEventDocumentService _simpleRangeEventDocumentService;
         readonly IFirearmsService         _firearmsService;
 
         /// <summary>
@@ -68,12 +68,12 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                                 Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                                 ISqliteHelper sqliteHelper,
                                                 ISimpleRangeEventDataProcessor simpleRangeEventDataProcessor,
-                                                ISimpleRangeEventService simpleRangeEventService,
+                                                ISimpleRangeEventDocumentService simpleRangeEventDocumentService,
                                                 IFirearmsService firearmsService)
         {
             _sqliteHelper                  = sqliteHelper;
             _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
-            _simpleRangeEventService       = simpleRangeEventService;
+            _simpleRangeEventDocumentService       = simpleRangeEventDocumentService;
             _firearmsService               = firearmsService;
             _dialogServiceFactory          = dialogServiceFactory;
             _dialogService                 = dialogServiceFactory(this);
@@ -212,7 +212,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             await using DapperCommandContext context =
                 await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken);
-            Result<IEnumerable<SimpleRangeEvent>> r = await _simpleRangeEventService.GetSimpleRangeEventsAsync(context);
+            Result<IEnumerable<SimpleRangeEvent>> r = await _simpleRangeEventDocumentService.GetSimpleRangeEventsAsync(context);
 
             if (r.IsSuccess)
             {
@@ -303,7 +303,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                                    _dialogServiceFactory,
                                                    _sqliteHelper,
                                                    _simpleRangeEventDataProcessor,
-                                                   _simpleRangeEventService,
+                                                   _simpleRangeEventDocumentService,
                                                    _firearmsService);
 
             SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(

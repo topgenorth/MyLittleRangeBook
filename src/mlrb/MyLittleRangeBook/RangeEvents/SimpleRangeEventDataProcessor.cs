@@ -45,13 +45,13 @@ namespace MyLittleRangeBook.RangeEvents
     public class SimpleRangeEventDataProcessor : ISimpleRangeEventDataProcessor
     {
         readonly IFirearmAggregateRepository _faRepo;
-        readonly ISimpleRangeEventService    _rangeEventService;
+        readonly ISimpleRangeEventDocumentService    _rangeEventDocumentService;
 
         public SimpleRangeEventDataProcessor(IFirearmAggregateRepository faRepo,
-                                             ISimpleRangeEventService    rangeEventService)
+                                             ISimpleRangeEventDocumentService    rangeEventDocumentService)
         {
             _faRepo            = faRepo;
-            _rangeEventService = rangeEventService;
+            _rangeEventDocumentService = rangeEventDocumentService;
         }
 
         public async Task<Result> DeleteSimpleRangeEvent(DapperCommandContext context, SimpleRangeEvent sre)
@@ -60,7 +60,7 @@ namespace MyLittleRangeBook.RangeEvents
             MlrbId         firearmId    = MlrbId.FromString(sre.FirearmName);
             MlrbId         rangeEventId = sre.Id!;
 
-            Result rDelete = await _rangeEventService.DeleteAsync(context, sre).ConfigureAwait(false);
+            Result rDelete = await _rangeEventDocumentService.DeleteAsync(context, sre).ConfigureAwait(false);
             if (!rDelete.IsSuccess)
             {
                 return rDelete;
@@ -144,7 +144,7 @@ namespace MyLittleRangeBook.RangeEvents
                                        RangeName       = rangeName,
                                    };
 
-            Result<MlrbId> rUpsertRangeEvent = await _rangeEventService.UpsertAsync(context, sre)
+            Result<MlrbId> rUpsertRangeEvent = await _rangeEventDocumentService.UpsertAsync(context, sre)
                                                                        .ConfigureAwait(false);
             List<IReason> reasons = [];
             reasons.AddRange(rUpsertRangeEvent.Reasons);
