@@ -21,15 +21,21 @@ namespace MyLittleRangeBook.GUI
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
         [STAThread]
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             IAppSettingsBootstrapper bootstrapper = new AppSettingsJsonFileBootstrapper()
                                                    .AddBootStrapper(SerilogAppSettingsJsonFileBootstrap.SerilogSection)
                                                    .AddBootStrapper(SqliteHelperExtensions
                                                                        .SqliteConnectionStringBootStrapper);
-            await bootstrapper
-                 .EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName)
-                 .ConfigureAwait(false);
+            // NOTE: Do NOT use `async Task Main` here. On macOS the Avalonia UI/dispatcher must be
+            // initialized on the process' main (entry) thread. An `await` (especially with
+            // ConfigureAwait(false)) resumes the rest of Main on a thread-pool thread, causing
+            // "IDispatcherImpl belongs to a different thread" when StartWithClassicDesktopLifetime
+            // is reached. Run the async bootstrap synchronously so Avalonia stays on the main thread.
+            bootstrapper
+                .EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName)
+                .GetAwaiter()
+                .GetResult();
 
             ConfigurationExtensions.DefaultLogDirectory.Create();
 
@@ -106,7 +112,7 @@ namespace MyLittleRangeBook.GUI
             }
             finally
             {
-                await Log.CloseAndFlushAsync();
+                Log.CloseAndFlush();
                 Log.Verbose("Application is shutting down");
             }
         }
