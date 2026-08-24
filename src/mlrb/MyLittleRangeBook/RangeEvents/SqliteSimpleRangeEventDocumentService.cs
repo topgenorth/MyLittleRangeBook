@@ -140,8 +140,7 @@ namespace MyLittleRangeBook.RangeEvents
         public Task<Result<SimpleRangeEvent>> GetAsync(MlrbId simpleRangeEventId, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
 
-        public Task<Result<MlrbId>> UpsertAsync(SimpleRangeEvent simpleRangeEvent, CancellationToken cancellationToken = default) =>
-            throw new NotImplementedException();
+
 
         [Obsolete("This method is deprecated and will be removed in a future version.", true)]
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(DapperCommandContext ctx)
@@ -164,20 +163,20 @@ namespace MyLittleRangeBook.RangeEvents
             return result;
         }
 
-        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
-        public async Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context,
-                                                      SimpleRangeEvent     simpleRangeEvent)
+        public async Task<Result<MlrbId>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
+                                                CancellationToken cancellationToken = default)
         {
             Result<MlrbId> result = new();
             simpleRangeEvent.Modified = DateTimeOffset.UtcNow;
             try
             {
                 _session.Store(simpleRangeEvent);
-                await _session.SaveChangesAsync();
+                await _session.SaveChangesAsync(cancellationToken);
                 result.Reasons.Add(new Success("Saved simple range event to document store."));
             }
             catch (Exception e2)
             {
+                result.Reasons.Add(e2.ToError().Enrich(simpleRangeEvent.Id!));
                 // [TO20260821] We don't consider this an error yet.
                 _logger.Warning(e2, "Failed to save simple range event document store.");
             }
@@ -185,6 +184,10 @@ namespace MyLittleRangeBook.RangeEvents
             return result;
         }
 
+        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
+        public Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context,
+                                                      SimpleRangeEvent     simpleRangeEvent) =>
+            throw new NotImplementedException();
 
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
             CancellationToken cancellationToken = default)
