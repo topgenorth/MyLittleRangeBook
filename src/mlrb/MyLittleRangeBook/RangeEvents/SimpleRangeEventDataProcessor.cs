@@ -12,7 +12,7 @@ namespace MyLittleRangeBook.RangeEvents
     public interface ISimpleRangeEventDataProcessor
     {
         /// <summary>
-        /// Process the simple range event.
+        ///     Process the simple range event.
         /// </summary>
         /// <param name="context"></param>
         /// <param name="firearmName"></param>
@@ -20,7 +20,10 @@ namespace MyLittleRangeBook.RangeEvents
         /// <param name="rangeName"></param>
         /// <param name="ammoDescription"></param>
         /// <param name="notes"></param>
-        /// <param name="dateOfEvent">The date (and only the date) of the event.  If omitted, then it will default to the current date.</param>
+        /// <param name="dateOfEvent">
+        ///     The date (and only the date) of the event.  If omitted, then it will default to the current
+        ///     date.
+        /// </param>
         /// <returns></returns>
         Task<Result<MlrbId>> ProcessSimpleRangeEventData(DapperCommandContext            context,
                                                          string                          firearmName,
@@ -31,7 +34,7 @@ namespace MyLittleRangeBook.RangeEvents
                                                          DateOnly?                       dateOfEvent);
 
         /// <summary>
-        /// Delete's the simple range event and dis-associates it from any firearm.
+        ///     Delete's the simple range event and dis-associates it from any firearm.
         /// </summary>
         /// <param name="context"></param>
         /// <param name="sre"></param>
@@ -40,17 +43,17 @@ namespace MyLittleRangeBook.RangeEvents
     }
 
     /// <summary>
-    /// An SQLite implementation of a SimpleRangeEventDataProcessor.
+    ///     An SQLite implementation of a SimpleRangeEventDataProcessor.
     /// </summary>
     public class SimpleRangeEventDataProcessor : ISimpleRangeEventDataProcessor
     {
-        readonly IFirearmAggregateRepository _faRepo;
-        readonly ISimpleRangeEventDocumentService    _rangeEventDocumentService;
+        readonly IFirearmAggregateRepository      _faRepo;
+        readonly ISimpleRangeEventDocumentService _rangeEventDocumentService;
 
-        public SimpleRangeEventDataProcessor(IFirearmAggregateRepository faRepo,
-                                             ISimpleRangeEventDocumentService    rangeEventDocumentService)
+        public SimpleRangeEventDataProcessor(IFirearmAggregateRepository      faRepo,
+                                             ISimpleRangeEventDocumentService rangeEventDocumentService)
         {
-            _faRepo            = faRepo;
+            _faRepo                    = faRepo;
             _rangeEventDocumentService = rangeEventDocumentService;
         }
 
@@ -60,7 +63,8 @@ namespace MyLittleRangeBook.RangeEvents
             MlrbId         firearmId    = MlrbId.FromString(sre.FirearmName);
             MlrbId         rangeEventId = sre.Id!;
 
-            Result rDelete = await _rangeEventDocumentService.DeleteAsync(context, sre).ConfigureAwait(false);
+            Result rDelete = await _rangeEventDocumentService.DeleteAsync(sre, context.CancellationToken)
+                                                             .ConfigureAwait(false);
             if (!rDelete.IsSuccess)
             {
                 return rDelete;
@@ -144,10 +148,13 @@ namespace MyLittleRangeBook.RangeEvents
                                        RangeName       = rangeName,
                                    };
 
-            Result<MlrbId> rUpsertRangeEvent = await _rangeEventDocumentService.UpsertAsync(context, sre)
-                                                                       .ConfigureAwait(false);
-            List<IReason> reasons = [];
-            reasons.AddRange(rUpsertRangeEvent.Reasons);
+            Result<MlrbId> rUpsertRangeEvent = await _rangeEventDocumentService
+                                                    .UpsertAsync(sre, context.CancellationToken)
+                                                    .ConfigureAwait(false);
+            List<IReason> reasons =
+            [
+                .. rUpsertRangeEvent.Reasons,
+            ];
 
             if (rUpsertRangeEvent.IsFailed)
             {

@@ -62,7 +62,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         async Task LoadRangeNamesAsync()
         {
             await using DapperCommandContext ctx  = await DapperCommandContext.NewAsync(_sqliteHelper);
-            Result<IEnumerable<string>>      list = await _simpleRangeEventDocumentService.GetRangeNames(ctx);
+            Result<IEnumerable<string>>      list = await _simpleRangeEventDocumentService.GetRangeNames();
             if (list.IsSuccess)
             {
                 RangeNames = list.Value;
@@ -79,7 +79,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 await DapperCommandContext.NewAsync(_sqliteHelper).ConfigureAwait(false);
 
             Result<IEnumerable<string>> ammoDescriptions =
-                await _simpleRangeEventDocumentService.GetAmmoDescriptions(ctx).ConfigureAwait(false);
+                await _simpleRangeEventDocumentService.GetAmmoDescriptions().ConfigureAwait(false);
 
             if (ammoDescriptions.IsSuccess)
             {
@@ -141,7 +141,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 {
                     await ctx.CommitAsync().ConfigureAwait(false);
                     Result<SimpleRangeEvent> r3 = await _simpleRangeEventDocumentService
-                                                       .GetAsync(ctx, r1.Value)
+                                                       .GetAsync(r1.Value, cancellationToken)
                                                        .ConfigureAwait(false);
                     SimpleRangeEvent          sre              = r3.Value;
                     SimpleRangeEventViewModel updatedViewModel = new(sre);

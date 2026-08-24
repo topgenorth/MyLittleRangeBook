@@ -212,7 +212,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             await using DapperCommandContext context =
                 await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken);
-            Result<IEnumerable<SimpleRangeEvent>> r = await _simpleRangeEventDocumentService.GetSimpleRangeEventsAsync(context);
+            Result<IEnumerable<SimpleRangeEvent>> r = await _simpleRangeEventDocumentService.GetSimpleRangeEventsAsync(cancellationToken);
 
             if (r.IsSuccess)
             {

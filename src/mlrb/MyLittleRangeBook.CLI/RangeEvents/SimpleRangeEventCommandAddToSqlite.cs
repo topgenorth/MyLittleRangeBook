@@ -99,7 +99,7 @@ namespace MyLittleRangeBook.RangeEvents
 
                 if (rProcess.IsSuccess)
                 {
-                    Result<SimpleRangeEvent> sre = await _simpleRangeEventDocumentService.GetAsync(context, rProcess.Value)
+                    Result<SimpleRangeEvent> sre = await _simpleRangeEventDocumentService.GetAsync(rProcess.Value, cancellationToken)
                                                                                  .ConfigureAwait(false);
 
                     _simpleRangeEventPrinter.Print(AnsiConsole.Console, sre.Value, quiet);

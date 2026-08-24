@@ -156,7 +156,7 @@ namespace MyLittleRangeBook.MlrbAssets
                 }
 
                 Result<SimpleRangeEvent> r = await _simpleRangeEventDocumentService
-                                                  .GetAsync(context, asset.Id)
+                                                  .GetAsync(asset.Id, context.CancellationToken)
                                                   .ConfigureAwait(false);
                 if (r.IsFailed)
                 {

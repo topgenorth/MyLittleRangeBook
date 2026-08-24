@@ -30,13 +30,13 @@ namespace MyLittleRangeBook.RangeEvents
             _querySession = querySession;
         }
 
-        [Obsolete("This method is deprecated and will be removed in a future version.")]
+        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
         public Task<Result> DeleteAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent) =>
             throw new NotImplementedException();
 
-        public Task<Result> DeleteAsync(SimpleRangeEvent simpleRangeEvent) => DeleteAsync(simpleRangeEvent.Id!);
+        public Task<Result> DeleteAsync(SimpleRangeEvent simpleRangeEvent, CancellationToken cancellationToken = default) => DeleteAsync(simpleRangeEvent.Id!, cancellationToken);
 
-        public async Task<Result> DeleteAsync(MlrbId simpleRangeEventId)
+        public async Task<Result> DeleteAsync(MlrbId simpleRangeEventId, CancellationToken cancellationToken = default)
         {
             Result result;
             if (await _session.CheckExistsAsync<SimpleRangeEvent>(simpleRangeEventId))
@@ -53,11 +53,7 @@ namespace MyLittleRangeBook.RangeEvents
             return result;
         }
 
-
-        public Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync() =>
-            throw new NotImplementedException();
-
-        [Obsolete("This method is deprecated and will be removed in a future version.")]
+        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
         public async Task<Result> ExportToCsv(DapperCommandContext context, string csvFileName)
         {
             try
@@ -89,9 +85,7 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
-        public Task<Result> ExportToCsv(string csvFileName) => throw new NotImplementedException();
-
-        [Obsolete("This method is deprecated and will be removed in a future version.")]
+        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
         public async Task<Result<IEnumerable<string>>> GetAmmoDescriptions(DapperCommandContext context)
         {
             try
@@ -107,9 +101,9 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
-        public Task<Result<IEnumerable<string>>> GetAmmoDescriptions() => throw new NotImplementedException();
+        public Task<Result<IEnumerable<string>>> GetAmmoDescriptions(CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
-        [Obsolete("This method is deprecated and will be removed in a future version.")]
+        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
         public async Task<Result<IEnumerable<string>>> GetRangeNames(DapperCommandContext context)
         {
             try
@@ -125,10 +119,10 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
-        public Task<Result<IEnumerable<string>>> GetRangeNames() => throw new NotImplementedException();
+        public Task<Result<IEnumerable<string>>> GetRangeNames(CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
-        [Obsolete("This method is deprecated and will be removed in a future version.")]
-        public async Task<Result<SimpleRangeEvent?>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId)
+        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
+        public async Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId)
         {
             Result<SimpleRangeEvent?> result;
 
@@ -140,20 +134,19 @@ namespace MyLittleRangeBook.RangeEvents
             else
             {
                 _logger.Debug("Could not find a Fisher document for simple range event.");
-                result = new Result<SimpleRangeEvent?>().WithValue(null)
-                                                        .WithSuccess("Could not find the simple range event.");
+                result = new Result<SimpleRangeEvent?>().WithSuccess("Could not find the simple range event.");
             }
 
             return result;
         }
 
-        public Task<Result<SimpleRangeEvent>> GetAsync(MlrbId simpleRangeEventId) =>
+        public Task<Result<SimpleRangeEvent>> GetAsync(MlrbId simpleRangeEventId, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
 
-        public Task<Result<MlrbId>> UpsertAsync(SimpleRangeEvent simpleRangeEvent) =>
+        public Task<Result<MlrbId>> UpsertAsync(SimpleRangeEvent simpleRangeEvent, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
 
-        [Obsolete("This method is deprecated and will be removed in a future version.")]
+        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(DapperCommandContext ctx)
         {
             Result<IEnumerable<SimpleRangeEvent>> result;
@@ -174,7 +167,7 @@ namespace MyLittleRangeBook.RangeEvents
             return result;
         }
 
-        [Obsolete("This method is deprecated and will be removed in a future version.")]
+        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
         public async Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context,
                                                       SimpleRangeEvent     simpleRangeEvent)
         {
@@ -193,6 +186,63 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             return result;
+        }
+
+
+        public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                IReadOnlyList<SimpleRangeEvent> rangeEvents =
+                    await _session.Query<SimpleRangeEvent>().ToListAsync(cancellationToken);
+                return Result.Ok<IEnumerable<SimpleRangeEvent>>(rangeEvents);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "An error occurred while fetching simple range events.");
+                return Result.Fail<IEnumerable<SimpleRangeEvent>>(ex.ToError());
+            }
+        }
+
+        public async Task<Result> ExportToCsv(string csvFileName, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (File.Exists(csvFileName))
+                {
+                    File.Delete(csvFileName);
+                }
+
+                IReadOnlyList<SimpleRangeEvent> rangeEvents = await _session.Query<SimpleRangeEvent>()
+                                                                            .OrderBy(x => x.EventDate)
+                                                                            .ThenBy(x => x.FirearmName)
+                                                                            .ToListAsync(cancellationToken);
+                await using StreamWriter writer = new(csvFileName);
+                await using CsvWriter    csv    = new(writer, CultureInfo.InvariantCulture);
+
+                await csv.WriteRecordsAsync(rangeEvents.OrderBy(x => x.EventDate), cancellationToken)
+                         .ConfigureAwait(false);
+
+                SimpleRangeEventsExportedToCsvSuccess success = new(csvFileName, rangeEvents.Count());
+                return Result.Ok().WithSuccess(success);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+
+            catch (Exception ex)
+            {
+                SimpleRangeEventsExportToCsvError error = new(csvFileName, ex);
+                error.CausedBy(ex);
+
+                return Result.Fail(error);
+            }
         }
 
         static class Commands
