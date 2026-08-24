@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Nodes;
 using Dapper;
 using Fisher;
+using JasperFx.Events;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -144,6 +145,10 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                {
                                    // [TO20260820] https://fisher.jasperfx.net/configuration/hostbuilder#registration-overloads
                                    opts.Connection(connectionString);
+
+                                   // // [TO20260824] https://fisher.jasperfx.net/documents/identity.html#strong-typed-identities
+                                   // opts.Events.StreamIdentity = StreamIdentity.AsString;
+                                   // opts.RegisterValueType<MlrbId>();
 
                                    opts.Policies.AllDocumentsSoftDeleted();
                                    // opts.Policies.AllDocumentsAreMultiTenanted();

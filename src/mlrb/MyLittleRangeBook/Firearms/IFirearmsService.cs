@@ -12,16 +12,16 @@ namespace MyLittleRangeBook.Firearms
         ///     Deletes the Firearm record from the database.
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="firearm"></param>
+        /// <param name="firearmTableRow"></param>
         /// <returns></returns>
-        Task<Result> DeleteAsync(Firearm firearm);
+        Task<Result> DeleteAsync(FirearmTableRow firearmTableRow);
 
         Task<Result> DeleteAsync(MlrbId firearmId);
 
-        Task<Result<Firearm>> GetFirearmAsync(MlrbId id);
+        Task<Result<FirearmTableRow>> GetFirearmAsync(MlrbId id);
 
-        Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(bool activeOnly = true);
+        Task<Result<IEnumerable<FirearmTableRow>>> GetFirearmsAsync(bool activeOnly = true);
 
-        Task<Result<MlrbId>> UpsertAsync(Firearm firearm);
+        Task<Result<MlrbId>> UpsertAsync(FirearmTableRow firearmTableRow);
     }
 }

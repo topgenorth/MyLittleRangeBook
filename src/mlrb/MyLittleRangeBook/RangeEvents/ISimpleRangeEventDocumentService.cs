@@ -33,7 +33,7 @@ namespace MyLittleRangeBook.RangeEvents
         [Obsolete("This method is deprecated and will be removed in a future version.", true)]
         Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId);
 
-        Task<Result<SimpleRangeEvent>> GetAsync(MlrbId            simpleRangeEventId,
+        Task<Result<SimpleRangeEvent>> GetAsync(Guid            simpleRangeEventId,
                                                 CancellationToken cancellationToken = default);
 
 

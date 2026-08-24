@@ -1,58 +1,230 @@
-﻿using MyLittleRangeBook.Models;
+﻿using System.Text;
+using System.Text.Json.Nodes;
+using MyLittleRangeBook.EventSourcing;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Firearms
 {
-    public record Firearm
+    public partial class Firearm : Aggregate
     {
-        public Firearm(string firearmName)
+        internal const string STREAM_TYPE = "firearm";
+
+        Firearm() => Name = "";
+
+        public override string         DefaultStreamType => STREAM_TYPE;
+        public          string         Name              { get; set; }
+        public          int            RoundsFired       { get; set; }
+        public          string?        Notes             { get; set; }
+        public          DateTimeOffset Created           { get; set; }
+        public          DateTimeOffset Modified          { get; set; }
+        public          bool           IsActive          { get; set; }
+
+
+        public static Firearm Create(EventStreamRow streamRow)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
-            Id   = MlrbId.FromString(firearmName);
-            Name = firearmName;
+            Firearm agg = new();
+            agg.Hydrate(streamRow);
+
+            return agg;
+        }
+
+        public static Firearm New(string name, DateTimeOffset utcNow)
+        {
+            MlrbId  streamId = MlrbId.FromString(name);
+            Firearm agg      = new();
+            agg.Raise(new FirearmCreated(streamId, name, utcNow));
+
+            return agg;
+        }
+
+        public FirearmTableRow ToTableRow()
+        {
+            FirearmTableRow f = new()
+                                {
+                                    Id          = Id,
+                                    RoundsFired = RoundsFired,
+                                    IsActive    = IsActive,
+                                    Name        = Name,
+                                    Notes       = Notes,
+                                    Modified    = Modified,
+                                };
+
+            return f;
+        }
+
+        JsonObject CreateNoteMetaDataJson(string? metadataJson, string noteType = "note")
+        {
+            JsonObject metadata;
+            if (string.IsNullOrWhiteSpace(metadataJson))
+            {
+                metadata = new JsonObject();
+            }
+            else
+            {
+                metadata = JsonNode.Parse(metadataJson)?.AsObject() ?? new JsonObject();
+            }
+
+            metadata["note_type"] = noteType;
+            return metadata;
+        }
+
+        public override void Apply(IDomainEvent e)
+        {
+            Modified = e.OccurredUtc;
+            switch (e)
+            {
+                case FirearmActive x:
+                    IsActive = true;
+
+                    break;
+
+                case FirearmAssociatedWithAsset x:
+                    break;
+
+                case FirearmAssociatedWithRangeEvent x:
+                    // TODO [TO20260626] - Capture the note and ammo description as metadata.
+
+                    break;
+                case FirearmBarrelChanged x:
+                    StringBuilder sbBarrelChange = new StringBuilder("Barrel changed from ")
+                                                  .Append(x.OldBarrel)
+                                                  .Append(" to ")
+                                                  .Append(x.NewBarrel)
+                                                  .Append('.');
+                    AddNote(sbBarrelChange.ToString(), x.OccurredUtc);
+
+                    break;
+                case FirearmCleaned x:
+                    AddNote($"Cleaned on {x.OccurredUtc.ToString()}.", x.OccurredUtc);
+
+                    break;
+
+                case FirearmDisassociatedFromRangeEvent x:
+
+                    break;
+
+                case FirearmRoundCountAltered x:
+                    RoundsFired += x.Rounds;
+                    if (!string.IsNullOrWhiteSpace(x.AmmoDescription))
+                    {
+                        AppendToFirearmAggregateNoteSummary(x.AmmoDescription);
+                    }
+
+                    break;
+
+                case FirearmCreated x:
+                    Id      = x.StreamId;
+                    Name    = x.Name;
+                    Created = x.OccurredUtc;
+                    break;
+
+                case FirearmInactive x:
+                    IsActive = false;
+
+                    break;
+
+                case FirearmModified x:
+                    StringBuilder sbModified = new StringBuilder("Firearm modified on ")
+                                              .Append(x.OccurredUtc.ToString())
+                                              .AppendLine()
+                                              .Append(x.Description);
+                    AppendToFirearmAggregateNoteSummary(sbModified.ToString());
+
+                    break;
+
+                case FirearmNoteAdded x:
+                    AppendToFirearmAggregateNoteSummary(x.Text);
+                    break;
+
+
+                case FirearmSightingSystemChanged x:
+                    StringBuilder sbSightsChanged = new StringBuilder("Changed sights from ")
+                                                   .Append(x.OldAimingSystem)
+                                                   .Append(" to ")
+                                                   .Append(x.NewAimingSystem)
+                                                   .Append(". ")
+                                                   .Append(x.OccurredUtc.ToString());
+                    AppendToFirearmAggregateNoteSummary(sbSightsChanged.ToString());
+
+                    break;
+            }
         }
 
         /// <summary>
-        ///     prefer to use to firearmName constructor.
+        ///     Internal helper method to append the text the Notes property of the aggregate.
         /// </summary>
-        public Firearm()
-        {}
-
-        /// <summary>
-        ///     An id to uniquely identify the Firearm. Will be null for a new entity. Should be same as stream id.
-        /// </summary>
-        public Guid Id { get; set; } = new MlrbId();
-
-        /// <summary>
-        ///     The common name of the Firearm.
-        /// </summary>
-        public string Name { get; set; } = string.Empty;
-
-        public int     RoundsFired { get; set; } = 0;
-        public string? Notes       { get; set; }
-
-        /// <summary>
-        ///     The time (UTC) that the record was created.
-        /// </summary>
-        public DateTimeOffset Created { get; set; } = DateTimeOffset.UtcNow;
-
-        /// <summary>
-        ///     The time (UTC) that the record was last modified.
-        /// </summary>
-        public DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
-
-        public bool IsActive { get; set; } = true;
-
-        /// <summary>
-        ///     Creates a new instance of a <see cref="Firearm" /> with the specified name.
-        /// </summary>
-        /// <param name="name">The name of the firearm. Must not be null, empty, or whitespace.</param>
-        /// <returns>A new <see cref="Firearm" /> instance with the specified name and an ID generated from the name.</returns>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="name" /> is null, empty, or whitespace.</exception>
-        public static Firearm New(string name)
+        /// <param name="text"></param>
+        void AppendToFirearmAggregateNoteSummary(string text)
         {
-            return new Firearm(name);
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(Notes))
+            {
+                Notes = text;
+            }
+            else
+            {
+                StringBuilder newNotes = new StringBuilder(Notes)
+                                        .AppendLine("--")
+                                        .Append("Date: ")
+                                        .AppendLine(Modified.ToString("O"))
+                                        .AppendLine(text.Trim());
+                Notes = newNotes.ToString();
+            }
         }
 
-        public override string ToString() => $"{Id} {Name}";
+        public void AddNote(string? text, DateTimeOffset utcNow, string? metaDataJson = null, string noteType = "note")
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return;
+            }
+
+            Raise(new FirearmNoteAdded(text, utcNow, noteType));
+        }
+
+        public void AssociatedWithAsset(MlrbId assetId, DateTimeOffset dto) =>
+            Raise(new FirearmAssociatedWithAsset(  assetId, dto));
+
+        public void AssociateWithSimpleRangeEvent(MlrbId assetId, DateTimeOffset utcNow) =>
+            Raise(new FirearmAssociatedWithRangeEvent(  assetId, utcNow));
+
+        public void Cleaned(DateTimeOffset utcNow) => Raise(new FirearmCleaned(  utcNow));
+
+        /// <summary>
+        ///     For some reason this firearm was no longer associated with a range event.
+        /// </summary>
+        /// <param name="assetId"></param>
+        /// <param name="roundsInRangeEvents"></param>
+        /// <param name="utcNow"></param>
+        public void DisassociatedWithRangeEvent(MlrbId assetId, DateTimeOffset utcNow) =>
+            Raise(new FirearmDisassociatedFromRangeEvent(  assetId, utcNow));
+
+        /// <summary>
+        ///     Record the discharge of rounds for this firearm.
+        /// </summary>
+        /// <param name="roundCount">If 0, then nothing is done.</param>
+        /// <param name="occurredUtc"></param>
+        /// <param name="ammoDescription">Optional. Free format text that describes the ammo used. </param>
+        /// <param name="metadataJson">Optional.  Any JSON metadata for this event.</param>
+        public void FirearmRoundCountChanged(int     roundCount, DateTimeOffset occurredUtc,
+                                             string? ammoDescription = null,
+                                             string? metadataJson    = null) =>
+            Raise(new FirearmRoundCountAltered(  roundCount, occurredUtc, ammoDescription));
+
+        public void IsInactive(bool inactive, DateTimeOffset utcNow)
+        {
+            if (inactive)
+            {
+                Raise(new FirearmInactive(  utcNow));
+            }
+            else
+            {
+                Raise(new FirearmActive(  utcNow));
+            }
+        }
     }
 }

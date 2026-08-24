@@ -13,13 +13,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
         Justification = "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class FirearmViewModel : ViewModelBase, ICloneable
     {
-        public FirearmViewModel(Firearm firearm)
+        public FirearmViewModel(FirearmTableRow firearmTableRow)
         {
-            Name = firearm.Name;
-            RoundsFired = firearm.RoundsFired;
-            Notes = firearm.Notes;
-            Modified = firearm.Modified;
-            Created = firearm.Created;
+            Name = firearmTableRow.Name;
+            RoundsFired = firearmTableRow.RoundsFired;
+            Notes = firearmTableRow.Notes;
+            Modified = firearmTableRow.Modified;
+            Created = firearmTableRow.Created;
         }
 
         [ObservableProperty] [Required] public partial long? Id { get; private set; }
@@ -36,9 +36,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
             return MemberwiseClone();
         }
 
-        public Firearm ToFirearm()
+        public FirearmTableRow ToFirearm()
         {
-            return new Firearm { Modified = Modified, Created = Created, Name = Name, RoundsFired = RoundsFired, Notes = Notes };
+            return new FirearmTableRow { Modified = Modified, Created = Created, Name = Name, RoundsFired = RoundsFired, Notes = Notes };
         }
 
         public FirearmViewModel CloneFirearmViewModel()

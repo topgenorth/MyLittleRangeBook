@@ -129,11 +129,12 @@ public readonly record struct MlrbId : IComparable<MlrbId>, IEquatable<MlrbId>
 
     // --- Operators ---
     public static implicit operator Guid(MlrbId d) => d._id.ToGuid();
+
     public static implicit operator string(MlrbId d) => d._id.ToString();
     public static implicit operator byte[](MlrbId d) => d._id.ToByteArray();
     public static implicit operator Ulid(MlrbId d) => d._id;
     public static implicit operator MlrbId(string someString) => FromString(someString);
     public static implicit operator MlrbId(Ulid ulid) => new(ulid);
-    public static implicit operator MlrbId(Guid guid) => new(guid);
+    public static explicit operator MlrbId(Guid guid) => new(guid);
 }
 }

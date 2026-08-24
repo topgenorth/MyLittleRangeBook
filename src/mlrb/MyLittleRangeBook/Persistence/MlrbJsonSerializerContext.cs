@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using MyLittleRangeBook.Models;
-using static MyLittleRangeBook.Firearms.FirearmAggregate;
+using static MyLittleRangeBook.Firearms.Firearm;
 using static MyLittleRangeBook.MlrbAssets.MlrbAssetAggregate;
 
 namespace MyLittleRangeBook.Persistence

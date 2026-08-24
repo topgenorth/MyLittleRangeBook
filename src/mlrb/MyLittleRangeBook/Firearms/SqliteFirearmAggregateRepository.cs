@@ -16,7 +16,7 @@ namespace MyLittleRangeBook.Firearms
     ///     SQLite-based event-sourced aggregate repositories. Implements the <see cref="IFirearmAggregateRepository" />
     ///     interface for firearm-specific repository operations.
     /// </remarks>
-    public class SqliteFirearmAggregateRepository : SqliteAggregateRepository<FirearmAggregate>,
+    public class SqliteFirearmAggregateRepository : SqliteAggregateRepository<Firearm>,
                                                     IFirearmAggregateRepository
     {
         public SqliteFirearmAggregateRepository(ISqliteHelper         sqliteHelper,
@@ -24,11 +24,11 @@ namespace MyLittleRangeBook.Firearms
                                                 IEventSourcingService eventSourcingService) :
             base(sqliteHelper,
                  eventSerializer,
-                 FirearmAggregate.STREAM_TYPE,
-                 FirearmAggregate.Create, eventSourcingService, null
+                 Firearm.STREAM_TYPE,
+                 Firearm.Create, eventSourcingService, null
                  ) { }
 
-        public async Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(DapperCommandContext ctx,
+        public async Task<Result<Firearm>> GetOrCreateByNameAsync(DapperCommandContext ctx,
                                                                            string               firearmName,
                                                                            DateTimeOffset?      createUtc = null)
         {
@@ -36,12 +36,12 @@ namespace MyLittleRangeBook.Firearms
 
             MlrbId                    streamId          = MlrbId.FromString(firearmName);
             DateTimeOffset            createdUtc        = createUtc ?? DateTimeOffset.UtcNow;
-            Result<FirearmAggregate>  result;
+            Result<Firearm>  result;
 
-            Result<FirearmAggregate?> rFirearmAggregate = await GetAsync(ctx, streamId);
+            Result<Firearm?> rFirearmAggregate = await GetAsync(ctx, streamId);
             if (rFirearmAggregate.HasError<EventStreamDoesNotExistError>())
             {
-                FirearmAggregate fa = FirearmAggregate.New(firearmName, createdUtc);
+                Firearm fa = Firearm.New(firearmName, createdUtc);
                 result = Result.Ok(fa).WithReason(new FirearmEventStreamCreatedReason(firearmName, streamId));
             }
             else if (rFirearmAggregate.IsFailed)
@@ -51,13 +51,13 @@ namespace MyLittleRangeBook.Firearms
             }
             else if (rFirearmAggregate.Value is not null)
             {
-                FirearmAggregate? fa = rFirearmAggregate.Value;
+                Firearm? fa = rFirearmAggregate.Value;
                 result = Result.Ok(fa)
                                .WithReason(new FirearmEventStreamCreatedReason(firearmName, streamId));
             }
             else
             {
-                result = Result.Fail<FirearmAggregate>(new FailedToGetFirearmEventStream(firearmName, streamId));
+                result = Result.Fail<Firearm>(new FailedToGetFirearmEventStream(firearmName, streamId));
             }
 
             return result;

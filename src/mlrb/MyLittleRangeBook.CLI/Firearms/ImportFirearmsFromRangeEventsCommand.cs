@@ -46,7 +46,7 @@ namespace MyLittleRangeBook
                         continue;
                     }
 
-                    FirearmAggregate fa = FirearmAggregate.New(f.FirearmName, f.CreatedUtc);
+                    Firearm fa = Firearm.New(f.FirearmName, f.CreatedUtc);
                     fa.AddNote($"Imported from simple_range_event {f.SimpleRangeEventId}.",
                                      DateTimeOffset.UtcNow);
 
@@ -63,7 +63,7 @@ namespace MyLittleRangeBook
                     foreach (RoundCountEventRow r in shotsFired)
                     {
                         fa.FirearmRoundCountChanged(r.RoundsFired, r.CreatedUtc);
-                        associations.Add((fa.Id, r.SimpleRangeEventId));
+                        associations.Add((fa.Id.ToString(), r.SimpleRangeEventId));
                     }
 
                     Result upsertEventStreamResult = await FirearmAggregateRepository
@@ -83,7 +83,7 @@ namespace MyLittleRangeBook
 
 
                     #region Step 3: Upsert the firearm.
-                    Firearm f2 = fa.ToFirearm();
+                    FirearmTableRow f2 = fa.ToTableRow();
                     Result<MlrbId> firearmUpsertResult =
                         await FirearmsService.UpsertAsync( f2).ConfigureAwait(false);
                     if (firearmUpsertResult.IsFailed)

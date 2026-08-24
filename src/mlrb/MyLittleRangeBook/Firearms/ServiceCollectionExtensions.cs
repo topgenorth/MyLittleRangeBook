@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence.Sqlite;
-using static MyLittleRangeBook.Firearms.FirearmAggregate;
+using static MyLittleRangeBook.Firearms.Firearm;
 
 // ReSharper disable once CheckNamespace
 namespace MyLittleRangeBook

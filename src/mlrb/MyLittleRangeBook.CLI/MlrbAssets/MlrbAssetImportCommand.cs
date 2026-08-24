@@ -160,14 +160,14 @@ namespace MyLittleRangeBook.MlrbAssets
             return returnCode;
         }
 
-        async Task<Result> AssociateWithFirearm(DapperCommandContext context, MlrbId assetId, string firearmName)
+        async Task<Result> AssociateWithFirearm(DapperCommandContext context, Guid assetId, string firearmName)
         {
             List<IReason> reasons = [];
-            Result<FirearmAggregate> r1 =
+            Result<Firearm> r1 =
                 await _faRepo.GetOrCreateByNameAsync(context, firearmName).ConfigureAwait(false);
             reasons.AddRange(r1.Reasons);
 
-            FirearmAggregate? fa = r1.Value;
+            Firearm? fa = r1.Value;
             fa.AssociatedWithAsset(assetId, DateTimeOffset.UtcNow);
             Result r2 = await _faRepo.UpsertAsync(context, fa).ConfigureAwait(false);
             reasons.AddRange(r2.Reasons);

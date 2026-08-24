@@ -24,7 +24,7 @@ namespace MyLittleRangeBook.Cartridges
         /// <summary>
         ///     An ID to uniquely identify the Cartridge.
         /// </summary>
-        public MlrbId Id { get; set; } = new MlrbId();
+        public Guid Id { get; set; } = new MlrbId();
 
         /// <summary>
         ///     The name of the Cartridge. This must be unique across all cartridges.

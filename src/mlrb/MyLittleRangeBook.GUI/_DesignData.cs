@@ -12,7 +12,7 @@ namespace MyLittleRangeBook.GUI
     // ReSharper disable once InconsistentNaming
     public static class _DesignData
     {
-        internal static readonly Firearm[] TestFirearms =
+        internal static readonly FirearmTableRow[] TestFirearms =
         [
             new()
             {

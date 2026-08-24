@@ -22,7 +22,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
     {
         public SimpleRangeEventViewModel(SimpleRangeEvent rangeEvent)
         {
-            Id              = rangeEvent.Id;
+            Id              = rangeEvent.Id.ToString();
             EventDate       = rangeEvent.EventDate;
             FirearmName     = rangeEvent.FirearmName;
             RangeName       = rangeEvent.RangeName;

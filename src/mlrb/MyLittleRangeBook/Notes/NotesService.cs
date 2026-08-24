@@ -11,7 +11,7 @@ namespace MyLittleRangeBook.Notes
             {
                 return Result.Ok()
                              .WithSuccess(new Success($"Nothing to delete; note `{note.Id}` does not exist.")
-                                             .Enrich(note.Id, note.RowId));
+                                             .Enrich(note.Id.ToString(), note.RowId));
             }
 
             try
@@ -24,7 +24,7 @@ namespace MyLittleRangeBook.Notes
             {
                 Error err = new Error($"Unexpected error trying to delete note `{note.Id}`: {e.Message}")
                            .CausedBy(e)
-                           .Enrich(note.Id, note.RowId);
+                           .Enrich(note.Id.ToString(), note.RowId);
 
                 return Result.Fail(err);
             }
@@ -49,13 +49,13 @@ namespace MyLittleRangeBook.Notes
                 note.RowId = rowId;
 
                 Success success = new($"Note `{note.Id}` saved.");
-                success.Enrich(note.Id, note.RowId);
+                success.Enrich(note.Id.ToString(), note.RowId);
 
                 return Result.Ok((MlrbId)note.Id!).WithSuccess(success);
             }
             catch (Exception e)
             {
-                Error err = e.ToError().Enrich(note.Id, note.RowId);
+                Error err = e.ToError().Enrich(note.Id.ToString(), note.RowId);
                 return Result.Fail(err);
             }
         }

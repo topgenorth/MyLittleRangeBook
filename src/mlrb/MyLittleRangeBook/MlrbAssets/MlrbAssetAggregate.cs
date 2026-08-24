@@ -188,7 +188,7 @@ namespace MyLittleRangeBook.MlrbAssets
 
         public MlrbAssetRow ToMlrbAssetRow()
         {
-            MlrbAssetRow row = new(Id,
+            MlrbAssetRow row = new(Id.ToString(),
                                    SourceFile,
                                    DestinationPath,
                                    MimeType,

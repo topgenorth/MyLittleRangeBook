@@ -21,7 +21,7 @@ namespace MyLittleRangeBook.RangeEvents
             {
                 Grid bodyGrid = new Grid().AddColumns(2);
 
-                bodyGrid.AddRow("  [white]Id:[/]", sre.Id!);
+                bodyGrid.AddRow("  [white]Id:[/]", sre.Id!.ToString());
                 bodyGrid.AddRow("  [white]Date:[/]", sre.EventDate.ToString("yyyy-MMM-dd"));
                 bodyGrid.AddRow("  [white]Firearm:[/]", sre.FirearmName);
                 bodyGrid.AddRow("  [white]Range:[/] ", sre.RangeName);

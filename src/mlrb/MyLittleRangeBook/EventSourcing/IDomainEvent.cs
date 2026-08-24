@@ -6,7 +6,6 @@ namespace MyLittleRangeBook.EventSourcing
 {
     public interface IDomainEvent: IHaveMetadataJson
     {
-        MlrbId         StreamId    { get; }
         DateTimeOffset OccurredUtc { get; }
 
         /// <summary>

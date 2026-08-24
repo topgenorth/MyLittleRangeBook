@@ -33,7 +33,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                   Justification =
                                       "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class ManageFirearmsViewModel : ViewModelBase, IDialogParticipant,
-                                                   IRecipient<UpdateDataMessage<Firearm>>,
+                                                   IRecipient<UpdateDataMessage<FirearmTableRow>>,
                                                    IRecipient<UpdateDataMessage<SimpleRangeEvent>>
     {
         readonly IDialogService                           _dialogService;
@@ -63,7 +63,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
 
             // Register for message notifications from other ViewModels
-            WeakReferenceMessenger.Default.Register<UpdateDataMessage<Firearm>>(this);
+            WeakReferenceMessenger.Default.Register<UpdateDataMessage<FirearmTableRow>>(this);
             WeakReferenceMessenger.Default.Register<UpdateDataMessage<SimpleRangeEvent>>(this);
 
             // Get the current synchronization context for UI thread operations
@@ -109,9 +109,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [NotifyCanExecuteChangedFor(nameof(DeleteFirearmCommand), nameof(EditFirearmCommand))]
         public partial FirearmViewModel? SelectedFirearm { get; set; }
 
-        public void Receive(UpdateDataMessage<Firearm> message)
+        public void Receive(UpdateDataMessage<FirearmTableRow> message)
         {
-            Firearm[] updateEvents = message.ItemsAffected;
+            FirearmTableRow[] updateEvents = message.ItemsAffected;
             switch (message.Action)
             {
                 case UpdateAction.Added:
@@ -144,7 +144,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             try
             {
 
-                Result<IEnumerable<Firearm>> result = await _firearmsDbService.GetFirearmsAsync();
+                Result<IEnumerable<FirearmTableRow>> result = await _firearmsDbService.GetFirearmsAsync();
 
                 if (result.IsSuccess)
                 {
@@ -167,9 +167,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand]
         async Task AddNewFirearmAsync()
         {
-            Firearm firearm = new();
+            FirearmTableRow firearmTableRow = new();
 
-            await EditFirearmAsync(new FirearmViewModel(firearm));
+            await EditFirearmAsync(new FirearmViewModel(firearmTableRow));
         }
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteFirearm))]

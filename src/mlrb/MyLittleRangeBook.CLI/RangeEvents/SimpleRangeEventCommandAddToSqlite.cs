@@ -1,11 +1,12 @@
 ﻿using ConsoleAppFramework;
+using Fisher;
 using FluentResults;
+using JasperFx.Events;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.EventSourcing;
-using MyLittleRangeBook.Persistence;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence.Sqlite;
-using static MyLittleRangeBook.ReturnCodes;
 
 namespace MyLittleRangeBook.RangeEvents
 {
@@ -17,32 +18,37 @@ namespace MyLittleRangeBook.RangeEvents
     public class SimpleRangeEventCommandAddToSqlite : MlrbSqliteCommandBase
     {
         /// <summary>
-        /// A list of <c ref="IReason" />'s that should be ignored when decided to commit the changes from the simple range event.
+        ///     A list of <c ref="IReason" />'s that should be ignored when decided to commit the changes from the simple range
+        ///     event.
         /// </summary>
         public static readonly Func<IReason, bool> s_reasonsThatDontCount = evt => evt is FirearmAssociatedWithNoteError
-                                                                              or
-                                                                                FirearmDisassociatedWithNoteError or
-                                                                                FirearmAssociatedToRangeEventError or
-                                                                                FirearmDisassociatedFromRangeEventError
-                                                                              or
-                                                                                FirearmAssociatedWithAssetError or
-                                                                                FirearmDisassociatedFromAssetError;
+                                                                                        or
+                                                                                          FirearmDisassociatedWithNoteError or
+                                                                                          FirearmAssociatedToRangeEventError
+                                                                                        or
+                                                                                          FirearmDisassociatedFromRangeEventError
+                                                                                        or
+                                                                                          FirearmAssociatedWithAssetError or
+                                                                                          FirearmDisassociatedFromAssetError;
 
-        readonly ISimpleRangeEventDataProcessor _rangeEventDataProcessor;
-        readonly ISimpleRangeEventPrinter       _simpleRangeEventPrinter;
-        readonly ISimpleRangeEventDocumentService       _simpleRangeEventDocumentService;
+        readonly ISimpleRangeEventDataProcessor   _rangeEventDataProcessor;
+        readonly IDocumentSession                 _session;
+        readonly ISimpleRangeEventDocumentService _simpleRangeEventDocumentService;
+        readonly ISimpleRangeEventPrinter         _simpleRangeEventPrinter;
 
-        public SimpleRangeEventCommandAddToSqlite(ILogger                        logger,
-                                                  ICliDisplay                    cliDisplay,
-                                                  ISimpleRangeEventDataProcessor simpleRangeEventProcessor,
-                                                  ISqliteHelper                  sqliteHelper,
-                                                  ISimpleRangeEventPrinter       simpleRangeEventPrinter,
-                                                  ISimpleRangeEventDocumentService       simpleRangeEventDocumentService) :
+        public SimpleRangeEventCommandAddToSqlite(ILogger                          logger,
+                                                  ICliDisplay                      cliDisplay,
+                                                  ISimpleRangeEventDataProcessor   simpleRangeEventProcessor,
+                                                  ISqliteHelper                    sqliteHelper,
+                                                  ISimpleRangeEventPrinter         simpleRangeEventPrinter,
+                                                  ISimpleRangeEventDocumentService simpleRangeEventDocumentService,
+                                                  IDocumentSession                 session) :
             base(logger, cliDisplay, sqliteHelper)
         {
-            _simpleRangeEventPrinter = simpleRangeEventPrinter;
+            _simpleRangeEventPrinter         = simpleRangeEventPrinter;
             _simpleRangeEventDocumentService = simpleRangeEventDocumentService;
-            _rangeEventDataProcessor = simpleRangeEventProcessor;
+            _session                         = session;
+            _rangeEventDataProcessor         = simpleRangeEventProcessor;
         }
 
         /// <summary>
@@ -71,55 +77,28 @@ namespace MyLittleRangeBook.RangeEvents
                                                         bool                            quiet             = false,
                                                         CancellationToken               cancellationToken = default)
         {
-            CliDisplay.PrintCommandHeader("Process range event data.");
-            await using DapperCommandContext context =
-                await DapperCommandContext.NewAsync(SqliteHelper, cancellationToken, true)
-                                          .ConfigureAwait(false);
+            int returnValue = -1;
+            CliDisplay.PrintCommandHeader("Add a range event.");
 
-            Result<MlrbId> rProcess = await _rangeEventDataProcessor
-                                           .ProcessSimpleRangeEventData(context, firearm, rounds, range, ammo, notes,
-                                                                        eventDate)
-                                           .ConfigureAwait(false);
+            SimpleRangeEvent sre = SimpleRangeEvent.New(firearm.Trim(), rounds, range.Trim(), ammo.Trim(), notes.Trim(),
+                                                        eventDate ?? DateOnly.FromDateTime(DateTime.UtcNow));
+            MlrbId firearmId = MlrbId.FromString(sre.FirearmName);
+            IEventStream<Firearm> f = await _session.Events
+                                                    .FetchForWriting<Firearm>((Guid) firearmId, cancellationToken)
+                                                    .ConfigureAwait(false);
 
-            int returnValue;
 
-            var warnings = rProcess.Reasons.Where(s_reasonsThatDontCount);
-            foreach (var w in warnings)
-            {
-                Logger.Debug(w.Message);
-                CliDisplay.PrintWarning(w.Message);
-            }
+            List<object> firearmevents =
+            [
+                new Firearm.FirearmActive(firearmId, sre.OccurredUtc),
+                new Firearm.FirearmRoundCountAltered(firearmId, sre.RoundsFired, sre.OccurredUtc),
+                new Firearm.FirearmAssociatedWithRangeEvent(firearmId, sre.Id, sre.OccurredUtc),
+                new Firearm.FirearmNoteAdded(firearmId, notes.Trim(), sre.OccurredUtc),
+            ];
+            _session.Store(sre);
+            f.AppendMany(firearmevents);
 
-            var rFiltered = new Result().WithReasons(rProcess.Reasons.Except(warnings));
-
-            if (rFiltered.IsSuccess)
-            {
-                await context.CommitAsync().ConfigureAwait(false);
-                returnValue = SUCCESS;
-
-                if (rProcess.IsSuccess)
-                {
-                    Result<SimpleRangeEvent> sre = await _simpleRangeEventDocumentService.GetAsync(rProcess.Value, cancellationToken)
-                                                                                 .ConfigureAwait(false);
-
-                    _simpleRangeEventPrinter.Print(AnsiConsole.Console, sre.Value, quiet);
-
-                }
-                Logger.Information("Processed simple range event.");
-                CliDisplay.PrintSuccess("Processed simple range event.");
-            }
-            else
-            {
-                await context.RollbackAsync().ConfigureAwait(false);
-                returnValue = RANGE_EVENT_FAILED_TO_CREATE;
-                foreach (IError err in rProcess.Errors)
-                {
-                    Logger.Error(err.Message);
-                    CliDisplay.PrintFailure(err.Message);
-                }
-
-                Logger.Error("Could not process simple range event.");
-            }
+            await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             PressEnterToContinue();
             return returnValue;

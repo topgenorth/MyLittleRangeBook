@@ -4,7 +4,7 @@ using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Firearms
 {
-    public partial class FirearmAggregate
+    public partial class Firearm
     {
         /// <summary>
         ///     Represents an event indicating that a firearm has been marked as active within the domain.
@@ -19,7 +19,7 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("firearm-active")]
         public record struct FirearmActive(
-            MlrbId         StreamId,
+
             DateTimeOffset OccurredUtc,
             string?        MetadataJson = null)
             : IDomainEvent;
@@ -44,7 +44,7 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("firearm-barrel-changed")]
         public record struct FirearmBarrelChanged(
-            MlrbId         StreamId,
+
             string         OldBarrel,
             string         NewBarrel,
             DateTimeOffset OccurredUtc,
@@ -81,7 +81,7 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("firearm-created")]
         public record struct FirearmCreated(
-            MlrbId         StreamId,
+
             string         Name,
             DateTimeOffset OccurredUtc,
             string?        MetadataJson = null) : IDomainEvent;
@@ -98,7 +98,7 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("firearm-inactive")]
         public record struct FirearmInactive(
-            MlrbId         StreamId,
+
             DateTimeOffset OccurredUtc,
             string?        MetadataJson = null)
             : IDomainEvent;
@@ -119,7 +119,7 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("firearm-modification")]
         public record struct FirearmModified(
-            MlrbId         StreamId,
+
             string         Description,
             DateTimeOffset OccurredUtc,
             string?        MetadataJson = null)
@@ -141,7 +141,7 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("firearm-round-count-altered")]
         public record struct FirearmRoundCountAltered(
-            MlrbId         StreamId,
+
             int            Rounds,
             DateTimeOffset OccurredUtc,
             string?        AmmoDescription = null,
@@ -164,7 +164,6 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("firearm-note-added")]
         public record struct FirearmNoteAdded(
-            MlrbId         StreamId,
             string         Text,
             DateTimeOffset OccurredUtc,
             string         NoteType     = "note",
@@ -190,7 +189,7 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("firearm-sights-changed")]
         public record struct FirearmSightingSystemChanged(
-            MlrbId         StreamId,
+
             string         OldAimingSystem,
             string         NewAimingSystem,
             DateTimeOffset OccurredUtc,
@@ -212,7 +211,7 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("range-event-associated-with-firearm")]
         public record struct FirearmAssociatedWithRangeEvent(
-            MlrbId         StreamId,
+
             MlrbId         RangeEventId,
             DateTimeOffset OccurredUtc,
             string?        MetadataJson = null
@@ -245,7 +244,7 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("asset-associated-with-firearm")]
         public record struct FirearmAssociatedWithAsset(
-            MlrbId         StreamId,
+
             MlrbId         AssetId,
             DateTimeOffset OccurredUtc,
             string?        MetadataJson = null)
@@ -267,7 +266,7 @@ namespace MyLittleRangeBook.Firearms
         /// </param>
         [EventType("asset-disassociated-from-firearm")]
         public record struct FirearmDisassociatedFromAsset(
-            MlrbId         StreamId,
+
             MlrbId         AssetId,
             DateTimeOffset OccurredUtc,
             string?        MetadataJson = null)

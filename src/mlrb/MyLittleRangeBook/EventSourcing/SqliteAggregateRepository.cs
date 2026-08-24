@@ -145,7 +145,7 @@ namespace MyLittleRangeBook.EventSourcing
             List<IReason> reasons  = [];
             try
             {
-                int? currentVersion = await GetStreamVersion(context, streamId).ConfigureAwait(false);
+                int? currentVersion = await GetStreamVersion(context, streamId.ToString()).ConfigureAwait(false);
                 Result<int> nextEventVersionResult = GetNextEventVersion(currentVersion,
                                                                          aggregate.Version,
                                                                          pendingEvents.Count,

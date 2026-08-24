@@ -12,14 +12,14 @@ namespace MyLittleRangeBook.Firearms
     {
         public const string DI_KEY = "firearm-note-projector";
 
-        public static readonly Func<IDomainEvent, bool> IsNoteEvent = evt => evt is FirearmAggregate.FirearmActive or
-                                                                                 FirearmAggregate.FirearmBarrelChanged
+        public static readonly Func<IDomainEvent, bool> IsNoteEvent = evt => evt is Firearm.FirearmActive or
+                                                                                 Firearm.FirearmBarrelChanged
                                                                                or
-                                                                                 FirearmAggregate.FirearmCleaned or
-                                                                                 FirearmAggregate.FirearmInactive or
-                                                                                 FirearmAggregate.FirearmModified or
-                                                                                 FirearmAggregate.FirearmNoteAdded or
-                                                                                 FirearmAggregate
+                                                                                 Firearm.FirearmCleaned or
+                                                                                 Firearm.FirearmInactive or
+                                                                                 Firearm.FirearmModified or
+                                                                                 Firearm.FirearmNoteAdded or
+                                                                                 Firearm
                                                                                     .FirearmSightingSystemChanged;
 
         readonly INotesService _notesService;
@@ -43,31 +43,31 @@ namespace MyLittleRangeBook.Firearms
             {
                 switch (evt)
                 {
-                    case FirearmAggregate.FirearmBarrelChanged e:
+                    case Firearm.FirearmBarrelChanged e:
                         postUpsertTasks.Add(AddFirearmNoteAsync(context, streamId,
                                                                 "barrel-change",
                                                                 $"Barrel changed from '{e.OldBarrel}' to '{e.NewBarrel}'.",
                                                                 e.OccurredUtc));
                         break;
-                    case FirearmAggregate.FirearmCleaned e7:
+                    case Firearm.FirearmCleaned e7:
                         postUpsertTasks.Add(AddFirearmNoteAsync(context, streamId,
                                                                 "cleaned",
                                                                 "Firearm cleaned.",
                                                                 e7.OccurredUtc));
                         break;
-                    case FirearmAggregate.FirearmModified e10:
+                    case Firearm.FirearmModified e10:
                         postUpsertTasks.Add(AddFirearmNoteAsync(context, streamId,
                                                                 "modified",
                                                                 $"Firearm modified: {e10.Description}",
                                                                 e10.OccurredUtc));
                         break;
-                    case FirearmAggregate.FirearmNoteAdded e6:
+                    case Firearm.FirearmNoteAdded e6:
                         postUpsertTasks.Add(AddFirearmNoteAsync(context, streamId,
                                                                 "note",
                                                                 e6.Text,
                                                                 e6.OccurredUtc));
                         break;
-                    case FirearmAggregate.FirearmSightingSystemChanged e11:
+                    case Firearm.FirearmSightingSystemChanged e11:
                         postUpsertTasks.Add(AddFirearmNoteAsync(context, streamId,
                                                                 "sighting-system-changed",
                                                                 $"Sighting system changed from '{e11.OldAimingSystem}' to '{e11.NewAimingSystem}'.",

@@ -55,7 +55,7 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             _simpleRangeeventTable.AddRow(
-                simpleRangeEvent.Id!,
+                simpleRangeEvent.Id!.ToString(),
                 simpleRangeEvent.EventDate.ToString("yyyy-MM-dd"),
                 simpleRangeEvent.FirearmName,
                 simpleRangeEvent.RangeName,

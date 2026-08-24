@@ -3,7 +3,7 @@ using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.Firearms
 {
-    public interface IFirearmAggregateRepository : ISqliteAggregateRepository<FirearmAggregate>
+    public interface IFirearmAggregateRepository : ISqliteAggregateRepository<Firearm>
     {
         /// <summary>
         ///     Retrieves a firearm aggregate by its name or creates a new one if it does not exist.
@@ -20,7 +20,7 @@ namespace MyLittleRangeBook.Firearms
         /// <returns>
         ///     A result containing the firearm aggregate found or created.
         /// </returns>
-        Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(DapperCommandContext ctx,
+        Task<Result<Firearm>> GetOrCreateByNameAsync(DapperCommandContext ctx,
                                                               string               firearmName,
                                                               DateTimeOffset?      createUtc = null);
     }
