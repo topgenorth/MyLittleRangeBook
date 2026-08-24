@@ -14,17 +14,13 @@ namespace MyLittleRangeBook.Firearms
         /// <summary>
         ///     prefer to use to firearmName constructor.
         /// </summary>
-        public Firearm() => Id = new MlrbId().ToString();
+        public Firearm()
+        {}
 
         /// <summary>
         ///     An id to uniquely identify the Firearm. Will be null for a new entity. Should be same as stream id.
         /// </summary>
-        public string? Id { get; set; }
-
-        /// <summary>
-        ///     The database row ID of the Firearm. Will be null for a new record.
-        /// </summary>
-        public long? RowId { get; set; }
+        public Guid Id { get; set; } = new MlrbId();
 
         /// <summary>
         ///     The common name of the Firearm.
@@ -57,6 +53,6 @@ namespace MyLittleRangeBook.Firearms
             return new Firearm(name);
         }
 
-        public override string ToString() => $"{Id ?? "N/A"}{Name}";
+        public override string ToString() => $"{Id} {Name}";
     }
 }

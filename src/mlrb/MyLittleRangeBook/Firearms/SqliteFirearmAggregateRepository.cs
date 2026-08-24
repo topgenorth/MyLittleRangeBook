@@ -21,14 +21,12 @@ namespace MyLittleRangeBook.Firearms
     {
         public SqliteFirearmAggregateRepository(ISqliteHelper         sqliteHelper,
                                                 IEventSerializer      eventSerializer,
-                                                IEventSourcingService eventSourcingService,
-                                                [FromKeyedServices(FirearmProjector.DI_KEY)]
-                                                IProjector projector) :
+                                                IEventSourcingService eventSourcingService) :
             base(sqliteHelper,
                  eventSerializer,
                  FirearmAggregate.STREAM_TYPE,
-                 FirearmAggregate.Create, eventSourcingService,
-                 projector) { }
+                 FirearmAggregate.Create, eventSourcingService, null
+                 ) { }
 
         public async Task<Result<FirearmAggregate>> GetOrCreateByNameAsync(DapperCommandContext ctx,
                                                                            string               firearmName,

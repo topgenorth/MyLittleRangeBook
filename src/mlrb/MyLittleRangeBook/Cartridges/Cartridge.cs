@@ -7,7 +7,6 @@ namespace MyLittleRangeBook.Cartridges
     {
         public Cartridge()
         {
-            Id = new MlrbId().ToString();
         }
 
         /// <summary>
@@ -19,19 +18,13 @@ namespace MyLittleRangeBook.Cartridges
         {
            ArgumentException.ThrowIfNullOrWhiteSpace(uniqueName);
            Name = uniqueName;
-           Id = MlrbId.FromString(uniqueName).ToString();
+           Id = MlrbId.FromString(uniqueName);
         }
 
         /// <summary>
         ///     An ID to uniquely identify the Cartridge.
         /// </summary>
-        public string Id { get; set; } = "";
-
-        /// <summary>
-        ///     The database row ID of the Cartridge. Will be null for a new record.
-        /// </summary>
-        [Obsolete]
-        public long? RowId { get; set; } = -1;
+        public MlrbId Id { get; set; } = new MlrbId();
 
         /// <summary>
         ///     The name of the Cartridge. This must be unique across all cartridges.
@@ -77,7 +70,7 @@ namespace MyLittleRangeBook.Cartridges
 
         public override string ToString()
         {
-            return $"{Id ?? "N/A"} {Name}";
+            return $"{Id} {Name}";
         }
     }
 }

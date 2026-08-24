@@ -144,7 +144,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             try
             {
 
-                Result<IEnumerable<Firearm>> result = await _firearmsDbService.GetFirearmsAsync(ctx);
+                Result<IEnumerable<Firearm>> result = await _firearmsDbService.GetFirearmsAsync();
 
                 if (result.IsSuccess)
                 {
@@ -221,7 +221,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                     await using SqliteConnection connection =
                         await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
                     DapperCommandContext ctx = new(connection, null, cancellationToken);
-                    Result<bool>         r   = await _firearmsDbService.DeleteAsync(ctx, firearm.ToFirearm());
+                    Result<bool>         r   = await _firearmsDbService.DeleteAsync(firearm.ToFirearm());
                     if (r.IsSuccess)
                     {
                         _firearmViewModelCache.Remove(firearm);

@@ -16,8 +16,7 @@ namespace MyLittleRangeBook.GUI
         [
             new()
             {
-                RowId = 1,
-                Id = "NANOID-1",
+                Id = Guid.CreateVersion7(),
                 Created = DateTimeOffset.UtcNow,
                 Modified = DateTimeOffset.UtcNow,
                 Name = "STAG-10",
@@ -25,8 +24,7 @@ namespace MyLittleRangeBook.GUI
             },
             new()
             {
-                Id = "NANOID-2",
-                RowId = 2,
+                Id = Guid.CreateVersion7(),
                 Created = DateTimeOffset.UtcNow,
                 Modified = DateTimeOffset.UtcNow,
                 Name = "Ruger 10/22",
@@ -38,8 +36,7 @@ namespace MyLittleRangeBook.GUI
         [
             new()
             {
-                Id = "NANOID-3",
-                RowId = 1,
+                Id = Guid.CreateVersion7(),
                 Created = DateTimeOffset.UtcNow,
                 Modified = DateTimeOffset.UtcNow,
                 EventDate = new DateTime(2024, 03, 12),
@@ -51,8 +48,7 @@ namespace MyLittleRangeBook.GUI
             },
             new()
             {
-                Id = "NANOID-4",
-                RowId = 2,
+                Id = Guid.CreateVersion7(),
                 Created = DateTimeOffset.UtcNow,
                 Modified = DateTimeOffset.UtcNow,
                 EventDate = new DateTime(2025, 03, 12),

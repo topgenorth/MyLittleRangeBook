@@ -15,7 +15,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
     {
         public FirearmViewModel(Firearm firearm)
         {
-            Id = firearm.RowId;
             Name = firearm.Name;
             RoundsFired = firearm.RoundsFired;
             Notes = firearm.Notes;
@@ -39,7 +38,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
         public Firearm ToFirearm()
         {
-            return new Firearm { RowId = Id, Modified = Modified, Created = Created, Name = Name, RoundsFired = RoundsFired, Notes = Notes };
+            return new Firearm { Modified = Modified, Created = Created, Name = Name, RoundsFired = RoundsFired, Notes = Notes };
         }
 
         public FirearmViewModel CloneFirearmViewModel()

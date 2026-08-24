@@ -37,7 +37,6 @@ namespace MyLittleRangeBook.Sqlite
         [Fact]
         public async Task Test1()
         {
-
             await InitializeAsync();
             Cartridge cartridge = new()
                                   {
@@ -47,7 +46,7 @@ namespace MyLittleRangeBook.Sqlite
             session.Store(cartridge);
             await session.SaveChangesAsync();
 
-            Cartridge? loaded = await session.LoadAsync<Cartridge>(cartridge.Id);
+            Cartridge? loaded = await session.LoadAsync<Cartridge>((Guid)cartridge.Id);
             Debug.WriteLine($"Loaded cartridge: {loaded?.CommonName}");
         }
     }

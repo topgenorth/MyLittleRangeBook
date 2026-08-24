@@ -29,13 +29,8 @@ namespace MyLittleRangeBook.RangeEvents
         /// <summary>
         ///     A Nanoid to uniquely identify the SimpleRangeEvent. Will be null for a new entity.
         /// </summary>
-        public string? Id { get; set; }
+        public MlrbId Id { get; set; } = new MlrbId();
 
-        /// <summary>
-        ///     The database row ID of the SimpleRangeEvent. Will be null for a new record.
-        /// </summary>
-        [Obsolete("This will be removed.")]
-        public long? RowId { get; set; }
 
         /// <summary>
         ///     The date that the event took place.

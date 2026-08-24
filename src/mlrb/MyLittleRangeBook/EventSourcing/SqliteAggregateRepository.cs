@@ -49,7 +49,7 @@ namespace MyLittleRangeBook.EventSourcing
                                             string                           streamType,
                                             Func<EventStreamRow, TAggregate> createFromStream,
                                             IEventSourcingService            eventSourcingService,
-                                            IProjector                       projector)
+                                            IProjector?                      projector)
         {
             SqliteHelper          = sqliteHelper;
             _eventSerializer      = eventSerializer;

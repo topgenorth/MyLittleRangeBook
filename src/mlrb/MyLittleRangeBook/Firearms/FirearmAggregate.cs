@@ -13,7 +13,6 @@ namespace MyLittleRangeBook.Firearms
         FirearmAggregate() => Name = "";
 
         public override string         DefaultStreamType => STREAM_TYPE;
-        public          long?          RowId             { get; set; }
         public          string         Name              { get; set; }
         public          int            RoundsFired       { get; set; }
         public          string?        Notes             { get; set; }
@@ -43,7 +42,7 @@ namespace MyLittleRangeBook.Firearms
         {
             Firearm f = new()
                         {
-                            Id          = Id.ToString(),
+                            Id          = Id,
                             RoundsFired = RoundsFired,
                             IsActive    = IsActive,
                             Name        = Name,

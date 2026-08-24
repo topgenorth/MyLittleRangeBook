@@ -23,7 +23,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public SimpleRangeEventViewModel(SimpleRangeEvent rangeEvent)
         {
             Id              = rangeEvent.Id;
-            RowId           = rangeEvent.RowId;
             EventDate       = rangeEvent.EventDate;
             FirearmName     = rangeEvent.FirearmName;
             RangeName       = rangeEvent.RangeName;
@@ -80,7 +79,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
             new()
             {
                 Id              = Id,
-                RowId           = RowId,
                 EventDate       = EventDate,
                 FirearmName     = FirearmName?.Trim() ?? string.Empty,
                 RangeName       = RangeName,

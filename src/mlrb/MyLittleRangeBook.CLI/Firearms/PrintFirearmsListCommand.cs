@@ -35,7 +35,7 @@ namespace MyLittleRangeBook
             var ctx = new DapperCommandContext(scopedConn.Connection, null, cancellationToken);
 
             var firearms = await FirearmsService
-                .GetFirearmsAsync(ctx)
+                .GetFirearmsAsync()
                 .ConfigureAwait(false);
 
             if (firearms.IsFailed)

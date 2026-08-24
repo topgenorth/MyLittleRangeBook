@@ -97,7 +97,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 await DapperCommandContext.NewAsync(_sqliteHelper).ConfigureAwait(false);
 
             Result<IEnumerable<Firearm>> firearmsResult =
-                await _firearmsService.GetFirearmsAsync(ctx).ConfigureAwait(false);
+                await _firearmsService.GetFirearmsAsync().ConfigureAwait(false);
 
             if (firearmsResult.IsSuccess)
             {

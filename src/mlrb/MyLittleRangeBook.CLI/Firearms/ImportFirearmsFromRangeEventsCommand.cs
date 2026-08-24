@@ -84,8 +84,8 @@ namespace MyLittleRangeBook
 
                     #region Step 3: Upsert the firearm.
                     Firearm f2 = fa.ToFirearm();
-                    Result<EntityId> firearmUpsertResult =
-                        await FirearmsService.UpsertAsync(context, f2).ConfigureAwait(false);
+                    Result<MlrbId> firearmUpsertResult =
+                        await FirearmsService.UpsertAsync( f2).ConfigureAwait(false);
                     if (firearmUpsertResult.IsFailed)
                     {
                         Logger.Warning("Failed to upsert firearm '{FirearmName}' - skipped.", f2.Name);

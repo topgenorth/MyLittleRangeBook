@@ -32,9 +32,7 @@ namespace MyLittleRangeBook.Models
         [Fact]
         public void FromEntityId_creates_a_valid_MlrbId()
         {
-            string   id       = new MlrbId().ToString();
-            EntityId entityId = new(id, null);
-            MlrbId   mlrbid   = entityId.Id;
+            MlrbId mlrbid = new MlrbId();
 
             Assert.NotEqual(MlrbId.Empty, mlrbid);
             Assert.True(Ulid.IsValid(mlrbid.ToString()));
@@ -43,12 +41,9 @@ namespace MyLittleRangeBook.Models
         [Fact]
         public void EntityIds_with_same_Id_should_have_equal_MlrbId()
         {
-            string   id        = new MlrbId().ToString();
-            EntityId entityId1 = new(id, null);
-            MlrbId   mlrbId1   = entityId1.Id;
+            MlrbId   mlrbId1   = new MlrbId();
 
-            EntityId entityId2 = new(id, 1111);
-            MlrbId   mlrbId2   = entityId2.Id;
+            MlrbId mlrbId2 = mlrbId1;
 
             Assert.Equal(mlrbId1, mlrbId2);
         }

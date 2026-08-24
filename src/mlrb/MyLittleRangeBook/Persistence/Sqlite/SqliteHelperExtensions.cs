@@ -151,13 +151,11 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    opts.Schema.For<Cartridge>()
                                        .Index(x => x.CommonName)
                                        .UniqueIndex(x => x.Name)
-                                       .UniqueIndex(x => x.RowId)
                                        .UseNumericRevisions();
 
                                    opts.Schema.For<SimpleRangeEvent>()
                                        .Index(x => x.EventDate)
                                        .Index(x => x.FirearmName)
-                                       .UniqueIndex(x => x.RowId)
                                        .UseNumericRevisions();
                                })
                     .ApplyAllDatabaseChangesOnStartup();

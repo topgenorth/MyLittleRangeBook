@@ -26,7 +26,7 @@ namespace MyLittleRangeBook
 
             foreach (Firearm firearm in _firearms)
             {
-                table.AddRow(firearm.Name, firearm.RoundsFired.ToString(), firearm.Id!);
+                table.AddRow(firearm.Name, firearm.RoundsFired.ToString(), firearm.Id.ToString());
             }
 
             Panel p = new Panel(table).Expand().Border(BoxBorder.None);

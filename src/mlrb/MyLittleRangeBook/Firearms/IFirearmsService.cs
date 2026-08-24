@@ -1,5 +1,4 @@
 ﻿using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Persistence;
 
 namespace MyLittleRangeBook.Firearms
 {
@@ -15,29 +14,14 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="context"></param>
         /// <param name="firearm"></param>
         /// <returns></returns>
-        Task<Result<bool>> DeleteAsync(DapperCommandContext context, Firearm firearm);
+        Task<Result> DeleteAsync(Firearm firearm);
 
-        Task<Result<Firearm>> GetFirearmAsync(DapperCommandContext context, string id);
+        Task<Result> DeleteAsync(MlrbId firearmId);
 
+        Task<Result<Firearm>> GetFirearmAsync(MlrbId id);
 
-        Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(DapperCommandContext context,
-                                                            bool                 activeOnly = true);
+        Task<Result<IEnumerable<Firearm>>> GetFirearmsAsync(bool activeOnly = true);
 
-
-        /// <summary>
-        ///     Update a row in the firearms table using the aggregate.
-        /// </summary>
-        /// <param name="firearm"></param>
-        /// <param name="context"></param>
-        /// <returns>An <c cref="EntityId">EntityId</c> that holds the Nanoid and the RowId of the firearm in the database.</returns>
-        Task<Result<EntityId>> UpsertAsync(DapperCommandContext context, Firearm firearm);
-
-        /// <summary>
-        ///     Add a firearm to the database.
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="firearmAggregate"></param>
-        /// <returns>An <c cref="EntityId">EntityId</c> that holds the Nanoid and the RowId of the firearm in the database.</returns>
-        Task<Result<EntityId>> UpsertAsync(DapperCommandContext context, FirearmAggregate firearmAggregate);
+        Task<Result<MlrbId>> UpsertAsync(Firearm firearm);
     }
 }

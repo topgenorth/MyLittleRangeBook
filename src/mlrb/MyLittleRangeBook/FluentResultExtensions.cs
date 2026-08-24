@@ -26,8 +26,6 @@ namespace MyLittleRangeBook
 
         public static Error Enrich(this Error error, MlrbId id) => error.Enrich(id.ToString());
 
-        public static Error Enrich(this Error error, EntityId eid) => error.Enrich(eid.Id, eid.RowId);
-
         public static Error Enrich(this Error error, string id) => error.WithMetadata(ID_KEY, id);
 
         public static Error Enrich(this Error error, long? rowId)
@@ -45,15 +43,6 @@ namespace MyLittleRangeBook
 
             return success;
         }
-
-        public static Success Enrich(this Success success, EntityId eid)
-        {
-            success.Metadata.Add(ID_KEY,    eid.Id);
-            success.Metadata.Add(ROWID_KEY, eid.RowId);
-
-            return success;
-        }
-
         public static Success Enrich(this Success success, string id, long? rowId)
         {
             success.Metadata.Add(ID_KEY,    id);
