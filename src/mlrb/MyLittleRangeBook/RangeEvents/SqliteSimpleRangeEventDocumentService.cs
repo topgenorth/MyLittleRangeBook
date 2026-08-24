@@ -19,15 +19,12 @@ namespace MyLittleRangeBook.RangeEvents
     public class SqliteSimpleRangeEventDocumentService : ISimpleRangeEventDocumentService
     {
         readonly ILogger          _logger;
-        readonly IQuerySession    _querySession;
         readonly IDocumentSession _session;
 
-        public SqliteSimpleRangeEventDocumentService(ILogger       logger, IDocumentSession session,
-                                                     IQuerySession querySession)
+        public SqliteSimpleRangeEventDocumentService(ILogger       logger, IDocumentSession session)
         {
             _session      = session;
             _logger       = logger;
-            _querySession = querySession;
         }
 
         [Obsolete("This method is deprecated and will be removed in a future version.", true)]
@@ -39,9 +36,9 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<Result> DeleteAsync(MlrbId simpleRangeEventId, CancellationToken cancellationToken = default)
         {
             Result result;
-            if (await _session.CheckExistsAsync<SimpleRangeEvent>(simpleRangeEventId))
+            if (await _session.CheckExistsAsync<SimpleRangeEvent>((Guid) simpleRangeEventId))
             {
-                _session.Delete<SimpleRangeEvent>(simpleRangeEventId);
+                _session.Delete<SimpleRangeEvent>((Guid) simpleRangeEventId);
                 await _session.SaveChangesAsync();
                 result = Result.Ok().WithSuccess("Deleted the simple range event.");
             }
@@ -126,9 +123,9 @@ namespace MyLittleRangeBook.RangeEvents
         {
             Result<SimpleRangeEvent?> result;
 
-            if (await _session.CheckExistsAsync<SimpleRangeEvent>(simpleRangeEventId))
+            if (await _session.CheckExistsAsync<SimpleRangeEvent>((Guid) simpleRangeEventId))
             {
-                SimpleRangeEvent? sre = await _session.LoadAsync<SimpleRangeEvent>(simpleRangeEventId);
+                SimpleRangeEvent? sre = await _session.LoadAsync<SimpleRangeEvent>((Guid) simpleRangeEventId);
                 result = Result.Ok(sre);
             }
             else
@@ -153,7 +150,7 @@ namespace MyLittleRangeBook.RangeEvents
 
             try
             {
-                IReadOnlyList<SimpleRangeEvent> list = await _querySession.Query<SimpleRangeEvent>()
+                IReadOnlyList<SimpleRangeEvent> list = await _session.Query<SimpleRangeEvent>()
                                                                           .OrderBy(x => x.EventDate)
                                                                           .ToListAsync();
                 result = new Result<IEnumerable<SimpleRangeEvent>>().WithValue(list);
