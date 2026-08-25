@@ -24,7 +24,7 @@ namespace MyLittleRangeBook
             try
             {
                 Result<IEnumerable<SimpleRangeEvent>> rangeEvents =
-                    await _simpleRangeEventDocumentService.GetSimpleRangeEventsAsync(cancellationToken).ConfigureAwait(false);
+                    await _simpleRangeEventService.GetSimpleRangeEventsAsync(cancellationToken).ConfigureAwait(false);
 
                 IEnumerable<IGrouping<string, SimpleRangeEvent>>? rangeEventsByFirearm = rangeEvents.Value?
                    .OrderBy(e => e.FirearmName)

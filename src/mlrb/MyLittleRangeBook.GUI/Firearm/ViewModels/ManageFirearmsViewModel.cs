@@ -45,13 +45,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly ILogger                                        _logger;
         readonly ISqliteHelper                                  _sqliteHelper;
         readonly ISimpleRangeEventDataProcessor                 _simpleRangeEventDataProcessor;
-        readonly ISimpleRangeEventDocumentService                       _simpleRangeEventDocumentService;
+        readonly ISimpleRangeEventService                       _simpleRangeEventService;
 
         public ManageFirearmsViewModel(IFirearmsService firearmsDbService,
                                        Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                        ISqliteHelper sqliteHelper,
                                        ILogger logger, ISimpleRangeEventDataProcessor simpleRangeEventDataProcessor,
-                                       ISimpleRangeEventDocumentService simpleRangeEventDocumentService)
+                                       ISimpleRangeEventService simpleRangeEventService)
         {
             _sqliteHelper                  = sqliteHelper;
             _firearmsDbService             = firearmsDbService;
@@ -59,7 +59,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _dialogService                 = dialogServiceFactory(this);
             _logger                        = logger;
             _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
-            _simpleRangeEventDocumentService       = simpleRangeEventDocumentService;
+            _simpleRangeEventService       = simpleRangeEventService;
 
 
             // Register for message notifications from other ViewModels
@@ -193,7 +193,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                                    _dialogServiceFactory,
                                                    _sqliteHelper,
                                                    _simpleRangeEventDataProcessor,
-                                                   _simpleRangeEventDocumentService,
+                                                   _simpleRangeEventService,
                                                    _firearmsDbService);
 
             await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(

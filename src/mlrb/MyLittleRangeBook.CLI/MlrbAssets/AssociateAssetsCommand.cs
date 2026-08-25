@@ -18,14 +18,14 @@ namespace MyLittleRangeBook.MlrbAssets
     {
         readonly IMlrbAssetAggregateRepository _assetAggregateRepository;
         readonly IFirearmAggregateRepository   _firearmAggregateRepository;
-        readonly ISimpleRangeEventDocumentService      _simpleRangeEventDocumentService;
+        readonly ISimpleRangeEventService      _simpleRangeEventService;
 
         public AssociateAssetsCommand(ILogger                       logger,
                                       ICliDisplay                   display,
                                       ISqliteHelper                 sqliteHelper,
                                       IFirearmAggregateRepository   firearmAggregateRepository,
                                       IMlrbAssetAggregateRepository assetAggregateRepository,
-                                      ISimpleRangeEventDocumentService      simpleRangeEventDocumentService) :
+                                      ISimpleRangeEventService      simpleRangeEventService) :
             base(logger, display, sqliteHelper)
         {
             ArgumentNullException.ThrowIfNull(firearmAggregateRepository);
@@ -33,7 +33,7 @@ namespace MyLittleRangeBook.MlrbAssets
 
             _firearmAggregateRepository = firearmAggregateRepository;
             _assetAggregateRepository   = assetAggregateRepository;
-            _simpleRangeEventDocumentService    = simpleRangeEventDocumentService;
+            _simpleRangeEventService    = simpleRangeEventService;
         }
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace MyLittleRangeBook.MlrbAssets
                     return;
                 }
 
-                Result<SimpleRangeEvent> r = await _simpleRangeEventDocumentService
+                Result<SimpleRangeEvent> r = await _simpleRangeEventService
                                                   .GetAsync(asset.Id, context.CancellationToken)
                                                   .ConfigureAwait(false);
                 if (r.IsFailed)

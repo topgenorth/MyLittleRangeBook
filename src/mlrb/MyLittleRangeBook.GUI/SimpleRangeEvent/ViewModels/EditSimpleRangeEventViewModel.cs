@@ -24,7 +24,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly             IFirearmsService               _firearmsService;
         readonly             ILogger                        _logger;
         readonly             ISimpleRangeEventDataProcessor _simpleRangeEventDataProcessor;
-        readonly             ISimpleRangeEventDocumentService       _simpleRangeEventDocumentService;
+        readonly             ISimpleRangeEventService       _simpleRangeEventService;
         readonly             ISqliteHelper                  _sqliteHelper;
         [ObservableProperty] IEnumerable<string>            _ammoDescription = [];
         [ObservableProperty] IEnumerable<string>            _firearmNames    = [];
@@ -40,7 +40,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                              Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                              ISqliteHelper                            sqliteHelper,
                                              ISimpleRangeEventDataProcessor           simpleRangeEventDataProcessor,
-                                             ISimpleRangeEventDocumentService                 simpleRangeEventDocumentService,
+                                             ISimpleRangeEventService                 simpleRangeEventService,
                                              IFirearmsService                         firearmsService)
         {
             Item                           = simpleRangeEvent;
@@ -48,7 +48,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _logger                        = logger;
             _sqliteHelper                  = sqliteHelper;
             _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
-            _simpleRangeEventDocumentService       = simpleRangeEventDocumentService;
+            _simpleRangeEventService       = simpleRangeEventService;
             _firearmsService               = firearmsService;
 
 
@@ -62,7 +62,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         async Task LoadRangeNamesAsync()
         {
             await using DapperCommandContext ctx  = await DapperCommandContext.NewAsync(_sqliteHelper);
-            Result<IEnumerable<string>>      list = await _simpleRangeEventDocumentService.GetRangeNames();
+            Result<IEnumerable<string>>      list = await _simpleRangeEventService.GetRangeNames();
             if (list.IsSuccess)
             {
                 RangeNames = list.Value;
@@ -79,7 +79,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 await DapperCommandContext.NewAsync(_sqliteHelper).ConfigureAwait(false);
 
             Result<IEnumerable<string>> ammoDescriptions =
-                await _simpleRangeEventDocumentService.GetAmmoDescriptions().ConfigureAwait(false);
+                await _simpleRangeEventService.GetAmmoDescriptions().ConfigureAwait(false);
 
             if (ammoDescriptions.IsSuccess)
             {
@@ -140,7 +140,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 if (r1.IsSuccess)
                 {
                     await ctx.CommitAsync().ConfigureAwait(false);
-                    Result<SimpleRangeEvent> r3 = await _simpleRangeEventDocumentService
+                    Result<SimpleRangeEvent> r3 = await _simpleRangeEventService
                                                        .GetAsync(r1.Value, cancellationToken)
                                                        .ConfigureAwait(false);
                     SimpleRangeEvent          sre              = r3.Value;

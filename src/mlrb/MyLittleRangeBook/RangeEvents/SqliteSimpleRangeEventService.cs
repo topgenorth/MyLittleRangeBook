@@ -15,13 +15,13 @@ namespace MyLittleRangeBook.RangeEvents
     ///     SimpleRangeEvent records from an SQLite database. It interacts with the database using
     ///     provided connection and transaction parameters, supporting asynchronous operations.
     /// </remarks>
-    [Obsolete]
-    public class SqliteSimpleRangeEventDocumentService : ISimpleRangeEventDocumentService
+    [Obsolete("Using Fisher now.", true)]
+    public class SqliteSimpleRangeEventService : ISimpleRangeEventService
     {
         readonly ILogger          _logger;
         readonly IDocumentSession _session;
 
-        public SqliteSimpleRangeEventDocumentService(ILogger       logger, IDocumentSession session)
+        public SqliteSimpleRangeEventService(ILogger       logger, IDocumentSession session)
         {
             _session      = session;
             _logger       = logger;

@@ -33,7 +33,7 @@ namespace MyLittleRangeBook.RangeEvents
 
         readonly ISimpleRangeEventDataProcessor   _rangeEventDataProcessor;
         readonly IDocumentSession                 _session;
-        readonly ISimpleRangeEventDocumentService _simpleRangeEventDocumentService;
+        readonly ISimpleRangeEventService _simpleRangeEventService;
         readonly ISimpleRangeEventPrinter         _simpleRangeEventPrinter;
 
         public SimpleRangeEventCommandAddToSqlite(ILogger                          logger,
@@ -41,12 +41,12 @@ namespace MyLittleRangeBook.RangeEvents
                                                   ISimpleRangeEventDataProcessor   simpleRangeEventProcessor,
                                                   ISqliteHelper                    sqliteHelper,
                                                   ISimpleRangeEventPrinter         simpleRangeEventPrinter,
-                                                  ISimpleRangeEventDocumentService simpleRangeEventDocumentService,
+                                                  ISimpleRangeEventService simpleRangeEventService,
                                                   IDocumentSession                 session) :
             base(logger, cliDisplay, sqliteHelper)
         {
             _simpleRangeEventPrinter         = simpleRangeEventPrinter;
-            _simpleRangeEventDocumentService = simpleRangeEventDocumentService;
+            _simpleRangeEventService = simpleRangeEventService;
             _session                         = session;
             _rangeEventDataProcessor         = simpleRangeEventProcessor;
         }
