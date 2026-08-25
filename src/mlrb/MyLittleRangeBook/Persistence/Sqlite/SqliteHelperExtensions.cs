@@ -154,11 +154,23 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    // opts.Policies.AllDocumentsAreMultiTenanted();
 
                                    opts.Schema.For<Cartridge>()
+                                       .Metadata(m =>
+                                                 {
+                                                     m.CreatedAt.Enabled     = true;
+                                                     m.CreatedAt.MapTo(x =>x.Created);
+                                                     m.LastModified.MapTo(x => x.Modified);
+                                                 })
                                        .Index(x => x.CommonName)
                                        .UniqueIndex(x => x.Name)
                                        .UseNumericRevisions();
 
                                    opts.Schema.For<SimpleRangeEvent>()
+                                       .Metadata(m =>
+                                                 {
+                                                     m.CreatedAt.Enabled     = true;
+                                                     m.CreatedAt.MapTo(x =>x.Created);
+                                                     m.LastModified.MapTo(x => x.Modified);
+                                                 })
                                        .Index(x => x.EventDate)
                                        .Index(x => x.FirearmName)
                                        .UseNumericRevisions();

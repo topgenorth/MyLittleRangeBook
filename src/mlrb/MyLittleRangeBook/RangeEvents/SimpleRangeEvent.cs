@@ -10,7 +10,7 @@ namespace MyLittleRangeBook.RangeEvents
         public SimpleRangeEvent(DateOnly eventDateOnly)
         {
             MlrbId id = MlrbId.From(eventDateOnly);
-            Id        = (Guid)MlrbId.From(eventDateOnly);
+            Id        = MlrbId.From(eventDateOnly);
             EventDate = id.DateTimeLocal;
         }
 
