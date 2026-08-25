@@ -15,40 +15,17 @@ namespace MyLittleRangeBook.RangeEvents
     /// </summary>
     [RegisterCommands("rangeevent")]
     [UsedImplicitly]
-    public class SimpleRangeEventCommandAddToSqlite : MlrbSqliteCommandBase
+    public class SimpleRangeEventCommandAddToSqlite
     {
-        /// <summary>
-        ///     A list of <c ref="IReason" />'s that should be ignored when decided to commit the changes from the simple range
-        ///     event.
-        /// </summary>
-        public static readonly Func<IReason, bool> s_reasonsThatDontCount = evt => evt is FirearmAssociatedWithNoteError
-                                                                                  or
-                                                                                    FirearmDisassociatedWithNoteError or
-                                                                                    FirearmAssociatedToRangeEventError
-                                                                                  or
-                                                                                    FirearmDisassociatedFromRangeEventError
-                                                                                  or
-                                                                                    FirearmAssociatedWithAssetError or
-                                                                                    FirearmDisassociatedFromAssetError;
-
-        readonly ISimpleRangeEventDataProcessor   _rangeEventDataProcessor;
-        readonly IDocumentSession                 _session;
-        readonly ISimpleRangeEventService _simpleRangeEventService;
-        readonly ISimpleRangeEventPrinter         _simpleRangeEventPrinter;
-
-        public SimpleRangeEventCommandAddToSqlite(ILogger                          logger,
-                                                  ICliDisplay                      cliDisplay,
-                                                  ISimpleRangeEventDataProcessor   simpleRangeEventProcessor,
-                                                  ISqliteHelper                    sqliteHelper,
-                                                  ISimpleRangeEventPrinter         simpleRangeEventPrinter,
-                                                  ISimpleRangeEventService simpleRangeEventService,
-                                                  IDocumentSession                 session) :
-            base(logger, cliDisplay, sqliteHelper)
+        readonly ILogger                  _logger;
+        readonly ICliDisplay              _cliDisplay;
+        readonly ISimpleRangeEventService _service;
+        public SimpleRangeEventCommandAddToSqlite(ILogger     logger,
+                                                  ICliDisplay cliDisplay, ISimpleRangeEventService service)
         {
-            _simpleRangeEventPrinter         = simpleRangeEventPrinter;
-            _simpleRangeEventService = simpleRangeEventService;
-            _session                         = session;
-            _rangeEventDataProcessor         = simpleRangeEventProcessor;
+            _logger       = logger;
+            _cliDisplay   = cliDisplay;
+            _service = service;
         }
 
         /// <summary>
@@ -78,41 +55,12 @@ namespace MyLittleRangeBook.RangeEvents
                                                         CancellationToken               cancellationToken = default)
         {
             int returnValue = -1;
-            CliDisplay.PrintCommandHeader("Add a range event.");
-
+            _cliDisplay.PrintCommandHeader("Add a range event.");
             SimpleRangeEvent sre = SimpleRangeEvent.New(firearm.Trim(), rounds, range.Trim(), ammo.Trim(), notes.Trim(),
                                                         eventDate ?? DateOnly.FromDateTime(DateTime.UtcNow));
-            Guid firearmId = MlrbId.FromString(sre.FirearmName);
-            Firearm? f2 = await _session.Events
-                                        .AggregateStreamAsync<Firearm>(firearmId, token: cancellationToken)
-                                        .ConfigureAwait(false);
 
-            List<object> firearmEvents = [];
-            if (f2 is null)
-            {
-                firearmEvents.Add(new Firearm.FirearmCreated(sre.FirearmName, sre.OccurredUtc));
-            }
 
-            firearmEvents.AddRange(
-                                   [
-                                       new Firearm.FirearmActive(sre.OccurredUtc),
-                                       new Firearm.FirearmRoundCountAltered(sre.RoundsFired, sre.OccurredUtc),
-                                       new Firearm.FirearmAssociatedWithRangeEvent(sre.Id, sre.OccurredUtc),
-                                       new Firearm.FirearmNoteAdded(notes.Trim(), sre.OccurredUtc),
-                                       new Firearm.FirearmUsedAtRange(range.Trim(), sre.OccurredUtc),
-                                       new Firearm.FirearmUsedAmmo(ammo.Trim(), sre.OccurredUtc),
-                                   ]);
-
-            _session.Store(sre);
-
-            IEventStream<Firearm> f = await _session.Events
-                                                    .FetchForWriting<Firearm>(firearmId, cancellationToken)
-                                                    .ConfigureAwait(false);
-            f.AppendMany(firearmEvents);
-
-            await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-            PressEnterToContinue();
+            var rAdd = await _service.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
             return returnValue;
         }
     }

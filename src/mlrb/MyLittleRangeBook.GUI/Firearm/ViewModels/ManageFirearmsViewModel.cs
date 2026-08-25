@@ -44,13 +44,12 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly ReadOnlyObservableCollection<FirearmViewModel> _firearmViewModels;
         readonly ILogger                                        _logger;
         readonly ISqliteHelper                                  _sqliteHelper;
-        readonly ISimpleRangeEventDataProcessor                 _simpleRangeEventDataProcessor;
         readonly ISimpleRangeEventService                       _simpleRangeEventService;
 
         public ManageFirearmsViewModel(IFirearmsService firearmsDbService,
                                        Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                        ISqliteHelper sqliteHelper,
-                                       ILogger logger, ISimpleRangeEventDataProcessor simpleRangeEventDataProcessor,
+                                       ILogger logger,
                                        ISimpleRangeEventService simpleRangeEventService)
         {
             _sqliteHelper                  = sqliteHelper;
@@ -58,7 +57,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _dialogServiceFactory          = dialogServiceFactory;
             _dialogService                 = dialogServiceFactory(this);
             _logger                        = logger;
-            _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
             _simpleRangeEventService       = simpleRangeEventService;
 
 
@@ -192,7 +190,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                                    _logger,
                                                    _dialogServiceFactory,
                                                    _sqliteHelper,
-                                                   _simpleRangeEventDataProcessor,
                                                    _simpleRangeEventService,
                                                    _firearmsDbService);
 

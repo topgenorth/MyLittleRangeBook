@@ -23,7 +23,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly             IDialogService                 _dialogService;
         readonly             IFirearmsService               _firearmsService;
         readonly             ILogger                        _logger;
-        readonly             ISimpleRangeEventDataProcessor _simpleRangeEventDataProcessor;
         readonly             ISimpleRangeEventService       _simpleRangeEventService;
         readonly             ISqliteHelper                  _sqliteHelper;
         [ObservableProperty] IEnumerable<string>            _ammoDescription = [];
@@ -39,7 +38,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                              ILogger                                  logger,
                                              Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                              ISqliteHelper                            sqliteHelper,
-                                             ISimpleRangeEventDataProcessor           simpleRangeEventDataProcessor,
                                              ISimpleRangeEventService                 simpleRangeEventService,
                                              IFirearmsService                         firearmsService)
         {
@@ -47,7 +45,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _dialogService                 = dialogServiceFactory(this);
             _logger                        = logger;
             _sqliteHelper                  = sqliteHelper;
-            _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
             _simpleRangeEventService       = simpleRangeEventService;
             _firearmsService               = firearmsService;
 
@@ -62,15 +59,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
         async Task LoadRangeNamesAsync()
         {
             await using DapperCommandContext ctx  = await DapperCommandContext.NewAsync(_sqliteHelper);
-            Result<IEnumerable<string>>      list = await _simpleRangeEventService.GetRangeNames();
-            if (list.IsSuccess)
-            {
-                RangeNames = list.Value;
-            }
-            else
-            {
-                _logger.Warning("Failed to load a list of range names.");
-            }
+            // Result<IEnumerable<string>>      list = await _simpleRangeEventService.GetRangeNames();
+            // if (list.IsSuccess)
+            // {
+            //     RangeNames = list.Value;
+            // }
+            // else
+            // {
+            //     _logger.Warning("Failed to load a list of range names.");
+            // }
         }
 
         async Task LoadAmmoDescriptionsAsync()
@@ -78,17 +75,17 @@ namespace MyLittleRangeBook.GUI.ViewModels
             await using DapperCommandContext ctx =
                 await DapperCommandContext.NewAsync(_sqliteHelper).ConfigureAwait(false);
 
-            Result<IEnumerable<string>> ammoDescriptions =
-                await _simpleRangeEventService.GetAmmoDescriptions().ConfigureAwait(false);
+            // Result<IEnumerable<string>> ammoDescriptions =
+                // await _simpleRangeEventService.GetAmmoDescriptions().ConfigureAwait(false);
 
-            if (ammoDescriptions.IsSuccess)
-            {
-                AmmoDescription = ammoDescriptions.Value;
-            }
-            else
-            {
-                _logger.Warning("Failed to load a list of ammo descriptions.");
-            }
+            // if (ammoDescriptions.IsSuccess)
+            // {
+            //     AmmoDescription = ammoDescriptions.Value;
+            // }
+            // else
+            // {
+            //     _logger.Warning("Failed to load a list of ammo descriptions.");
+            // }
         }
 
         async Task LoadFirearmNamesAsync()
@@ -127,38 +124,38 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
             try
             {
-                Result<Guid> r1 = await _simpleRangeEventDataProcessor
-                                         .ProcessSimpleRangeEventData(ctx,
-                                                                      Item.FirearmName,
-                                                                      Item.RoundsFired,
-                                                                      Item.RangeName,
-                                                                      Item.AmmoDescription,
-                                                                      Item.Notes,
-                                                                      DateOnly.FromDateTime(Item.EventDate))
-                                         .ConfigureAwait(false);
+                // Result<Guid> r1 = await _simpleRangeEventDataProcessor
+                //                          .ProcessSimpleRangeEventData(ctx,
+                //                                                       Item.FirearmName,
+                //                                                       Item.RoundsFired,
+                //                                                       Item.RangeName,
+                //                                                       Item.AmmoDescription,
+                //                                                       Item.Notes,
+                //                                                       DateOnly.FromDateTime(Item.EventDate))
+                //                          .ConfigureAwait(false);
 
-                if (r1.IsSuccess)
-                {
-                    await ctx.CommitAsync().ConfigureAwait(false);
-                    Result<SimpleRangeEvent> r3 = await _simpleRangeEventService
-                                                       .GetAsync(r1.Value, cancellationToken)
-                                                       .ConfigureAwait(false);
-                    SimpleRangeEvent          sre              = r3.Value;
-                    SimpleRangeEventViewModel updatedViewModel = new(sre);
-                    _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
-                    WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
-                                                             Item.RowId == null
-                                                                 ? UpdateAction.Added
-                                                                 : UpdateAction.Updated,
-                                                             sre));
-                }
-                else
-                {
-                    await ctx.RollbackAsync().ConfigureAwait(false);
-                    await _dialogService.ShowOverlayDialogAsync<bool>("Error",
-                                                                      "An error occured while trying to save the event.",
-                                                                      DialogCommands.Ok);
-                }
+                // if (r1.IsSuccess)
+                // {
+                //     await ctx.CommitAsync().ConfigureAwait(false);
+                //     Result<SimpleRangeEvent> r3 = await _simpleRangeEventService
+                //                                        .GetAsync(r1.Value, cancellationToken)
+                //                                        .ConfigureAwait(false);
+                //     SimpleRangeEvent          sre              = r3.Value;
+                //     SimpleRangeEventViewModel updatedViewModel = new(sre);
+                //     _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
+                //     WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
+                //                                              Item.RowId == null
+                //                                                  ? UpdateAction.Added
+                //                                                  : UpdateAction.Updated,
+                //                                              sre));
+                // }
+                // else
+                // {
+                //     await ctx.RollbackAsync().ConfigureAwait(false);
+                //     await _dialogService.ShowOverlayDialogAsync<bool>("Error",
+                //                                                       "An error occured while trying to save the event.",
+                //                                                       DialogCommands.Ok);
+                // }
             }
             catch (Exception e)
             {
