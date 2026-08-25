@@ -23,6 +23,49 @@ namespace MyLittleRangeBook.Firearms
 
 
         /// <summary>
+        ///     Represents an event indicating that a firearm has been associated with an asset in the domain.
+        ///     This event carries information pertaining to the unique identifiers of both the firearm and the asset, as well as
+        ///     the timestamp of when the event occurred.
+        /// </summary>
+        /// <param name="StreamId">
+        ///     The unique identifier of the firearm associated with the asset.
+        /// </param>
+        /// <param name="AssetId">
+        ///     The unique identifier of the asset being associated with the firearm.
+        /// </param>
+        /// <param name="OccurredUtc">
+        ///     The UTC timestamp when the association event occurred.
+        /// </param>
+        [EventType("asset-associated-with-firearm")]
+        public record struct FirearmAssociatedWithAsset(
+            Guid           AssetId,
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null)
+            : IDomainEvent;
+
+        /// <summary>
+        ///     Represents an event indicating that a firearm has been associated with a range event in the domain.
+        ///     This event carries information about the unique identifiers of both the firearm and the range event, as well as the
+        ///     timestamp when the association occurred.
+        /// </summary>
+        /// <param name="StreamId">
+        ///     The unique identifier of the firearm associated with the range event.
+        /// </param>
+        /// <param name="RangeEventId">
+        ///     The unique identifier of the range event being associated with the firearm.
+        /// </param>
+        /// <param name="OccurredUtc">
+        ///     The UTC timestamp when the association event occurred.
+        /// </param>
+        [EventType("range-event-associated-with-firearm")]
+        public record struct FirearmAssociatedWithRangeEvent(
+            Guid           RangeEventId,
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null
+        )
+            : IDomainEvent;
+
+        /// <summary>
         ///     Represents an event indicating a change in the barrel of a firearm within the domain.
         ///     This event contains details about the firearm's unique identifier, the previous barrel,
         ///     the updated barrel, and the timestamp when the change occurred.
@@ -82,6 +125,35 @@ namespace MyLittleRangeBook.Firearms
             string?        MetadataJson = null) : IDomainEvent;
 
         /// <summary>
+        ///     Represents an event indicating that a firearm has been associated with an asset in the domain.
+        ///     This event carries information pertaining to the unique identifiers of both the firearm and the asset, as well as
+        ///     the timestamp of when the event occurred.
+        /// </summary>
+        /// <param name="StreamId">
+        ///     The unique identifier of the firearm associated with the asset.
+        /// </param>
+        /// <param name="AssetId">
+        ///     The unique identifier of the asset being associated with the firearm.
+        /// </param>
+        /// <param name="OccurredUtc">
+        ///     The UTC timestamp when the association event occurred.
+        /// </param>
+        [EventType("asset-disassociated-from-firearm")]
+        public record struct FirearmDisassociatedFromAsset(
+            Guid           AssetId,
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null)
+            : IDomainEvent;
+
+        [EventType("range-event-disassociated-from-firearm")]
+        public record struct FirearmDisassociatedFromRangeEvent(
+            Guid           RangeEventId,
+            DateTimeOffset OccurredUtc,
+            string?        MetadataJson = null
+        )
+            : IDomainEvent;
+
+        /// <summary>
         ///     Represents an event indicating that a firearm has been marked as inactive within the domain.
         ///     This event contains the unique identifier of the firearm and the timestamp when the status change was recorded.
         /// </summary>
@@ -119,28 +191,6 @@ namespace MyLittleRangeBook.Firearms
             : IDomainEvent;
 
         /// <summary>
-        ///     Represents an event indicating the discharge of multiple rounds from a firearm within the domain.
-        ///     This event captures details about the firearm's unique identifier, the number of rounds discharged,
-        ///     and the timestamp when the event occurred.
-        /// </summary>
-        /// <param name="StreamId">
-        ///     The unique identifier of the firearm involved in the discharge event.
-        /// </param>
-        /// <param name="Rounds">
-        ///     The number of rounds discharged from the firearm.
-        /// </param>
-        /// <param name="OccurredUtc">
-        ///     The UTC timestamp when the discharge event was recorded.
-        /// </param>
-        [EventType("firearm-round-count-altered")]
-        public record struct FirearmRoundCountAltered(
-            int            Rounds,
-            DateTimeOffset OccurredUtc,
-            string?        AmmoDescription = null,
-            string?        MetadataJson    = null)
-            : IDomainEvent;
-
-        /// <summary>
         ///     Represents an event indicating that a note has been added to a firearm within the domain.
         ///     This event contains details about the firearm's unique identifier, the newly added note,
         ///     and the timestamp when the note was recorded.
@@ -160,6 +210,28 @@ namespace MyLittleRangeBook.Firearms
             DateTimeOffset OccurredUtc,
             string         NoteType     = "note",
             string?        MetadataJson = null)
+            : IDomainEvent;
+
+        /// <summary>
+        ///     Represents an event indicating the discharge of multiple rounds from a firearm within the domain.
+        ///     This event captures details about the firearm's unique identifier, the number of rounds discharged,
+        ///     and the timestamp when the event occurred.
+        /// </summary>
+        /// <param name="StreamId">
+        ///     The unique identifier of the firearm involved in the discharge event.
+        /// </param>
+        /// <param name="Rounds">
+        ///     The number of rounds discharged from the firearm.
+        /// </param>
+        /// <param name="OccurredUtc">
+        ///     The UTC timestamp when the discharge event was recorded.
+        /// </param>
+        [EventType("firearm-round-count-altered")]
+        public record struct FirearmRoundCountAltered(
+            int            Rounds,
+            DateTimeOffset OccurredUtc,
+            string?        AmmoDescription = null,
+            string?        MetadataJson    = null)
             : IDomainEvent;
 
         /// <summary>
@@ -187,83 +259,14 @@ namespace MyLittleRangeBook.Firearms
             string?        MetadataJson = null) : IDomainEvent;
 
         [EventType("firearm-used-at-range")]
-        public record struct FirearmUsedAtRange(string RangeName, DateTimeOffset OccurredUtc);
+        public record struct FirearmUsedAtRange(
+            string         RangeName,
+            int            RoundCount,
+            string?        AmmoDescription,
+            DateTimeOffset OccurredUtc);
 
 
         [EventType("firearm-used-at-range")]
         public record struct FirearmUsedAmmo(string AmmoDescription, DateTimeOffset OccurredUtc);
-
-        /// <summary>
-        ///     Represents an event indicating that a firearm has been associated with a range event in the domain.
-        ///     This event carries information about the unique identifiers of both the firearm and the range event, as well as the
-        ///     timestamp when the association occurred.
-        /// </summary>
-        /// <param name="StreamId">
-        ///     The unique identifier of the firearm associated with the range event.
-        /// </param>
-        /// <param name="RangeEventId">
-        ///     The unique identifier of the range event being associated with the firearm.
-        /// </param>
-        /// <param name="OccurredUtc">
-        ///     The UTC timestamp when the association event occurred.
-        /// </param>
-        [EventType("range-event-associated-with-firearm")]
-        public record struct FirearmAssociatedWithRangeEvent(
-            Guid           RangeEventId,
-            DateTimeOffset OccurredUtc,
-            string?        MetadataJson = null
-        )
-            : IDomainEvent;
-
-        [EventType("range-event-disassociated-from-firearm")]
-        public record struct FirearmDisassociatedFromRangeEvent(
-            Guid           RangeEventId,
-            DateTimeOffset OccurredUtc,
-            string?        MetadataJson = null
-        )
-            : IDomainEvent;
-
-
-        /// <summary>
-        ///     Represents an event indicating that a firearm has been associated with an asset in the domain.
-        ///     This event carries information pertaining to the unique identifiers of both the firearm and the asset, as well as
-        ///     the timestamp of when the event occurred.
-        /// </summary>
-        /// <param name="StreamId">
-        ///     The unique identifier of the firearm associated with the asset.
-        /// </param>
-        /// <param name="AssetId">
-        ///     The unique identifier of the asset being associated with the firearm.
-        /// </param>
-        /// <param name="OccurredUtc">
-        ///     The UTC timestamp when the association event occurred.
-        /// </param>
-        [EventType("asset-associated-with-firearm")]
-        public record struct FirearmAssociatedWithAsset(
-            Guid           AssetId,
-            DateTimeOffset OccurredUtc,
-            string?        MetadataJson = null)
-            : IDomainEvent;
-
-        /// <summary>
-        ///     Represents an event indicating that a firearm has been associated with an asset in the domain.
-        ///     This event carries information pertaining to the unique identifiers of both the firearm and the asset, as well as
-        ///     the timestamp of when the event occurred.
-        /// </summary>
-        /// <param name="StreamId">
-        ///     The unique identifier of the firearm associated with the asset.
-        /// </param>
-        /// <param name="AssetId">
-        ///     The unique identifier of the asset being associated with the firearm.
-        /// </param>
-        /// <param name="OccurredUtc">
-        ///     The UTC timestamp when the association event occurred.
-        /// </param>
-        [EventType("asset-disassociated-from-firearm")]
-        public record struct FirearmDisassociatedFromAsset(
-            Guid           AssetId,
-            DateTimeOffset OccurredUtc,
-            string?        MetadataJson = null)
-            : IDomainEvent;
     }
 }
