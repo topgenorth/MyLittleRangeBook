@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using System.Text.Json.Nodes;
 using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Models;
@@ -30,9 +31,8 @@ namespace MyLittleRangeBook.Firearms
 
         public static Firearm New(string name, DateTimeOffset utcNow)
         {
-            MlrbId  streamId = MlrbId.FromString(name);
-            Firearm agg      = new();
-            agg.Raise(new FirearmCreated(streamId, name, utcNow));
+            Firearm agg = new();
+            agg.Raise(new FirearmCreated(name, utcNow));
 
             return agg;
         }
@@ -113,7 +113,6 @@ namespace MyLittleRangeBook.Firearms
                     break;
 
                 case FirearmCreated x:
-                    Id      = x.StreamId;
                     Name    = x.Name;
                     Created = x.OccurredUtc;
                     break;
@@ -146,6 +145,9 @@ namespace MyLittleRangeBook.Firearms
                                                    .Append(x.OccurredUtc.ToString());
                     AppendToFirearmAggregateNoteSummary(sbSightsChanged.ToString());
 
+                    break;
+                default :
+                    Debug.WriteLine($"Unhandled event type: {e.GetType().Name}");
                     break;
             }
         }
@@ -186,13 +188,13 @@ namespace MyLittleRangeBook.Firearms
             Raise(new FirearmNoteAdded(text, utcNow, noteType));
         }
 
-        public void AssociatedWithAsset(MlrbId assetId, DateTimeOffset dto) =>
-            Raise(new FirearmAssociatedWithAsset(  assetId, dto));
+        public void AssociatedWithAsset(Guid assetId, DateTimeOffset dto) =>
+            Raise(new FirearmAssociatedWithAsset(assetId, dto));
 
-        public void AssociateWithSimpleRangeEvent(MlrbId assetId, DateTimeOffset utcNow) =>
-            Raise(new FirearmAssociatedWithRangeEvent(  assetId, utcNow));
+        public void AssociateWithSimpleRangeEvent(Guid assetId, DateTimeOffset utcNow) =>
+            Raise(new FirearmAssociatedWithRangeEvent(assetId, utcNow));
 
-        public void Cleaned(DateTimeOffset utcNow) => Raise(new FirearmCleaned(  utcNow));
+        public void Cleaned(DateTimeOffset utcNow) => Raise(new FirearmCleaned(utcNow));
 
         /// <summary>
         ///     For some reason this firearm was no longer associated with a range event.
@@ -200,8 +202,8 @@ namespace MyLittleRangeBook.Firearms
         /// <param name="assetId"></param>
         /// <param name="roundsInRangeEvents"></param>
         /// <param name="utcNow"></param>
-        public void DisassociatedWithRangeEvent(MlrbId assetId, DateTimeOffset utcNow) =>
-            Raise(new FirearmDisassociatedFromRangeEvent(  assetId, utcNow));
+        public void DisassociatedWithRangeEvent(Guid assetId, DateTimeOffset utcNow) =>
+            Raise(new FirearmDisassociatedFromRangeEvent(assetId, utcNow));
 
         /// <summary>
         ///     Record the discharge of rounds for this firearm.
@@ -213,17 +215,17 @@ namespace MyLittleRangeBook.Firearms
         public void FirearmRoundCountChanged(int     roundCount, DateTimeOffset occurredUtc,
                                              string? ammoDescription = null,
                                              string? metadataJson    = null) =>
-            Raise(new FirearmRoundCountAltered(  roundCount, occurredUtc, ammoDescription));
+            Raise(new FirearmRoundCountAltered(roundCount, occurredUtc, ammoDescription));
 
         public void IsInactive(bool inactive, DateTimeOffset utcNow)
         {
             if (inactive)
             {
-                Raise(new FirearmInactive(  utcNow));
+                Raise(new FirearmInactive(utcNow));
             }
             else
             {
-                Raise(new FirearmActive(  utcNow));
+                Raise(new FirearmActive(utcNow));
             }
         }
     }

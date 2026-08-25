@@ -26,7 +26,8 @@ namespace MyLittleRangeBook.Firearms
 
         public FirearmNoteProjector(INotesService notesService) => _notesService = notesService;
 
-        public async Task<Result> ProjectAggregateAsync(DapperCommandContext       context, MlrbId streamId,
+        public async Task<Result> ProjectAggregateAsync(DapperCommandContext       context,
+                                                        Guid streamId,
                                                         IEnumerable<IDomainEvent>? uncommittedDomainEvents = null)
 
         {
@@ -89,7 +90,7 @@ namespace MyLittleRangeBook.Firearms
 
         async Task<Result> AddFirearmNoteAsync(
             DapperCommandContext context,
-            MlrbId               firearmId,
+            Guid               firearmId,
             string               noteType,
             string               content,
             DateTimeOffset       occurredUtc)

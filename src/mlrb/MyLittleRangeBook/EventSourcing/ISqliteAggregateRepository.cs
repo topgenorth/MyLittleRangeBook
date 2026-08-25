@@ -11,7 +11,7 @@ namespace MyLittleRangeBook.EventSourcing
         /// <param name="context">The database command context, including connection, transaction (if any), and cancellation token.</param>
         /// <param name="id">The unique identifier of the aggregate to retrieve.</param>
         /// <returns>A result containing the aggregate if found, or <c>null</c> if no events exist for the specified identifier.</returns>
-        Task<Result<TAggregate?>> GetAsync(DapperCommandContext context, MlrbId id);
+        Task<Result<TAggregate?>> GetAsync(DapperCommandContext context, Guid id);
 
         /// <summary>
         ///     Retrieves a collection of domain events associated with the specified stream identifier.
@@ -20,7 +20,7 @@ namespace MyLittleRangeBook.EventSourcing
         /// <param name="streamId">The identifier of the event stream whose domain events are to be retrieved.</param>
         /// <returns>A task representing the asynchronous operation, containing a collection of domain events.</returns>
         Task<Result<IEnumerable<IDomainEvent>>> GetDomainEvents(
-            DapperCommandContext context, MlrbId streamId);
+            DapperCommandContext context, Guid streamId);
 
         /// <summary>
         ///     Upserts the specified aggregate into the database using the provided Dapper command context.

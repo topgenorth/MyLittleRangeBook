@@ -19,7 +19,7 @@ namespace MyLittleRangeBook.RangeEvents
         Task<Result> DeleteAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent);
 
         Task<Result> DeleteAsync(SimpleRangeEvent simpleRangeEvent,   CancellationToken cancellationToken = default);
-        Task<Result> DeleteAsync(MlrbId           simpleRangeEventId, CancellationToken cancellationToken = default);
+        Task<Result> DeleteAsync(Guid           simpleRangeEventId, CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Retrieves a simple range event by its identifier from the database.
@@ -31,7 +31,7 @@ namespace MyLittleRangeBook.RangeEvents
         ///     simple range event data.
         /// </returns>
         [Obsolete("This method is deprecated and will be removed in a future version.", true)]
-        Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId);
+        Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, Guid simpleRangeEventId);
 
         Task<Result<SimpleRangeEvent>> GetAsync(Guid            simpleRangeEventId,
                                                 CancellationToken cancellationToken = default);
@@ -44,9 +44,9 @@ namespace MyLittleRangeBook.RangeEvents
         /// <param name="simpleRangeEvent"></param>
         /// <returns></returns>
         [Obsolete("This method is deprecated and will be removed in a future version.", true)]
-        Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent);
+        Task<Result<Guid>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent);
 
-        Task<Result<MlrbId>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
+        Task<Result<Guid>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
                                          CancellationToken cancellationToken = default);
 
         /// <summary>

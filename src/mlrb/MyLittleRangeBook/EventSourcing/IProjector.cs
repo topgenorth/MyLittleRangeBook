@@ -19,7 +19,7 @@ namespace MyLittleRangeBook.EventSourcing
         /// </param>
         /// <returns>A <see cref="Result" /> object indicating the outcome of the operation.</returns>
         Task<Result> ProjectAggregateAsync(DapperCommandContext       context,
-                                           MlrbId                     streamId,
+                                           Guid                     streamId,
                                            IEnumerable<IDomainEvent>? uncommittedDomainEvents = null);
     }
 }

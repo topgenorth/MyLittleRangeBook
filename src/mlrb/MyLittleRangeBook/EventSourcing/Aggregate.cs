@@ -1,6 +1,6 @@
-﻿using MyLittleRangeBook.Models;
+﻿ using MyLittleRangeBook.EventSourcing;
 
-namespace MyLittleRangeBook.EventSourcing
+ namespace MyLittleRangeBook.EventSourcing
 {
     /// <summary>
     ///     Abstract base class for event-sourced aggregates. Subclasses are responsible for
@@ -59,7 +59,6 @@ namespace MyLittleRangeBook.EventSourcing
         /// </summary>
         protected void Hydrate(EventStreamRow streamRow)
         {
-            Id         = streamRow.StreamId;
             StreamType = streamRow.StreamType;
             Version    = streamRow.Version;
         }

@@ -25,7 +25,7 @@ namespace MyLittleRangeBook.RangeEvents
         ///     date.
         /// </param>
         /// <returns></returns>
-        Task<Result<MlrbId>> ProcessSimpleRangeEventData(DapperCommandContext            context,
+        Task<Result<Guid>> ProcessSimpleRangeEventData(DapperCommandContext            context,
                                                          string                          firearmName,
                                                          [ValueRange(-10000, 10000)] int roundsFired,
                                                          string                          rangeName,
@@ -60,8 +60,8 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<Result> DeleteSimpleRangeEvent(DapperCommandContext context, SimpleRangeEvent sre)
         {
             DateTimeOffset offsetUtc    = DateTimeOffset.UtcNow;
-            MlrbId         firearmId    = MlrbId.FromString(sre.FirearmName);
-            MlrbId         rangeEventId = sre.Id!;
+            Guid         firearmId    = MlrbId.FromString(sre.FirearmName);
+            Guid         rangeEventId = sre.Id!;
 
             Result rDelete = await _rangeEventDocumentService.DeleteAsync(sre, context.CancellationToken)
                                                              .ConfigureAwait(false);
@@ -81,7 +81,7 @@ namespace MyLittleRangeBook.RangeEvents
             return Result.Merge(rDelete, rSaveEventStream);
         }
 
-        public async Task<Result<MlrbId>> ProcessSimpleRangeEventData(DapperCommandContext            context,
+        public async Task<Result<Guid>> ProcessSimpleRangeEventData(DapperCommandContext            context,
                                                                       string                          firearmName,
                                                                       [ValueRange(-10000, 10000)] int roundsFired,
                                                                       string                          rangeName,
@@ -90,7 +90,7 @@ namespace MyLittleRangeBook.RangeEvents
                                                                       DateOnly?                       dateOfEvent)
         {
             (DateOnly _, DateTimeOffset occurredUtc) = GetEventDate(dateOfEvent);
-            Result<MlrbId> result = new();
+            Result<Guid> result = new();
 
             Result<SimpleRangeEvent> rUpsertRangeEvent = await UpsertSimpleRangeEvent(context,
                                                              firearmName,
@@ -101,7 +101,7 @@ namespace MyLittleRangeBook.RangeEvents
                                                              occurredUtc).ConfigureAwait(false);
 
             result.Reasons.AddRange(rUpsertRangeEvent.Reasons);
-            MlrbId? rangeEventId = null;
+            Guid? rangeEventId = null;
             if (rUpsertRangeEvent.IsSuccess)
             {
                 Success x = new("Saved the range range event that occured on " + occurredUtc.ToString("O"));
@@ -111,14 +111,14 @@ namespace MyLittleRangeBook.RangeEvents
 
 
             Result<FirearmTableRow> upsertFirearmEventStreamResult = await UpdateFirearmEventStream(context,
-                                                                     firearmName,
-                                                                     roundsFired,
-                                                                     rangeName,
-                                                                     ammoDescription,
-                                                                     notes,
-                                                                     occurredUtc,
-                                                                     rangeEventId)
-                                                                .ConfigureAwait(false);
+                                                                             firearmName,
+                                                                             roundsFired,
+                                                                             rangeName,
+                                                                             ammoDescription,
+                                                                             notes,
+                                                                             occurredUtc,
+                                                                             rangeEventId)
+                                                                        .ConfigureAwait(false);
 
             result = Result.Merge(result, upsertFirearmEventStreamResult);
 
@@ -148,9 +148,9 @@ namespace MyLittleRangeBook.RangeEvents
                                        RangeName       = rangeName,
                                    };
 
-            Result<MlrbId> rUpsertRangeEvent = await _rangeEventDocumentService
-                                                    .UpsertAsync(sre, context.CancellationToken)
-                                                    .ConfigureAwait(false);
+            Result<Guid> rUpsertRangeEvent = await _rangeEventDocumentService
+                                                  .UpsertAsync(sre, context.CancellationToken)
+                                                  .ConfigureAwait(false);
             List<IReason> reasons =
             [
                 .. rUpsertRangeEvent.Reasons,
@@ -171,13 +171,13 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
         async Task<Result<FirearmTableRow>> UpdateFirearmEventStream(DapperCommandContext            context,
-                                                             string                          firearmName,
-                                                             [ValueRange(-10000, 10000)] int roundsFired,
-                                                             string                          rangeName,
-                                                             string                          ammoDescription,
-                                                             string                          notes,
-                                                             DateTimeOffset                  eventDateUtc,
-                                                             MlrbId?                         rangeEventId)
+                                                                     string                          firearmName,
+                                                                     [ValueRange(-10000, 10000)] int roundsFired,
+                                                                     string                          rangeName,
+                                                                     string                          ammoDescription,
+                                                                     string                          notes,
+                                                                     DateTimeOffset                  eventDateUtc,
+                                                                     Guid?                         rangeEventId)
         {
             List<IReason> reasons = [];
             Result<Firearm> rGetFirearmAggregate =

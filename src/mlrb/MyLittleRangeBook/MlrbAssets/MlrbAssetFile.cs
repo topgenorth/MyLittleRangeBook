@@ -30,7 +30,7 @@ namespace MyLittleRangeBook.MlrbAssets
         /// <summary>
         ///     A unique ID that will identify the range asset file; it's also the aggregate Id for the MlrbAsset.
         /// </summary>
-        public MlrbId Id { get; private set; }
+        public Guid Id { get; private set; }
 
         /// <summary>
         ///     Path to the asset that is to be copied over to the range event asset directory.

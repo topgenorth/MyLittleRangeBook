@@ -9,11 +9,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="noteId">The ID of the note.</param>
-    public class FirearmAssociatedWithNoteSuccess(MlrbId firearmId, MlrbId noteId)
+    public class FirearmAssociatedWithNoteSuccess(Guid firearmId, Guid noteId)
         : Success($"Associated firearm {firearmId} with note {noteId}")
     {
-        public MlrbId FirearmId = firearmId;
-        public MlrbId NoteId    = noteId;
+        public Guid FirearmId = firearmId;
+        public Guid NoteId    = noteId;
     }
 
     /// <summary>
@@ -21,11 +21,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="noteId">The ID of the note.</param>
-    public class FirearmAssociatedWithNoteError(MlrbId firearmId, MlrbId noteId)
+    public class FirearmAssociatedWithNoteError(Guid firearmId, Guid noteId)
         : Error($"Failed to associate firearm {firearmId} with note {noteId}")
     {
-        public MlrbId FirearmId = firearmId;
-        public MlrbId NoteId    = noteId;
+        public Guid FirearmId = firearmId;
+        public Guid NoteId    = noteId;
     }
 
     /// <summary>
@@ -33,11 +33,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="noteId">The ID of the note.</param>
-    public class FirearmDisassociatedWithNoteError(MlrbId firearmId, MlrbId noteId)
+    public class FirearmDisassociatedWithNoteError(Guid firearmId, Guid noteId)
         : Error($"Failed to disassociate firearm {firearmId} from note {noteId}")
     {
-        public MlrbId FirearmId = firearmId;
-        public MlrbId NoteId    = noteId;
+        public Guid FirearmId = firearmId;
+        public Guid NoteId    = noteId;
     }
 
     /// <summary>
@@ -45,11 +45,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="noteId">The ID of the note.</param>
-    public class FirearmDisassociatedWithNoteSuccess(MlrbId firearmId, MlrbId noteId)
+    public class FirearmDisassociatedWithNoteSuccess(Guid firearmId, Guid noteId)
         : Success($"Disassociated firearm {firearmId} from note {noteId}")
     {
-        public MlrbId FirearmId = firearmId;
-        public MlrbId NoteId    = noteId;
+        public Guid FirearmId = firearmId;
+        public Guid NoteId    = noteId;
     }
     #endregion
 
@@ -59,11 +59,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="rangeEventId">The ID of the range event.</param>
-    public class FirearmAssociatedWithRangeEventSuccess(MlrbId firearmId, MlrbId rangeEventId)
+    public class FirearmAssociatedWithRangeEventSuccess(Guid firearmId, Guid rangeEventId)
         : Success($"Associated firearm {firearmId} to range event {rangeEventId}.")
     {
-        public MlrbId FirearmId    { get; } = firearmId;
-        public MlrbId RangeEventId { get; } = rangeEventId;
+        public Guid FirearmId    { get; } = firearmId;
+        public Guid RangeEventId { get; } = rangeEventId;
     }
 
     /// <summary>
@@ -71,11 +71,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="rangeEventId">The ID of the range event.</param>
-    public class FirearmAssociatedToRangeEventError(MlrbId firearmId, MlrbId rangeEventId)
+    public class FirearmAssociatedToRangeEventError(Guid firearmId, Guid rangeEventId)
         : Error($"Failed to associate firearm {firearmId} to range event {rangeEventId}.")
     {
-        public MlrbId FirearmId    { get; } = firearmId;
-        public MlrbId RangeEventId { get; } = rangeEventId;
+        public Guid FirearmId    { get; } = firearmId;
+        public Guid RangeEventId { get; } = rangeEventId;
     }
 
     /// <summary>
@@ -83,11 +83,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="rangeEventId">The ID of the range event.</param>
-    public class FirearmDisassociatedFromRangeEventSuccess(MlrbId firearmId, MlrbId rangeEventId)
+    public class FirearmDisassociatedFromRangeEventSuccess(Guid firearmId, Guid rangeEventId)
         : Success($"Dissociated firearm {firearmId} from range event {rangeEventId}.")
     {
-        public MlrbId FirearmId    { get; } = firearmId;
-        public MlrbId RangeEventId { get; } = rangeEventId;
+        public Guid FirearmId    { get; } = firearmId;
+        public Guid RangeEventId { get; } = rangeEventId;
     }
 
     /// <summary>
@@ -95,11 +95,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="rangeEventId">The ID of the range event.</param>
-    public class FirearmDisassociatedFromRangeEventError(MlrbId firearmId, MlrbId rangeEventId)
+    public class FirearmDisassociatedFromRangeEventError(Guid firearmId, Guid rangeEventId)
         : Error($"Failed to disassociate firearm {firearmId} from range event {rangeEventId}.")
     {
-        public MlrbId FirearmId    { get; } = firearmId;
-        public MlrbId RangeEventId { get; } = rangeEventId;
+        public Guid FirearmId    { get; } = firearmId;
+        public Guid RangeEventId { get; } = rangeEventId;
     }
     #endregion
 
@@ -110,11 +110,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="assetId">The ID of the asset.</param>
-    public class FirearmAssociatedWithAssetSuccess(MlrbId firearmId, MlrbId assetId)
+    public class FirearmAssociatedWithAssetSuccess(Guid firearmId, Guid assetId)
         : Success($"Associated firearm {firearmId} to asset {assetId}.")
     {
-        public MlrbId FirearmId { get; } = firearmId;
-        public MlrbId AssetId   { get; } = assetId;
+        public Guid FirearmId { get; } = firearmId;
+        public Guid AssetId   { get; } = assetId;
     }
 
     /// <summary>
@@ -122,11 +122,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="assetId">The ID of the asset.</param>
-    public class FirearmAssociatedWithAssetError(MlrbId firearmId, MlrbId assetId)
+    public class FirearmAssociatedWithAssetError(Guid firearmId, Guid assetId)
         : Error($"Failed to associate firearm {firearmId} to asset {assetId}.")
     {
-        public MlrbId FirearmId { get; } = firearmId;
-        public MlrbId AssetId   { get; } = assetId;
+        public Guid FirearmId { get; } = firearmId;
+        public Guid AssetId   { get; } = assetId;
     }
 
     /// <summary>
@@ -134,11 +134,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="assetId">The ID of the asset.</param>
-    public class FirearmDisassociatedFromAssetSuccess(MlrbId firearmId, MlrbId assetId)
+    public class FirearmDisassociatedFromAssetSuccess(Guid firearmId, Guid assetId)
         : Success($"Disassociated firearm {firearmId} from asset {assetId}.")
     {
-        public MlrbId FirearmId { get; } = firearmId;
-        public MlrbId AssetId   { get; } = assetId;
+        public Guid FirearmId { get; } = firearmId;
+        public Guid AssetId   { get; } = assetId;
     }
 
     /// <summary>
@@ -146,11 +146,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
     /// <param name="assetId">The ID of the asset.</param>
-    public class FirearmDisassociatedFromAssetError(MlrbId firearmId, MlrbId assetId)
+    public class FirearmDisassociatedFromAssetError(Guid firearmId, Guid assetId)
         : Error($"Failed to disassociate firearm {firearmId} from asset {assetId}.")
     {
-        public MlrbId FirearmId { get; } = firearmId;
-        public MlrbId AssetId   { get; } = assetId;
+        public Guid FirearmId { get; } = firearmId;
+        public Guid AssetId   { get; } = assetId;
     }
     #endregion
 
@@ -159,21 +159,21 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="name">The name of the firearm.</param>
     /// <param name="firearmId">The ID of the firearm.</param>
-    public class FirearmsTableUpdatedFromEventStreamSuccess(string name, MlrbId firearmId)
+    public class FirearmsTableUpdatedFromEventStreamSuccess(string name, Guid firearmId)
         : Success($"Updated the firearms table from event stream: {name} (ID: {firearmId})")
     {
         public string Name      { get; } = name;
-        public MlrbId FirearmId { get; } = firearmId;
+        public Guid FirearmId { get; } = firearmId;
     }
 
     /// <summary>
     ///     Reason indicating that an error occurred while updating the firearms table from an event stream.
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
-    public class FirearmsTableUpdatedFromEventStreamError(MlrbId firearmId)
+    public class FirearmsTableUpdatedFromEventStreamError(Guid firearmId)
         : Error($"Failed to update the firearms table from the event stream: {firearmId}")
     {
-        public MlrbId FirearmId { get; } = firearmId;
+        public Guid FirearmId { get; } = firearmId;
     }
 
     /// <summary>
@@ -181,10 +181,10 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="name">The name of the firearm.</param>
     /// <param name="firearmId">The ID of the firearm.</param>
-    public class FailedToGetFirearmEventStream(string name, MlrbId firearmId)
+    public class FailedToGetFirearmEventStream(string name, Guid firearmId)
         : Error($"Failed to get the firearm event stream for {name} (ID: {firearmId})")
     {
-        public MlrbId FirearmId = firearmId;
+        public Guid FirearmId = firearmId;
         public string Name { get; } = name;
     }
 
@@ -193,30 +193,30 @@ namespace MyLittleRangeBook.EventSourcing
     /// </summary>
     /// <param name="name">The name of the firearm.</param>
     /// <param name="firearmId">The ID of the firearm.</param>
-    public class FirearmEventStreamCreatedReason(string name, MlrbId firearmId)
+    public class FirearmEventStreamCreatedReason(string name, Guid firearmId)
         : Success($"Created new firearm event stream: {name} (ID: {firearmId})")
     {
         public string Name      { get; } = name;
-        public MlrbId FirearmId { get; } = firearmId;
+        public Guid FirearmId { get; } = firearmId;
     }
 
     /// <summary>
     ///     Reason indicating that a firearm event stream has been successfully loaded from the database.
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
-    public class FirearmEventStreamLoadedSuccess(MlrbId firearmId)
+    public class FirearmEventStreamLoadedSuccess(Guid firearmId)
         : Success($"Loaded firearm event stream from database: {firearmId}")
     {
-        public MlrbId FirearmId { get; } = firearmId;
+        public Guid FirearmId { get; } = firearmId;
     }
 
     /// <summary>
     ///     Reason indicating that an error occurred while loading a firearm event stream from the database.
     /// </summary>
     /// <param name="firearmId">The ID of the firearm.</param>
-    public class FirearmEventStreamLoadedError(MlrbId firearmId)
+    public class FirearmEventStreamLoadedError(Guid firearmId)
         : Error($"Failed to load firearm event stream from database: {firearmId}")
     {
-        public MlrbId FirearmId { get; } = firearmId;
+        public Guid FirearmId { get; } = firearmId;
     }
 }

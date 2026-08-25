@@ -5,18 +5,18 @@ namespace MyLittleRangeBook.RangeEvents
 {
     public record SimpleRangeEvent
     {
-        public SimpleRangeEvent() => Id = new MlrbId().ToString();
+        public SimpleRangeEvent() => Id = Guid.CreateVersion7();
 
         public SimpleRangeEvent(DateOnly eventDateOnly)
         {
             MlrbId id = MlrbId.From(eventDateOnly);
-            Id        = id.ToString();
+            Id        = (Guid)MlrbId.From(eventDateOnly);
             EventDate = id.DateTimeLocal;
         }
 
         public SimpleRangeEvent(DateTime eventDateTime)
         {
-            Id        = MlrbId.From(eventDateTime).ToString();
+            Id        = MlrbId.From(eventDateTime);
             EventDate = eventDateTime.ToLocalTime();
         }
 
@@ -29,7 +29,7 @@ namespace MyLittleRangeBook.RangeEvents
         /// <summary>
         ///     A Nanoid to uniquely identify the SimpleRangeEvent. Will be null for a new entity.
         /// </summary>
-        public MlrbId Id { get; set; } = new MlrbId();
+        public Guid Id { get; set; }
 
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace MyLittleRangeBook.RangeEvents
             MlrbId   id        = MlrbId.From(eventDate);
             SimpleRangeEvent sre = new()
                                    {
-                                       Id              = id.ToString(),
+                                       Id              = id,
                                        FirearmName     = firearm,
                                        RoundsFired     = rounds,
                                        RangeName       = range,

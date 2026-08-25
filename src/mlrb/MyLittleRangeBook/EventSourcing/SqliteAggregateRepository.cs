@@ -4,22 +4,22 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.EventSourcing
 {
-    public class EventStreamLoadedSuccess(MlrbId streamId, string? message = null)
+    public class EventStreamLoadedSuccess(Guid streamId, string? message = null)
         : Success(message ?? $"Event stream loaded (ID: {streamId})")
     {
-        public MlrbId StreamId = streamId;
+        public Guid StreamId = streamId;
     }
 
-    public class FailedToLoadEventStreamError(MlrbId streamId)
+    public class FailedToLoadEventStreamError(Guid streamId)
         : Error($"Failed to load the event stream (ID: {streamId})")
     {
-        public MlrbId StreamId = streamId;
+        public Guid StreamId = streamId;
     }
 
-    public class EventStreamDoesNotExistError(MlrbId streamId)
+    public class EventStreamDoesNotExistError(Guid streamId)
         : Error($"Event stream does not exist (ID: {streamId})")
     {
-        public MlrbId StreamId = streamId;
+        public Guid StreamId = streamId;
     }
 
     /// <summary>
@@ -65,7 +65,7 @@ namespace MyLittleRangeBook.EventSourcing
         /// <param name="context">The database command context, including connection, transaction (if any), and cancellation token.</param>
         /// <param name="id">The unique identifier of the aggregate to retrieve.</param>
         /// <returns>A result containing the aggregate if found, or <c>null</c> if no events exist for the specified identifier.</returns>
-        public virtual async Task<Result<TAggregate?>> GetAsync(DapperCommandContext context, MlrbId id)
+        public virtual async Task<Result<TAggregate?>> GetAsync(DapperCommandContext context, Guid id)
         {
             try
             {
@@ -107,7 +107,7 @@ namespace MyLittleRangeBook.EventSourcing
         }
 
         public async Task<Result<IEnumerable<IDomainEvent>>> GetDomainEvents(
-            DapperCommandContext context, MlrbId streamId)
+            DapperCommandContext context, Guid streamId)
         {
             try
             {
@@ -141,7 +141,7 @@ namespace MyLittleRangeBook.EventSourcing
                 return Result.Ok();
             }
 
-            MlrbId        streamId = aggregate.Id;
+            Guid        streamId = aggregate.Id;
             List<IReason> reasons  = [];
             try
             {
@@ -196,7 +196,7 @@ namespace MyLittleRangeBook.EventSourcing
         static Result<int> GetNextEventVersion(int?   currentVersion,
                                                int    aggregateVersion,
                                                int    pendingEventCount,
-                                               MlrbId streamId)
+                                               Guid streamId)
         {
             int           expectedVersion = aggregateVersion - pendingEventCount;
             List<IReason> reasons         = [];

@@ -33,7 +33,7 @@ namespace MyLittleRangeBook.RangeEvents
 
         public Task<Result> DeleteAsync(SimpleRangeEvent simpleRangeEvent, CancellationToken cancellationToken = default) => DeleteAsync(simpleRangeEvent.Id!, cancellationToken);
 
-        public async Task<Result> DeleteAsync(MlrbId simpleRangeEventId, CancellationToken cancellationToken = default)
+        public async Task<Result> DeleteAsync(Guid simpleRangeEventId, CancellationToken cancellationToken = default)
         {
             Result result;
             if (await _session.CheckExistsAsync<SimpleRangeEvent>((Guid) simpleRangeEventId))
@@ -49,6 +49,8 @@ namespace MyLittleRangeBook.RangeEvents
 
             return result;
         }
+
+        public Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, Guid simpleRangeEventId) => throw new NotImplementedException();
 
         [Obsolete("This method is deprecated and will be removed in a future version.", true)]
         public async Task<Result> ExportToCsv(DapperCommandContext context, string csvFileName)
@@ -137,7 +139,7 @@ namespace MyLittleRangeBook.RangeEvents
             return result;
         }
 
-        public Task<Result<SimpleRangeEvent>> GetAsync(MlrbId simpleRangeEventId, CancellationToken cancellationToken = default) =>
+        public Task<Result<SimpleRangeEvent>> GetAsync(Guid simpleRangeEventId, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
 
 
@@ -163,10 +165,10 @@ namespace MyLittleRangeBook.RangeEvents
             return result;
         }
 
-        public async Task<Result<MlrbId>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
+        public async Task<Result<Guid>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
                                                 CancellationToken cancellationToken = default)
         {
-            Result<MlrbId> result = new();
+            Result<Guid> result = new();
             simpleRangeEvent.Modified = DateTimeOffset.UtcNow;
             try
             {
@@ -185,7 +187,7 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
         [Obsolete("This method is deprecated and will be removed in a future version.", true)]
-        public Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context,
+        public Task<Result<Guid>> UpsertAsync(DapperCommandContext context,
                                                       SimpleRangeEvent     simpleRangeEvent) =>
             throw new NotImplementedException();
 

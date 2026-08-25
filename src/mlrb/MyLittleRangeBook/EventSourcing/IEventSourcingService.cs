@@ -19,7 +19,7 @@ namespace MyLittleRangeBook.EventSourcing
         /// A collection of <see cref="IDomainEvent" /> items representing the domain events associated with the
         /// specified stream ID.
         /// </returns>
-        Task<IEnumerable<IDomainEvent>> GetDomainEvents(DapperCommandContext context, MlrbId streamId);
+        Task<IEnumerable<IDomainEvent>> GetDomainEvents(DapperCommandContext context, Guid streamId);
 
         /// <summary>
         ///     Retrieves the event stream associated with the specified stream ID from the database.
@@ -34,7 +34,7 @@ namespace MyLittleRangeBook.EventSourcing
         /// <returns>
         ///     An <see cref="EventStreamRow" /> representing the event stream if it exists, or null if no stream is found.
         /// </returns>
-        Task<EventStreamRow?> GetEventStream(DapperCommandContext context, MlrbId streamId);
+        Task<EventStreamRow?> GetEventStream(DapperCommandContext context, Guid streamId);
 
         /// <summary>
         ///     Inserts a domain event into the event stream with the specified parameters and persists it to storage.
@@ -67,7 +67,7 @@ namespace MyLittleRangeBook.EventSourcing
         ///     or if it does not seem a record was added.
         /// </exception>
         Task InsertDomainEvent(DapperCommandContext context,
-                               MlrbId               streamId,
+                               Guid               streamId,
                                string               streamType,
                                IDomainEvent         domainEvent,
                                int                  version

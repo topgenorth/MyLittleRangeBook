@@ -51,7 +51,7 @@ namespace MyLittleRangeBook.RangeEvents
                 await foreach (CsvRow sre in LoadRangeEventsFromCsv(file, cancellationToken).ConfigureAwait(false))
                 {
                     DateOnly eventDate = DateOnly.FromDateTime(DateTime.Parse(sre.EventDate));
-                    Result<MlrbId> result = await _simpleRangeEventProcessor.ProcessSimpleRangeEventData(
+                    Result<Guid> result = await _simpleRangeEventProcessor.ProcessSimpleRangeEventData(
                                                  context,
                                                  sre.FirearmName,
                                                  sre.RoundsFired,

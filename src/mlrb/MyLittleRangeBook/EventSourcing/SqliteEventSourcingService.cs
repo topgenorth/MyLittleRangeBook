@@ -9,7 +9,7 @@ namespace MyLittleRangeBook.EventSourcing
 
         public SqliteEventSourcingService(IEventSerializer eventSerializer) => _eventSerializer = eventSerializer;
 
-        public async Task<IEnumerable<IDomainEvent>> GetDomainEvents(DapperCommandContext context, MlrbId streamId)
+        public async Task<IEnumerable<IDomainEvent>> GetDomainEvents(DapperCommandContext context, Guid streamId)
         {
             IEnumerable<EventRow> rows = await GetEventRows(context, streamId).ConfigureAwait(false);
             return rows.Select(r => r.ToDomainEvent(_eventSerializer));
@@ -28,7 +28,7 @@ namespace MyLittleRangeBook.EventSourcing
         /// <returns>
         ///     An <see cref="EventStreamRow" /> representing the event stream if it exists, or null if no stream is found.
         /// </returns>
-        public async Task<EventStreamRow?> GetEventStream(DapperCommandContext context, MlrbId streamId)
+        public async Task<EventStreamRow?> GetEventStream(DapperCommandContext context, Guid streamId)
         {
             DapperCommandContext ctx = context with { Arguments = new { StreamId = streamId.ToString() } };
 
@@ -81,7 +81,7 @@ namespace MyLittleRangeBook.EventSourcing
         ///     or if it does not seem a record was added.
         /// </exception>
         public async Task InsertDomainEvent(DapperCommandContext context,
-                                            MlrbId               streamId,
+                                            Guid               streamId,
                                             string               streamType,
                                             IDomainEvent         domainEvent,
                                             int                  version
@@ -92,7 +92,7 @@ namespace MyLittleRangeBook.EventSourcing
             var args = new
                        {
                            StreamId   = streamId,
-                           Id         = new MlrbId(domainEvent.OccurredUtc),
+                           Id         =  Guid.CreateVersion7(domainEvent.OccurredUtc),
                            StreamType = streamType,
                            domainEvent.EventType,
                            Version = version,
@@ -192,7 +192,7 @@ namespace MyLittleRangeBook.EventSourcing
         /// <returns>
         ///     A collection of <see cref="EventRow" /> objects representing the events associated with the specified stream ID.
         /// </returns>
-        public async Task<IEnumerable<EventRow>> GetEventRows(DapperCommandContext context, MlrbId streamId)
+        public async Task<IEnumerable<EventRow>> GetEventRows(DapperCommandContext context, Guid streamId)
         {
             DapperCommandContext ctx = context with { Arguments = new { StreamId = streamId.ToString() } };
             IEnumerable<EventRow> rows = await EventSourcingCommands.s_selectEventsCommand.QueryAsync<EventRow>(ctx)

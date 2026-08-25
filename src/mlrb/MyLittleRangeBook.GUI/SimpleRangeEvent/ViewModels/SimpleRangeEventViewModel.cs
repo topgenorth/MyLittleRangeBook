@@ -78,7 +78,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public SimpleRangeEvent ToSimpleRangeEvent() =>
             new()
             {
-                Id              = Id,
+                Id              = Guid.Parse(Id!),
                 EventDate       = EventDate,
                 FirearmName     = FirearmName?.Trim() ?? string.Empty,
                 RangeName       = RangeName,

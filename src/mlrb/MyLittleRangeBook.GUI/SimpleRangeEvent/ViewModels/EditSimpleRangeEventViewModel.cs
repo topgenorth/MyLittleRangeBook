@@ -127,7 +127,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
             try
             {
-                Result<MlrbId> r1 = await _simpleRangeEventDataProcessor
+                Result<Guid> r1 = await _simpleRangeEventDataProcessor
                                          .ProcessSimpleRangeEventData(ctx,
                                                                       Item.FirearmName,
                                                                       Item.RoundsFired,

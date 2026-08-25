@@ -86,7 +86,7 @@ namespace MyLittleRangeBook.RangeEvents
             try
             {
                 Result<SimpleRangeEvent> result =
-                    await _simpleRangeEventDocumentService.GetAsync(id, cancellationToken: ct).ConfigureAwait(false);
+                    await _simpleRangeEventDocumentService.GetAsync(Guid.Parse(id), cancellationToken: ct).ConfigureAwait(false);
 
                 if (result.IsFailed)
                 {
@@ -187,7 +187,7 @@ namespace MyLittleRangeBook.RangeEvents
             {
                 // First, retrieve the event to ensure it exists
                 Result<SimpleRangeEvent> getResult =
-                    await _simpleRangeEventDocumentService.GetAsync(id, ct).ConfigureAwait(false);
+                    await _simpleRangeEventDocumentService.GetAsync(Guid.Parse(id), ct).ConfigureAwait(false);
 
                 if (getResult.IsFailed)
                 {

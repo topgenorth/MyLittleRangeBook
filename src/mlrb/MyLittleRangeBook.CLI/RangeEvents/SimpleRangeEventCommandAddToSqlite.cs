@@ -22,14 +22,14 @@ namespace MyLittleRangeBook.RangeEvents
         ///     event.
         /// </summary>
         public static readonly Func<IReason, bool> s_reasonsThatDontCount = evt => evt is FirearmAssociatedWithNoteError
-                                                                                        or
-                                                                                          FirearmDisassociatedWithNoteError or
-                                                                                          FirearmAssociatedToRangeEventError
-                                                                                        or
-                                                                                          FirearmDisassociatedFromRangeEventError
-                                                                                        or
-                                                                                          FirearmAssociatedWithAssetError or
-                                                                                          FirearmDisassociatedFromAssetError;
+                                                                                  or
+                                                                                    FirearmDisassociatedWithNoteError or
+                                                                                    FirearmAssociatedToRangeEventError
+                                                                                  or
+                                                                                    FirearmDisassociatedFromRangeEventError
+                                                                                  or
+                                                                                    FirearmAssociatedWithAssetError or
+                                                                                    FirearmDisassociatedFromAssetError;
 
         readonly ISimpleRangeEventDataProcessor   _rangeEventDataProcessor;
         readonly IDocumentSession                 _session;
@@ -82,21 +82,33 @@ namespace MyLittleRangeBook.RangeEvents
 
             SimpleRangeEvent sre = SimpleRangeEvent.New(firearm.Trim(), rounds, range.Trim(), ammo.Trim(), notes.Trim(),
                                                         eventDate ?? DateOnly.FromDateTime(DateTime.UtcNow));
-            MlrbId firearmId = MlrbId.FromString(sre.FirearmName);
-            IEventStream<Firearm> f = await _session.Events
-                                                    .FetchForWriting<Firearm>((Guid) firearmId, cancellationToken)
-                                                    .ConfigureAwait(false);
+            Guid firearmId = MlrbId.FromString(sre.FirearmName);
+            Firearm? f2 = await _session.Events
+                                        .AggregateStreamAsync<Firearm>(firearmId, token: cancellationToken)
+                                        .ConfigureAwait(false);
 
+            List<object> firearmEvents = [];
+            if (f2 is null)
+            {
+                firearmEvents.Add(new Firearm.FirearmCreated(sre.FirearmName, sre.OccurredUtc));
+            }
 
-            List<object> firearmevents =
-            [
-                new Firearm.FirearmActive(firearmId, sre.OccurredUtc),
-                new Firearm.FirearmRoundCountAltered(firearmId, sre.RoundsFired, sre.OccurredUtc),
-                new Firearm.FirearmAssociatedWithRangeEvent(firearmId, sre.Id, sre.OccurredUtc),
-                new Firearm.FirearmNoteAdded(firearmId, notes.Trim(), sre.OccurredUtc),
-            ];
+            firearmEvents.AddRange(
+                                   [
+                                       new Firearm.FirearmActive(sre.OccurredUtc),
+                                       new Firearm.FirearmRoundCountAltered(sre.RoundsFired, sre.OccurredUtc),
+                                       new Firearm.FirearmAssociatedWithRangeEvent(sre.Id, sre.OccurredUtc),
+                                       new Firearm.FirearmNoteAdded(notes.Trim(), sre.OccurredUtc),
+                                       new Firearm.FirearmUsedAtRange(range.Trim(), sre.OccurredUtc),
+                                       new Firearm.FirearmUsedAmmo(ammo.Trim(), sre.OccurredUtc),
+                                   ]);
+
             _session.Store(sre);
-            f.AppendMany(firearmevents);
+
+            IEventStream<Firearm> f = await _session.Events
+                                                    .FetchForWriting<Firearm>(firearmId, cancellationToken)
+                                                    .ConfigureAwait(false);
+            f.AppendMany(firearmEvents);
 
             await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

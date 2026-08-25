@@ -24,6 +24,7 @@ namespace MyLittleRangeBook
             return Result.Fail(err);
         }
 
+        public static Error Enrich(this Error error, Guid id) => error.Enrich(id.ToString());
         public static Error Enrich(this Error error, MlrbId id) => error.Enrich(id.ToString());
 
         public static Error Enrich(this Error error, string id) => error.WithMetadata(ID_KEY, id);
@@ -38,6 +39,12 @@ namespace MyLittleRangeBook
         public static Error Enrich(this Error error, string id, long? rowId) => error.Enrich(id).Enrich(rowId);
 
         public static Success Enrich(this Success success, MlrbId id)
+        {
+            success.Metadata.Add(ID_KEY, id.ToString());
+
+            return success;
+        }
+        public static Success Enrich(this Success success, Guid id)
         {
             success.Metadata.Add(ID_KEY, id.ToString());
 
