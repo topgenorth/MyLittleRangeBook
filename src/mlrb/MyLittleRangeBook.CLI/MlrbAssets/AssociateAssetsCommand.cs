@@ -17,21 +17,17 @@ namespace MyLittleRangeBook.MlrbAssets
     public class AssociateAssetsCommand : MlrbSqliteCommandBase
     {
         readonly IMlrbAssetAggregateRepository _assetAggregateRepository;
-        readonly IFirearmAggregateRepository   _firearmAggregateRepository;
         readonly ISimpleRangeEventService      _simpleRangeEventService;
 
         public AssociateAssetsCommand(ILogger                       logger,
                                       ICliDisplay                   display,
                                       ISqliteHelper                 sqliteHelper,
-                                      IFirearmAggregateRepository   firearmAggregateRepository,
                                       IMlrbAssetAggregateRepository assetAggregateRepository,
                                       ISimpleRangeEventService      simpleRangeEventService) :
             base(logger, display, sqliteHelper)
         {
-            ArgumentNullException.ThrowIfNull(firearmAggregateRepository);
             ArgumentNullException.ThrowIfNull(assetAggregateRepository);
 
-            _firearmAggregateRepository = firearmAggregateRepository;
             _assetAggregateRepository   = assetAggregateRepository;
             _simpleRangeEventService    = simpleRangeEventService;
         }
@@ -110,16 +106,16 @@ namespace MyLittleRangeBook.MlrbAssets
 
             try
             {
-                Result<Firearm?> f = await _firearmAggregateRepository.GetAsync(context, Guid.Parse(firearmId!))
-                                                                              .ConfigureAwait(false);
-                if (f.IsFailed)
-                {
-                    Logger.Warning(
-                                   "Failed to create the association between {assetId}:{asset} and firearm {firearmId}, {reason}.",
-                                   asset.Id, asset.DestinationPath, firearmId, f.Errors[0].Message);
-
-                    return;
-                }
+                // Result<Firearm?> f = await _firearmAggregateRepository.GetAsync(context, Guid.Parse(firearmId!))
+                //                                                               .ConfigureAwait(false);
+                // if (f.IsFailed)
+                // {
+                //     Logger.Warning(
+                //                    "Failed to create the association between {assetId}:{asset} and firearm {firearmId}, {reason}.",
+                //                    asset.Id, asset.DestinationPath, firearmId, f.Errors[0].Message);
+                //
+                //     return;
+                // }
 
                 var                  p   = new { FirearmId = firearmId, AssetId = asset.Id.ToString() };
                 DapperCommandContext ctx = context with { Arguments = p };
@@ -127,13 +123,13 @@ namespace MyLittleRangeBook.MlrbAssets
 
                 DateTimeOffset dto = DateTimeOffset.UtcNow;
                 asset.AssociatedWithFirearm(firearmId, dto);
-                f.Value!.AssociatedWithAsset(asset.Id, dto);
+                // f.Value!.AssociatedWithAsset(asset.Id, dto);
 
-                await _firearmAggregateRepository.UpsertAsync(context, f.Value).ConfigureAwait(false);
+                // await _firearmAggregateRepository.UpsertAsync(context, f.Value).ConfigureAwait(false);
                 await _assetAggregateRepository.SaveAsync(context, asset).ConfigureAwait(false);
 
-                CliDisplay.PrintSuccess(
-                                        $"Associated firearm {firearmId}:{f.Value.Name} with asset {asset.Id}:{asset.DestinationPath}");
+                // CliDisplay.PrintSuccess(
+                                        // $"Associated firearm {firearmId}:{f.Value.Name} with asset {asset.Id}:{asset.DestinationPath}");
                 Logger.Information("Associated firearm {firearmId} with asset {assetId}", firearmId, asset.Id);
             }
             catch (Exception e)

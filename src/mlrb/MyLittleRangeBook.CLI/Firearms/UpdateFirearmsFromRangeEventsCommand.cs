@@ -20,11 +20,11 @@ namespace MyLittleRangeBook
                                                     ICliDisplay                 display,
                                                     ISqliteHelper               sqliteHelper,
                                                     IFirearmsService            firearmsService,
-                                                    IFirearmAggregateRepository firearmAggregateRepo,
+
                                                     IEventSourcingService       eventSourcingService,
                                                     ISimpleRangeEventService simpleRangeEventService) : base(logger, display,
                                                                                                                                                                sqliteHelper,
-                                                                                                                                                               firearmsService, firearmAggregateRepo)
+                                                                                                                                                               firearmsService)
         {
             _eventSourcingService         = eventSourcingService;
             _simpleRangeEventService = simpleRangeEventService;

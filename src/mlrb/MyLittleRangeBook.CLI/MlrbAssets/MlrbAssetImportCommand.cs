@@ -22,7 +22,6 @@ namespace MyLittleRangeBook.MlrbAssets
         readonly IMlrbAssetAggregateRepository _aggregateRepo;
         readonly IPipeline<MlrbAssetFile>      _assetPipeline;
         readonly IXeroCsvShotSessionParser     _csvParser;
-        readonly IFirearmAggregateRepository   _faRepo;
         readonly ISqliteHelper                 _sqliteHelper;
         readonly IProjector                    _firearmsProjector;
 
@@ -31,7 +30,6 @@ namespace MyLittleRangeBook.MlrbAssets
                                       IPipeline<MlrbAssetFile>      assetPipeline,
                                       IMlrbAssetAggregateRepository aggregateRepo,
                                       ISqliteHelper                 sqliteHelper,
-                                      IFirearmAggregateRepository   faRepo,
                                       IXeroCsvShotSessionParser     csvParser,
                                       IProjector firearmsProjector) : base(logger,
                                                                                                                     cliDisplay)
@@ -39,7 +37,7 @@ namespace MyLittleRangeBook.MlrbAssets
             _assetPipeline          = assetPipeline;
             _aggregateRepo          = aggregateRepo;
             _sqliteHelper           = sqliteHelper;
-            _faRepo                 = faRepo;
+
             _csvParser              = csvParser;
             _firearmsProjector = firearmsProjector;
         }
@@ -163,14 +161,14 @@ namespace MyLittleRangeBook.MlrbAssets
         async Task<Result> AssociateWithFirearm(DapperCommandContext context, Guid assetId, string firearmName)
         {
             List<IReason> reasons = [];
-            Result<Firearm> r1 =
-                await _faRepo.GetOrCreateByNameAsync(context, firearmName).ConfigureAwait(false);
-            reasons.AddRange(r1.Reasons);
-
-            Firearm? fa = r1.Value;
-            fa.AssociatedWithAsset(assetId, DateTimeOffset.UtcNow);
-            Result r2 = await _faRepo.UpsertAsync(context, fa).ConfigureAwait(false);
-            reasons.AddRange(r2.Reasons);
+            // Result<Firearm> r1 =
+            //     await _faRepo.GetOrCreateByNameAsync(context, firearmName).ConfigureAwait(false);
+            // reasons.AddRange(r1.Reasons);
+            //
+            // Firearm? fa = r1.Value;
+            // fa.AssociatedWithAsset(assetId, DateTimeOffset.UtcNow);
+            // Result r2 = await _faRepo.UpsertAsync(context, fa).ConfigureAwait(false);
+            // reasons.AddRange(r2.Reasons);
 
 
 

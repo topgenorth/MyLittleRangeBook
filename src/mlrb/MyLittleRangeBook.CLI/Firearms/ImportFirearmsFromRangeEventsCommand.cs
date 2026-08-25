@@ -66,17 +66,17 @@ namespace MyLittleRangeBook
                         associations.Add((fa.Id.ToString(), r.SimpleRangeEventId));
                     }
 
-                    Result upsertEventStreamResult = await FirearmAggregateRepository
-                                                          .UpsertAsync(context, fa)
-                                                          .ConfigureAwait(false);
-                    if (upsertEventStreamResult.IsFailed)
-                    {
-                        Logger.Warning("Failed to create the firearm aggregate for '{FirearmName}' - skipped",
-                                       f.FirearmName);
-                        CliDisplay
-                           .PrintWarning($"Failed to create the firearm aggregate for '{f.FirearmName}' - skipped.");
-                        continue;
-                    }
+                    // Result upsertEventStreamResult = await FirearmAggregateRepository
+                    //                                       .UpsertAsync(context, fa)
+                    //                                       .ConfigureAwait(false);
+                    // if (upsertEventStreamResult.IsFailed)
+                    // {
+                    //     Logger.Warning("Failed to create the firearm aggregate for '{FirearmName}' - skipped",
+                    //                    f.FirearmName);
+                    //     CliDisplay
+                    //        .PrintWarning($"Failed to create the firearm aggregate for '{f.FirearmName}' - skipped.");
+                    //     continue;
+                    // }
 
                     CliDisplay.PrintInfo($"Created the event stream for '{f.FirearmName}'.");
                     #endregion

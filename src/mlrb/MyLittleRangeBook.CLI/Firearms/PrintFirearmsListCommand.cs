@@ -14,8 +14,8 @@ namespace MyLittleRangeBook
 
 
         public PrintFirearmsListCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper,
-            IFirearmsService firearmsService, IFirearmAggregateRepository firearmAggregateRepo) : base(logger, display,
-            sqliteHelper, firearmsService, firearmAggregateRepo)
+            IFirearmsService firearmsService) : base(logger, display,
+            sqliteHelper, firearmsService)
         {
         }
 
