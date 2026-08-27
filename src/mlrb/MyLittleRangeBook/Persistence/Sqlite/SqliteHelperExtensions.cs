@@ -2,6 +2,7 @@
 using Dapper;
 using Fisher;
 using JasperFx.Events;
+using JasperFx.Events.Projections;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -174,6 +175,10 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                        .Index(x => x.EventDate)
                                        .Index(x => x.FirearmName)
                                        .UseNumericRevisions();
+
+                                   opts.Schema.For<FirearmRoundCount>().Index(x => x.Name);
+
+                                   opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
                                })
                     .ApplyAllDatabaseChangesOnStartup();
 

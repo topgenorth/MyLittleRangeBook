@@ -4,7 +4,7 @@ using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.EventSourcing
 {
-    public interface IDomainEvent: IHaveMetadataJson
+    public interface IDomainEvent
     {
         DateTimeOffset OccurredUtc { get; }
 

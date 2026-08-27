@@ -73,7 +73,7 @@ namespace MyLittleRangeBook.Firearms
             Modified = e.OccurredUtc;
             switch (e)
             {
-                case FirearmActive x:
+                case FirearmActivated x:
                     IsActive = true;
 
                     break;
@@ -117,7 +117,7 @@ namespace MyLittleRangeBook.Firearms
                     Created = x.OccurredUtc;
                     break;
 
-                case FirearmInactive x:
+                case FirearmDeactivated x:
                     IsActive = false;
 
                     break;
@@ -221,11 +221,11 @@ namespace MyLittleRangeBook.Firearms
         {
             if (inactive)
             {
-                Raise(new FirearmInactive(utcNow));
+                Raise(new FirearmDeactivated(utcNow));
             }
             else
             {
-                Raise(new FirearmActive(utcNow));
+                Raise(new FirearmActivated(utcNow));
             }
         }
     }

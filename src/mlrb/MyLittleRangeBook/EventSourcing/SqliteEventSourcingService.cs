@@ -88,7 +88,7 @@ namespace MyLittleRangeBook.EventSourcing
         )
         {
             string  dataJson     = _eventSerializer.Serialize(domainEvent);
-            string? metadataJson = domainEvent.MetadataJson;
+            // string? metadataJson = domainEvent.MetadataJson;
             var args = new
                        {
                            StreamId   = streamId,
@@ -98,7 +98,7 @@ namespace MyLittleRangeBook.EventSourcing
                            Version = version,
                            domainEvent.OccurredUtc,
                            DataJson     = dataJson,
-                           MetadataJson = metadataJson,
+                           // MetadataJson = metadataJson,
                        };
             DapperCommandContext ctx = context with { Arguments = args };
             int                  rowCount;

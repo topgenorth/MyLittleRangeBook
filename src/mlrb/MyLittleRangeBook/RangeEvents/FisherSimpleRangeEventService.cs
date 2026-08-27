@@ -1,5 +1,6 @@
 ﻿using Fisher;
 using JasperFx.Events;
+using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 
@@ -36,31 +37,31 @@ namespace MyLittleRangeBook.RangeEvents
             List<object> firearmEvents = [];
             if (f2 is null)
             {
-                firearmEvents.Add(new Firearm.FirearmCreated(sre.FirearmName, sre.OccurredUtc));
+                firearmEvents.Add(new FirearmCreated(sre.FirearmName, sre.OccurredUtc));
             }
 
-            firearmEvents.Add(new Firearm.FirearmActive(sre.OccurredUtc));
-            firearmEvents.Add(new Firearm.FirearmAssociatedWithRangeEvent(sre.Id, sre.OccurredUtc));
+            firearmEvents.Add(new FirearmActivated(sre.OccurredUtc));
+            firearmEvents.Add(new FirearmAssociatedWithRangeEvent(sre.Id, sre.OccurredUtc));
 
-            if (sre.RoundsFired != 0)
-            {
-                firearmEvents.Add(new Firearm.FirearmRoundCountAltered(sre.RoundsFired, sre.OccurredUtc));
-            }
+            // if (sre.RoundsFired != 0)
+            // {
+            //     firearmEvents.Add(new Firearm.FirearmRoundCountAltered(sre.RoundsFired, sre.OccurredUtc));
+            // }
+            // if (!string.IsNullOrWhiteSpace(sre.AmmoDescription))
+            // {
+            //     firearmEvents.Add(new Firearm.FirearmUsedAmmo(sre.AmmoDescription.Trim(), sre.OccurredUtc));
+            // }
 
             if (!string.IsNullOrWhiteSpace(sre.Notes))
             {
-                firearmEvents.Add(new Firearm.FirearmNoteAdded(sre.Notes.Trim(), sre.OccurredUtc));
+                firearmEvents.Add(new FirearmNoteAdded(sre.Notes.Trim(), sre.OccurredUtc));
             }
 
             if (!string.IsNullOrWhiteSpace(sre.RangeName))
             {
-                firearmEvents.Add(new Firearm.FirearmUsedAtRange(sre.RangeName.Trim(), sre.OccurredUtc));
+                firearmEvents.Add(new FirearmUsedAtRange(sre.RangeName.Trim(), sre.RoundsFired, sre.AmmoDescription, sre.OccurredUtc));
             }
 
-            if (!string.IsNullOrWhiteSpace(sre.AmmoDescription))
-            {
-                firearmEvents.Add(new Firearm.FirearmUsedAmmo(sre.AmmoDescription.Trim(), sre.OccurredUtc));
-            }
 
             IEventStream<Firearm> f = await _session.Events
                                                     .FetchForWriting<Firearm>(firearmId, cancellationToken)

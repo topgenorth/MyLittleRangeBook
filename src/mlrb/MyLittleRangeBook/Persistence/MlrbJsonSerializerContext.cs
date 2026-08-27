@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using MyLittleRangeBook.EventSourcing;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 using static MyLittleRangeBook.Firearms.Firearm;
 using static MyLittleRangeBook.MlrbAssets.MlrbAssetAggregate;
@@ -38,14 +40,14 @@ namespace MyLittleRangeBook.Persistence
 
     #region Domain Events: Firearms
     // [TO20260609] This list should match the SupportedFirearmEvents list in  Firearms/ServiceCollectionExtensions.cs
-    [JsonSerializable(typeof(FirearmActive))]
+    [JsonSerializable(typeof(FirearmActivated))]
     [JsonSerializable(typeof(FirearmAssociatedWithAsset))]
     [JsonSerializable(typeof(FirearmAssociatedWithRangeEvent))]
     [JsonSerializable(typeof(FirearmBarrelChanged))]
     [JsonSerializable(typeof(FirearmCleaned))]
     [JsonSerializable(typeof(FirearmCreated))]
     [JsonSerializable(typeof(FirearmRoundCountAltered))]
-    [JsonSerializable(typeof(FirearmInactive))]
+    [JsonSerializable(typeof(FirearmDeactivated))]
     [JsonSerializable(typeof(FirearmModified))]
     [JsonSerializable(typeof(FirearmNoteAdded))]
     [JsonSerializable(typeof(FirearmSightingSystemChanged))]

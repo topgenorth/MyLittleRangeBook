@@ -57,7 +57,6 @@ builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration)
     ;
 
 
-
 using IHost         host  = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
 

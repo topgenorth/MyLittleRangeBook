@@ -14,14 +14,14 @@ namespace MyLittleRangeBook
         /// This should match the JsonSerializeble attributes in MlrbJsonSerializerContext.cs
         /// </summary>
         static readonly Type[] s_supportedFirearmsEvents = [
-            typeof(FirearmActive),
+            typeof(FirearmActivated),
             typeof(FirearmAssociatedWithAsset),
             typeof(FirearmAssociatedWithRangeEvent),
             typeof(FirearmBarrelChanged),
             typeof(FirearmCleaned),
             typeof(FirearmCreated),
             typeof(FirearmRoundCountAltered),
-            typeof(FirearmInactive),
+            typeof(FirearmDeactivated),
             typeof(FirearmModified),
             typeof(FirearmNoteAdded),
             typeof(FirearmSightingSystemChanged),
