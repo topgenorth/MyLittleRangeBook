@@ -4,9 +4,9 @@ using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Firearms
 {
-    public partial class FirearmRangeVisitProjection: SingleStreamProjection<FirearmRangeVisitCount, Guid>
+    public partial class FirearmRangeVisitProjection: SingleStreamProjection<RangeVisitCount, Guid>
     {
-        public void Apply(FirearmUsedAtRange e, FirearmRangeVisitCount view)
+        public void Apply(FirearmUsedAtRange e, RangeVisitCount view)
         {
             view.VisitCount++;
         }

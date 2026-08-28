@@ -37,7 +37,7 @@ namespace MyLittleRangeBook.RangeEvents
             if (!File.Exists(file))
             {
                 _logger.Error("The CSV file '{csvFileName}' was not found.", file);
-                return ReturnCodes.SHOTVIEW_FILE_NOT_FOUND;
+                return ReturnCodes.RANGE_EVENT_CSV_FILE_NOT_FOUND;
             }
 
             try

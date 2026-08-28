@@ -71,14 +71,6 @@ namespace MyLittleRangeBook.GUI
                 // Last resort: silently fail to avoid crashing the app if logging setup fails (e.g., under AOT)
             }
 
-            services.RegisterMyLittleRangeBookSqlite(configuration)
-                    .RegisterEventSourcingStuff()
-                    .RegisterRangeAssetHandlers()
-                    .RegisterDomainEventSerializers()
-                    .RegisterRangeAssetEventSourcing()
-                    .RegisterFirearmEventSourcing()
-                    .RegisterNotes();
-
             services.AddSingleton<Func<IDialogParticipant, IDialogService>>(provider =>
                                                                                 participant =>
                                                                                     new DialogService(participant));

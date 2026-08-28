@@ -1,7 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using Dapper;
 using Fisher;
-using JasperFx.Events;
 using JasperFx.Events.Projections;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
@@ -117,6 +116,59 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             return connection;
         }
 
+        public static IServiceCollection RegisterFisherForMyLittleRangeBook(
+            this IServiceCollection services, IConfiguration configuration)
+        {
+            //ConnectionStrings:SqliteConnection
+            string connectionString = configuration.GetConnectionString("SqliteConnection")!;
+
+            services.AddFisher(opts =>
+                               {
+                                   // [TO20260820] https://fisher.jasperfx.net/configuration/hostbuilder#registration-overloads
+                                   opts.Connection(connectionString);
+
+                                   opts.Policies.AllDocumentsSoftDeleted();
+                                   // opts.Policies.AllDocumentsAreMultiTenanted();
+
+                                   opts.Schema.For<Cartridge>()
+                                       .Metadata(m =>
+                                                 {
+                                                     m.CreatedAt.Enabled = true;
+                                                     m.CreatedAt.MapTo(x => x.Created);
+                                                     m.LastModified.MapTo(x => x.Modified);
+                                                 })
+                                       .Index(x => x.CommonName)
+                                       .UniqueIndex(x => x.Name)
+                                       .UseNumericRevisions();
+
+                                   opts.Schema.For<SimpleRangeEvent>()
+                                       .Metadata(m =>
+                                                 {
+                                                     m.CreatedAt.Enabled = true;
+                                                     m.CreatedAt.MapTo(x => x.Created);
+                                                     m.LastModified.MapTo(x => x.Modified);
+                                                 })
+                                       .Index(x => x.EventDate)
+                                       .Index(x => x.FirearmName)
+                                       .UseNumericRevisions();
+
+                                   opts.Schema.For<Firearm>()
+                                       .Metadata(m =>
+                                                 {
+                                                     m.CreatedAt.Enabled = true;
+                                                     m.CreatedAt.MapTo(x => x.Created);
+                                                     m.LastModified.MapTo(x => x.Modified);
+                                                 })
+                                       .UseNumericRevisions()
+                                       .UniqueIndex(x => x.Name);
+
+                                   // opts.Projections.Add<FirearmRoundCountProjection>(ProjectionLifecycle.Inline);
+                                   // opts.Projections.Add<FirearmRangeVisitProjection>(ProjectionLifecycle.Inline);
+                                   opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
+                               })
+                    .ApplyAllDatabaseChangesOnStartup();
+            return services;
+        }
 
         /// <summary>
         ///     Register the necessary things in DI as keyed services.
@@ -129,8 +181,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         {
             SetSqlite3ProviderAndInit();
 
-            //ConnectionStrings:SqliteConnection
-            string connectionString = configuration.GetConnectionString("SqliteConnection")!;
 
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset),  new SqliteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
@@ -143,51 +193,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             services.TryAddKeyedScoped<ISimpleRangeEventService, FisherSimpleRangeEventService>(DI_KEY);
             services.TryAddScoped<ISimpleRangeEventService, FisherSimpleRangeEventService>();
 
-            services.AddFisher(opts =>
-                               {
-                                   // [TO20260820] https://fisher.jasperfx.net/configuration/hostbuilder#registration-overloads
-                                   opts.Connection(connectionString);
-
-                                    opts.Policies.AllDocumentsSoftDeleted();
-                                   // opts.Policies.AllDocumentsAreMultiTenanted();
-
-                                   opts.Schema.For<Cartridge>()
-                                       .Metadata(m =>
-                                                 {
-                                                     m.CreatedAt.Enabled     = true;
-                                                     m.CreatedAt.MapTo(x =>x.Created);
-                                                     m.LastModified.MapTo(x => x.Modified);
-                                                 })
-                                       .Index(x => x.CommonName)
-                                       .UniqueIndex(x => x.Name)
-                                       .UseNumericRevisions();
-
-                                   opts.Schema.For<SimpleRangeEvent>()
-                                       .Metadata(m =>
-                                                 {
-                                                     m.CreatedAt.Enabled     = true;
-                                                     m.CreatedAt.MapTo(x =>x.Created);
-                                                     m.LastModified.MapTo(x => x.Modified);
-                                                 })
-                                       .Index(x => x.EventDate)
-                                       .Index(x => x.FirearmName)
-                                       .UseNumericRevisions();
-
-                                   opts.Schema.For<Firearm>()
-                                       .Metadata(m =>
-                                                 {
-                                                     m.CreatedAt.Enabled     = true;
-                                                     m.CreatedAt.MapTo(x =>x.Created);
-                                                     m.LastModified.MapTo(x => x.Modified);
-                                                 })
-                                       .UseNumericRevisions()
-                                       .UniqueIndex(x => x.Name);
-
-                                   opts.Projections.Add<FirearmRoundCountProjection>(ProjectionLifecycle.Inline);
-                                   opts.Projections.Add<FirearmRangeVisitProjection>(ProjectionLifecycle.Inline);
-                                   opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
-                               })
-                    .ApplyAllDatabaseChangesOnStartup();
 
             return services;
         }
