@@ -27,9 +27,6 @@ namespace MyLittleRangeBook.RangeEvents
             _logger       = logger;
         }
 
-        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
-        public Task<Result> DeleteAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent) =>
-            throw new NotImplementedException();
 
         public Task<Result> DeleteAsync(SimpleRangeEvent simpleRangeEvent, CancellationToken cancellationToken = default) => DeleteAsync(simpleRangeEvent.Id!, cancellationToken);
 
@@ -50,7 +47,6 @@ namespace MyLittleRangeBook.RangeEvents
             return result;
         }
 
-        public Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, Guid simpleRangeEventId) => throw new NotImplementedException();
 
         [Obsolete("This method is deprecated and will be removed in a future version.", true)]
         public async Task<Result> ExportToCsv(DapperCommandContext context, string csvFileName)
@@ -84,60 +80,12 @@ namespace MyLittleRangeBook.RangeEvents
             }
         }
 
-        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
-        public async Task<Result<IEnumerable<string>>> GetAmmoDescriptions(DapperCommandContext context)
-        {
-            try
-            {
-                IEnumerable<string> list = await Commands.s_ammoDescriptionCommand.QueryAsync<string>(context)
-                                                         .ConfigureAwait(false);
-                return Result.Ok(list);
-            }
-            catch (Exception ex)
-            {
-                Error err = ex.ToError();
-                return Result.Fail<IEnumerable<string>>(err);
-            }
-        }
 
         public Task<Result<IEnumerable<string>>> GetAmmoDescriptions(CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
-        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
-        public async Task<Result<IEnumerable<string>>> GetRangeNames(DapperCommandContext context)
-        {
-            try
-            {
-                IEnumerable<string> list = await Commands.s_rangeNamesCommand.QueryAsync<string>(context)
-                                                         .ConfigureAwait(false);
-                return Result.Ok(list);
-            }
-            catch (Exception ex)
-            {
-                Error err = ex.ToError();
-                return Result.Fail<IEnumerable<string>>(err);
-            }
-        }
 
         public Task<Result<IEnumerable<string>>> GetRangeNames(CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
-        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
-        public async Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId)
-        {
-            Result<SimpleRangeEvent?> result;
-
-            if (await _session.CheckExistsAsync<SimpleRangeEvent>((Guid) simpleRangeEventId))
-            {
-                SimpleRangeEvent? sre = await _session.LoadAsync<SimpleRangeEvent>((Guid) simpleRangeEventId);
-                result = Result.Ok(sre);
-            }
-            else
-            {
-                _logger.Debug("Could not find a Fisher document for simple range event.");
-                result = new Result<SimpleRangeEvent?>().WithSuccess("Could not find the simple range event.");
-            }
-
-            return result;
-        }
 
         public Task<Result<SimpleRangeEvent>> GetAsync(Guid simpleRangeEventId, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
@@ -186,10 +134,6 @@ namespace MyLittleRangeBook.RangeEvents
             return result;
         }
 
-        [Obsolete("This method is deprecated and will be removed in a future version.", true)]
-        public Task<Result<Guid>> UpsertAsync(DapperCommandContext context,
-                                                      SimpleRangeEvent     simpleRangeEvent) =>
-            throw new NotImplementedException();
 
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
             CancellationToken cancellationToken = default)

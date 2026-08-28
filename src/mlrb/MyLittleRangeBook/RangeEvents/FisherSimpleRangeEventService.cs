@@ -1,21 +1,26 @@
-﻿using Fisher;
+﻿using System.Diagnostics;
+using Fisher;
+using Fisher.Exceptions;
 using JasperFx.Events;
 using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
-using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.RangeEvents
 {
     public class FisherSimpleRangeEventService : ISimpleRangeEventService
     {
         readonly IDocumentSession _session;
-
-        public FisherSimpleRangeEventService(IDocumentSession session) => _session = session;
+        readonly ILogger          _logger;
+        public FisherSimpleRangeEventService(IDocumentSession session, ILogger logger)
+        {
+            _session     = session;
+            _logger = logger;
+        }
 
         public async Task<Result> DeleteAsync(SimpleRangeEvent  simpleRangeEvent,
                                               CancellationToken cancellationToken = default)
         {
-            _session.Delete<SimpleRangeEvent>(simpleRangeEvent);
+            _session.Delete(simpleRangeEvent);
             await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return Result.Ok();
         }
@@ -27,47 +32,63 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<Result<Guid>> UpsertAsync(SimpleRangeEvent  sre,
                                                     CancellationToken cancellationToken = default)
         {
-            _session.Store(sre);
+            List<object> newEvents = [];
 
-            Guid firearmId = MlrbId.FromString(sre.FirearmName);
-            Firearm? f2 = await _session.Events
-                                        .AggregateStreamAsync<Firearm>(firearmId, token: cancellationToken)
-                                        .ConfigureAwait(false);
 
-            List<object> firearmEvents = [];
-            if (f2 is null)
-            {
-                firearmEvents.Add(new FirearmCreated(sre.FirearmName, sre.OccurredUtc));
-            }
-
-            firearmEvents.Add(new FirearmActivated(sre.OccurredUtc));
-            firearmEvents.Add(new FirearmAssociatedWithRangeEvent(sre.Id, sre.OccurredUtc));
-
-            // if (sre.RoundsFired != 0)
-            // {
-            //     firearmEvents.Add(new Firearm.FirearmRoundCountAltered(sre.RoundsFired, sre.OccurredUtc));
-            // }
-            // if (!string.IsNullOrWhiteSpace(sre.AmmoDescription))
-            // {
-            //     firearmEvents.Add(new Firearm.FirearmUsedAmmo(sre.AmmoDescription.Trim(), sre.OccurredUtc));
-            // }
+            newEvents.Add(new FirearmActivated(sre.FirearmName, DateTimeOffset.UtcNow));
 
             if (!string.IsNullOrWhiteSpace(sre.Notes))
             {
-                firearmEvents.Add(new FirearmNoteAdded(sre.Notes.Trim(), sre.OccurredUtc));
+                newEvents.Add(new FirearmNoteAdded(sre.FirearmName, sre.Notes.Trim(), DateTimeOffset.UtcNow));
             }
 
             if (!string.IsNullOrWhiteSpace(sre.RangeName))
             {
-                firearmEvents.Add(new FirearmUsedAtRange(sre.RangeName.Trim(), sre.RoundsFired, sre.AmmoDescription, sre.OccurredUtc));
+                newEvents.Add(new FirearmUsedAtRange(sre.FirearmName, sre.RangeName.Trim(), sre.RoundsFired,
+                                                     sre.AmmoDescription,
+                                                     sre.OccurredUtc));
+            }
+            else
+            {
+                if (sre.RoundsFired != 0)
+                {
+                    newEvents.Add(new FirearmRoundCountAltered(sre.FirearmName, sre.RoundsFired,
+                                                               DateTimeOffset.UtcNow));
+                }
             }
 
+            bool create = false;
+            Guid firearmId = Guid.CreateVersion7();
+            try
+            {
+                var stream =
+                    await _session.Events.FetchForWritingByNaturalKey<Firearm, string>(sre.FirearmName, cancellationToken);
+                firearmId = stream.Id;
+            }
+            catch (UnknownNaturalKeyException)
+            {
+                _logger.Verbose("{0} is not a known natural key.", sre.FirearmName);
+                create = true;
+            }
 
-            IEventStream<Firearm> f = await _session.Events
-                                                    .FetchForWriting<Firearm>(firearmId, cancellationToken)
-                                                    .ConfigureAwait(false);
-            f.AppendMany(firearmEvents);
+            if (create)
+            {
+                firearmId = Guid.CreateVersion7();
+                try
+                {
+                    var x = _session.Events.StartStream<Firearm>(firearmId,
+                                                                 new FirearmCreated(sre.FirearmName, DateTimeOffset.UtcNow));
+                    _logger.Verbose("Created the stream for natural key {0}/{1}.", sre.FirearmName, firearmId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "An error occurred while creating the firearm stream for natural key {0}.", sre.FirearmName);
 
+                }
+            }
+
+            _session.Events.Append(firearmId, newEvents);
+            _session.Store(sre);
             await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             return Result.Ok(sre.Id);
@@ -76,11 +97,10 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
             CancellationToken cancellationToken = default)
         {
-
-            var events = _session.Query<SimpleRangeEvent>()
-                                 .OrderBy(sre => sre.EventDate)
-                                 .ThenBy(sre => sre.FirearmName)
-                                 .ToArray();
+            SimpleRangeEvent[] events = _session.Query<SimpleRangeEvent>()
+                                                .OrderBy(sre => sre.EventDate)
+                                                .ThenBy(sre => sre.FirearmName)
+                                                .ToArray();
             return Result.Ok<IEnumerable<SimpleRangeEvent>>(events);
         }
 

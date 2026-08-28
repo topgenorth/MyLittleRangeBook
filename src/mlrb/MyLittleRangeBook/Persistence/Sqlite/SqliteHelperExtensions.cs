@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.Cartridges;
+using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.RangeEvents;
 using SQLitePCL;
@@ -147,11 +148,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    // [TO20260820] https://fisher.jasperfx.net/configuration/hostbuilder#registration-overloads
                                    opts.Connection(connectionString);
 
-                                   // // [TO20260824] https://fisher.jasperfx.net/documents/identity.html#strong-typed-identities
-                                   // opts.Events.StreamIdentity = StreamIdentity.AsString;
-                                   // opts.RegisterValueType<MlrbId>();
-
-                                   opts.Policies.AllDocumentsSoftDeleted();
+                                    opts.Policies.AllDocumentsSoftDeleted();
                                    // opts.Policies.AllDocumentsAreMultiTenanted();
 
                                    opts.Schema.For<Cartridge>()
@@ -176,9 +173,19 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                        .Index(x => x.FirearmName)
                                        .UseNumericRevisions();
 
-                                   opts.Schema.For<FirearmRoundCount>().Index(x => x.Name);
+                                   opts.Schema.For<Firearm>()
+                                       .Metadata(m =>
+                                                 {
+                                                     m.CreatedAt.Enabled     = true;
+                                                     m.CreatedAt.MapTo(x =>x.Created);
+                                                     m.LastModified.MapTo(x => x.Modified);
+                                                 })
+                                       .UseNumericRevisions()
+                                       .UniqueIndex(x => x.Name);
 
-                                   opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
+                                   opts.Projections.Add<FirearmRoundCountProjection>(ProjectionLifecycle.Inline);
+                                   opts.Projections.Add<FirearmRangeVisitProjection>(ProjectionLifecycle.Inline);
+                                   opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
                                })
                     .ApplyAllDatabaseChangesOnStartup();
 

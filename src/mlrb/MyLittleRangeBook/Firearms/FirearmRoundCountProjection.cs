@@ -1,8 +1,17 @@
 ﻿using Fisher.Projections;
 using MyLittleRangeBook.EventSourcing;
+using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.Models
+namespace MyLittleRangeBook.Firearms
 {
+    public partial class FirearmRangeVisitProjection: SingleStreamProjection<FirearmRangeVisitCount, Guid>
+    {
+        public void Apply(FirearmUsedAtRange e, FirearmRangeVisitCount view)
+        {
+            view.VisitCount++;
+        }
+    }
+
     public partial class FirearmRoundCountProjection:SingleStreamProjection<FirearmRoundCount, Guid>
     {
         public static FirearmRoundCount Create(FirearmCreated e)
@@ -16,12 +25,12 @@ namespace MyLittleRangeBook.Models
 
         public void Apply(FirearmUsedAtRange e, FirearmRoundCount view)
         {
-            view.RoundCount += e.RoundCount;
+            view.RoundCount += e.RoundsFired;
         }
 
         public void Apply(FirearmRoundCountAltered e, FirearmRoundCount view)
         {
-            view.RoundCount += e.Rounds;
+            view.RoundCount += e.RoundsDelta;
         }
     }
 }

@@ -1,4 +1,7 @@
 ﻿// ReSharper disable once CheckNamespace
+
+using JasperFx.Events.Aggregation;
+
 namespace MyLittleRangeBook.EventSourcing
 {
     /// <summary>
@@ -16,15 +19,18 @@ namespace MyLittleRangeBook.EventSourcing
     ///     The UTC timestamp when the creation of the firearm was recorded.
     /// </param>
     [EventType("firearm-created")]
+
     public record struct FirearmCreated(
+        [property: NaturalKey]
         string         Name,
         DateTimeOffset OccurredUtc,
         string?        MetadataJson = null) : IDomainEvent;
 
     [EventType("firearm-used-at-range")]
     public record struct FirearmUsedAtRange(
+        [property: NaturalKey] string FirearmName,
         string         RangeName,
-        int            RoundCount,
+        int            RoundsFired,
         string?        AmmoDescription,
         DateTimeOffset OccurredUtc);
 
@@ -36,18 +42,19 @@ namespace MyLittleRangeBook.EventSourcing
     /// <param name="StreamId">
     ///     The unique identifier of the firearm involved in the discharge event.
     /// </param>
-    /// <param name="Rounds">
-    ///     The number of rounds discharged from the firearm.
+    /// <param name="RoundsDelta">
+    ///     An integer that will changed the round count for the firearm.
     /// </param>
     /// <param name="OccurredUtc">
     ///     The UTC timestamp when the discharge event was recorded.
     /// </param>
     [EventType("firearm-round-count-altered")]
     public record struct FirearmRoundCountAltered(
-        int            Rounds,
-        DateTimeOffset OccurredUtc,
-        string?        AmmoDescription = null,
-        string?        MetadataJson    = null)
+        [property: NaturalKey] string FirearmName,
+        int                           RoundsDelta,
+        DateTimeOffset                OccurredUtc,
+        string?                       AmmoDescription = null,
+        string?                       MetadataJson    = null)
         : IDomainEvent;
 
     /// <summary>
@@ -63,8 +70,9 @@ namespace MyLittleRangeBook.EventSourcing
     /// </param>
     [EventType("firearm-active")]
     public record struct FirearmActivated(
-        DateTimeOffset OccurredUtc,
-        string?        MetadataJson = null)
+        [property: NaturalKey] string FirearmName,
+        DateTimeOffset                OccurredUtc,
+        string?                       MetadataJson = null)
         : IDomainEvent;
 
     /// <summary>
@@ -83,9 +91,10 @@ namespace MyLittleRangeBook.EventSourcing
     /// </param>
     [EventType("range-event-associated-with-firearm")]
     public record struct FirearmAssociatedWithRangeEvent(
-        Guid           RangeEventId,
-        DateTimeOffset OccurredUtc,
-        string?        MetadataJson = null
+        [property: NaturalKey] string FirearmName,
+        Guid                          RangeEventId,
+        DateTimeOffset                OccurredUtc,
+        string?                       MetadataJson = null
     )
         : IDomainEvent;
 
@@ -101,8 +110,9 @@ namespace MyLittleRangeBook.EventSourcing
     /// </param>
     [EventType("firearm-deactivated")]
     public record struct FirearmDeactivated(
-        DateTimeOffset OccurredUtc,
-        string?        MetadataJson = null)
+        [property: NaturalKey] string FirearmName,
+        DateTimeOffset                OccurredUtc,
+        string?                       MetadataJson = null)
         : IDomainEvent;
 
     /// <summary>
@@ -121,10 +131,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </param>
     [EventType("firearm-note-added")]
     public record struct FirearmNoteAdded(
-        string         Text,
-        DateTimeOffset OccurredUtc,
-        string         NoteType     = "note",
-        string?        MetadataJson = null)
+        [property: NaturalKey] string FirearmName,
+        string                        Text,
+        DateTimeOffset                OccurredUtc,
+        string                        NoteType     = "note",
+        string?                       MetadataJson = null)
         : IDomainEvent;
 
     /// <summary>
@@ -143,9 +154,10 @@ namespace MyLittleRangeBook.EventSourcing
     /// </param>
     [EventType("asset-associated-with-firearm")]
     public record struct FirearmAssociatedWithAsset(
-        Guid           AssetId,
-        DateTimeOffset OccurredUtc,
-        string?        MetadataJson = null)
+        [property: NaturalKey] string FirearmName,
+        Guid                          AssetId,
+        DateTimeOffset                OccurredUtc,
+        string?                       MetadataJson = null)
         : IDomainEvent;
 
     [EventType("firearm-used-ammo")]
@@ -170,10 +182,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </param>
     [EventType("firearm-sights-changed")]
     public record struct FirearmSightingSystemChanged(
-        string         OldAimingSystem,
-        string         NewAimingSystem,
-        DateTimeOffset OccurredUtc,
-        string?        MetadataJson = null) : IDomainEvent;
+        [property: NaturalKey] string FirearmName,
+        string                        OldAimingSystem,
+        string                        NewAimingSystem,
+        DateTimeOffset                OccurredUtc,
+        string?                       MetadataJson = null) : IDomainEvent;
 
     /// <summary>
     ///     Represents an event indicating a change in the barrel of a firearm within the domain.
@@ -194,10 +207,11 @@ namespace MyLittleRangeBook.EventSourcing
     /// </param>
     [EventType("firearm-barrel-changed")]
     public record struct FirearmBarrelChanged(
-        string         OldBarrel,
-        string         NewBarrel,
-        DateTimeOffset OccurredUtc,
-        string?        MetadataJson = null) : IDomainEvent;
+    [property: NaturalKey] string FirearmName,
+        string                        OldBarrel,
+        string                        NewBarrel,
+        DateTimeOffset                OccurredUtc,
+        string?                       MetadataJson = null) : IDomainEvent;
 
     /// <summary>
     ///     Represents an event indicating that a firearm has been cleaned.
@@ -211,7 +225,7 @@ namespace MyLittleRangeBook.EventSourcing
     ///     The UTC timestamp denoting when the cleaning event was recorded.
     /// </param>
     [EventType("firearm-cleaned")]
-    public record struct FirearmCleaned(DateTimeOffset OccurredUtc, string? MetadataJson = null)
+    public record struct FirearmCleaned([property: NaturalKey] string FirearmName, DateTimeOffset OccurredUtc, string? MetadataJson = null)
         : IDomainEvent;
 
     /// <summary>
@@ -230,9 +244,10 @@ namespace MyLittleRangeBook.EventSourcing
     /// </param>
     [EventType("firearm-modification")]
     public record struct FirearmModified(
-        string         Description,
-        DateTimeOffset OccurredUtc,
-        string?        MetadataJson = null)
+        [property: NaturalKey] string FirearmName,
+        string                        Description,
+        DateTimeOffset                OccurredUtc,
+        string?                       MetadataJson = null)
         : IDomainEvent;
 
     /// <summary>
@@ -251,16 +266,18 @@ namespace MyLittleRangeBook.EventSourcing
     /// </param>
     [EventType("asset-disassociated-from-firearm")]
     public record struct FirearmDisassociatedFromAsset(
-        Guid           AssetId,
-        DateTimeOffset OccurredUtc,
-        string?        MetadataJson = null)
+        [property: NaturalKey] string FirearmName,
+        Guid                          AssetId,
+        DateTimeOffset                OccurredUtc,
+        string?                       MetadataJson = null)
         : IDomainEvent;
 
     [EventType("range-event-disassociated-from-firearm")]
     public record struct FirearmDisassociatedFromRangeEvent(
-        Guid           RangeEventId,
-        DateTimeOffset OccurredUtc,
-        string?        MetadataJson = null
+        [property: NaturalKey] string FirearmName,
+        Guid                          RangeEventId,
+        DateTimeOffset                OccurredUtc,
+        string?                       MetadataJson = null
     )
         : IDomainEvent;
 }
