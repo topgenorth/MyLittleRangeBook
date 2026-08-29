@@ -168,6 +168,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    // opts.Schema.For<RangeVisitCount>()
                                    //     .UniqueIndex(x => x.Name);
 
+                                   opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
                                    opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
                                    opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
                                })
