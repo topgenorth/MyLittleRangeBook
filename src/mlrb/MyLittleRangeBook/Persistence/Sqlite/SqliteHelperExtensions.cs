@@ -162,7 +162,12 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                        .UseNumericRevisions()
                                        .UniqueIndex(x => x.Name);
 
-                                   opts.Projections.Add(new FirearmUsedAtRangeProjection(),   ProjectionLifecycle.Inline);
+                                   // opts.Schema.For<FirearmRoundCount>()
+                                   //     .UniqueIndex(x => x.Name);
+                                   //
+                                   // opts.Schema.For<RangeVisitCount>()
+                                   //     .UniqueIndex(x => x.Name);
+
                                    opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
                                    opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
                                })

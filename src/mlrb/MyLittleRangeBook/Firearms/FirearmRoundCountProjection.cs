@@ -18,11 +18,11 @@ namespace MyLittleRangeBook.Firearms
                                         map.SetValue("round_count", 0);
                                     });
 
-            // Project<FirearmUsedAtRange>(map =>
-            //                             {
-            //                                 map.Map(x => x.FirearmName, "firearm_name");
-            //                                 map.Increment(x => x.RoundsFired, "round_count");
-            //                             });
+            Project<FirearmUsedAtRange>(map =>
+                                        {
+                                            map.Map(x => x.FirearmName, "firearm_name");
+                                            map.Increment(x => x.RoundsFired, "round_count");
+                                        });
             Project<FirearmRoundCountAltered>(map =>
                                               {
                                                   map.Map(x => x.FirearmName, "firearm_name");
