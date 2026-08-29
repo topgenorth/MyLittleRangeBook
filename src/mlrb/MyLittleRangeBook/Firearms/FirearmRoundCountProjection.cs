@@ -7,8 +7,7 @@ namespace MyLittleRangeBook.Firearms
     {
         public FirearmRoundCountProjection() : base("firearm_round_counts")
         {
-            Table.AddColumn("id",           "TEXT").AsPrimaryKey();
-            Table.AddColumn("firearm_name", "TEXT").AddIndex(c => { c.IsUnique = true; }).NotNull();
+            Table.AddColumn("firearm_name", "TEXT").AsPrimaryKey();
             Table.AddColumn("round_count",  "INTEGER").DefaultValue(0).NotNull();
 
 
@@ -16,18 +15,23 @@ namespace MyLittleRangeBook.Firearms
                                     {
                                         map.Map(x => x.Name, "firearm_name");
                                         map.SetValue("round_count", 0);
-                                    });
+                                    },
+                                    x => x.Name);
 
             Project<FirearmUsedAtRange>(map =>
                                         {
                                             map.Map(x => x.FirearmName, "firearm_name");
                                             map.Increment(x => x.RoundsFired, "round_count");
-                                        });
+                                        },
+                                        x => x.FirearmName);
             Project<FirearmRoundCountAltered>(map =>
                                               {
                                                   map.Map(x => x.FirearmName, "firearm_name");
                                                   map.Increment(x => x.RoundsDelta, "round_count");
-                                              });
+                                              },
+                                              x => x.FirearmName);
+
+            Delete<FirearmDeactivated>(e => e.FirearmName);
         }
     }
 }
