@@ -1,36 +1,33 @@
-﻿using Fisher.Projections;
+﻿using Fisher.Projections.Flattened;
 using MyLittleRangeBook.EventSourcing;
-using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Firearms
 {
-    public partial class FirearmRangeVisitProjection: SingleStreamProjection<RangeVisitCount, Guid>
+    public class FirearmRoundCountProjection : FlatTableProjection
     {
-        public void Apply(FirearmUsedAtRange e, RangeVisitCount view)
+        public FirearmRoundCountProjection() : base("firearm_round_counts")
         {
-            view.VisitCount++;
-        }
-    }
+            Table.AddColumn("id",           "TEXT").AsPrimaryKey();
+            Table.AddColumn("firearm_name", "TEXT").AddIndex(c => { c.IsUnique = true; }).NotNull();
+            Table.AddColumn("round_count",  "INTEGER").DefaultValue(0).NotNull();
 
-    public partial class FirearmRoundCountProjection:SingleStreamProjection<FirearmRoundCount, Guid>
-    {
-        public static FirearmRoundCount Create(FirearmCreated e)
-        {
-            return new FirearmRoundCount()
-                   {
-                       Name       = e.Name,
-                       RoundCount = 0,
-                   };
-        }
 
-        public void Apply(FirearmUsedAtRange e, FirearmRoundCount view)
-        {
-            view.RoundCount += e.RoundsFired;
-        }
+            Project<FirearmCreated>(map =>
+                                    {
+                                        map.Map(x => x.Name, "firearm_name");
+                                        map.SetValue("round_count", 0);
+                                    });
 
-        public void Apply(FirearmRoundCountAltered e, FirearmRoundCount view)
-        {
-            view.RoundCount += e.RoundsDelta;
+            // Project<FirearmUsedAtRange>(map =>
+            //                             {
+            //                                 map.Map(x => x.FirearmName, "firearm_name");
+            //                                 map.Increment(x => x.RoundsFired, "round_count");
+            //                             });
+            Project<FirearmRoundCountAltered>(map =>
+                                              {
+                                                  map.Map(x => x.FirearmName, "firearm_name");
+                                                  map.Increment(x => x.RoundsDelta, "round_count");
+                                              });
         }
     }
 }
