@@ -1,12 +1,7 @@
 ﻿using ConsoleAppFramework;
-using Fisher;
 using FluentResults;
-using JasperFx.Events;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.EventSourcing;
-using MyLittleRangeBook.Firearms;
-using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.RangeEvents
 {
@@ -15,17 +10,16 @@ namespace MyLittleRangeBook.RangeEvents
     /// </summary>
     [RegisterCommands("rangeevent")]
     [UsedImplicitly]
-    public class SimpleRangeEventCommandAddToSqlite
+    public class AddNewSimpleRangeEventCommand
     {
-        readonly ILogger                  _logger;
         readonly ICliDisplay              _cliDisplay;
         readonly ISimpleRangeEventService _service;
-        public SimpleRangeEventCommandAddToSqlite(ILogger     logger,
-                                                  ICliDisplay cliDisplay, ISimpleRangeEventService service)
+
+        public AddNewSimpleRangeEventCommand(ICliDisplay              cliDisplay,
+                                             ISimpleRangeEventService service)
         {
-            _logger       = logger;
-            _cliDisplay   = cliDisplay;
-            _service = service;
+            _cliDisplay = cliDisplay;
+            _service    = service;
         }
 
         /// <summary>
@@ -60,7 +54,22 @@ namespace MyLittleRangeBook.RangeEvents
                                                         eventDate ?? DateOnly.FromDateTime(DateTime.UtcNow));
 
 
-            var rAdd = await _service.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
+            Result<Guid> rAdd = await _service.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
+
+            if (rAdd.IsSuccess)
+            {
+                returnValue = ReturnCodes.SUCCESS;
+                _cliDisplay.PrintSuccess("Saved the range event.");
+                SimpleRangeEventPrinter2 p = new();
+                p.Print(_cliDisplay.Console,sre, false);
+            }
+            else
+            {
+                returnValue = ReturnCodes.RANGE_EVENT_FAILED_TO_CREATE;
+                _cliDisplay.PrintFailure("Failed to save range event.");
+            }
+
+
             return returnValue;
         }
     }

@@ -11,6 +11,7 @@ using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.RangeEvents;
 using SQLitePCL;
+using Wolverine;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.Persistence.Sqlite
@@ -133,7 +134,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    opts.Schema.For<Cartridge>()
                                        .Metadata(m =>
                                                  {
-                                                     m.CreatedAt.Enabled = true;
+                                                     m.CreatedAt.Enabled      = true;
                                                      m.CreatedAt.MapTo(x => x.Created);
                                                      m.LastModified.MapTo(x => x.Modified);
                                                  })
@@ -144,7 +145,8 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    opts.Schema.For<SimpleRangeEvent>()
                                        .Metadata(m =>
                                                  {
-                                                     m.CreatedAt.Enabled = true;
+                                                     m.CreatedAt.Enabled      = true;
+                                                     m.LastModifiedBy.Enabled = true;
                                                      m.CreatedAt.MapTo(x => x.Created);
                                                      m.LastModified.MapTo(x => x.Modified);
                                                  })
@@ -155,9 +157,11 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    opts.Schema.For<Firearm>()
                                        .Metadata(m =>
                                                  {
-                                                     m.CreatedAt.Enabled = true;
+                                                     m.CreatedAt.Enabled      = true;
+                                                     m.LastModifiedBy.Enabled = true;
                                                      m.CreatedAt.MapTo(x => x.Created);
                                                      m.LastModified.MapTo(x => x.Modified);
+
                                                  })
                                        .UseNumericRevisions()
                                        .UniqueIndex(x => x.Name);

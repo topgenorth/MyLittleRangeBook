@@ -1,4 +1,6 @@
-﻿namespace MyLittleRangeBook.RangeEvents
+﻿using Fisher.Projections.Flattened;
+
+namespace MyLittleRangeBook.RangeEvents
 {
     public record SimpleRangeEventCreated(
         DateOnly EventDate,
@@ -7,4 +9,5 @@
         int      RoundsFired,
         string   AmmoDescription,
         string   Notes);
+
 }

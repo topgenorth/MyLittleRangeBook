@@ -1,6 +1,6 @@
-﻿using System.Diagnostics;
-using Fisher;
+﻿using Fisher;
 using Fisher.Exceptions;
+using Fisher.Linq;
 using JasperFx.Events;
 using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
@@ -9,12 +9,13 @@ namespace MyLittleRangeBook.RangeEvents
 {
     public class FisherSimpleRangeEventService : ISimpleRangeEventService
     {
-        readonly IDocumentSession _session;
         readonly ILogger          _logger;
+        readonly IDocumentSession _session;
+
         public FisherSimpleRangeEventService(IDocumentSession session, ILogger logger)
         {
-            _session     = session;
-            _logger = logger;
+            _session = session;
+            _logger  = logger;
         }
 
         public async Task<Result> DeleteAsync(SimpleRangeEvent  simpleRangeEvent,
@@ -26,8 +27,16 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
         public async Task<Result<SimpleRangeEvent>> GetAsync(Guid              simpleRangeEventId,
-                                                             CancellationToken cancellationToken = default) =>
-            throw new NotImplementedException();
+                                                             CancellationToken cancellationToken = default)
+        {
+            SimpleRangeEvent? sre = await _session.LoadAsync<SimpleRangeEvent>(simpleRangeEventId, cancellationToken);
+            if (sre is null)
+            {
+                return new Result().WithError(new InvalidSimpleRangeEventIdError(simpleRangeEventId));
+            }
+
+            return Result.Ok(sre);
+        }
 
         public async Task<Result<Guid>> UpsertAsync(SimpleRangeEvent  sre,
                                                     CancellationToken cancellationToken = default)
@@ -57,12 +66,13 @@ namespace MyLittleRangeBook.RangeEvents
                 }
             }
 
-            bool create = false;
+            bool create    = false;
             Guid firearmId = Guid.CreateVersion7();
             try
             {
-                var stream =
-                    await _session.Events.FetchForWritingByNaturalKey<Firearm, string>(sre.FirearmName, cancellationToken);
+                IEventStream<Firearm> stream =
+                    await _session.Events.FetchForWritingByNaturalKey<Firearm, string>(sre.FirearmName,
+                             cancellationToken);
                 firearmId = stream.Id;
             }
             catch (UnknownNaturalKeyException)
@@ -76,14 +86,15 @@ namespace MyLittleRangeBook.RangeEvents
                 firearmId = Guid.CreateVersion7();
                 try
                 {
-                    var x = _session.Events.StartStream<Firearm>(firearmId,
-                                                                 new FirearmCreated(sre.FirearmName, DateTimeOffset.UtcNow));
+                    StreamAction x = _session.Events.StartStream<Firearm>(firearmId,
+                                                                          new FirearmCreated(sre.FirearmName,
+                                                                                   DateTimeOffset.UtcNow));
                     _logger.Verbose("Created the stream for natural key {0}/{1}.", sre.FirearmName, firearmId);
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(ex, "An error occurred while creating the firearm stream for natural key {0}.", sre.FirearmName);
-
+                    _logger.Error(ex, "An error occurred while creating the firearm stream for natural key {0}.",
+                                  sre.FirearmName);
                 }
             }
 
@@ -94,13 +105,17 @@ namespace MyLittleRangeBook.RangeEvents
             return Result.Ok(sre.Id);
         }
 
+        /// <summary>
+        /// Returns an unsorted list of simple range event documents.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
             CancellationToken cancellationToken = default)
         {
-            SimpleRangeEvent[] events = _session.Query<SimpleRangeEvent>()
-                                                .OrderBy(sre => sre.EventDate)
-                                                .ThenBy(sre => sre.FirearmName)
-                                                .ToArray();
+            IReadOnlyList<SimpleRangeEvent> events = await _session.Query<SimpleRangeEvent>()
+                                                                   .ToListAsync(cancellationToken)
+                                                                   .ConfigureAwait(false);
             return Result.Ok<IEnumerable<SimpleRangeEvent>>(events);
         }
 

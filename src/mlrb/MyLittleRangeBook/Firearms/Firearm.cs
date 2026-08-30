@@ -6,14 +6,13 @@ namespace MyLittleRangeBook.Firearms
 {
     public class Firearm
     {
+        public Guid Id { get; set; } = Guid.CreateVersion7();
 
-        public Guid           Id          { get; set; } = Guid.CreateVersion7();
-
-        [NaturalKey] public string         Name        { get; set; } = "Unknown Firearm";
-        public              string?        Notes       { get; set; }
-        public              DateTimeOffset Created     { get; set; }
-        public              DateTimeOffset Modified    { get; set; }
-        public              bool           IsActive    { get; set; }
+        [NaturalKey] public string         Name     { get; set; } = "Unknown Firearm";
+        public              string?        Notes    { get; set; }
+        public              DateTimeOffset Created  { get; set; } = DateTimeOffset.UtcNow;
+        public              DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
+        public              bool           IsActive { get; set; } = true;
 
         public void Apply(FirearmActivated e) => IsActive = true;
 
@@ -27,7 +26,7 @@ namespace MyLittleRangeBook.Firearms
             AppendToFirearmAggregateNoteSummary(sbBarrelChange.ToString());
         }
 
-            public void Apply(FirearmCleaned e) =>
+        public void Apply(FirearmCleaned e) =>
             AppendToFirearmAggregateNoteSummary($"Cleaned on {e.OccurredUtc.ToString()}.");
 
         [NaturalKeySource]
@@ -76,8 +75,8 @@ namespace MyLittleRangeBook.Firearms
             {
                 StringBuilder newNotes = new StringBuilder(Notes)
                                         .AppendLine("--")
-                                        // .Append("Date: ")
-                                        // .AppendLine(Modified.ToString("O"))
+                                         // .Append("Date: ")
+                                         // .AppendLine(Modified.ToString("O"))
                                         .AppendLine(text.Trim());
                 Notes = newNotes.ToString();
             }
