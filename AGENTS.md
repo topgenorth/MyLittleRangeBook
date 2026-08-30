@@ -32,6 +32,7 @@ Other folders under `src/mlrb/`: `sql-scripts/`, `supabase/`, `hatcher/`, `fit-r
 
 ## 3) Architecture & why
 
+- **Event driven and event sourcing code**. This project is meant to be entirely event driven.
 - **Domain-organised core.** Persistence is *inside* the core project under
   `MyLittleRangeBook/Persistence/`. There is **no separate `.Sqlite` or `.PgSQL` provider
   project, and no Postgres implementation** — SQLite only today.

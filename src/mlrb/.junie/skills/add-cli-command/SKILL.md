@@ -1,6 +1,6 @@
 ---
 name: add-cli-command
-description: Add a new ConsoleAppFramework CLI command for MyLittleRangeBook using async patterns, Spectre.Console output, DI, and repository-based persistence.
+description: Add a new ConsoleAppFramework CLI command for MyLittleRangeBook using async patterns, Spectre.Console output, and DI.
 ---
 
 # Purpose
@@ -11,28 +11,23 @@ Use this skill when asked to add or modify a CLI command in MyLittleRangeBook.
 - Prefer implementing features in CLI first.
 - Target framework is .NET 10.
 - CLI uses ConsoleAppFramework and Spectre.Console.
-- Commands  should inherit from `MlrbSqliteCommandBase`.
+- Spectre.Console commands should be in their own class.
 - Use the Result pattern (via `FluentResults`) for service/logic methods.
-- Use `DapperCommandContext` for database access and transactions.
-- Use `MlrbId` for all entity and aggregate IDs.
 - Prefer async methods everywhere possible.
-- Data access uses Dapper.
-- Databases supported: SQLite only. Ignore anything Supabase or PostgreSQL.
-- Domain includes range trips, Garmin Xero FIT files, shot/session logs, firearms, ammo, and related marksmanship records.
+- The Fisher framework (from the Critter Stack) is used for data storage.
 
 # Instructions
-1. Find the CLI project and existing command organization.
-2. Follow the existing namespace, DI, and command registration patterns.
-3. Inherit from `MlrbSqliteCommandBase` for SQLite-based commands.
-4. Create async command handlers returning `Task<int>`.
-5. Keep command logic thin; move business logic into services.
-6. Use `DapperCommandContext` for transactional operations.
-7. Use repository abstractions around Dapper access.
-8. Use `MlrbId` for IDs.
-9. Use Spectre.Console (via `CliDisplay`) for user-facing output.
-10. When persistence changes are needed, support only SQLite.
-11. Add or update tests where the repo pattern suggests.
-12. Keep changes minimal and consistent with existing naming.
+1. The CLI project is MyLittleRangeBook.CLI.
+2. Core logic exists in only the MyLittleRangebook project.
+3. Command classes should be sealed.
+4. The commands will be in directories that are named after the document.  For example `Firearms`, `RangeEvents`, and cartridges.
+5. Follow the existing namespace, DI, and command registration patterns.
+6. Create async command handlers returning `Task<int>`.
+7. Keep Spectre.Console command logic thin; move business logic into services.
+8. Use Spectre.Console (via `CliDisplay`) for user-facing output.
+9. Add or update tests where the repo pattern suggests.
+10. Keep changes minimal and consistent with existing naming.
+11. Spectre.Console commands return an integer value for any issues.  Update the file ReturnCodes.cs with a descriptive constant for the integer.
 
 # Output expectations
 - Show files to add/change.
