@@ -6,7 +6,7 @@ using MyLittleRangeBook.Console;
 namespace MyLittleRangeBook.RangeEvents
 {
     [RegisterCommands("rangeevent")]
-    public class DisplaySingleRangeEventCommand
+    public sealed class DisplaySingleRangeEventCommand
     {
         readonly ICliDisplay              _cliDisplay;
         readonly ILogger                  _logger;

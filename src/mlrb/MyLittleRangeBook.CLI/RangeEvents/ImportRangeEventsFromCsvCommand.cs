@@ -11,7 +11,7 @@ namespace MyLittleRangeBook.RangeEvents
 {
     [RegisterCommands("rangeevent")]
     [UsedImplicitly]
-    public class ImportRangeEventsFromCsvCommand
+    public sealed class ImportRangeEventsFromCsvCommand
     {
         readonly ILogger                  _logger;
         readonly ISimpleRangeEventService _service;

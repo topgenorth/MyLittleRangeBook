@@ -10,7 +10,7 @@ namespace MyLittleRangeBook.RangeEvents
     /// </summary>
     [RegisterCommands("rangeevent")]
     [UsedImplicitly]
-    public class AddNewSimpleRangeEventCommand
+    public sealed class AddNewSimpleRangeEventCommand
     {
         readonly ICliDisplay              _cliDisplay;
         readonly ISimpleRangeEventService _service;
