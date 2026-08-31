@@ -76,7 +76,9 @@ namespace MyLittleRangeBook.Sqlite
                 Result<bool> migrationResult = await SqliteHelper.ApplyDbupMigrationsAsync();
                 if (migrationResult.IsFailed)
                 {
-                    throw new Exception("Migration failed");
+                    string errors = string.Join("; ", migrationResult.Errors.Select(e => e.Message));
+
+                    throw new Exception($"Migration failed: {errors}");
                 }
 
                 conn = await SqliteHelper.GetScopedDatabaseConnectionAsync().ConfigureAwait(false);

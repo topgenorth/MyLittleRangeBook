@@ -33,6 +33,8 @@
         ///     occurs during the creation of a range event, such as validation errors, database errors, etc.
         /// </summary>
         public const int RANGE_EVENT_FAILED_TO_CREATE = 401;
+
+        public const int RANGE_EVENT_CSV_FILE_NOT_FOUND = 402;
         #endregion
 
         #region General SQL return codes.

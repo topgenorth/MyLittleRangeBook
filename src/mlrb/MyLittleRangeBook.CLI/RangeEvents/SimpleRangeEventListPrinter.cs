@@ -41,7 +41,7 @@ namespace MyLittleRangeBook.RangeEvents
                 .AddColumn("Rounds", col => col.Alignment(Justify.Center))
                 .AddColumn("Ammo", col => col.Alignment(Justify.Left))
                 .AddColumn("Notes", col => col.Alignment(Justify.Left))
-                .AddColumn("RowId", col => col.Alignment(Justify.Center));
+                ;
 
 
             return this;
@@ -55,14 +55,13 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             _simpleRangeeventTable.AddRow(
-                simpleRangeEvent.Id!,
+                simpleRangeEvent.Id!.ToString(),
                 simpleRangeEvent.EventDate.ToString("yyyy-MM-dd"),
                 simpleRangeEvent.FirearmName,
                 simpleRangeEvent.RangeName,
                 simpleRangeEvent.RoundsFired.ToString(),
                 simpleRangeEvent.AmmoDescription ?? string.Empty,
-                simpleRangeEvent.Notes ?? string.Empty,
-                simpleRangeEvent.RowId?.ToString() ?? string.Empty
+                simpleRangeEvent.Notes ?? string.Empty
             );
 
             return this;

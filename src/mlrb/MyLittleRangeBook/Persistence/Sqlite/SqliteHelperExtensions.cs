@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Nodes;
 using Dapper;
 using Fisher;
+using JasperFx.Events.Projections;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.RangeEvents;
 using SQLitePCL;
+using Wolverine;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.Persistence.Sqlite
@@ -35,32 +37,33 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         ///     readiness for database operations.
         /// </summary>
         public static readonly Func<JsonNode?, Result> SqliteConnectionStringBootStrapper = rootNode =>
-        {
-            if (rootNode is not JsonObject rootObject)
-            {
-                return Result.Fail("Root appsettings JSON must be a JSON object.");
-            }
+                                                                                            {
+                                                                                                if (rootNode is not JsonObject rootObject)
+                                                                                                {
+                                                                                                    return Result.Fail("Root appsettings JSON must be a JSON object.");
+                                                                                                }
 
-            JsonNode? n1 = rootObject["ConnectionStrings"];
-            if (n1 == null)
-            {
-                rootObject["ConnectionStrings"] = new JsonObject();
-                n1 = rootObject["ConnectionStrings"];
-            }
+                                                                                                JsonNode? n1 = rootObject["ConnectionStrings"];
+                                                                                                if (n1 == null)
+                                                                                                {
+                                                                                                    rootObject["ConnectionStrings"] = new JsonObject();
+                                                                                                    n1                              = rootObject["ConnectionStrings"];
+                                                                                                }
 
-            JsonNode? n2 = n1!["SqliteConnection"];
-            if (n2 is null)
-            {
-                var builder = new SqliteConnectionStringBuilder
-                {
-                    DataSource = DefaultSqliteDatabaseName(), Mode = SqliteOpenMode.ReadWriteCreate
-                };
+                                                                                                JsonNode? n2 = n1!["SqliteConnection"];
+                                                                                                if (n2 is null)
+                                                                                                {
+                                                                                                    SqliteConnectionStringBuilder builder = new()
+                                                                                                                                            {
+                                                                                                                                                DataSource = DefaultSqliteDatabaseName(),
+                                                                                                                                                Mode       = SqliteOpenMode.ReadWriteCreate,
+                                                                                                                                            };
 
-                n1["SqliteConnection"] = $"{builder.ConnectionString}";
-            }
+                                                                                                    n1["SqliteConnection"] = $"{builder.ConnectionString}";
+                                                                                                }
 
-            return Result.Ok();
-        };
+                                                                                                return Result.Ok();
+                                                                                            };
 
 
         /// <summary>
@@ -86,7 +89,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         public static string DefaultSqliteDatabaseName(bool inferFromEnvironment = true)
         {
             string fullPath = Path.Combine(ConfigurationExtensions.DefaultUserSettingsDirectory.FullName,
-                SQLITE_DATABASE_NAME);
+                                           SQLITE_DATABASE_NAME);
             if (inferFromEnvironment)
             {
                 fullPath = new FileInfo(fullPath).InjectEnvironmentIntoFileName().FullName;
@@ -114,6 +117,68 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             return connection;
         }
 
+        public static IServiceCollection RegisterFisherForMyLittleRangeBook(
+            this IServiceCollection services, IConfiguration configuration)
+        {
+            //ConnectionStrings:SqliteConnection
+            string connectionString = configuration.GetConnectionString("SqliteConnection")!;
+
+            services.AddFisher(opts =>
+                               {
+                                   // [TO20260820] https://fisher.jasperfx.net/configuration/hostbuilder#registration-overloads
+                                   opts.Connection(connectionString);
+
+                                   opts.Policies.AllDocumentsSoftDeleted();
+                                   // opts.Policies.AllDocumentsAreMultiTenanted();
+
+                                   opts.Schema.For<Cartridge>()
+                                       .Metadata(m =>
+                                                 {
+                                                     m.CreatedAt.Enabled      = true;
+                                                     m.CreatedAt.MapTo(x => x.Created);
+                                                     m.LastModified.MapTo(x => x.Modified);
+                                                 })
+                                       .Index(x => x.CommonName)
+                                       .UniqueIndex(x => x.Name)
+                                       .UseNumericRevisions();
+
+                                   opts.Schema.For<SimpleRangeEvent>()
+                                       .Metadata(m =>
+                                                 {
+                                                     m.CreatedAt.Enabled      = true;
+                                                     m.LastModifiedBy.Enabled = true;
+                                                     m.CreatedAt.MapTo(x => x.Created);
+                                                     m.LastModified.MapTo(x => x.Modified);
+                                                 })
+                                       .Index(x => x.EventDate)
+                                       .Index(x => x.FirearmName)
+                                       .UseNumericRevisions();
+
+                                   opts.Schema.For<Firearm>()
+                                       .Metadata(m =>
+                                                 {
+                                                     m.CreatedAt.Enabled      = true;
+                                                     m.LastModifiedBy.Enabled = true;
+                                                     m.CreatedAt.MapTo(x => x.Created);
+                                                     m.LastModified.MapTo(x => x.Modified);
+
+                                                 })
+                                       .UseNumericRevisions()
+                                       .UniqueIndex(x => x.Name);
+
+                                   // opts.Schema.For<FirearmRoundCount>()
+                                   //     .UniqueIndex(x => x.Name);
+                                   //
+                                   // opts.Schema.For<RangeVisitCount>()
+                                   //     .UniqueIndex(x => x.Name);
+
+                                   opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
+                                   opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
+                                   opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
+                               })
+                    .ApplyAllDatabaseChangesOnStartup();
+            return services;
+        }
 
         /// <summary>
         ///     Register the necessary things in DI as keyed services.
@@ -122,42 +187,22 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <param name="configuration"></param>
         /// <returns>The original <see cref="IServiceCollection" /> for chaining.</returns>
         public static IServiceCollection RegisterMyLittleRangeBookSqlite(this IServiceCollection services,
-            IConfiguration configuration)
+                                                                         IConfiguration          configuration)
         {
             SetSqlite3ProviderAndInit();
 
-            //ConnectionStrings:SqliteConnection
-            string connectionString = configuration.GetConnectionString("SqliteConnection")!;
 
-            SqlMapper.AddTypeHandler(typeof(DateTimeOffset), new SqliteDateTimeOffsetHandler());
+            SqlMapper.AddTypeHandler(typeof(DateTimeOffset),  new SqliteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());
-            SqlMapper.AddTypeHandler(typeof(MlrbId), new SqliteMlrbIdHandler());
+            SqlMapper.AddTypeHandler(typeof(MlrbId),          new SqliteMlrbIdHandler());
 
             services.TryAddSingleton(configuration);
 
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
 
-            services.TryAddKeyedScoped<ISimpleRangeEventService, SqliteSimpleRangeEventService>(DI_KEY);
-            services.TryAddScoped<ISimpleRangeEventService, SqliteSimpleRangeEventService>();
+            services.TryAddKeyedScoped<ISimpleRangeEventService, FisherSimpleRangeEventService>(DI_KEY);
+            services.TryAddScoped<ISimpleRangeEventService, FisherSimpleRangeEventService>();
 
-            services.AddFisher(opts =>
-                {
-                    // [TO20260820] https://fisher.jasperfx.net/configuration/hostbuilder#registration-overloads
-                    opts.Connection(connectionString);
-
-                    opts.Schema.For<Cartridge>()
-                        .Index(x => x.CommonName)
-                        .UniqueIndex(x => x.Name)
-                        .UniqueIndex(x => x.RowId)
-                        .SoftDeleted();
-
-                    opts.Schema.For<SimpleRangeEvent>()
-                        .Index(x => x.EventDate)
-                        .Index(x => x.FirearmName)
-                        .UseNumericRevisions()
-                       .SoftDeleted();
-                })
-                .ApplyAllDatabaseChangesOnStartup();
 
             return services;
         }
@@ -174,14 +219,14 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <returns></returns>
         public static bool EnsureDefaultSqliteConnectionString(this JsonNode? rootNode)
         {
-            var wasUpdated = false;
+            bool wasUpdated = false;
             rootNode ??= new JsonObject();
 
             JsonNode? n1 = rootNode["ConnectionStrings"];
             if (n1 == null)
             {
                 rootNode["ConnectionStrings"] = new JsonObject();
-                n1 = rootNode["ConnectionStrings"];
+                n1                            = rootNode["ConnectionStrings"];
             }
 
             JsonNode? n2 = n1!["SqliteConnection"];
@@ -190,13 +235,14 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                 return wasUpdated;
             }
 
-            var builder = new SqliteConnectionStringBuilder
-            {
-                DataSource = DefaultSqliteDatabaseName(), Mode = SqliteOpenMode.ReadWriteCreate
-            };
+            SqliteConnectionStringBuilder builder = new()
+                                                    {
+                                                        DataSource = DefaultSqliteDatabaseName(),
+                                                        Mode       = SqliteOpenMode.ReadWriteCreate,
+                                                    };
 
             n1["SqliteConnection"] = $"{builder.ConnectionString}";
-            wasUpdated = true;
+            wasUpdated             = true;
 
             return wasUpdated;
         }

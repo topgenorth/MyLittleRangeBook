@@ -1,62 +1,85 @@
-﻿using MyLittleRangeBook.Models;
+﻿using System.Text;
+using JasperFx.Events.Aggregation;
+using MyLittleRangeBook.EventSourcing;
 
 namespace MyLittleRangeBook.Firearms
 {
-    public record Firearm
+    public class Firearm
     {
-        public Firearm(string firearmName)
+        public Guid Id { get; set; } = Guid.CreateVersion7();
+
+        [NaturalKey] public string         Name     { get; set; } = "Unknown Firearm";
+        public              string?        Notes    { get; set; }
+        public              DateTimeOffset Created  { get; set; } = DateTimeOffset.UtcNow;
+        public              DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
+        public              bool           IsActive { get; set; } = true;
+
+        public void Apply(FirearmActivated e) => IsActive = true;
+
+        public void Apply(FirearmBarrelChanged e)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
-            Id   = MlrbId.FromString(firearmName);
-            Name = firearmName;
+            StringBuilder sbBarrelChange = new StringBuilder("Barrel changed from ")
+                                          .Append(e.OldBarrel)
+                                          .Append(" to ")
+                                          .Append(e.NewBarrel)
+                                          .Append('.');
+            AppendToFirearmAggregateNoteSummary(sbBarrelChange.ToString());
+        }
+
+        public void Apply(FirearmCleaned e) =>
+            AppendToFirearmAggregateNoteSummary($"Cleaned on {e.OccurredUtc.ToString()}.");
+
+        [NaturalKeySource]
+        public void Apply(FirearmCreated e) => Name = e.Name;
+
+        public void Apply(FirearmDeactivated e) => IsActive = false;
+
+        public void Apply(FirearmModified e)
+        {
+            StringBuilder sbModified = new StringBuilder("Firearm modified on ")
+                                      .Append(e.OccurredUtc.ToString())
+                                      .AppendLine()
+                                      .Append(e.Description);
+            AppendToFirearmAggregateNoteSummary(sbModified.ToString());
+        }
+
+        public void Apply(FirearmNoteAdded e) => AppendToFirearmAggregateNoteSummary(e.Text);
+
+        public void Apply(FirearmSightingSystemChanged e)
+        {
+            StringBuilder sbSightsChanged = new StringBuilder("Changed sights from ")
+                                           .Append(e.OldAimingSystem)
+                                           .Append(" to ")
+                                           .Append(e.NewAimingSystem)
+                                           .Append(". ")
+                                           .Append(e.OccurredUtc.ToString());
+            AppendToFirearmAggregateNoteSummary(sbSightsChanged.ToString());
         }
 
         /// <summary>
-        ///     prefer to use to firearmName constructor.
+        ///     Internal helper method to append the text the Notes property of the aggregate.
         /// </summary>
-        public Firearm() => Id = new MlrbId().ToString();
-
-        /// <summary>
-        ///     An id to uniquely identify the Firearm. Will be null for a new entity. Should be same as stream id.
-        /// </summary>
-        public string? Id { get; set; }
-
-        /// <summary>
-        ///     The database row ID of the Firearm. Will be null for a new record.
-        /// </summary>
-        public long? RowId { get; set; }
-
-        /// <summary>
-        ///     The common name of the Firearm.
-        /// </summary>
-        public string Name { get; set; } = string.Empty;
-
-        public int     RoundsFired { get; set; } = 0;
-        public string? Notes       { get; set; }
-
-        /// <summary>
-        ///     The time (UTC) that the record was created.
-        /// </summary>
-        public DateTimeOffset Created { get; set; } = DateTimeOffset.UtcNow;
-
-        /// <summary>
-        ///     The time (UTC) that the record was last modified.
-        /// </summary>
-        public DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
-
-        public bool IsActive { get; set; } = true;
-
-        /// <summary>
-        ///     Creates a new instance of a <see cref="Firearm" /> with the specified name.
-        /// </summary>
-        /// <param name="name">The name of the firearm. Must not be null, empty, or whitespace.</param>
-        /// <returns>A new <see cref="Firearm" /> instance with the specified name and an ID generated from the name.</returns>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="name" /> is null, empty, or whitespace.</exception>
-        public static Firearm New(string name)
+        /// <param name="text"></param>
+        void AppendToFirearmAggregateNoteSummary(string text)
         {
-            return new Firearm(name);
-        }
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return;
+            }
 
-        public override string ToString() => $"{Id ?? "N/A"}{Name}";
+            if (string.IsNullOrWhiteSpace(Notes))
+            {
+                Notes = text;
+            }
+            else
+            {
+                StringBuilder newNotes = new StringBuilder(Notes)
+                                        .AppendLine("--")
+                                         // .Append("Date: ")
+                                         // .AppendLine(Modified.ToString("O"))
+                                        .AppendLine(text.Trim());
+                Notes = newNotes.ToString();
+            }
+        }
     }
 }

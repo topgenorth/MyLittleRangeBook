@@ -29,8 +29,10 @@ namespace MyLittleRangeBook.Cartridges
             {
                 table.AddRow(cartridge.Name, cartridge.CommonName ?? string.Empty,
                     cartridge.ProjectileDiameterMetric.ToString("F2"),
-                    cartridge.ProjectileDiameterImperial.ToString("F3"), cartridge.SuitableForRifle ? "Yes" : "No",
-                    cartridge.SuitableForPistol ? "Yes" : "No", cartridge.Id!);
+                    cartridge.ProjectileDiameterImperial.ToString("F3"),
+                    cartridge.SuitableForRifle ? "Yes" : "No",
+                    cartridge.SuitableForPistol ? "Yes" : "No",
+                    cartridge.Id!.ToString());
             }
 
             Panel p = new Panel(table).Expand().Border(BoxBorder.None);

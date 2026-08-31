@@ -6,7 +6,7 @@ namespace MyLittleRangeBook
 {
     class FirearmsTablePrinter : IConsolePrinter
     {
-        IEnumerable<Firearm> _firearms = [];
+        IEnumerable<FirearmTableRow> _firearms = [];
 
         public void Print(IAnsiConsole console)
         {
@@ -24,9 +24,9 @@ namespace MyLittleRangeBook
                 .AddColumn("Rounds", col => col.Alignment(Justify.Center).Width(6))
                 .AddColumn("Id", col => col.Alignment(Justify.Center).Width(26));
 
-            foreach (Firearm firearm in _firearms)
+            foreach (FirearmTableRow firearm in _firearms)
             {
-                table.AddRow(firearm.Name, firearm.RoundsFired.ToString(), firearm.Id!);
+                table.AddRow(firearm.Name, firearm.RoundsFired.ToString(), firearm.Id.ToString());
             }
 
             Panel p = new Panel(table).Expand().Border(BoxBorder.None);
@@ -34,7 +34,7 @@ namespace MyLittleRangeBook
             return p;
         }
 
-        public FirearmsTablePrinter SetFirearms(IEnumerable<Firearm> firearms)
+        public FirearmsTablePrinter SetFirearms(IEnumerable<FirearmTableRow> firearms)
         {
             _firearms = firearms;
 

@@ -14,8 +14,8 @@ namespace MyLittleRangeBook
 
 
         public PrintFirearmsListCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper,
-            IFirearmsService firearmsService, IFirearmAggregateRepository firearmAggregateRepo) : base(logger, display,
-            sqliteHelper, firearmsService, firearmAggregateRepo)
+            IFirearmsService firearmsService) : base(logger, display,
+            sqliteHelper, firearmsService)
         {
         }
 
@@ -35,7 +35,7 @@ namespace MyLittleRangeBook
             var ctx = new DapperCommandContext(scopedConn.Connection, null, cancellationToken);
 
             var firearms = await FirearmsService
-                .GetFirearmsAsync(ctx)
+                .GetFirearmsAsync()
                 .ConfigureAwait(false);
 
             if (firearms.IsFailed)

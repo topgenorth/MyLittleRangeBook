@@ -24,7 +24,7 @@ namespace MyLittleRangeBook.RangeEvents
                 .AddColumn()
                 .AddColumn()
                 .AddColumn();
-            grid.AddRow("Id: " + sre.Id?.Trim(),
+            grid.AddRow("Id: " + sre.Id,
                 ", Date: " + sre.EventDate.ToString("yyyy-MM-dd"),
                 ", Firearm: " + sre.FirearmName.Trim(),
                 ", Range: " + sre.RangeName.Trim(),

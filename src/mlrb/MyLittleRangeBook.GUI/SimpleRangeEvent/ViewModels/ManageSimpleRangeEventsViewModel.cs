@@ -45,7 +45,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly ILogger                                  _logger;
-        readonly ISimpleRangeEventDataProcessor           _simpleRangeEventDataProcessor;
 
         /// <summary>
         ///     Read-only collection bound to the UI for displaying filtered and sorted SimpleRangeEvents.
@@ -67,12 +66,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public ManageSimpleRangeEventsViewModel(ILogger logger,
                                                 Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                                 ISqliteHelper sqliteHelper,
-                                                ISimpleRangeEventDataProcessor simpleRangeEventDataProcessor,
                                                 ISimpleRangeEventService simpleRangeEventService,
                                                 IFirearmsService firearmsService)
         {
             _sqliteHelper                  = sqliteHelper;
-            _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
             _simpleRangeEventService       = simpleRangeEventService;
             _firearmsService               = firearmsService;
             _dialogServiceFactory          = dialogServiceFactory;
@@ -212,7 +209,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             await using DapperCommandContext context =
                 await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken);
-            Result<IEnumerable<SimpleRangeEvent>> r = await _simpleRangeEventService.GetSimpleRangeEventsAsync(context);
+            Result<IEnumerable<SimpleRangeEvent>> r = await _simpleRangeEventService.GetSimpleRangeEventsAsync(cancellationToken);
 
             if (r.IsSuccess)
             {
@@ -265,28 +262,28 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 SimpleRangeEvent sre       = simpleRangeEvent.ToSimpleRangeEvent();
                 var              firearmId = MlrbId.FromString(sre.FirearmName);
 
-                var r = await _simpleRangeEventDataProcessor
-                    .DeleteSimpleRangeEvent(context, sre)
-                    .ConfigureAwait(false);
-
-
-                if (r.IsSuccess)
-                {
-                    _simpleRangeEventSourceCache.Remove(simpleRangeEvent);
-                    await context.CommitAsync().ConfigureAwait(false);
-                    WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
-                                                         UpdateAction.Removed, sre));
-                    _logger.Error("Range event deleted successfully.");
-
-                }
-                else
-                {
-                    StringBuilder message = new("Could not delete the range event.");
-                    r.Reasons.ForEach(reason => message.AppendLine(reason.Message));
-                    _logger.Error(message.ToString());
-
-                    await context.RollbackAsync().ConfigureAwait(false);
-                }
+                // var r = await _simpleRangeEventDataProcessor
+                //     .DeleteSimpleRangeEvent(context, sre)
+                //     .ConfigureAwait(false);
+                //
+                //
+                // if (r.IsSuccess)
+                // {
+                //     _simpleRangeEventSourceCache.Remove(simpleRangeEvent);
+                //     await context.CommitAsync().ConfigureAwait(false);
+                //     WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
+                //                                          UpdateAction.Removed, sre));
+                //     _logger.Error("Range event deleted successfully.");
+                //
+                // }
+                // else
+                // {
+                //     StringBuilder message = new("Could not delete the range event.");
+                //     r.Reasons.ForEach(reason => message.AppendLine(reason.Message));
+                //     _logger.Error(message.ToString());
+                //
+                //     await context.RollbackAsync().ConfigureAwait(false);
+                // }
             }
         }
 
@@ -302,7 +299,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                                    _logger,
                                                    _dialogServiceFactory,
                                                    _sqliteHelper,
-                                                   _simpleRangeEventDataProcessor,
                                                    _simpleRangeEventService,
                                                    _firearmsService);
 

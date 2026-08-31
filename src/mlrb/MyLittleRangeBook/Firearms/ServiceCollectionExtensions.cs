@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Persistence.Sqlite;
-using static MyLittleRangeBook.Firearms.FirearmAggregate;
+using static MyLittleRangeBook.Firearms.Firearm;
 
 // ReSharper disable once CheckNamespace
 namespace MyLittleRangeBook
@@ -14,14 +14,14 @@ namespace MyLittleRangeBook
         /// This should match the JsonSerializeble attributes in MlrbJsonSerializerContext.cs
         /// </summary>
         static readonly Type[] s_supportedFirearmsEvents = [
-            typeof(FirearmActive),
+            typeof(FirearmActivated),
             typeof(FirearmAssociatedWithAsset),
             typeof(FirearmAssociatedWithRangeEvent),
             typeof(FirearmBarrelChanged),
             typeof(FirearmCleaned),
             typeof(FirearmCreated),
             typeof(FirearmRoundCountAltered),
-            typeof(FirearmInactive),
+            typeof(FirearmDeactivated),
             typeof(FirearmModified),
             typeof(FirearmNoteAdded),
             typeof(FirearmSightingSystemChanged),
@@ -32,10 +32,7 @@ namespace MyLittleRangeBook
             ArgumentNullException.ThrowIfNull(services);
 
             services.TryAddKeyedScoped<IFirearmsService, FirearmsService>(SqliteHelperExtensions.DI_KEY);
-            services.TryAddKeyedScoped<IProjector, FirearmProjector>(FirearmProjector.DI_KEY);
-            services.TryAddKeyedScoped<IProjector, FirearmNoteProjector>(FirearmNoteProjector.DI_KEY);
             services.TryAddScoped<IFirearmsService, FirearmsService>();
-            services.TryAddScoped<IFirearmAggregateRepository, SqliteFirearmAggregateRepository>();
             return services;
         }
     }

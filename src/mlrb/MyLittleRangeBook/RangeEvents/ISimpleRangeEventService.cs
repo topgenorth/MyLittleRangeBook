@@ -1,7 +1,4 @@
-﻿using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Persistence;
-
-namespace MyLittleRangeBook.RangeEvents
+﻿namespace MyLittleRangeBook.RangeEvents
 {
     /// <summary>
     ///     Defines methods for managing simple range events. Provides functionality for
@@ -10,59 +7,70 @@ namespace MyLittleRangeBook.RangeEvents
     public interface ISimpleRangeEventService
     {
         /// <summary>
-        ///     Deletes a record in the simple_range_event table.
+        ///     Delete a SimpleRangeEvent document.
         /// </summary>
-        /// <param name="context">The command context containing connection, transaction, and other configurations.</param>
-        /// <param name="simpleRangeEvent">The simple range event to be deleted.</param>
-        /// <returns>A task that represents the asynchronous operation, containing the result of the delete operation.</returns>
-        Task<Result> DeleteAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent);
+        /// <param name="simpleRangeEvent">
+        ///     The simple range event to delete.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A cancellation token to observe while waiting for the task to complete. This is optional and defaults to None.
+        /// </param>
+        /// <returns>
+        ///     A task representing the asynchronous deletion operation. It contains the result indicating the success or
+        ///     failure of the operation.
+        /// </returns>
+        Task<Result> DeleteAsync(SimpleRangeEvent simpleRangeEvent, CancellationToken cancellationToken = default);
+
 
         /// <summary>
         ///     Retrieves a simple range event by its identifier from the database.
         /// </summary>
-        /// <param name="context">The command context containing the database connection, transaction, and other configurations.</param>
         /// <param name="simpleRangeEventId">The identifier of the simple range event to retrieve.</param>
+        /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
         /// <returns>
         ///     A task representing the asynchronous operation, containing the result of the retrieval operation with the
         ///     simple range event data.
         /// </returns>
-        Task<Result<SimpleRangeEvent>> GetAsync(DapperCommandContext context, MlrbId simpleRangeEventId);
+        Task<Result<SimpleRangeEvent>> GetAsync(Guid              simpleRangeEventId,
+                                                CancellationToken cancellationToken = default);
 
         /// <summary>
-        ///     Insert or update a record in the simple_range_event table.
+        ///     Insert or update a SimpleRangeEvent document. If the document exists, it will be updated;
+        ///     otherwise, a new document will be created.
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="simpleRangeEvent"></param>
+        /// <param name="simpleRangeEvent">
+        ///     The simple range event to insert or update.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A cancellation token to observe while waiting for the task to complete. This is optional and defaults to None.
+        /// </param>
+        /// <returns>
+        ///     A task representing the asynchronous operation. It contains the result, including the unique
+        ///     identifier of the inserted or updated SimpleRangeEvent.
+        /// </returns>
+        Task<Result<Guid>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
+                                       CancellationToken cancellationToken = default);
+
+
+        /// <summary>
+        ///     Retrieves a collection of SimpleRangeEvent objects asynchronously.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///     A cancellation token to observe while waiting for the task to complete. This is optional and defaults to None.
+        /// </param>
+        /// <returns>
+        ///     A task representing the asynchronous operation. It contains a result object which includes a collection of
+        ///     SimpleRangeEvent objects or an error indicating the failure of the operation.
+        /// </returns>
+        Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Writes the SimpleRangeEvents documents to a CSV file.
+        /// </summary>
+        /// <param name="csvFileName"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<Result<MlrbId>> UpsertAsync(DapperCommandContext context, SimpleRangeEvent simpleRangeEvent);
-
-        /// <summary>
-        ///     Fetches all simple range events
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(DapperCommandContext context);
-
-        /// <summary>
-        ///     Exports range event records to a CSV file.
-        /// </summary>
-        /// <param name="context">The command context containing connection and transaction details.</param>
-        /// <param name="csvFileName">The name of the CSV file to which the range event data will be exported.</param>
-        /// <returns>A result indicating the success or failure of the operation.</returns>
-        Task<Result> ExportToCsv(DapperCommandContext context, string csvFileName);
-
-        /// <summary>
-        ///     Retrieves a collection of ammo descriptions that were used so far.
-        /// </summary>
-        /// <param name="context">The command context containing database connection, transaction, and other configurations.</param>
-        /// <returns>A task that represents the asynchronous operation, containing the result of a collection of ammo descriptions.</returns>
-        Task<Result<IEnumerable<string>>> GetAmmoDescriptions(DapperCommandContext context);
-
-        /// <summary>
-        ///     Retrieves a collection of range names that have been used so far.
-        /// </summary>
-        /// <param name="context">The command context containing connection, transaction, and other configurations.</param>
-        /// <returns>A task that represents the asynchronous operation, containing an enumerable of range names.</returns>
-        Task<Result<IEnumerable<string>>> GetRangeNames(DapperCommandContext context);
+        Task<Result> ExportToCsv(string csvFileName, CancellationToken cancellationToken = default);
     }
 }

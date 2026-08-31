@@ -15,14 +15,13 @@ namespace MyLittleRangeBook.RangeEvents
         {
             if (quiet)
             {
-                console.MarkupLineInterpolated($"[green]Range Trip added: RowId {sre.RowId}, Id {sre.Id}.[/]");
+                console.MarkupLineInterpolated($"[green]Range Trip added, Id {sre.Id}.[/]");
             }
             else
             {
                 Grid bodyGrid = new Grid().AddColumns(2);
 
-                bodyGrid.AddRow("  [white]RowId:[/]", sre.RowId.ToString() ?? string.Empty);
-                bodyGrid.AddRow("  [white]Id:[/]", sre.Id!);
+                bodyGrid.AddRow("  [white]Id:[/]", sre.Id!.ToString());
                 bodyGrid.AddRow("  [white]Date:[/]", sre.EventDate.ToString("yyyy-MMM-dd"));
                 bodyGrid.AddRow("  [white]Firearm:[/]", sre.FirearmName);
                 bodyGrid.AddRow("  [white]Range:[/] ", sre.RangeName);

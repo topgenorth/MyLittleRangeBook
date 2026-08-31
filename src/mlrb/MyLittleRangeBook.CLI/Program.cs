@@ -48,17 +48,8 @@ builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventList
 
 builder.Services.AddTransient<IXeroShotSessionParser, XeroShotSessionParser>();
 builder.Services.AddTransient<IXeroCsvShotSessionParser, XeroCsvShotSessionParser>();
-builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration)
-       .RegisterEventSourcingStuff()
-       .RegisterRangeEventStuff()
-       .RegisterRangeAssetHandlers()
-       .RegisterDomainEventSerializers()
-       .RegisterRangeAssetEventSourcing()
-       .RegisterFirearmEventSourcing()
-       .RegisterNotes()
-    ;
-
-
+builder.Services.RegisterMyLittleRangeBookSqlite(builder.Configuration);
+builder.Services.RegisterFisherForMyLittleRangeBook(builder.Configuration);
 
 using IHost         host  = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();

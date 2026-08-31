@@ -33,7 +33,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                   Justification =
                                       "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class ManageFirearmsViewModel : ViewModelBase, IDialogParticipant,
-                                                   IRecipient<UpdateDataMessage<Firearm>>,
+                                                   IRecipient<UpdateDataMessage<FirearmTableRow>>,
                                                    IRecipient<UpdateDataMessage<SimpleRangeEvent>>
     {
         readonly IDialogService                           _dialogService;
@@ -44,13 +44,12 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly ReadOnlyObservableCollection<FirearmViewModel> _firearmViewModels;
         readonly ILogger                                        _logger;
         readonly ISqliteHelper                                  _sqliteHelper;
-        readonly ISimpleRangeEventDataProcessor                 _simpleRangeEventDataProcessor;
         readonly ISimpleRangeEventService                       _simpleRangeEventService;
 
         public ManageFirearmsViewModel(IFirearmsService firearmsDbService,
                                        Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                        ISqliteHelper sqliteHelper,
-                                       ILogger logger, ISimpleRangeEventDataProcessor simpleRangeEventDataProcessor,
+                                       ILogger logger,
                                        ISimpleRangeEventService simpleRangeEventService)
         {
             _sqliteHelper                  = sqliteHelper;
@@ -58,12 +57,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _dialogServiceFactory          = dialogServiceFactory;
             _dialogService                 = dialogServiceFactory(this);
             _logger                        = logger;
-            _simpleRangeEventDataProcessor = simpleRangeEventDataProcessor;
             _simpleRangeEventService       = simpleRangeEventService;
 
 
             // Register for message notifications from other ViewModels
-            WeakReferenceMessenger.Default.Register<UpdateDataMessage<Firearm>>(this);
+            WeakReferenceMessenger.Default.Register<UpdateDataMessage<FirearmTableRow>>(this);
             WeakReferenceMessenger.Default.Register<UpdateDataMessage<SimpleRangeEvent>>(this);
 
             // Get the current synchronization context for UI thread operations
@@ -109,9 +107,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [NotifyCanExecuteChangedFor(nameof(DeleteFirearmCommand), nameof(EditFirearmCommand))]
         public partial FirearmViewModel? SelectedFirearm { get; set; }
 
-        public void Receive(UpdateDataMessage<Firearm> message)
+        public void Receive(UpdateDataMessage<FirearmTableRow> message)
         {
-            Firearm[] updateEvents = message.ItemsAffected;
+            FirearmTableRow[] updateEvents = message.ItemsAffected;
             switch (message.Action)
             {
                 case UpdateAction.Added:
@@ -144,7 +142,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             try
             {
 
-                Result<IEnumerable<Firearm>> result = await _firearmsDbService.GetFirearmsAsync(ctx);
+                Result<IEnumerable<FirearmTableRow>> result = await _firearmsDbService.GetFirearmsAsync();
 
                 if (result.IsSuccess)
                 {
@@ -167,9 +165,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand]
         async Task AddNewFirearmAsync()
         {
-            Firearm firearm = new();
+            FirearmTableRow firearmTableRow = new();
 
-            await EditFirearmAsync(new FirearmViewModel(firearm));
+            await EditFirearmAsync(new FirearmViewModel(firearmTableRow));
         }
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteFirearm))]
@@ -192,7 +190,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                                    _logger,
                                                    _dialogServiceFactory,
                                                    _sqliteHelper,
-                                                   _simpleRangeEventDataProcessor,
                                                    _simpleRangeEventService,
                                                    _firearmsDbService);
 
@@ -221,7 +218,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                     await using SqliteConnection connection =
                         await _sqliteHelper.GetDatabaseConnectionAsync(cancellationToken);
                     DapperCommandContext ctx = new(connection, null, cancellationToken);
-                    Result<bool>         r   = await _firearmsDbService.DeleteAsync(ctx, firearm.ToFirearm());
+                    Result<bool>         r   = await _firearmsDbService.DeleteAsync(firearm.ToFirearm());
                     if (r.IsSuccess)
                     {
                         _firearmViewModelCache.Remove(firearm);

@@ -6,25 +6,26 @@ using CsvHelper.Configuration;
 using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.Persistence;
-using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.RangeEvents
 {
     [RegisterCommands("rangeevent")]
     [UsedImplicitly]
-    public class ImportRangeEventsFromCsvCommand : MlrbSqliteCommandBase
+    public sealed class ImportRangeEventsFromCsvCommand
     {
-        readonly ISimpleRangeEventDataProcessor _simpleRangeEventProcessor;
+        readonly ILogger                  _logger;
+        readonly ISimpleRangeEventService _service;
 
-        public ImportRangeEventsFromCsvCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper,
-                                               ISimpleRangeEventDataProcessor simpleRangeEventProcessor) :
-            base(logger, display, sqliteHelper) =>
-            _simpleRangeEventProcessor = simpleRangeEventProcessor;
+        public ImportRangeEventsFromCsvCommand(ILogger logger, ICliDisplay display, ISimpleRangeEventService service)
+        {
+            _logger  = logger;
+            _service = service;
+        }
 
         /// <summary>
-        /// Imports range events from a CSV file into the database. There are no "guard-rails" to prevent you from importing the
-        /// same file twice. Doing so will duplicate things.
+        ///     Imports range events from a CSV file into the database. There are no "guard-rails" to prevent you from importing
+        ///     the
+        ///     same file twice. Doing so will duplicate things.
         /// </summary>
         /// <param name="file">The file path to the CSV file containing range events.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
@@ -35,52 +36,44 @@ namespace MyLittleRangeBook.RangeEvents
         {
             if (!File.Exists(file))
             {
-                Logger.Error("The CSV file '{csvFileName}' was not found.", file);
-                return ReturnCodes.SHOTVIEW_FILE_NOT_FOUND;
+                _logger.Error("The CSV file '{csvFileName}' was not found.", file);
+                return ReturnCodes.RANGE_EVENT_CSV_FILE_NOT_FOUND;
             }
-
-            await using DapperCommandContext context = await DapperCommandContext
-                                                            .NewAsync(SqliteHelper,
-                                                                      cancellationToken,
-                                                                      withTransaction: true)
-                                                            .ConfigureAwait(false);
 
             try
             {
                 int count = 0;
-                await foreach (CsvRow sre in LoadRangeEventsFromCsv(file, cancellationToken).ConfigureAwait(false))
+                await foreach (CsvRow csvRow in LoadRangeEventsFromCsv(file, cancellationToken).ConfigureAwait(false))
                 {
-                    DateOnly eventDate = DateOnly.FromDateTime(DateTime.Parse(sre.EventDate));
-                    Result<MlrbId> result = await _simpleRangeEventProcessor.ProcessSimpleRangeEventData(
-                                                 context,
-                                                 sre.FirearmName,
-                                                 sre.RoundsFired,
-                                                 sre.RangeName,
-                                                 sre.AmmoDescription ?? string.Empty,
-                                                 sre.Notes           ?? string.Empty,
-                                                 eventDate
-                                                ).ConfigureAwait(false);
+                    DateOnly eventDate = DateOnly.FromDateTime(DateTime.Parse(csvRow.EventDate));
+                    SimpleRangeEvent sre = SimpleRangeEvent.New(csvRow.FirearmName,
+                                                                csvRow.RoundsFired,
+                                                                csvRow.RangeName,
+                                                                csvRow.AmmoDescription,
+                                                                csvRow.Notes,
+                                                                eventDate);
 
-                    if (result.IsSuccess)
+                    Result<Guid> rUpsert = await _service.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
+
+
+                    if (rUpsert.IsSuccess)
                     {
                         count++;
                     }
                     else
                     {
-                        Logger.Warning("Failed to import row {rowId}: {error}", sre.RowId,
-                                       string.Join(", ", result.Reasons.Select(x => x.Message)));
+                        _logger.Warning("Failed to import row {rowId}: {error}", csvRow.RowId,
+                                        string.Join(", ", rUpsert.Reasons.Select(x => x.Message)));
                     }
                 }
 
-                await context.CommitAsync().ConfigureAwait(false);
-                Logger.Information("Successfully imported {count} range events from {csvFileName}.", count,
-                                   file);
+                _logger.Information("Successfully imported {count} range events from {csvFileName}.", count,
+                                    file);
                 return ReturnCodes.SUCCESS;
             }
             catch (Exception ex)
             {
-                await context.RollbackAsync().ConfigureAwait(false);
-                Logger.Error(ex, "An error occurred while importing range events from {csvFileName}.", file);
+                _logger.Error(ex, "An error occurred while importing range events from {csvFileName}.", file);
                 return ReturnCodes.RANGEEVENT_CSV_FILE_READ_FAILURE;
             }
         }
@@ -91,8 +84,9 @@ namespace MyLittleRangeBook.RangeEvents
         /// <param name="csvFileName">The path to the CSV file.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>An enumerable of SimpleRangeEvent objects.</returns>
-        async IAsyncEnumerable<CsvRow> LoadRangeEventsFromCsv(string            csvFileName,
-                                                              [EnumeratorCancellation]CancellationToken cancellationToken)
+        async IAsyncEnumerable<CsvRow> LoadRangeEventsFromCsv(string csvFileName,
+                                                              [EnumeratorCancellation]
+                                                              CancellationToken cancellationToken)
         {
             CsvConfiguration config = new(CultureInfo.InvariantCulture)
                                       {
@@ -103,6 +97,7 @@ namespace MyLittleRangeBook.RangeEvents
             using CsvReader    csv    = new(reader, config);
 
             // GetRecordsAsync returns an IAsyncEnumerable<T>; ConfigureAwait is not applicable here.
+            // ReSharper disable once UseConfigureAwaitFalse
             await foreach (CsvRow record in csv.GetRecordsAsync<CsvRow>(cancellationToken))
             {
                 yield return record;
