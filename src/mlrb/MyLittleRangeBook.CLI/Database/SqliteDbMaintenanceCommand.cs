@@ -14,7 +14,7 @@ namespace MyLittleRangeBook.Database
 
         [Command("maintenance")]
         [UsedImplicitly]
-        public async Task<int> SqliteMainteance(CancellationToken cancellationToken)
+        public async Task<int> SqliteMaintenance(CancellationToken cancellationToken)
         {
             CliDisplay.PrintCommandHeader("SQLite Maintenance.");
             await using ScopedSqliteConnection scope =

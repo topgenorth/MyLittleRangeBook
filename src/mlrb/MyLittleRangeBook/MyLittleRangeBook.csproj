@@ -47,4 +47,8 @@
       <ProjectReference Include="..\MyLittleRangeBook.FIT\MyLittleRangeBook.FIT.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Persistence\Sqlite\Scripts\" />
+    </ItemGroup>
+
 </Project>
