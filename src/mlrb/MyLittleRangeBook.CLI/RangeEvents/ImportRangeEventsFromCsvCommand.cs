@@ -15,11 +15,12 @@ namespace MyLittleRangeBook.RangeEvents
     {
         readonly ILogger                  _logger;
         readonly ISimpleRangeEventService _service;
-
-        public ImportRangeEventsFromCsvCommand(ILogger logger, ICliDisplay display, ISimpleRangeEventService service)
+        readonly ICliDisplay              _cliDisplay;
+        public ImportRangeEventsFromCsvCommand(ILogger logger, ICliDisplay display, ISimpleRangeEventService service, ICliDisplay cliDisplay)
         {
-            _logger  = logger;
-            _service = service;
+            _logger          = logger;
+            _service         = service;
+            _cliDisplay = cliDisplay;
         }
 
         /// <summary>
@@ -67,13 +68,15 @@ namespace MyLittleRangeBook.RangeEvents
                     }
                 }
 
-                _logger.Information("Successfully imported {count} range events from {csvFileName}.", count,
+                _cliDisplay.PrintSuccess($"Successfully imported {count} range events from '{file}'.");
+                _logger.Information("Successfully imported {count} range events from '{csvFileName}'.", count,
                                     file);
                 return ReturnCodes.SUCCESS;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "An error occurred while importing range events from {csvFileName}.", file);
+                _cliDisplay.PrintFailure($"An error occurred while importing range events from '{file}'.");
+                _logger.Error(ex, "An error occurred while importing range events from '{csvFileName}'.", file);
                 return ReturnCodes.RANGEEVENT_CSV_FILE_READ_FAILURE;
             }
         }
