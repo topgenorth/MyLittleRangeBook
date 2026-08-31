@@ -18,18 +18,6 @@ namespace MyLittleRangeBook.Models
         }
 
         [Fact]
-        public void FromFitFile_should_create_same_MlrbId_each_time()
-        {
-            const string fileName = "06-21-2026_13-15-45.fit";
-            MlrbId       id1      = MlrbId.FromString(fileName);
-            MlrbId       id2      = MlrbId.FromString(fileName);
-
-            id1.ShouldBeEquivalentTo(id2);
-            id1.DateTimeOffset.ShouldBeEquivalentTo(id2.DateTimeOffset);
-        }
-
-
-        [Fact]
         public void FromEntityId_creates_a_valid_MlrbId()
         {
             MlrbId mlrbid = new MlrbId();

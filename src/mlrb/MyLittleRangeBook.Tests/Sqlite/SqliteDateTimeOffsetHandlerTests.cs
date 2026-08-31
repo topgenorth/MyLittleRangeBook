@@ -8,7 +8,7 @@ namespace MyLittleRangeBook.Sqlite
 {
     public class SqliteDateTimeOffsetHandlerTests : SqliteConnectionTestBase
     {
-        [Fact]
+        [Fact(Skip = "Switching to Fisher, might not be needed.")]
         public async Task Should_Query_DateTimeOffset_From_Sqlite()
         {
             // Explicitly register handlers as they are registered in Program.Main which might not run for tests

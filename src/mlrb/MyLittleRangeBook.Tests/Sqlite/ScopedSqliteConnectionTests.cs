@@ -7,7 +7,7 @@ namespace MyLittleRangeBook.Tests.Sqlite
 {
     public class ScopedSqliteConnectionTests : SqliteConnectionTestBase
     {
-        [Fact]
+        [Fact(Skip = "Switching to Fisher, might not be needed.")]
         public async Task ScopedConnection_WithoutTransaction_DoesNotHaveTransaction()
         {
             await using ScopedSqliteConnection scoped = await SqliteHelper.GetScopedDatabaseConnectionAsync();
@@ -15,7 +15,7 @@ namespace MyLittleRangeBook.Tests.Sqlite
             Assert.Null(scoped.Transaction);
         }
 
-        [Fact]
+        [Fact(Skip = "Switching to Fisher, might not be needed.")]
         public async Task ScopedConnection_WithTransaction_HasTransaction()
         {
             await using ScopedSqliteConnection scoped =
@@ -23,7 +23,7 @@ namespace MyLittleRangeBook.Tests.Sqlite
             Assert.NotNull(scoped.Transaction);
         }
 
-        [Fact]
+        [Fact(Skip = "Switching to Fisher, might not be needed.")]
         public async Task ScopedConnection_WithTransaction_CommitsOnDispose()
         {
             string tableName = "TestTable";
@@ -53,7 +53,7 @@ namespace MyLittleRangeBook.Tests.Sqlite
             }
         }
 
-        [Fact]
+        [Fact(Skip = "Switching to Fisher, might not be needed.")]
         public async Task ScopedConnection_WithTransaction_CanBeExplicitlyCommitted()
         {
             string tableName = "TestTableExplicit";

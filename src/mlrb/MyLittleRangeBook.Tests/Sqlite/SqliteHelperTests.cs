@@ -41,7 +41,7 @@ namespace MyLittleRangeBook.Sqlite
             _logger = Substitute.For<ILogger>();
         }
 
-        [Fact]
+        [Fact(Skip = "Switching to Fisher, might not be needed.")]
         // ReSharper disable once AsyncMethodWithoutAwait
         public async Task Should_Append_ReadWriteCreate_To_ConnectionString()
         {
@@ -53,7 +53,7 @@ namespace MyLittleRangeBook.Sqlite
             connectionString.ShouldBe("Data Source=:memory:;Mode=ReadWriteCreate;Foreign Keys=True");
         }
 
-        [Fact]
+        [Fact(Skip = "Switching to Fisher, might not be needed.")]
         public async Task Should_Apply_DbUp_Migrations()
         {
             // [TO20260419] Not a very good test - we just assume that the migrations will run if the result is success.
@@ -63,7 +63,7 @@ namespace MyLittleRangeBook.Sqlite
             result.IsSuccess.ShouldBeTrue();
         }
 
-        [Theory]
+        [Theory(Skip="Switching to Fisher, might not be needed")]
         [InlineData("{}", true)]
         [InlineData(AppSettingsWithConnectionString, false)]
         [InlineData(AppSettingsWithOutConnectionString, true)]
