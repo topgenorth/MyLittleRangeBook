@@ -84,56 +84,6 @@ namespace MyLittleRangeBook.Database
         }
 
         /// <summary>
-        ///     Run the SQL statements to insert data into the database. The SQL file is not recorded as a migration.
-        /// </summary>
-        /// <param name="sqlfile">The SQL file to use.</param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        [Command("runsql")]
-        [UsedImplicitly]
-        // ReSharper disable once IdentifierTypo
-        public async Task<int> RunSqlOnDatabase(string sqlfile, CancellationToken ct = default)
-        {
-            CliDisplay.PrintCommandHeader("Apply SQL to Database.");
-            await RunMigrations(ct).ConfigureAwait(false);
-
-            if (!File.Exists(sqlfile))
-            {
-                Logger.Warning("SQL File {sqlFile} not found.", sqlfile);
-                CliDisplay.PrintFailure($"Could not find the SQL file '{sqlfile}'.");
-
-                return SQL_SCRIPT_FILE_NOT_FOUND;
-            }
-
-            try
-            {
-                CliDisplay.Console.MarkupLineInterpolated($"[green]✓ Loading SQL file {sqlfile}.[/]");
-                string sql = await File.ReadAllTextAsync(sqlfile, ct).ConfigureAwait(false);
-
-                Result<bool> result = await _sqliteHelper.RunSqlOnDatabaseAsync(sql, ct).ConfigureAwait(false);
-                if (result.IsFailed)
-                {
-                    string? msg = result.Errors.FirstOrDefault()?.Message;
-                    Logger.Error("Failed to run SQL '{sqlfile}': {Error}", sqlfile, msg);
-                    CliDisplay.PrintFailure($"Failed to run SQL '{sqlfile}': {msg}");
-
-                    return SQL_FAILED_TO_RUN_SCRIPT;
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e, "Failed to run SQL.");
-                CliDisplay.PrintFailure($"Failed to run SQL '{e.Message}'.");
-
-                return SQL_FAILED_TO_RUN_SCRIPT;
-            }
-
-            CliDisplay.PrintSuccess($"Successfully ran SQL '{sqlfile}'.");
-
-            return SUCCESS;
-        }
-
-        /// <summary>
         ///     Ensures that all database schema migrations have been applied.
         /// </summary>
         /// <param name="ct"></param>
