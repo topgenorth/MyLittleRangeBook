@@ -104,8 +104,8 @@ if ($IsLinux -or $IsMacOS) {
     & chmod +x $guiDestinationPath
 }
 
-Write-Host "Migrating database and run maintenance tasks...."
-mlrb db migrate
+Write-Host "Run maintenance tasks...."
+#mlrb db migrate
 mlrb db maintenance
 Write-Host "Installed $cliExecutable to $cliDestinationPath"
 Write-Host "Installed $guiExecutable to $guiDestinationPath"

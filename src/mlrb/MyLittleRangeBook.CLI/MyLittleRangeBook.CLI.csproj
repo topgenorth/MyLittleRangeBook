@@ -18,10 +18,9 @@
         <DefineConstants>TRACE</DefineConstants>
         <PublishSingleFile>true</PublishSingleFile>
         <PublishTrimmed>true</PublishTrimmed>
+        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
         <SelfContained>true</SelfContained>
         <InvariantGlobalization>true</InvariantGlobalization>
-        <DebugType>none</DebugType>
-        <DebugSymbols>false</DebugSymbols>
         <TrimMode>partial</TrimMode>
     </PropertyGroup>
 
@@ -31,9 +30,6 @@
         </None>
         <None Update="appsettings.Development.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="appsettings.Development.json">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
