@@ -13,6 +13,9 @@ namespace MyLittleRangeBook.Firearms
         public              DateTimeOffset Created  { get; set; } = DateTimeOffset.UtcNow;
         public              DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
         public              bool           IsActive { get; set; } = true;
+        public              List<string>   ShotViewCsvFiles { get; set; } = new();
+
+
 
         public void Apply(FirearmActivated e) => IsActive = true;
 
@@ -54,6 +57,11 @@ namespace MyLittleRangeBook.Firearms
                                            .Append(". ")
                                            .Append(e.OccurredUtc.ToString());
             AppendToFirearmAggregateNoteSummary(sbSightsChanged.ToString());
+        }
+
+        public void Apply(GarminShotViewFileAddedToFirearm e)
+        {
+            ShotViewCsvFiles.Add(e.FileContents);
         }
 
         /// <summary>

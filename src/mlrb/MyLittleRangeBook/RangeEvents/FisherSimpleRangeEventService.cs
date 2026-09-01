@@ -67,7 +67,7 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             bool create    = false;
-            Guid firearmId = Guid.CreateVersion7();
+            Guid firearmId;
             try
             {
                 IEventStream<Firearm> stream =
@@ -78,12 +78,13 @@ namespace MyLittleRangeBook.RangeEvents
             catch (UnknownNaturalKeyException)
             {
                 _logger.Verbose("{0} is not a known natural key.", sre.FirearmName);
-                create = true;
+                create    = true;
+                firearmId = Guid.CreateVersion7();
             }
 
             if (create)
             {
-                firearmId = Guid.CreateVersion7();
+
                 try
                 {
                     StreamAction x = _session.Events.StartStream<Firearm>(firearmId,

@@ -177,6 +177,8 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
                                })
                     .ApplyAllDatabaseChangesOnStartup();
+
+            services.TryAddScoped<IFirearmsService, FirearmsService>();
             return services;
         }
 

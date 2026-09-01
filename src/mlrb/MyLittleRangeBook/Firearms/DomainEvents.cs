@@ -18,18 +18,16 @@ namespace MyLittleRangeBook.EventSourcing
     /// <param name="OccurredUtc">
     ///     The UTC timestamp when the creation of the firearm was recorded.
     /// </param>
-
     public record struct FirearmCreated(
-        [property: NaturalKey]
-        string         Name,
-        DateTimeOffset OccurredUtc);
+        [property: NaturalKey] string Name,
+        DateTimeOffset                OccurredUtc);
 
     public record struct FirearmUsedAtRange(
         [property: NaturalKey] string FirearmName,
-        string         RangeName,
-        int            RoundsFired,
-        string?        AmmoDescription,
-        DateTimeOffset OccurredUtc);
+        string                        RangeName,
+        int                           RoundsFired,
+        string?                       AmmoDescription,
+        DateTimeOffset                OccurredUtc);
 
     /// <summary>
     ///     Represents an event indicating the discharge of multiple rounds from a firearm within the domain.
@@ -67,26 +65,6 @@ namespace MyLittleRangeBook.EventSourcing
         DateTimeOffset                OccurredUtc);
 
     /// <summary>
-    ///     Represents an event indicating that a firearm has been associated with a range event in the domain.
-    ///     This event carries information about the unique identifiers of both the firearm and the range event, as well as the
-    ///     timestamp when the association occurred.
-    /// </summary>
-    /// <param name="StreamId">
-    ///     The unique identifier of the firearm associated with the range event.
-    /// </param>
-    /// <param name="RangeEventId">
-    ///     The unique identifier of the range event being associated with the firearm.
-    /// </param>
-    /// <param name="OccurredUtc">
-    ///     The UTC timestamp when the association event occurred.
-    /// </param>
-    public record struct FirearmAssociatedWithRangeEvent(
-        [property: NaturalKey] string FirearmName,
-        Guid                          RangeEventId,
-        DateTimeOffset                OccurredUtc
-    );
-
-    /// <summary>
     ///     Represents an event indicating that a firearm has been marked as inactive within the domain.
     ///     This event contains the unique identifier of the firearm and the timestamp when the status change was recorded.
     /// </summary>
@@ -119,25 +97,6 @@ namespace MyLittleRangeBook.EventSourcing
         string                        Text,
         DateTimeOffset                OccurredUtc,
         string                        NoteType = "note");
-
-    /// <summary>
-    ///     Represents an event indicating that a firearm has been associated with an asset in the domain.
-    ///     This event carries information pertaining to the unique identifiers of both the firearm and the asset, as well as
-    ///     the timestamp of when the event occurred.
-    /// </summary>
-    /// <param name="StreamId">
-    ///     The unique identifier of the firearm associated with the asset.
-    /// </param>
-    /// <param name="AssetId">
-    ///     The unique identifier of the asset being associated with the firearm.
-    /// </param>
-    /// <param name="OccurredUtc">
-    ///     The UTC timestamp when the association event occurred.
-    /// </param>
-    public record struct FirearmAssociatedWithAsset(
-        [property: NaturalKey] string FirearmName,
-        Guid                          AssetId,
-        DateTimeOffset                OccurredUtc);
 
     public record struct FirearmUsedAmmo(string AmmoDescription, string Note, DateTimeOffset OccurredUtc);
 
@@ -182,7 +141,7 @@ namespace MyLittleRangeBook.EventSourcing
     ///     The UTC timestamp when the barrel change was recorded.
     /// </param>
     public record struct FirearmBarrelChanged(
-    [property: NaturalKey] string FirearmName,
+        [property: NaturalKey] string FirearmName,
         string                        OldBarrel,
         string                        NewBarrel,
         DateTimeOffset                OccurredUtc);
@@ -220,27 +179,13 @@ namespace MyLittleRangeBook.EventSourcing
         DateTimeOffset                OccurredUtc);
 
     /// <summary>
-    ///     Represents an event indicating that a firearm has been associated with an asset in the domain.
-    ///     This event carries information pertaining to the unique identifiers of both the firearm and the asset, as well as
-    ///     the timestamp of when the event occurred.
+    ///     A Garmin ShotView CSV file was added to a firearm.
     /// </summary>
-    /// <param name="StreamId">
-    ///     The unique identifier of the firearm associated with the asset.
-    /// </param>
-    /// <param name="AssetId">
-    ///     The unique identifier of the asset being associated with the firearm.
-    /// </param>
-    /// <param name="OccurredUtc">
-    ///     The UTC timestamp when the association event occurred.
-    /// </param>
-    public record struct FirearmDisassociatedFromAsset(
+    /// <param name="FirearmName"></param>
+    /// <param name="FileContents">The contents of the ShotView file, which will be text and in CSV format.</param>
+    /// <param name="OccurredUtc"></param>
+    public record struct GarminShotViewFileAddedToFirearm(
         [property: NaturalKey] string FirearmName,
-        Guid                          AssetId,
+        string                        FileContents,
         DateTimeOffset                OccurredUtc);
-
-    public record struct FirearmDisassociatedFromRangeEvent(
-        [property: NaturalKey] string FirearmName,
-        Guid                          RangeEventId,
-        DateTimeOffset                OccurredUtc
-    );
 }

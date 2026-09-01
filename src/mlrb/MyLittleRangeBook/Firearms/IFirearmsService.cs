@@ -23,5 +23,15 @@ namespace MyLittleRangeBook.Firearms
         Task<Result<IEnumerable<FirearmTableRow>>> GetFirearmsAsync(bool activeOnly = true);
 
         Task<Result<MlrbId>> UpsertAsync(FirearmTableRow firearmTableRow);
+
+        /// <summary>
+        /// This will append the contents of a Garmin shotview file to the event stream for the firearm.
+        /// </summary>
+        /// <param name="firearmName"></param>
+        /// <param name="fileContents"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        Task<Result> AddGarminShotviewCsv(string            firearmName, string fileContents,
+                                          CancellationToken cancellationToken = default);
     }
 }
