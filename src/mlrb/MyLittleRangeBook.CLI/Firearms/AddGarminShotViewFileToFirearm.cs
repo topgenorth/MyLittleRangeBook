@@ -60,56 +60,21 @@ namespace MyLittleRangeBook
                 return ReturnCodes.SHOTVIEW_FILE_NOT_FOUND;
             }
 
-            Guid firearmId;
-            bool create    = false;
-            try
-            {
-                IEventStream<Firearm> stream =
-                    await _session.Events.FetchForWritingByNaturalKey<Firearm, string>(name,
-                        cancellationToken);
-                firearmId = stream.Id;
-            }
-            catch (UnknownNaturalKeyException)
-            {
-                _logger.Verbose("{0} is not a known natural key.", name);
-                create = true;
-                firearmId = Guid.CreateVersion7();
-            }
-
-            if (create)
-            {
-                try
-                {
-                    _session.Events.StartStream<Firearm>(firearmId,
-                                                                 new FirearmCreated(name, DateTimeOffset.UtcNow));
-                    _logger.Verbose("Created the stream for natural key {0}/{1}.", name, firearmId);
-
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error(ex, "An error occurred while creating the firearm stream for natural key {0}.",
-                                  name);
-
-                    _cliDisplay.PrintFailure(ex.Message);
-                    return ReturnCodes.FAILURE;
-                }
-            }
 
             try
             {
                 string fileContent = await File.ReadAllTextAsync(file, cancellationToken).ConfigureAwait(false);
-                var e = new GarminShotViewFileAddedToFirearm()
+                var    r           = await _firearmsService.AddGarminShotviewCsv(name, fileContent, cancellationToken);
+                if (r.IsSuccess)
                 {
-                    FirearmName = name,
-                    FileContents = fileContent,
-                    OccurredUtc = DateTimeOffset.UtcNow,
-                };
-                _session.Events.Append(firearmId, e);
-                await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                    _logger.Information("Add the Shotview file {File} to the {Firearm}", file, name);
+                    _cliDisplay.PrintSuccess($"Updated the firearm {name}   with the ShotView file {file}.");
+                    return ReturnCodes.SUCCESS;
+                }
 
-                _logger.Information("Add the Shotview file {File} to the {Firearm}", file, name);
-                _cliDisplay.PrintSuccess($"Updated the firearm {name}   with the ShotView file {file}.");
-                return ReturnCodes.SUCCESS;
+                _logger.Error("Failed to add '{File}' to {Firearm}", file, name);
+                _cliDisplay.PrintFailure($"Failed to add {file} to {name}.");
+                return ReturnCodes.FAILURE;
             }
             catch (Exception ex)
             {
