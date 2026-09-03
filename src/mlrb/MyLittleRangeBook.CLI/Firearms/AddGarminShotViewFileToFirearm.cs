@@ -82,8 +82,6 @@ namespace MyLittleRangeBook
                 _cliDisplay.PrintFailure($"Failed to read file: {ex.Message}");
                 return ReturnCodes.SHOTVIEW_FILE_READ_FAILURE;
             }
-
-            return ReturnCodes.SUCCESS;
         }
     }
 }

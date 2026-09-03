@@ -11,11 +11,11 @@ namespace MyLittleRangeBook
     ///     Updates the application with a new version.
     /// </summary>
     [RegisterCommands("update")]
-    public class UpdateCommands : MlrbCommandBase
+    public class UpdateApplicationFromGithubArtifactsCommand : MlrbCommandBase
     {
         const string WorkflowName = "Build MyLittleRangeBook";
 
-        public UpdateCommands(ILogger logger, ICliDisplay cliDisplay)
+        public UpdateApplicationFromGithubArtifactsCommand(ILogger logger, ICliDisplay cliDisplay)
             : base(logger, cliDisplay) { }
 
         /// <summary>
@@ -59,9 +59,16 @@ namespace MyLittleRangeBook
                                               ".local", "bin");
                 executableName = "mlrb";
             }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                artifactPattern = "*-macos-executables";
+                destinationDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                                              ".local", "bin");
+                executableName = "mlrb";
+            }
             else
             {
-                CliDisplay.PrintFailure("Unsupported platform. This command supports Windows and Linux only.");
+                CliDisplay.PrintFailure("Unsupported platform. This command supports Windows, Linux, and macOS only.");
                 return ReturnCodes.FAILURE;
             }
 

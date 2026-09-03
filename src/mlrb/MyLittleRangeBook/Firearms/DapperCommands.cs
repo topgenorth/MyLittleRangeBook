@@ -9,6 +9,11 @@ namespace MyLittleRangeBook.Firearms
         /// </summary>
         public static class Commands
         {
+            /// <summary>
+            ///     Show the count of rounds discharged through each firearm.
+            /// </summary>
+
+
             const string SELECT_SQL = """
                                       SELECT row_id AS RowId, id AS Id, name AS Name, notes AS Notes, is_active AS IsActive,
                                              rounds_fired AS RoundsFired, created AS Created, modified AS Modified
@@ -40,12 +45,6 @@ namespace MyLittleRangeBook.Firearms
                                       RETURNING row_id
                                       """;
 
-            internal static readonly DapperCommand s_selectAll    = new(SELECT_SQL);
-            internal static readonly DapperCommand s_selectActive = new(SELECT_ACTIVE_SQL);
-            internal static readonly DapperCommand s_selectById   = new(SELECT_BY_ID_SQL);
-            internal static readonly DapperCommand s_deleteById   = new(DELETE_SQL);
-            internal static readonly DapperCommand s_upsert       = new(UPSERT_SQL);
-
             const string ASSOCIATE_FIREARM_WITH_ASSET_SQL = """
                                                             INSERT INTO asset_files_firearms (firearm_id, asset_id)
                                                             VALUES (@FirearmId, @AssetId)
@@ -76,6 +75,12 @@ namespace MyLittleRangeBook.Firearms
                                                            ON CONFLICT DO NOTHING
                                                            RETURNING row_id;
                                                            """;
+
+            internal static readonly DapperCommand s_selectAll    = new(SELECT_SQL);
+            internal static readonly DapperCommand s_selectActive = new(SELECT_ACTIVE_SQL);
+            internal static readonly DapperCommand s_selectById   = new(SELECT_BY_ID_SQL);
+            internal static readonly DapperCommand s_deleteById   = new(DELETE_SQL);
+            internal static readonly DapperCommand s_upsert       = new(UPSERT_SQL);
 
             internal static readonly DapperCommand s_addAssociationToAsset =
                 new(ASSOCIATE_FIREARM_WITH_ASSET_SQL);
