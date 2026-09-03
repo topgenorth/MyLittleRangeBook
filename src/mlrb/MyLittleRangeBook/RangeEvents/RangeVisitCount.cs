@@ -1,9 +1,9 @@
 ﻿using Fisher.Attributes;
 using Fisher.Projections.Flattened;
 using JasperFx.Events.Aggregation;
-using MyLittleRangeBook.EventSourcing;
+using MyLittleRangeBook.Firearms;
 
-namespace MyLittleRangeBook.Models
+namespace MyLittleRangeBook.RangeEvents
 {
     public class RangeVisitProjection : FlatTableProjection
     {

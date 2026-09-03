@@ -2,7 +2,6 @@
 using Fisher.Exceptions;
 using Fisher.Linq;
 using JasperFx.Events;
-using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
 
 namespace MyLittleRangeBook.RangeEvents
@@ -43,6 +42,13 @@ namespace MyLittleRangeBook.RangeEvents
         {
             List<object> newEvents = [];
 
+            newEvents.Add(new SimpleRangeEventCreatedFromCommandLine(DateOnly.FromDateTime(sre.EventDate),
+                                                                     sre.FirearmName,
+                                                                     sre.RangeName,
+                                                                     sre.RoundsFired,
+                                                                     sre.AmmoDescription,
+                                                                     sre.Notes,
+                                                                     DateTimeOffset.UtcNow));
 
             newEvents.Add(new FirearmActivated(sre.FirearmName, DateTimeOffset.UtcNow));
 
@@ -53,7 +59,9 @@ namespace MyLittleRangeBook.RangeEvents
 
             if (!string.IsNullOrWhiteSpace(sre.RangeName))
             {
-                newEvents.Add(new FirearmUsedAtRange(sre.FirearmName, sre.RangeName.Trim(), sre.RoundsFired,
+                newEvents.Add(new FirearmUsedAtRange(sre.FirearmName,
+                                                     sre.RangeName.Trim(),
+                                                     sre.RoundsFired,
                                                      sre.AmmoDescription,
                                                      sre.OccurredUtc));
             }
@@ -63,16 +71,21 @@ namespace MyLittleRangeBook.RangeEvents
                 {
                     newEvents.Add(new FirearmRoundCountAltered(sre.FirearmName, sre.RoundsFired,
                                                                DateTimeOffset.UtcNow));
+                    if (!string.IsNullOrEmpty(sre.AmmoDescription))
+                    {
+                        newEvents.Add(new FirearmUsedAmmo(sre.FirearmName, sre.AmmoDescription, sre.Notes,
+                                                          DateTimeOffset.UtcNow));
+                    }
                 }
             }
 
-            bool create    = false;
+            bool create = false;
             Guid firearmId;
             try
             {
                 IEventStream<Firearm> stream =
                     await _session.Events.FetchForWritingByNaturalKey<Firearm, string>(sre.FirearmName,
-                             cancellationToken);
+                        cancellationToken);
                 firearmId = stream.Id;
             }
             catch (UnknownNaturalKeyException)
@@ -84,12 +97,11 @@ namespace MyLittleRangeBook.RangeEvents
 
             if (create)
             {
-
                 try
                 {
                     StreamAction x = _session.Events.StartStream<Firearm>(firearmId,
                                                                           new FirearmCreated(sre.FirearmName,
-                                                                                   DateTimeOffset.UtcNow));
+                                                                              DateTimeOffset.UtcNow));
                     _logger.Verbose("Created the stream for natural key {0}/{1}.", sre.FirearmName, firearmId);
                 }
                 catch (Exception ex)
@@ -107,7 +119,7 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
         /// <summary>
-        /// Returns an unsorted list of simple range event documents.
+        ///     Returns an unsorted list of simple range event documents.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>

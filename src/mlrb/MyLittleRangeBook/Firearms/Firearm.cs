@@ -1,19 +1,41 @@
 ﻿using System.Text;
 using JasperFx.Events.Aggregation;
-using MyLittleRangeBook.EventSourcing;
+using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Firearms
 {
     public class Firearm
     {
+        /// <summary>
+        /// Represents the unique identifier for a firearm entity.
+        /// </summary>
         public Guid Id { get; set; } = Guid.CreateVersion7();
 
-        [NaturalKey] public string         Name     { get; set; } = "Unknown Firearm";
-        public              string?        Notes    { get; set; }
-        public              DateTimeOffset Created  { get; set; } = DateTimeOffset.UtcNow;
-        public              DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
-        public              bool           IsActive { get; set; } = true;
+        /// <summary>
+        ///  The name of the firearm.  This must be unique to all of the firearms that belong to you (including firearms that are "inactive").
+        /// </summary>
+        [NaturalKey] public string         Name             { get; set; } = "Unknown Firearm";
+
+        /// <summary>
+        /// Gets or sets the date and time when the firearm was created.
+        /// </summary>
+        public              DateTimeOffset Created          { get; set; } = DateTimeOffset.UtcNow;
+
+        /// <summary>
+        /// Represents the timestamp of the most recent modification made to the firearm entity.
+        /// </summary>
+        public DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
+        public bool           IsActive { get; set; } = true;
+
+        /// <summary>
+        /// Holds a list of Garmin Shotview CSC files for this firearm.
+        /// </summary>
         public              List<string>   ShotViewCsvFiles { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets the list of notes associated with the firearm.
+        /// </summary>
+        public List<Note> Notes { get; set; } = new();
 
 
 
@@ -26,11 +48,11 @@ namespace MyLittleRangeBook.Firearms
                                           .Append(" to ")
                                           .Append(e.NewBarrel)
                                           .Append('.');
-            AppendToFirearmAggregateNoteSummary(sbBarrelChange.ToString());
+            AppendTextAsNote(sbBarrelChange.ToString());
         }
 
         public void Apply(FirearmCleaned e) =>
-            AppendToFirearmAggregateNoteSummary($"Cleaned on {e.OccurredUtc.ToString()}.");
+            AppendTextAsNote($"Fiearm was cleaned.");
 
         [NaturalKeySource]
         public void Apply(FirearmCreated e) => Name = e.FirearmName;
@@ -39,14 +61,13 @@ namespace MyLittleRangeBook.Firearms
 
         public void Apply(FirearmModified e)
         {
-            StringBuilder sbModified = new StringBuilder("Firearm modified on ")
-                                      .Append(e.OccurredUtc.ToString())
+            StringBuilder sbModified = new StringBuilder("Firearm modified:  ")
                                       .AppendLine()
                                       .Append(e.Description);
-            AppendToFirearmAggregateNoteSummary(sbModified.ToString());
+            AppendTextAsNote(sbModified.ToString());
         }
 
-        public void Apply(FirearmNoteAdded e) => AppendToFirearmAggregateNoteSummary(e.Text);
+        public void Apply(FirearmNoteAdded e) => AppendTextAsNote(e.Text);
 
         public void Apply(FirearmSightingSystemChanged e)
         {
@@ -54,40 +75,37 @@ namespace MyLittleRangeBook.Firearms
                                            .Append(e.OldAimingSystem)
                                            .Append(" to ")
                                            .Append(e.NewAimingSystem)
-                                           .Append(". ")
-                                           .Append(e.OccurredUtc.ToString());
-            AppendToFirearmAggregateNoteSummary(sbSightsChanged.ToString());
+                                           .Append(". ");
+            AppendTextAsNote(sbSightsChanged.ToString());
         }
 
-        public void Apply(GarminShotViewFileAddedToFirearm e)
-        {
-            ShotViewCsvFiles.Add(e.FileContents);
-        }
+        public void Apply(GarminShotViewFileAddedToFirearm e) => ShotViewCsvFiles.Add(e.FileContents);
 
         /// <summary>
         ///     Internal helper method to append the text the Notes property of the aggregate.
         /// </summary>
         /// <param name="text"></param>
-        void AppendToFirearmAggregateNoteSummary(string text)
+        void AppendTextAsNote(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
             {
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(Notes))
+            var note = new Note() { Content = text.Trim(), NoteType = "firearm"};
+            Notes.Add(note);
+        }
+
+        string CombineAllNotes()
+        {
+            var sb = new StringBuilder();
+            foreach (var n in Notes.OrderBy(x => x.ModifiedUtc))
             {
-                Notes = text;
+                sb.AppendLine($"-- {n.ModifiedUtc:O}");
+                sb.AppendLine(n.Content);
+                sb.AppendLine(string.Empty);
             }
-            else
-            {
-                StringBuilder newNotes = new StringBuilder(Notes)
-                                        .AppendLine("--")
-                                         // .Append("Date: ")
-                                         // .AppendLine(Modified.ToString("O"))
-                                        .AppendLine(text.Trim());
-                Notes = newNotes.ToString();
-            }
+            return sb.ToString();
         }
     }
 }
