@@ -193,7 +193,9 @@ namespace MyLittleRangeBook.Firearms
     /// <param name="OccurredUtc">
     ///     The UTC timestamp when the ammunition use was recorded.
     /// </param>
-    public record struct FirearmUsedAmmo([property: NaturalKey] string FirearmName,string AmmoDescription, string Note, DateTimeOffset OccurredUtc);
+    public record struct FirearmUsedAmmo([property: NaturalKey] string FirearmName,
+                                         string AmmoDescription,
+                                         string? Note, DateTimeOffset OccurredUtc);
 
     /// <summary>
     /// Represents an event where a firearm was used at a specific range.

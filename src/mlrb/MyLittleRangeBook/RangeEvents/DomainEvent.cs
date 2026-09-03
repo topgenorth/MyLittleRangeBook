@@ -16,7 +16,7 @@ namespace MyLittleRangeBook.RangeEvents
         string   FirearmName,
         string   RangeName,
         int      RoundsFired,
-        string   AmmoDescription,
-        string   Notes);
+        string?  AmmoDescription,
+        string?  Notes);
 
 }
