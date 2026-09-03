@@ -43,8 +43,12 @@ namespace MyLittleRangeBook.RangeEvents
             List<object> newEvents = [];
 
             newEvents.Add(new SimpleRangeEventCreatedFromCommandLine(DateOnly.FromDateTime(sre.EventDate),
-                                                                     sre.FirearmName, sre.RangeName, sre.RoundsFired,
-                                                                     sre.AmmoDescription, sre.Notes));
+                                                                     sre.FirearmName,
+                                                                     sre.RangeName,
+                                                                     sre.RoundsFired,
+                                                                     sre.AmmoDescription,
+                                                                     sre.Notes,
+                                                                     DateTimeOffset.UtcNow));
 
             newEvents.Add(new FirearmActivated(sre.FirearmName, DateTimeOffset.UtcNow));
 
