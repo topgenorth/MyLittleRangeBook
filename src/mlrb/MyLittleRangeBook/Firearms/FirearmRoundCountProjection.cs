@@ -13,10 +13,10 @@ namespace MyLittleRangeBook.Firearms
 
             Project<FirearmCreated>(map =>
                                     {
-                                        map.Map(x => x.Name, "firearm_name");
+                                        map.Map(x => x.FirearmName, "firearm_name");
                                         map.SetValue("round_count", 0);
                                     },
-                                    x => x.Name);
+                                    x => x.FirearmName);
 
             Project<FirearmUsedAtRange>(map =>
                                         {

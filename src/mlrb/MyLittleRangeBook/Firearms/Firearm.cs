@@ -33,7 +33,7 @@ namespace MyLittleRangeBook.Firearms
             AppendToFirearmAggregateNoteSummary($"Cleaned on {e.OccurredUtc.ToString()}.");
 
         [NaturalKeySource]
-        public void Apply(FirearmCreated e) => Name = e.Name;
+        public void Apply(FirearmCreated e) => Name = e.FirearmName;
 
         public void Apply(FirearmDeactivated e) => IsActive = false;
 
