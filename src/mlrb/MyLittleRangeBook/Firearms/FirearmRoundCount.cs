@@ -1,6 +1,6 @@
 ﻿using Fisher.Attributes;
 
-namespace MyLittleRangeBook.Models
+namespace MyLittleRangeBook.Firearms
 {
     /// <summary>
     ///     Represents the count of rounds for a specific firearm.
