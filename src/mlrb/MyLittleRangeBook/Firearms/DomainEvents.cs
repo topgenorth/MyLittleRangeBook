@@ -144,7 +144,7 @@ namespace MyLittleRangeBook.Firearms
     ///     The unique identifier of the firearm involved in the discharge event.
     /// </param>
     /// <param name="RoundsDelta">
-    ///     An integer that will changed the round count for the firearm.
+    ///     An integer that will change the round count for the firearm.
     /// </param>
     /// <param name="OccurredUtc">
     ///     The UTC timestamp when the discharge event was recorded.
@@ -193,18 +193,20 @@ namespace MyLittleRangeBook.Firearms
     /// <param name="OccurredUtc">
     ///     The UTC timestamp when the ammunition use was recorded.
     /// </param>
-    public record struct FirearmUsedAmmo([property: NaturalKey] string FirearmName,
-                                         string AmmoDescription,
-                                         string? Note, DateTimeOffset OccurredUtc);
+    public record struct FirearmUsedAmmo(
+        [property: NaturalKey] string FirearmName,
+        string                        AmmoDescription,
+        string?                       Note,
+        DateTimeOffset                OccurredUtc);
 
     /// <summary>
-    /// Represents an event where a firearm was used at a specific range.
+    ///     Represents an event where a firearm was used at a specific range.
     /// </summary>
     /// <param name="FirearmName">The name of the firearm used at the range.</param>
     /// <param name="RangeName">The name of the range where the firearm was used.</param>
     /// <param name="RoundsFired">The number of rounds fired during the usage.</param>
     /// <param name="AmmoDescription">
-    /// An optional description of the ammunition used during the session.
+    ///     An optional description of the ammunition used during the session.
     /// </param>
     /// <param name="OccurredUtc">The date and time when the event occurred, in UTC format.</param>
     public record struct FirearmUsedAtRange(
@@ -213,4 +215,24 @@ namespace MyLittleRangeBook.Firearms
         int                           RoundsFired,
         string?                       AmmoDescription,
         DateTimeOffset                OccurredUtc);
+
+
+    /// <summary>
+    ///     Represents a new reloading recipe created for a specific cartridge.
+    /// </summary>
+    /// <param name="Id">The unique identifier for the reloading recipe.</param>
+    /// <param name="FirearmName">The name of the firearm for which the reloading recipe is created.</param>
+    /// <param name="CartridgeName">
+    ///     The name of the cartridge associated with the recipe. It should be the SAAMI name if
+    ///     possible.
+    /// </param>
+    /// <param name="AmmoDescription">A description of the ammunition for the reloading recipe.</param>
+    /// <param name="OccurredUtc">The date and time when the reloading recipe was created, in UTC.</param>
+    public record struct NewReloadingRecipeForFirearm(
+        Guid           Id,
+        string         FirearmName,
+        string         CartridgeName,
+        string         AmmoDescription,
+        DateTimeOffset OccurredUtc
+    );
 }

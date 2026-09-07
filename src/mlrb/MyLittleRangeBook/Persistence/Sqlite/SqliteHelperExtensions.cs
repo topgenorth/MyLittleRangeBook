@@ -178,7 +178,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                })
                     .ApplyAllDatabaseChangesOnStartup();
 
-            services.TryAddScoped<IFirearmsService, FirearmsService>();
+            services.TryAddScoped<IFirearmsService, FisherFirearmsService>();
             return services;
         }
 
