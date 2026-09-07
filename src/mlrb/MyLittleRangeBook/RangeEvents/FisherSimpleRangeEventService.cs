@@ -42,79 +42,62 @@ namespace MyLittleRangeBook.RangeEvents
         {
             List<object> newEvents = [];
 
-            newEvents.Add(new SimpleRangeEventCreatedFromCommandLine(DateOnly.FromDateTime(sre.EventDate),
-                                                                     sre.FirearmName,
-                                                                     sre.RangeName,
-                                                                     sre.RoundsFired,
-                                                                     sre.AmmoDescription,
-                                                                     sre.Notes,
-                                                                     DateTimeOffset.UtcNow));
+            (bool created, Guid firearmId) = await GetStreamIdForFirearmName(sre.FirearmName, cancellationToken);
 
-            newEvents.Add(new FirearmActivated(sre.FirearmName, DateTimeOffset.UtcNow));
-
-            if (!string.IsNullOrWhiteSpace(sre.Notes))
-            {
-                newEvents.Add(new FirearmNoteAdded(sre.FirearmName, sre.Notes.Trim(), DateTimeOffset.UtcNow));
-            }
+            #region Capture the simple range event.
+            SimpleRangeEventCreatedFromCommandLine simpleRangeEventCreatedFromCommandLine =
+                new(DateOnly.FromDateTime(sre.EventDate),
+                    sre.FirearmName,
+                    sre.RangeName,
+                    sre.RoundsFired,
+                    sre.AmmoDescription,
+                    sre.Notes,
+                    DateTimeOffset.UtcNow);
+            newEvents.Add(simpleRangeEventCreatedFromCommandLine);
+            #endregion
 
             if (!string.IsNullOrWhiteSpace(sre.RangeName))
             {
+                // [TO20260907] Capture the range if provided.
                 newEvents.Add(new FirearmUsedAtRange(sre.FirearmName,
                                                      sre.RangeName.Trim(),
                                                      sre.RoundsFired,
                                                      sre.AmmoDescription,
                                                      sre.OccurredUtc));
             }
-            else
+
+            if (sre.RoundsFired != 0)
             {
-                if (sre.RoundsFired != 0)
-                {
-                    newEvents.Add(new FirearmRoundCountAltered(sre.FirearmName, sre.RoundsFired,
-                                                               DateTimeOffset.UtcNow));
-                    if (!string.IsNullOrEmpty(sre.AmmoDescription))
-                    {
-                        newEvents.Add(new FirearmUsedAmmo(sre.FirearmName, sre.AmmoDescription, sre.Notes,
-                                                          DateTimeOffset.UtcNow));
-                    }
-                }
+                newEvents.Add(new FirearmRoundCountAltered(sre.FirearmName, sre.RoundsFired,
+                                                           DateTimeOffset.UtcNow));
             }
 
-            bool create = false;
-            Guid firearmId;
+            if (!string.IsNullOrEmpty(sre.AmmoDescription))
+            {
+                // [TO20260907] Capture the ammo if provided.
+                newEvents.Add(new FirearmUsedAmmo(sre.FirearmName, sre.AmmoDescription,
+                                                  sre.Notes,
+                                                  DateTimeOffset.UtcNow));
+            }
+
+            if (!string.IsNullOrWhiteSpace(sre.Notes))
+            {
+                newEvents.Add(new FirearmNoteAdded(sre.FirearmName, sre.Notes.Trim(), DateTimeOffset.UtcNow));
+            }
+
             try
             {
-                IEventStream<Firearm> stream =
-                    await _session.Events.FetchForWritingByNaturalKey<Firearm, string>(sre.FirearmName,
-                        cancellationToken);
-                firearmId = stream.Id;
+                _session.Events.Append(firearmId, newEvents);
+                _session.Store(sre);
+                await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch (UnknownNaturalKeyException)
+            catch (Exception e)
             {
-                _logger.Verbose("{0} is not a known natural key.", sre.FirearmName);
-                create    = true;
-                firearmId = Guid.CreateVersion7();
+                _logger.Error(e, "Failed to process the simple range event `{rangeEvent}`.", sre);
+                return Result.Fail($"Failed to process the simple range event `{sre}`.");
             }
 
-            if (create)
-            {
-                try
-                {
-                    StreamAction x = _session.Events.StartStream<Firearm>(firearmId,
-                                                                          new FirearmCreated(sre.FirearmName,
-                                                                              DateTimeOffset.UtcNow));
-                    _logger.Verbose("Created the stream for natural key {0}/{1}.", sre.FirearmName, firearmId);
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error(ex, "An error occurred while creating the firearm stream for natural key {0}.",
-                                  sre.FirearmName);
-                }
-            }
-
-            _session.Events.Append(firearmId, newEvents);
-            _session.Store(sre);
-            await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
+            _logger.Debug("Processed the simple range event.");
             return Result.Ok(sre.Id);
         }
 
@@ -134,5 +117,52 @@ namespace MyLittleRangeBook.RangeEvents
 
         public async Task<Result> ExportToCsv(string csvFileName, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
+
+        /// <summary>
+        ///     Retrieves or creates the event stream ID for the specified firearm name.
+        /// </summary>
+        /// <param name="sre">
+        ///     The simple range event containing the firearm name for which the stream ID is required.
+        /// </param>
+        /// <param name="firearmName">
+        ///     The name (natural key) of the firearm for which to retrieve or create a stream ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A token to monitor for cancellation requests.
+        /// </param>
+        /// <returns>
+        ///     A tuple indicating whether the stream was created and the associated firearm stream ID.
+        /// </returns>
+        async Task<(bool created, Guid firearmId)> GetStreamIdForFirearmName(string            firearmName,
+                                                                             CancellationToken cancellationToken)
+        {
+            bool create = false;
+            Guid firearmId;
+            try
+            {
+                IEventStream<Firearm> stream =
+                    await _session.Events.FetchForWritingByNaturalKey<Firearm, string>(firearmName,
+                             cancellationToken);
+                firearmId = stream.Id;
+            }
+            catch (UnknownNaturalKeyException)
+            {
+                _logger.Verbose("{0} is not a known natural key for a firearm.", firearmName);
+                create    = true;
+                firearmId = Guid.CreateVersion7();
+            }
+
+            if (!create)
+            {
+                return (create, firearmId);
+            }
+
+
+            FirearmCreated firearmCreated = new(firearmName, DateTimeOffset.UtcNow);
+            StreamAction   x              = _session.Events.StartStream<Firearm>(firearmId, firearmCreated);
+            _logger.Verbose("Created the stream for firearm's natural key {0}/{1}.", firearmName, firearmId);
+
+            return (create, firearmId);
+        }
     }
 }
