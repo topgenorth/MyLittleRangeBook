@@ -27,7 +27,7 @@
     /// <param name="FileContents">The contents of the ShotView CSV file.</param>
     /// <param name="FirearmName">The unique name of the firearm used.</param>
     /// <param name="OccurredUtc">The UTC timestamp when the event occurred.</param>
-    public record SimpleRangeEventCreatedFromShotViewCsv(
+    public record ShotViewCsvFileSubmitted(
         string         FirearmName,
         string         FileContents,
         DateTimeOffset OccurredUtc);
