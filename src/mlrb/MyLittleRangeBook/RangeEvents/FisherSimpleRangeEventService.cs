@@ -90,6 +90,8 @@ namespace MyLittleRangeBook.RangeEvents
                 _session.Events.Append(firearmId, newEvents);
                 _session.Store(sre);
                 await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                _logger.Debug($"Successfully processed the simple range event `{sre}`.");
+                return Result.Ok(sre.Id);
             }
             catch (Exception e)
             {
@@ -97,8 +99,6 @@ namespace MyLittleRangeBook.RangeEvents
                 return Result.Fail($"Failed to process the simple range event `{sre}`.");
             }
 
-            _logger.Debug("Processed the simple range event.");
-            return Result.Ok(sre.Id);
         }
 
         /// <summary>
