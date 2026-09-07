@@ -23,7 +23,7 @@ if (args.Length < 1)
 
 string loadingString = args[0];
 string ollamaUrl     = args.Length > 1 ? args[1] : "http://localhost:11434/api/chat";
-string model         = args.Length > 2 ? args[2] : "llama3.2";
+string model         = args.Length > 2 ? args[2] : "mistral";
 
 // ── prompt ──────────────────────────────────────────────────────────
 string prompt =
@@ -50,32 +50,76 @@ string prompt =
                         "trim_length_units": "inches",
                         "manufacturer": "<string>",
                         "primer": "<string>" }
-            "comments": "<string>"
-            "original_string": "<string>"
+            "comments": "<string>",
+            "metadata" : {
+                "original_string": "<string>"
+            }
         }
     }
 
-    Rules:
-    * data segments are separated by commas, semicolons, or periods.  Each segment may contain one or more data points.
-    * the cartridge name a string that names the cartridge.  
-    • projectile / powder weights are in grains (gr) or grams (g); keep the same decimal precision as the source. If not specified, assume grains. If the source explicitly states "g" or "grams", convert to grains (1 g = 15.4324 gr) and round to 2 decimal places.
-    * the projectile manufacturer is the company that produced the projectile. If unknown, use "unknown".
-    * The powder "manufacturer" is the company that produced the powder. If unknown, use "unknown".
-    • The powder "type" should include the name of the product. If unknown, use "unknown".
-    * the projectile type is the product name of the projectile. If unknown, use "unknown".
-    * the powder uniquetek_value is a unitless value that used by the Uniquetek power meter bar to control the powder flow. If unknown, use 0. It is a decimal number with up to 2 decimal places.
-    • COAL value is in inches or millimeters. Assume the units are in inches unless the source explicitly states "mm" or "millimeters".
-    * The COAL value is identified with the string COAL. This identifier might appear after a numeric value or before for the numeric value.  For example 2.263" COAL or COAL 2.263".
-    * CBTO value is in inches or millimeters. Assume the units are in inches unless the source explicitly states "mm" or "millimeters".
-    * The CBTO value is identified with the string CBTO. This identifier might appear after a numeric value or before for the numeric value.  For example 2.263" CBTO or CBTO 2.263".
-    * the case trim_length is in inches or millimeters. Assume the units are in inches unless the source explicitly states "mm" or "millimeters". The value is a decimal number with up to 3 decimal places. If missing, assume 0.
-    * the case manufacturer is the company that produced the brass case. If unknown, use "unknown". 
-    * the case primer is the manufacturer and type of primer as a single descriptive string. If unknown, use "unknown".
-    * original_string is the original load data string that was parsed. THe original string must be JSON escaped so that it can be included in the JSON output.
-    * comments is a free-form string that may contain any additional information that was not captured in the other fields. If there are no comments, use an empty string.
+    ## Parsing Rules
 
+    ### Cartridge & Components
+    - Extract the cartridge name as a single string (e.g., "6.5 Creedmoor", ".308 Winchester")
+    - Projectile type = product name (e.g., "Berger VLD", "Hornady ELD-M")
+    - Powder type = product name (e.g., "H4895", "IMR 4064")
 
-    Loading string:
+    ### Weight Units (Projectile & Powder)
+    - Default unit: grains (gr)
+    - If source states "g" or "grams": convert to grains using 1g = 15.4324 gr, round to 2 decimals
+    - Preserve source precision (e.g., 168 stays 168, 168.5 stays 168.5)
+    - Units field must be "gr" or "g" (use "gr" after conversion)
+
+    ### COAL & CBTO (Cartridge Overall Length / Cartridge Base to Ogive)
+    - Default unit: inches
+    - If source explicitly states "mm" or "millimeters": keep as-is, unit = "mm"
+    - Identifier "COAL" or "CBTO" may appear before or after value (e.g., "COAL 2.263"" or "2.263" COAL")
+
+    ### Case Trim Length
+    - Default unit: inches
+    - If missing from source: set value to 0, unit = "inches"
+    - If source states "mm" or "millimeters": keep as-is, unit = "mm"
+
+    ### Manufacturers & Unknown Values
+    - If manufacturer unknown: use "unknown"
+    - If the manufacturer is "VV" then replace that with "Vihtavuori".
+    - if the manufacturer is "IMR", then replace that with "Hodgdon".
+    - If data missing or unclear: use "unknown" for string fields, 0 for numeric fields
+    - Uniquetek value (unitless): default to 0 if not present
+
+    ### Comments
+    - Comments: free-form string capturing any extra info not in other fields; use "" if none
+
+    ### Metadata
+    - original_string: the exact input string, JSON-escaped for inclusion in output
+
+    ### Primer
+    - A string that describes the manufacturer and product of the primer used.
+    - If missing or unclear use "unknown". 
+
+    ### Data Segmentation
+    - Segments separated by: commas, semicolons, periods, forward slash 
+    - Process each segment for relevant data points
+
+    ## Examples
+
+    Input: "Random stuff at the beginning. 6.5 x 55 Swedish Mauser, Berger 140gr VLD, VV N566 44.5gr, COAL 2.8125, Lapua brass, CCI200 primer.  Random stuff at the end."
+
+    Output (partial):
+    {
+        "cartridge": {"name": "6.5 x 55 Swedish Mauser"},
+        "projectile": {"manufacturer": "Berger", "type": "VLD", "weight": 140, "units": "gr"},
+        "powder": {"manufacturer": "VV", "type": "N560", "weight": 44.5, "units": "gr", "uniquetek_value": 0},
+        "coal": {"value": 2.8125, "unit": "inches"},
+        "case": {"trim_length": 0, "trim_length_units": "inches", "manufacturer": "Lapua", "primer": "CCI200"}
+    }
+
+    ## Error Handling
+    - If input is malformed/incomplete: extract what you can, use "unknown"/"0" for missing values
+    - Always return valid JSON matching the schema above
+    - If multiple cartridges detected: parse only the first one
+
+    Loading string: 
     """ + loadingString;
 
 // ── build the Ollama request body ───────────────────────────────────
@@ -95,7 +139,11 @@ string json = JsonSerializer.Serialize(request);
 // ── call Ollama ─────────────────────────────────────────────────────
 using var           http    = new HttpClient { Timeout = TimeSpan.FromSeconds(300) };
 var                 content = new StringContent(json, Encoding.UTF8, "application/json");
+
+var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 HttpResponseMessage resp    = await http.PostAsync(ollamaUrl, content);
+stopwatch.Stop();
+double requestTimeSeconds = stopwatch.Elapsed.TotalSeconds;
 
 if (!resp.IsSuccessStatusCode)
 {
@@ -106,8 +154,8 @@ if (!resp.IsSuccessStatusCode)
 // ── extract the assistant's reply ───────────────────────────────────
 using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
 string reply = doc.RootElement.GetProperty("message")
-                  .GetProperty("content")
-                  .GetString()!;
+                   .GetProperty("content")
+                   .GetString()!;
 
 // ── clean up & validate ─────────────────────────────────────────────
 // LLMs sometimes wrap the JSON in markdown fences; strip them.
@@ -123,8 +171,15 @@ if (reply.StartsWith("```"))
 try
 {
     var parsed = JsonDocument.Parse(reply);
-    string pretty = JsonSerializer.Serialize(parsed.RootElement,
-                                             new JsonSerializerOptions { WriteIndented = true });
+
+    // Update metadata section with model name and request time
+    using var ms = new MemoryStream();
+    await using (var writer = new Utf8JsonWriter(ms, new JsonWriterOptions { Indented = true }))
+    {
+        CopyJsonWithUpdatedMetadata(parsed.RootElement, writer, model, requestTimeSeconds);
+    }
+
+    string pretty = Encoding.UTF8.GetString(ms.ToArray());
 
     Console.WriteLine(pretty);
     return 0;
@@ -134,4 +189,85 @@ catch (Exception ex)
     Console.Error.WriteLine($"Error parsing JSON: {ex.Message}");
     Console.WriteLine(reply);
     return 1;
+}
+
+// ── helper method to copy JSON and update metadata ─────────────────
+void CopyJsonWithUpdatedMetadata(JsonElement element, Utf8JsonWriter writer, string modelName, double requestTime)
+{
+    switch (element.ValueKind)
+    {
+        case JsonValueKind.Object:
+            writer.WriteStartObject();
+            foreach (var property in element.EnumerateObject())
+            {
+                writer.WritePropertyName(property.Name);
+
+                // If this is the metadata property, add the new fields
+                if (property.Name == "metadata")
+                {
+                    writer.WriteStartObject();
+
+                    // Copy existing metadata properties
+                    if (property.Value.ValueKind == JsonValueKind.Object)
+                    {
+                        foreach (var metaProp in property.Value.EnumerateObject())
+                        {
+                            writer.WritePropertyName(metaProp.Name);
+                            CopyJsonWithUpdatedMetadata(metaProp.Value, writer, modelName, requestTime);
+                        }
+                    }
+
+                    // Add new metadata fields
+                    writer.WritePropertyName("model");
+                    writer.WriteStringValue(modelName);
+
+                    writer.WritePropertyName("request_time_seconds");
+                    writer.WriteNumberValue(requestTime);
+
+                    writer.WriteEndObject();
+                }
+                else
+                {
+                    CopyJsonWithUpdatedMetadata(property.Value, writer, modelName, requestTime);
+                }
+            }
+            writer.WriteEndObject();
+            break;
+
+        case JsonValueKind.Array:
+            writer.WriteStartArray();
+            foreach (var item in element.EnumerateArray())
+            {
+                CopyJsonWithUpdatedMetadata(item, writer, modelName, requestTime);
+            }
+            writer.WriteEndArray();
+            break;
+
+        case JsonValueKind.String:
+            writer.WriteStringValue(element.GetString());
+            break;
+
+        case JsonValueKind.Number:
+            if (element.TryGetInt64(out long longValue))
+            {
+                writer.WriteNumberValue(longValue);
+            }
+            else if (element.TryGetDouble(out double doubleValue))
+            {
+                writer.WriteNumberValue(doubleValue);
+            }
+            break;
+
+        case JsonValueKind.True:
+            writer.WriteBooleanValue(true);
+            break;
+
+        case JsonValueKind.False:
+            writer.WriteBooleanValue(false);
+            break;
+
+        case JsonValueKind.Null:
+            writer.WriteNullValue();
+            break;
+    }
 }
