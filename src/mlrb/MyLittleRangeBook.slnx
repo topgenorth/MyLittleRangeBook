@@ -9,6 +9,7 @@
         <File Path="../../AGENTS.md" />
         <File Path="../../CLAUDE.md" />
         <File Path="../../update-from-artifacts.ps1" />
+        <File Path="../experiments/parse_load_data.cs" />
         <File Path=".editorconfig" />
         <File Path=".gitignore" />
         <File Path="README.md" />

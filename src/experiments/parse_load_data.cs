@@ -1,4 +1,4 @@
-// Program.cs  —  run with:  dotnet run
+// Run with:  dotnet run parse_load_data.cs
  #:property JsonSerializerIsReflectionEnabledByDefault=true
 using System.Net.Http;
 using System.Text;
