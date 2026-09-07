@@ -62,21 +62,23 @@ namespace MyLittleRangeBook.RangeEvents
                 newEvents.Add(new FirearmUsedAtRange(sre.FirearmName,
                                                      sre.RangeName.Trim(),
                                                      sre.RoundsFired,
-                                                     sre.AmmoDescription,
+                                                     sre.AmmoDescription.Trim(),
                                                      sre.OccurredUtc));
             }
 
             if (sre.RoundsFired != 0)
             {
-                newEvents.Add(new FirearmRoundCountAltered(sre.FirearmName, sre.RoundsFired,
+                newEvents.Add(new FirearmRoundCountAltered(sre.FirearmName,
+                                                           sre.RoundsFired,
                                                            DateTimeOffset.UtcNow));
             }
 
             if (!string.IsNullOrEmpty(sre.AmmoDescription))
             {
                 // [TO20260907] Capture the ammo if provided.
-                newEvents.Add(new FirearmUsedAmmo(sre.FirearmName, sre.AmmoDescription,
-                                                  sre.Notes,
+                newEvents.Add(new FirearmUsedAmmo(sre.FirearmName,
+                                                  sre.AmmoDescription,
+                                                  sre.Notes.Trim(),
                                                   DateTimeOffset.UtcNow));
             }
 
