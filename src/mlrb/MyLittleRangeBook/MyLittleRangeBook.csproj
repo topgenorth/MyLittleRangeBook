@@ -47,4 +47,82 @@
       <ProjectReference Include="..\MyLittleRangeBook.FIT\MyLittleRangeBook.FIT.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="..\..\..\data\sample-fit-files\01-16-2026_11-29-31.fit">
+        <Link>data\sample-fit-files\01-16-2026_11-29-31.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\01-16-2026_11-42-39.fit">
+        <Link>data\sample-fit-files\01-16-2026_11-42-39.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\01-16-2026_11-53-46.fit">
+        <Link>data\sample-fit-files\01-16-2026_11-53-46.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\01-16-2026_12-13-09.fit">
+        <Link>data\sample-fit-files\01-16-2026_12-13-09.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\03-06-2026_14-11-13.fit">
+        <Link>data\sample-fit-files\03-06-2026_14-11-13.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\03-06-2026_14-42-52.fit">
+        <Link>data\sample-fit-files\03-06-2026_14-42-52.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\04-16-2026_13-11-21.fit">
+        <Link>data\sample-fit-files\04-16-2026_13-11-21.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\04-16-2026_13-21-49.fit">
+        <Link>data\sample-fit-files\04-16-2026_13-21-49.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\04-21-2026_15-36-07.fit">
+        <Link>data\sample-fit-files\04-21-2026_15-36-07.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\04-21-2026_15-42-04.fit">
+        <Link>data\sample-fit-files\04-21-2026_15-42-04.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\04-21-2026_15-53-03.fit">
+        <Link>data\sample-fit-files\04-21-2026_15-53-03.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\04-21-2026_16-09-58.fit">
+        <Link>data\sample-fit-files\04-21-2026_16-09-58.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\05-05-2026_14-45-28.fit">
+        <Link>data\sample-fit-files\05-05-2026_14-45-28.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\05-05-2026_15-14-49.fit">
+        <Link>data\sample-fit-files\05-05-2026_15-14-49.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\11-29-2025_13-41-40.fit">
+        <Link>data\sample-fit-files\11-29-2025_13-41-40.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\11-29-2025_13-56-08.fit">
+        <Link>data\sample-fit-files\11-29-2025_13-56-08.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\11-30-2025_12-38-41.fit">
+        <Link>data\sample-fit-files\11-30-2025_12-38-41.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\12-31-2025_11-39-01.fit">
+        <Link>data\sample-fit-files\12-31-2025_11-39-01.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-fit-files\12-31-2025_12-19-19.fit">
+        <Link>data\sample-fit-files\12-31-2025_12-19-19.fit</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-images\BX_RAW_PHOTO_1590715558170.jpg">
+        <Link>data\sample-images\BX_RAW_PHOTO_1590715558170.jpg</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-images\M3-Carl-Gustav.jpg">
+        <Link>data\sample-images\M3-Carl-Gustav.jpg</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-shotview-csv-files\CZ457_2026-07-05_13-30-54.csv">
+        <Link>data\sample-shotview-csv-files\CZ457_2026-07-05_13-30-54.csv</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-shotview-csv-files\Phoenix_Indoor_range_2026-05-05_14-45-28.csv">
+        <Link>data\sample-shotview-csv-files\Phoenix_Indoor_range_2026-05-05_14-45-28.csv</Link>
+      </Content>
+      <Content Include="..\..\..\data\sample-shotview-csv-files\Phoenix_Indoor_range_2026-05-05_15-14-49.csv">
+        <Link>data\sample-shotview-csv-files\Phoenix_Indoor_range_2026-05-05_15-14-49.csv</Link>
+      </Content>
+      <Content Include="..\..\..\data\simple_range_events.csv">
+        <Link>data\simple_range_events.csv</Link>
+      </Content>
+    </ItemGroup>
+
 </Project>
