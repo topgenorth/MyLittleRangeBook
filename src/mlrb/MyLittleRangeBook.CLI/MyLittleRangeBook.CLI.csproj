@@ -79,8 +79,4 @@
       <Compile Remove="Firearms\SyncRangeEventsToFirearms.cs" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Recipes\" />
-    </ItemGroup>
-
 </Project>

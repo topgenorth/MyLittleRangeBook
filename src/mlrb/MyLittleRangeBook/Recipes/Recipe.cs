@@ -3,13 +3,28 @@
 namespace MyLittleRangeBook.Recipes
 {
     /// <summary>
-    /// Represents a reloading recipe that combines various components required for creating
-    /// ammunition. This includes details about the cartridge, projectile, powder, case, and
-    /// measurements such as COAL (Cartridge Overall Length) and CBTO (Cartridge Base To Ogive),
-    /// as well as metadata and additional comments.
+    ///     Represents a reloading recipe that combines various components required for creating
+    ///     ammunition. This includes details about the cartridge, projectile, powder, case, and
+    ///     measurements such as COAL (Cartridge Overall Length) and CBTO (Cartridge Base To Ogive),
+    ///     as well as metadata and additional comments.
     /// </summary>
     public class Recipe
     {
+        public Recipe()
+        {
+            Guid id = Guid.CreateVersion7();
+            Id            = id;
+            CorrelationId = id;
+            Headers       = string.Empty;
+            CausationId   = id;
+        }
+
+        public required Guid Id            { get; set; }
+        public required Guid CorrelationId { get; set; }
+        public required Guid CausationId   { get; set; }
+
+        public required string Headers { get; set; }
+
         /// <summary>
         ///     The name of the cartridge this recipe is for.
         /// </summary>
@@ -61,8 +76,18 @@ namespace MyLittleRangeBook.Recipes
         public required MetadataValues Metadata { get; set; }
 
         /// <summary>
-        /// Represents a cartridge used in a reloading recipe. A cartridge typically includes
-        /// information about the specific type or name of the ammunition cartridge.
+        ///     The time this document was created.
+        /// </summary>
+        public DateTimeOffset Created { get; set; }
+
+        /// <summary>
+        ///     The time this document was last modified.
+        /// </summary>
+        public DateTimeOffset Modified { get; set; }
+
+        /// <summary>
+        ///     Represents a cartridge used in a reloading recipe. A cartridge typically includes
+        ///     information about the specific type or name of the ammunition cartridge.
         /// </summary>
         public class CartridgeValues
         {
@@ -70,8 +95,8 @@ namespace MyLittleRangeBook.Recipes
         }
 
         /// <summary>
-        /// Represents the properties of a projectile used in a reloading recipe. This encompasses
-        /// details about the projectile's manufacturer, type, weight, and units of measurement.
+        ///     Represents the properties of a projectile used in a reloading recipe. This encompasses
+        ///     details about the projectile's manufacturer, type, weight, and units of measurement.
         /// </summary>
         public class ProjecticleValues
         {
@@ -82,9 +107,9 @@ namespace MyLittleRangeBook.Recipes
         }
 
         /// <summary>
-        /// Represents details about the powder used in a reloading recipe, including
-        /// information about the manufacturer, type, weight, and units. Additionally,
-        /// this includes a unique value to identify or categorize the powder.
+        ///     Represents details about the powder used in a reloading recipe, including
+        ///     information about the manufacturer, type, weight, and units. Additionally,
+        ///     this includes a unique value to identify or categorize the powder.
         /// </summary>
         public class PowderValues
         {
@@ -92,14 +117,16 @@ namespace MyLittleRangeBook.Recipes
             [JsonPropertyName("type")]         public required string  Type         { get; set; }
             [JsonPropertyName("weight")]       public required decimal Weight       { get; set; }
             [JsonPropertyName("units")]        public required string  Units        { get; set; }
-
-            [JsonPropertyName("uniquetek_value")] public required int UniquetekValue { get; set; }
+            /// <summary>
+            /// The value of the UniqueTek powder bar measure for the Dillon powder dispenser.
+            /// </summary>
+            [JsonPropertyName("uniquetek_value")] public required int UniqueTekValue { get; set; }
         }
 
         /// <summary>
-        /// Represents the Cartridge Overall Length (COAL) values, which include the measurement of
-        /// the total length of a loaded cartridge and the unit of measurement. This is a critical
-        /// specification in ammunition reloading to ensure proper fit and functionality.
+        ///     Represents the Cartridge Overall Length (COAL) values, which include the measurement of
+        ///     the total length of a loaded cartridge and the unit of measurement. This is a critical
+        ///     specification in ammunition reloading to ensure proper fit and functionality.
         /// </summary>
         public class CoalValues
         {
@@ -108,9 +135,9 @@ namespace MyLittleRangeBook.Recipes
         }
 
         /// <summary>
-        /// Represents the Case Base Diameter (CBD) values, which include the measurement of
-        /// the diameter of the case base and the unit of measurement. This is a critical
-        /// specification in ammunition reloading to ensure proper fit and functionality.
+        ///     Represents the Case Base Diameter (CBD) values, which include the measurement of
+        ///     the diameter of the case base and the unit of measurement. This is a critical
+        ///     specification in ammunition reloading to ensure proper fit and functionality.
         /// </summary>
         public class CbtoValues
         {
@@ -119,8 +146,8 @@ namespace MyLittleRangeBook.Recipes
         }
 
         /// <summary>
-        /// Represents the properties and specifications of a cartridge case used in a reloading recipe.
-        /// Includes details such as the trim length, units of measurement, manufacturer, and primer type.
+        ///     Represents the properties and specifications of a cartridge case used in a reloading recipe.
+        ///     Includes details such as the trim length, units of measurement, manufacturer, and primer type.
         /// </summary>
         public class CaseValues
         {
@@ -131,13 +158,12 @@ namespace MyLittleRangeBook.Recipes
 
             [JsonPropertyName("manufacturer")] public required string Manufacturer { get; set; }
 
-            [JsonPropertyName("primer")]
-            public required string Primer { get; set; }
+            [JsonPropertyName("primer")] public required string Primer { get; set; }
         }
 
         /// <summary>
-        /// Encapsulates additional metadata related to a recipe, including details about the original
-        /// input string, the processing model used, and the time it took to process the request in seconds.
+        ///     Encapsulates additional metadata related to a recipe, including details about the original
+        ///     input string, the processing model used, and the time it took to process the request in seconds.
         /// </summary>
         public class MetadataValues
         {
