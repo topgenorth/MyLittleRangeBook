@@ -61,14 +61,26 @@ string prompt =
 
     ### Cartridge & Components
     - Extract the cartridge name as a single string (e.g., "6.5 Creedmoor", ".308 Winchester")
-    - Projectile type = product name (e.g., "Berger VLD", "Hornady ELD-M")
+    - If the cartridge is "9mm", then change it to "9mm Parabellum"
+    - If the cartridge is "45" or ".45" then change it to ".45ACP"
+    
+    ### Powder
     - Powder type = product name (e.g., "H4895", "IMR 4064")
-
-    ### Weight Units (Projectile & Powder)
+    - If the powder manufacturer is "VV", then replace it with "Vihtavouri"
+    - If there is no powder manufacturer and the powder type starts with an "N", then the powder manufacturer is "Vihtavouri".
     - Default unit: grains (gr)
-    - If source states "g" or "grams": convert to grains using 1g = 15.4324 gr, round to 2 decimals
+    - If the powder type starts with "IMR" or "H", then the powder manufacturer is "Hodgdon".
+    - If source states "g" or "grams": convert to grains using 1g = 15.4324 gr, round to 1 decimals
+    - Units field must be "gr" or "g" (use "gr" after conversion)
+    - the manufacturer and type can appear before or after the numeric value (e.g., "4.5gr HP-38" or "H-38 4.5gr").
+    
+    ### Projectile
+    - Projectile type = product name (e.g., "Berger VLD", "Hornady ELD-M")
+    - Default unit: grains (gr)
+    - If source states "g" or "grams": convert to grains using 1g = 15.4324 gr, round to 1 decimals
     - Preserve source precision (e.g., 168 stays 168, 168.5 stays 168.5)
     - Units field must be "gr" or "g" (use "gr" after conversion)
+    - the manufacturer and type can appear before or after the numeric value
 
     ### COAL & CBTO (Cartridge Overall Length / Cartridge Base to Ogive)
     - Default unit: inches
@@ -98,7 +110,7 @@ string prompt =
     - If missing or unclear use "unknown". 
 
     ### Data Segmentation
-    - Segments separated by: commas, semicolons, periods, forward slash 
+    - Segments separated by: commas, semicolons, periods, forward slash (/)
     - Process each segment for relevant data points
 
     ## Examples

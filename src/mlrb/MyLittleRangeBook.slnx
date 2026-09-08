@@ -8,6 +8,7 @@
     <Folder Name="/SolutionItems/">
         <File Path="../../AGENTS.md" />
         <File Path="../../CLAUDE.md" />
+        <File Path="../../data/simple_range_events.csv" />
         <File Path="../../update-from-artifacts.ps1" />
         <File Path="../experiments/parse_load_data.cs" />
         <File Path=".editorconfig" />
