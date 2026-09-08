@@ -1,6 +1,7 @@
 // Run with:  dotnet run parse_load_data.cs
 
 #:property JsonSerializerIsReflectionEnabledByDefault=true
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
@@ -63,7 +64,7 @@ string prompt =
     - Extract the cartridge name as a single string (e.g., "6.5 Creedmoor", ".308 Winchester")
     - If the cartridge is "9mm", then change it to "9mm Parabellum"
     - If the cartridge is "45" or ".45" then change it to ".45ACP"
-    
+
     ### Powder
     - Powder type = product name (e.g., "H4895", "IMR 4064")
     - If the powder manufacturer is "VV", then replace it with "Vihtavouri"
@@ -73,7 +74,7 @@ string prompt =
     - If source states "g" or "grams": convert to grains using 1g = 15.4324 gr, round to 1 decimals
     - Units field must be "gr" or "g" (use "gr" after conversion)
     - the manufacturer and type can appear before or after the numeric value (e.g., "4.5gr HP-38" or "H-38 4.5gr").
-    
+
     ### Projectile
     - Projectile type = product name (e.g., "Berger VLD", "Hornady ELD-M")
     - Default unit: grains (gr)
@@ -144,18 +145,18 @@ var request = new
                                  new { role = "system", content = "You output only raw JSON. No code fences." },
                                  new { role = "user", content   = prompt },
                              },
-               };
+              };
 
 #pragma warning disable IL2026, IL3050
 string json = JsonSerializer.Serialize(request);
 #pragma warning restore IL2026, IL3050
 
 // ── call Ollama ─────────────────────────────────────────────────────
-using var           http    = new HttpClient { Timeout = TimeSpan.FromSeconds(300) };
-var                 content = new StringContent(json, Encoding.UTF8, "application/json");
+using var http    = new HttpClient { Timeout = TimeSpan.FromSeconds(300) };
+var       content = new StringContent(json, Encoding.UTF8, "application/json");
 
-var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-HttpResponseMessage resp    = await http.PostAsync(ollamaUrl, content);
+var                 stopwatch = Stopwatch.StartNew();
+HttpResponseMessage resp      = await http.PostAsync(ollamaUrl, content);
 stopwatch.Stop();
 double requestTimeSeconds = stopwatch.Elapsed.TotalSeconds;
 
@@ -168,8 +169,8 @@ if (!resp.IsSuccessStatusCode)
 // ── extract the assistant's reply ───────────────────────────────────
 using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
 string reply = doc.RootElement.GetProperty("message")
-                   .GetProperty("content")
-                   .GetString()!;
+                  .GetProperty("content")
+                  .GetString()!;
 
 // ── clean up & validate ─────────────────────────────────────────────
 // LLMs sometimes wrap the JSON in markdown fences; strip them.
@@ -212,7 +213,7 @@ void CopyJsonWithUpdatedMetadata(JsonElement element, Utf8JsonWriter writer, str
     {
         case JsonValueKind.Object:
             writer.WriteStartObject();
-            foreach (var property in element.EnumerateObject())
+            foreach (JsonProperty property in element.EnumerateObject())
             {
                 writer.WritePropertyName(property.Name);
 
@@ -223,13 +224,11 @@ void CopyJsonWithUpdatedMetadata(JsonElement element, Utf8JsonWriter writer, str
 
                     // Copy existing metadata properties
                     if (property.Value.ValueKind == JsonValueKind.Object)
-                    {
-                        foreach (var metaProp in property.Value.EnumerateObject())
+                        foreach (JsonProperty metaProp in property.Value.EnumerateObject())
                         {
                             writer.WritePropertyName(metaProp.Name);
                             CopyJsonWithUpdatedMetadata(metaProp.Value, writer, modelName, requestTime);
                         }
-                    }
 
                     // Add new metadata fields
                     writer.WritePropertyName("model");
@@ -245,15 +244,17 @@ void CopyJsonWithUpdatedMetadata(JsonElement element, Utf8JsonWriter writer, str
                     CopyJsonWithUpdatedMetadata(property.Value, writer, modelName, requestTime);
                 }
             }
+
             writer.WriteEndObject();
             break;
 
         case JsonValueKind.Array:
             writer.WriteStartArray();
-            foreach (var item in element.EnumerateArray())
+            foreach (JsonElement item in element.EnumerateArray())
             {
                 CopyJsonWithUpdatedMetadata(item, writer, modelName, requestTime);
             }
+
             writer.WriteEndArray();
             break;
 
@@ -263,13 +264,8 @@ void CopyJsonWithUpdatedMetadata(JsonElement element, Utf8JsonWriter writer, str
 
         case JsonValueKind.Number:
             if (element.TryGetInt64(out long longValue))
-            {
                 writer.WriteNumberValue(longValue);
-            }
-            else if (element.TryGetDouble(out double doubleValue))
-            {
-                writer.WriteNumberValue(doubleValue);
-            }
+            else if (element.TryGetDouble(out double doubleValue)) writer.WriteNumberValue(doubleValue);
             break;
 
         case JsonValueKind.True:
