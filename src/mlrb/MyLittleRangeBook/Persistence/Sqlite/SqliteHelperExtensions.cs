@@ -145,8 +145,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    opts.Schema.For<SimpleRangeEvent>()
                                        .Metadata(m =>
                                                  {
-                                                     m.CreatedAt.Enabled      = true;
-                                                     m.LastModifiedBy.Enabled = true;
+                                                     m.CreatedAt.Enabled = true;
                                                      m.CreatedAt.MapTo(x => x.Created);
                                                      m.LastModified.MapTo(x => x.Modified);
                                                  })

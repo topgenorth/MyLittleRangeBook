@@ -1,10 +1,8 @@
-﻿using ConsoleAppFramework;
+﻿using System.Text.Json;
+using ConsoleAppFramework;
 using Fisher;
-using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.Firearms;
-using System.Text.Json;
 using MyLittleRangeBook.Recipes;
 
 namespace MyLittleRangeBook
@@ -17,12 +15,12 @@ namespace MyLittleRangeBook
         readonly ILogger          _logger;
         readonly IDocumentSession _session;
 
-        public AddReloadingRecipeToFirearmCommand(ICliDisplay cliDisplay,
-                                                  ILogger     logger,
+        public AddReloadingRecipeToFirearmCommand(ICliDisplay      cliDisplay,
+                                                  ILogger          logger,
                                                   IDocumentSession session)
         {
-            _cliDisplay      = cliDisplay;
-            _logger          = logger;
+            _cliDisplay = cliDisplay;
+            _logger     = logger;
         }
 
         /// <summary>
@@ -47,31 +45,55 @@ namespace MyLittleRangeBook
                 return ReturnCodes.FAILURE;
             }
 
+            Guid commandId = Guid.CreateVersion7();
+            NewRecipeFromCommandLine e = new(
+                                             Guid.CreateVersion7(),
+                                             commandId,
+                                             commandId,
+                                             json,
+                                             DateTimeOffset.UtcNow);
+            ErrorDeserializingRecipeJson? e2 = null;
+
+
             Recipe? recipe;
             try
             {
-                recipe = JsonSerializer.Deserialize<Recipe>(json);
+                recipe               = JsonSerializer.Deserialize<Recipe>(json);
+                recipe.CorrelationId = commandId;
+                recipe.CausationId   = e.Id;
             }
-            catch (JsonException ex)
+            catch (Exception ex)
             {
+                recipe = null;
+                e2 = new ErrorDeserializingRecipeJson(
+                                                 Guid.CreateVersion7(),
+                                                 commandId,
+                                                 e.Id,
+                                                 json,
+                                                 ex,
+                                                 DateTimeOffset.UtcNow);
+
                 _logger.Error(ex, "Failed to deserialize JSON to Recipe.");
                 _cliDisplay.PrintFailure("Invalid JSON format.");
                 return ReturnCodes.FAILURE;
             }
 
+            _session.Store(recipe);
+            await _session.SaveChangesAsync(cancellationToken);
+            int returnCode = ReturnCodes.SUCCESS;
+
             if (recipe == null)
             {
                 _logger.Warning("Deserialized recipe is null.");
                 _cliDisplay.PrintFailure("Failed to deserialize recipe.");
-                return ReturnCodes.FAILURE;
+                returnCode =  ReturnCodes.FAILURE;
+            }
+            else
+            {
+                _cliDisplay.PrintSuccess("Reloading recipe added successfully.");
             }
 
-            _session.Store(recipe);
-            await _session.SaveChangesAsync(cancellationToken);
-
-
-            _cliDisplay.PrintSuccess("Reloading recipe added successfully.");
-            return ReturnCodes.SUCCESS;
+            return returnCode;
         }
     }
 }
