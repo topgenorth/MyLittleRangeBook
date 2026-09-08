@@ -144,9 +144,11 @@ var request = new
                                  new { role = "system", content = "You output only raw JSON. No code fences." },
                                  new { role = "user", content   = prompt },
                              },
-              };
+               };
 
+#pragma warning disable IL2026, IL3050
 string json = JsonSerializer.Serialize(request);
+#pragma warning restore IL2026, IL3050
 
 // ── call Ollama ─────────────────────────────────────────────────────
 using var           http    = new HttpClient { Timeout = TimeSpan.FromSeconds(300) };
