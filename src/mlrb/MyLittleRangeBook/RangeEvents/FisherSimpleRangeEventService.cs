@@ -64,6 +64,8 @@ namespace MyLittleRangeBook.RangeEvents
             {
                 // [TO20260907] Capture the range if provided.
                 newEvents.Add(new FirearmUsedAtRange(sre.FirearmName,
+                                                     correlationId,
+                                                     e1.Id,
                                                      sre.RangeName.Trim(),
                                                      sre.RoundsFired,
                                                      sre.AmmoDescription?.Trim(),
@@ -73,6 +75,8 @@ namespace MyLittleRangeBook.RangeEvents
             if (sre.RoundsFired != 0)
             {
                 newEvents.Add(new FirearmRoundCountAltered(sre.FirearmName,
+                                                           correlationId,
+                                                           e1.Id,
                                                            sre.RoundsFired,
                                                            DateTimeOffset.UtcNow));
             }
@@ -81,6 +85,8 @@ namespace MyLittleRangeBook.RangeEvents
             {
                 // [TO20260907] Capture the ammo if provided.
                 newEvents.Add(new FirearmUsedAmmo(sre.FirearmName,
+                                                  correlationId,
+                                                  e1.Id,
                                                   sre.AmmoDescription,
                                                   sre.Notes?.Trim(),
                                                   DateTimeOffset.UtcNow));
@@ -88,7 +94,11 @@ namespace MyLittleRangeBook.RangeEvents
 
             if (!string.IsNullOrWhiteSpace(sre.Notes))
             {
-                newEvents.Add(new FirearmNoteAdded(sre.FirearmName, sre.Notes?.Trim(), DateTimeOffset.UtcNow));
+                newEvents.Add(new FirearmNoteAdded(sre.FirearmName,
+                                                   correlationId,
+                                                   e1.Id,
+                                                   sre.Notes!.Trim(),
+                                                   DateTimeOffset.UtcNow));
             }
 
             try
@@ -96,7 +106,6 @@ namespace MyLittleRangeBook.RangeEvents
                 _session.Events.Append(firearmId, newEvents);
                 _session.Store(sre);
                 await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-                _logger.Debug($"Successfully processed the simple range event `{sre}`.");
                 return Result.Ok(sre.Id);
             }
             catch (Exception ex)

@@ -131,7 +131,9 @@ namespace MyLittleRangeBook.Firearms
     /// </param>
     public record struct FirearmNoteAdded(
         [property: NaturalKey] string FirearmName,
-        string                        Text,
+        Guid CorrelationId,
+        Guid CausationId,
+        string?                       Text,
         DateTimeOffset                OccurredUtc,
         string                        NoteType = "note");
 
@@ -151,6 +153,8 @@ namespace MyLittleRangeBook.Firearms
     /// </param>
     public record struct FirearmRoundCountAltered(
         [property: NaturalKey] string FirearmName,
+        Guid CorrelationId,
+        Guid CausationId,
         int                           RoundsDelta,
         DateTimeOffset                OccurredUtc,
         string?                       AmmoDescription = null);
@@ -195,6 +199,8 @@ namespace MyLittleRangeBook.Firearms
     /// </param>
     public record struct FirearmUsedAmmo(
         [property: NaturalKey] string FirearmName,
+        Guid CorrelationId,
+        Guid CausationId,
         string                        AmmoDescription,
         string?                       Note,
         DateTimeOffset                OccurredUtc);
@@ -211,6 +217,8 @@ namespace MyLittleRangeBook.Firearms
     /// <param name="OccurredUtc">The date and time when the event occurred, in UTC format.</param>
     public record struct FirearmUsedAtRange(
         [property: NaturalKey] string FirearmName,
+        Guid CorrelationId,
+        Guid CausationId,
         string                        RangeName,
         int                           RoundsFired,
         string?                       AmmoDescription,

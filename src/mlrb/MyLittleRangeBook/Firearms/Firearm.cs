@@ -85,7 +85,7 @@ namespace MyLittleRangeBook.Firearms
         ///     Internal helper method to append the text the Notes property of the aggregate.
         /// </summary>
         /// <param name="text"></param>
-        void AppendTextAsNote(string text)
+        void AppendTextAsNote(string? text)
         {
             if (string.IsNullOrWhiteSpace(text))
             {
