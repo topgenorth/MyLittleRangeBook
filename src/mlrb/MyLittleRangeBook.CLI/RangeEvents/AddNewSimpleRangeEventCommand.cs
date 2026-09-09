@@ -48,7 +48,8 @@ namespace MyLittleRangeBook.RangeEvents
                                                         bool                            quiet             = false,
                                                         CancellationToken               cancellationToken = default)
         {
-            int returnValue = -1;
+            int  returnValue = -1;
+
             _cliDisplay.PrintCommandHeader("Add a range event.");
             SimpleRangeEvent sre = SimpleRangeEvent.New(firearm.Trim(), rounds, range.Trim(), ammo.Trim(), notes.Trim(),
                                                         eventDate ?? DateOnly.FromDateTime(DateTime.UtcNow));

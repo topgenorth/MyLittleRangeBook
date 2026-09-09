@@ -15,6 +15,9 @@
     public record SimpleRangeEventCreatedFromCommandLine(
         DateOnly       EventDate,
         string         FirearmName,
+        Guid Id,
+        Guid CorrelationId,
+        Guid CausationId,
         string         RangeName,
         int            RoundsFired,
         string?        AmmoDescription,
@@ -28,6 +31,9 @@
     /// <param name="FirearmName">The unique name of the firearm used.</param>
     /// <param name="OccurredUtc">The UTC timestamp when the event occurred.</param>
     public record ShotViewCsvFileSubmitted(
+        Guid Id,
+        Guid CorrelationId,
+        Guid CausationId,
         string         FirearmName,
         string         FileContents,
         DateTimeOffset OccurredUtc);

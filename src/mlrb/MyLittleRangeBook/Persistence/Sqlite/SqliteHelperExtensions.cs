@@ -10,8 +10,8 @@ using MyLittleRangeBook.Cartridges;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 using MyLittleRangeBook.RangeEvents;
+using MyLittleRangeBook.Recipes;
 using SQLitePCL;
-using Wolverine;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
 namespace MyLittleRangeBook.Persistence.Sqlite
@@ -134,7 +134,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    opts.Schema.For<Cartridge>()
                                        .Metadata(m =>
                                                  {
-                                                     m.CreatedAt.Enabled      = true;
+                                                     m.CreatedAt.Enabled = true;
                                                      m.CreatedAt.MapTo(x => x.Created);
                                                      m.LastModified.MapTo(x => x.Modified);
                                                  })
@@ -145,11 +145,14 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    opts.Schema.For<SimpleRangeEvent>()
                                        .Metadata(m =>
                                                  {
-                                                     m.CreatedAt.Enabled      = true;
-                                                     m.LastModifiedBy.Enabled = true;
+                                                     m.CreatedAt.Enabled = true;
                                                      m.CreatedAt.MapTo(x => x.Created);
                                                      m.LastModified.MapTo(x => x.Modified);
+                                                     m.CorrelationId.Enabled = true;
+                                                     m.CausationId.Enabled   = true;
+                                                     m.Headers.Enabled       = true;
                                                  })
+                                       .UniqueIndex(x => x.Id)
                                        .Index(x => x.EventDate)
                                        .Index(x => x.FirearmName)
                                        .UseNumericRevisions();
@@ -161,16 +164,23 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                                      m.LastModifiedBy.Enabled = true;
                                                      m.CreatedAt.MapTo(x => x.Created);
                                                      m.LastModified.MapTo(x => x.Modified);
-
                                                  })
                                        .UseNumericRevisions()
                                        .UniqueIndex(x => x.Name);
 
-                                   // opts.Schema.For<FirearmRoundCount>()
-                                   //     .UniqueIndex(x => x.Name);
-                                   //
-                                   // opts.Schema.For<RangeVisitCount>()
-                                   //     .UniqueIndex(x => x.Name);
+                                   opts.Schema.For<Recipe>()
+                                       .Metadata(m =>
+                                                 {
+                                                     m.CreatedAt.Enabled      = true;
+                                                     m.LastModifiedBy.Enabled = true;
+                                                     m.CreatedAt.MapTo(x => x.Created);
+                                                     m.LastModified.MapTo(x => x.Modified);
+                                                     m.CorrelationId.Enabled = true;
+                                                     m.CausationId.Enabled   = true;
+                                                     m.Headers.Enabled       = true;
+                                                 })
+                                       .Index(x => x.Cartridge.Name)
+                                       .UseOptimisticConcurrency();
 
                                    opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
                                    opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
@@ -178,7 +188,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                })
                     .ApplyAllDatabaseChangesOnStartup();
 
-            services.TryAddScoped<IFirearmsService, FirearmsService>();
+            services.TryAddScoped<IFirearmsService, FisherFirearmsService>();
             return services;
         }
 

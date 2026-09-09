@@ -48,14 +48,11 @@ Other folders under `src/mlrb/`: `sql-scripts/`, `supabase/`, `hatcher/`, `fit-r
 
 ## 4) Two persistence patterns
 
-**Event sourcing** — used for complex aggregates (canonical example: `Firearms/FirearmAggregate.cs`):
-- Aggregates inherit from `Aggregate` and accumulate state via immutable `DomainEvent` records.
-- `Raise()` applies an event and queues it as uncommitted; `Apply()` mutates state.
-- `IProjector` builds read models; the event stream is stored in the `EventStreams` table.
-- Base abstractions live in `MyLittleRangeBook/EventSourcing/`.
+**Event sourcing** — used for complex aggregates (canonical example: `Firearms/Firearm.cs`):
 
 **Simple CRUD services** — used for less complex entities (`SimpleRangeEvent`, `Cartridge`, etc.):
 - Service interface returns `Result<T>` / `Result`.
+- Use Dapper micro ORM for all database interactions.
 - Implementations accept a `DapperCommandContext` (wraps connection, transaction, cancellation).
 
 ## 5) Concrete patterns to follow
@@ -76,6 +73,7 @@ Other folders under `src/mlrb/`: `sql-scripts/`, `supabase/`, `hatcher/`, `fit-r
 - **Custom SQLite functions** registered by `SqliteConnection.AddFunctions()`
   (`Persistence/Sqlite/SqliteHelperExtensions.cs`): `nanoid()` (actually returns a ULID string)
   and `utcnow()` (UTC `DateTimeOffset` in round-trip "O" format).
+- Always use block scoped namespaces.  Never use file scoped.
 
 ## 6) Build / test / debug workflows
 
