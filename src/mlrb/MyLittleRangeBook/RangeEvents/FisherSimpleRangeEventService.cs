@@ -40,20 +40,24 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<Result<Guid>> UpsertAsync(SimpleRangeEvent  sre,
                                                     CancellationToken cancellationToken = default)
         {
-            List<object> newEvents = [];
+            List<object> newEvents     = [];
+            var          correlationId = sre.CorrelationId;
 
             (bool created, Guid firearmId) = await GetStreamIdForFirearmName(sre.FirearmName, cancellationToken);
 
             #region Capture the simple range event.
-            SimpleRangeEventCreatedFromCommandLine simpleRangeEventCreatedFromCommandLine =
+            SimpleRangeEventCreatedFromCommandLine e1 =
                 new(DateOnly.FromDateTime(sre.EventDate),
                     sre.FirearmName,
+                    Guid.CreateVersion7(),
+                    correlationId,
+                    correlationId,
                     sre.RangeName,
                     sre.RoundsFired,
                     sre.AmmoDescription,
                     sre.Notes,
                     DateTimeOffset.UtcNow);
-            newEvents.Add(simpleRangeEventCreatedFromCommandLine);
+            newEvents.Add(e1);
             #endregion
 
             if (!string.IsNullOrWhiteSpace(sre.RangeName))
@@ -62,7 +66,7 @@ namespace MyLittleRangeBook.RangeEvents
                 newEvents.Add(new FirearmUsedAtRange(sre.FirearmName,
                                                      sre.RangeName.Trim(),
                                                      sre.RoundsFired,
-                                                     sre.AmmoDescription.Trim(),
+                                                     sre.AmmoDescription?.Trim(),
                                                      sre.OccurredUtc));
             }
 
@@ -78,13 +82,13 @@ namespace MyLittleRangeBook.RangeEvents
                 // [TO20260907] Capture the ammo if provided.
                 newEvents.Add(new FirearmUsedAmmo(sre.FirearmName,
                                                   sre.AmmoDescription,
-                                                  sre.Notes.Trim(),
+                                                  sre.Notes?.Trim(),
                                                   DateTimeOffset.UtcNow));
             }
 
             if (!string.IsNullOrWhiteSpace(sre.Notes))
             {
-                newEvents.Add(new FirearmNoteAdded(sre.FirearmName, sre.Notes.Trim(), DateTimeOffset.UtcNow));
+                newEvents.Add(new FirearmNoteAdded(sre.FirearmName, sre.Notes?.Trim(), DateTimeOffset.UtcNow));
             }
 
             try
@@ -95,9 +99,9 @@ namespace MyLittleRangeBook.RangeEvents
                 _logger.Debug($"Successfully processed the simple range event `{sre}`.");
                 return Result.Ok(sre.Id);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                _logger.Error(e, "Failed to process the simple range event `{rangeEvent}`.", sre);
+                _logger.Error(ex, "Failed to process the simple range event `{rangeEvent}`.", sre);
                 return Result.Fail($"Failed to process the simple range event `{sre}`.");
             }
 

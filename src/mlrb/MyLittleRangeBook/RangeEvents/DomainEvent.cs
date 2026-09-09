@@ -15,6 +15,9 @@
     public record SimpleRangeEventCreatedFromCommandLine(
         DateOnly       EventDate,
         string         FirearmName,
+        Guid Id,
+        Guid CorrelationId,
+        Guid CausationId,
         string         RangeName,
         int            RoundsFired,
         string?        AmmoDescription,

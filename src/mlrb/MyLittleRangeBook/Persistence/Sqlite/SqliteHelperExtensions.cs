@@ -148,7 +148,11 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                                      m.CreatedAt.Enabled = true;
                                                      m.CreatedAt.MapTo(x => x.Created);
                                                      m.LastModified.MapTo(x => x.Modified);
+                                                     m.CorrelationId.Enabled = true;
+                                                     m.CausationId.Enabled   = true;
+                                                     m.Headers.Enabled       = true;
                                                  })
+                                       .UniqueIndex(x => x.Id)
                                        .Index(x => x.EventDate)
                                        .Index(x => x.FirearmName)
                                        .UseNumericRevisions();
