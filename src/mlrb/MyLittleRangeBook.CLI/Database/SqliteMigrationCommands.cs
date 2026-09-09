@@ -11,7 +11,7 @@ namespace MyLittleRangeBook.Database
     /// <summary>
     ///     This class provides functionality for managing SQLite database migrations.
     /// </summary>
-    [RegisterCommands("db")]
+    // [RegisterCommands("db")]
     [UsedImplicitly]
     public class SqliteMigrationCommands : MlrbCommandBase
     {

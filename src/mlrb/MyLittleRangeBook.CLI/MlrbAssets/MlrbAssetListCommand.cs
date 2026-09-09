@@ -7,7 +7,7 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.MlrbAssets
 {
-    [RegisterCommands("assets"), UsedImplicitly]
+    // [RegisterCommands("assets"), UsedImplicitly]
     public class MlrbAssetListCommand : MlrbSqliteCommandBase
     {
         public MlrbAssetListCommand(ILogger logger, ICliDisplay display, ISqliteHelper sqliteHelper) : base(logger,
@@ -49,11 +49,11 @@ namespace MyLittleRangeBook.MlrbAssets
         static class Commands
         {
             const string Sql = """
-                               SELECT id as Id, 
-                                      row_id as RowId, 
+                               SELECT id as Id,
+                                      row_id as RowId,
                                       mime_type AS MimeType,
                                       path_to_asset_file AS PathToAsset
-                               FROM asset_files 
+                               FROM asset_files
                                ORDER BY id;
                                """;
 
