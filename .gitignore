@@ -408,3 +408,5 @@ FodyWeavers.xsd
 /src/rangelogui/DumpFit.CLI/appsettings.Development.json
 appsettings.Development.json
 /simple_range_events.csv
+
+data/mlrb.db
