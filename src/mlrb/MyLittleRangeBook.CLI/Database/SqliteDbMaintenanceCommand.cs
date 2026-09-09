@@ -5,7 +5,7 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Database
 {
-    // [RegisterCommands("db")]
+    [RegisterCommands("db")]
     [UsedImplicitly]
     public class SqliteDbMaintenanceCommand : MlrbSqliteCommandBase
     {
