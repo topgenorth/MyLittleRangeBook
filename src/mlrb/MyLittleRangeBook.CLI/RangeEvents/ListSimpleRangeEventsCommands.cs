@@ -9,7 +9,7 @@ namespace MyLittleRangeBook.RangeEvents
     /// <summary>
     ///     This class will display all the simple range events in a table to the console.
     /// </summary>
-    [RegisterCommands("rangeevent")]
+    [RegisterCommands("rangeevents")]
     [UsedImplicitly]
     public sealed class ListSimpleRangeEventsCommands
     {

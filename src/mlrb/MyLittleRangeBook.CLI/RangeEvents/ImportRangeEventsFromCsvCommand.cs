@@ -9,7 +9,7 @@ using MyLittleRangeBook.Console;
 
 namespace MyLittleRangeBook.RangeEvents
 {
-    [RegisterCommands("rangeevent")]
+    [RegisterCommands("rangeevents")]
     [UsedImplicitly]
     public sealed class ImportRangeEventsFromCsvCommand
     {

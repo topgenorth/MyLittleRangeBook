@@ -6,7 +6,7 @@ using static MyLittleRangeBook.ReturnCodes;
 
 namespace MyLittleRangeBook.RangeEvents
 {
-    [RegisterCommands("rangeevent")]
+    [RegisterCommands("rangeevents")]
     public sealed class ExportRangeEventsToCsvCommand
     {
         readonly ICliDisplay              _cliDisplay;

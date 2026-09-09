@@ -9,7 +9,7 @@ namespace MyLittleRangeBook.RangeEvents
     /// <summary>
     ///     This class will delete simple range events from the document store.
     /// </summary>
-    [RegisterCommands("rangeevent")]
+    [RegisterCommands("rangeevents")]
     [UsedImplicitly]
     public sealed class DeleteSimpleRangeEventCommand
     {
