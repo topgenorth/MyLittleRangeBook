@@ -46,40 +46,27 @@ namespace MyLittleRangeBook
             }
 
             Guid commandId = Guid.CreateVersion7();
-            NewRecipeFromCommandLine e = new(
-                                             Guid.CreateVersion7(),
-                                             commandId,
-                                             commandId,
-                                             json,
-                                             DateTimeOffset.UtcNow);
-            ErrorDeserializingRecipeJson? e2 = null;
 
+            Recipe? recipe    = null;
 
-            Recipe? recipe;
             try
             {
                 recipe               = JsonSerializer.Deserialize<Recipe>(json);
                 recipe.CorrelationId = commandId;
-                recipe.CausationId   = e.Id;
+                recipe.CausationId   = commandId;
+
+
+                _session.Store(recipe);
             }
             catch (Exception ex)
             {
-                recipe = null;
-                e2 = new ErrorDeserializingRecipeJson(
-                                                 Guid.CreateVersion7(),
-                                                 commandId,
-                                                 e.Id,
-                                                 json,
-                                                 ex,
-                                                 DateTimeOffset.UtcNow);
 
                 _logger.Error(ex, "Failed to deserialize JSON to Recipe.");
                 _cliDisplay.PrintFailure("Invalid JSON format.");
                 return ReturnCodes.FAILURE;
             }
 
-            _session.Store(recipe);
-            await _session.SaveChangesAsync(cancellationToken);
+
             int returnCode = ReturnCodes.SUCCESS;
 
             if (recipe == null)
@@ -90,6 +77,7 @@ namespace MyLittleRangeBook
             }
             else
             {
+                await _session.SaveChangesAsync(cancellationToken);
                 _cliDisplay.PrintSuccess("Reloading recipe added successfully.");
             }
 
