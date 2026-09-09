@@ -19,8 +19,9 @@ namespace MyLittleRangeBook
                                                   ILogger          logger,
                                                   IDocumentSession session)
         {
-            _cliDisplay = cliDisplay;
-            _logger     = logger;
+            _cliDisplay   = cliDisplay;
+            _logger       = logger;
+            _session = session;
         }
 
         /// <summary>

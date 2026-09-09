@@ -1,14 +1,15 @@
 ﻿using ConsoleAppFramework;
 using Fisher;
-using Fisher.Exceptions;
-using JasperFx.Events;
+using FluentResults;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.EventSourcing;
 using MyLittleRangeBook.Firearms;
 
 namespace MyLittleRangeBook
 {
+    /// <summary>
+    ///     THis will associate a ShotView file with
+    /// </summary>
     [RegisterCommands("firearms")]
     [UsedImplicitly]
     public class AddGarminShotViewFileToFirearm
@@ -16,16 +17,13 @@ namespace MyLittleRangeBook
         readonly ICliDisplay      _cliDisplay;
         readonly IFirearmsService _firearmsService;
         readonly ILogger          _logger;
-        readonly IDocumentSession _session;
 
 
-        public AddGarminShotViewFileToFirearm(ILogger logger, ICliDisplay cliDisplay, IFirearmsService firearmsService,
-                                              IDocumentSession session)
+        public AddGarminShotViewFileToFirearm(ILogger logger, ICliDisplay cliDisplay, IFirearmsService firearmsService)
         {
             _logger          = logger;
             _cliDisplay      = cliDisplay;
             _firearmsService = firearmsService;
-            _session         = session;
         }
 
         /// <summary>
@@ -35,7 +33,8 @@ namespace MyLittleRangeBook
         /// <param name="file"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [Command("add-shotview-file"), UsedImplicitly]
+        [Command("add-shotview-file")]
+        [UsedImplicitly]
         public async Task<int> AddGarminShotViewCSV(string            name,
                                                     string            file,
                                                     CancellationToken cancellationToken = default)
@@ -46,6 +45,7 @@ namespace MyLittleRangeBook
                 _cliDisplay.PrintFailure("Firearm name must be provided.");
                 return ReturnCodes.FAILURE;
             }
+
             if (string.IsNullOrWhiteSpace(file))
             {
                 _logger.Warning("File path is null or empty.");
@@ -64,7 +64,7 @@ namespace MyLittleRangeBook
             try
             {
                 string fileContent = await File.ReadAllTextAsync(file, cancellationToken).ConfigureAwait(false);
-                var    r           = await _firearmsService.AddGarminShotviewCsv(name, fileContent, cancellationToken);
+                Result r           = await _firearmsService.AddGarminShotviewCsv(name, fileContent, cancellationToken);
                 if (r.IsSuccess)
                 {
                     _logger.Information("Add the Shotview file {File} to the {Firearm}", file, name);
