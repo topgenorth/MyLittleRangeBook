@@ -87,6 +87,15 @@ string prompt =
     - Notes: free-form string capturing any extra info not in other fields; use "" if none
     - The contents of the first line is the first thing to put in the `notes` JSON element.
     - Find the line that starts with "Session Note", and append the second field in the CSV to the `notes` element of the JSON file.
+    
+    ### Velocity 
+    - The header for the velocity data where the first field in the CSV is "﻿#".
+    - The collection of velocity data ends with first CSV line that has a "-" in the first field.
+    - The velocity is summarized 
+    - The average velocity is found on the CSV line where the first field is "AVERAGE SPEED". It is a decimal number but convert it to integer.
+    - The standard deviation of the velocity is found on the CSV line where the first field is "STD DEV". It is a decimal number with a precision of one decimal place.
+    - The extreme spread is found on the CSV line where the first field is "EXTREME SPREAD". It is a decimal number but convert it to integer.
+    
 
     ## Error Handling
     - If input is malformed/incomplete: extract what you can, use "unknown"/"0" for missing values

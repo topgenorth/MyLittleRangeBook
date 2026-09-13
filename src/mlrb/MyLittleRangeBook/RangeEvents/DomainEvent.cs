@@ -12,7 +12,7 @@
     /// <param name="RoundsFired"></param>
     /// <param name="AmmoDescription">A text description of the ammo that was used.</param>
     /// <param name="Notes">A free-format entry of any notes from this range event.</param>
-    public record SimpleRangeEventCreatedFromCommandLine(
+    public record struct SimpleRangeEventCreatedFromCommandLine(
         DateOnly       EventDate,
         string         FirearmName,
         Guid Id,
@@ -30,11 +30,19 @@
     /// <param name="FileContents">The contents of the ShotView CSV file.</param>
     /// <param name="FirearmName">The unique name of the firearm used.</param>
     /// <param name="OccurredUtc">The UTC timestamp when the event occurred.</param>
-    public record ShotViewCsvFileSubmitted(
+    public record struct  ShotViewCsvFileSubmitted(
         Guid Id,
         Guid CorrelationId,
         Guid CausationId,
         string         FirearmName,
         string         FileContents,
         DateTimeOffset OccurredUtc);
+
+    public record struct ShotViewCsvFileParsedByOllama(
+        Guid           Id,
+        Guid           CorrelationId,
+        Guid           CausationId,
+        string         ResponseBody,
+        DateTimeOffset OccuredUtc
+    );
 }

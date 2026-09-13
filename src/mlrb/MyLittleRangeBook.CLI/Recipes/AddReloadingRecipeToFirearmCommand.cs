@@ -53,7 +53,7 @@ namespace MyLittleRangeBook
             try
             {
                 recipe               = JsonSerializer.Deserialize<Recipe>(json);
-                recipe.CorrelationId = commandId;
+                recipe!.CorrelationId = commandId;
                 recipe.CausationId   = commandId;
 
 
