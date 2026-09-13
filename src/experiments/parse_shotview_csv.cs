@@ -1,0 +1,247 @@
+// Run with:  dotnet run parse_load_data.cs
+
+#:property JsonSerializerIsReflectionEnabledByDefault=true
+using System.Diagnostics;
+using System.Text;
+using System.Text.Json;
+
+// ── config ──────────────────────────────────────────────────────────
+// Command-line arguments:
+//   1. loadingString (required): the firearm load data string to parse
+//   2. ollamaUrl (optional): Ollama API URL (default: http://localhost:11434/api/chat)
+//   3. model (optional): Ollama model name (default: llama3.2)
+
+if (args.Length < 1)
+{
+    Console.Error.WriteLine("Usage: dotnet run parse_load_data.cs <loadingString> [ollamaUrl] [model]");
+    Console.Error.WriteLine("");
+    Console.Error.WriteLine("Arguments:");
+    Console.Error.WriteLine("  pathToCsv (required) - The path to the CSV file containing shot view data");
+    Console.Error.WriteLine("  ollamaUrl (optional)     - Ollama API URL (default: http://localhost:11434/api/chat)");
+    Console.Error.WriteLine("  model (optional)         - Ollama model name (default: llama3.2)");
+    return 1;
+}
+
+string pathToCsv = args[0];
+string ollamaUrl     = args.Length > 1 ? args[1] : "http://localhost:11434/api/chat";
+string model         = args.Length > 2 ? args[2] : "mistral";
+
+// ── load file ──────────────────────────────────────────────────────────
+
+string loadingString;
+try
+{
+    loadingString = await File.ReadAllTextAsync(pathToCsv);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error reading file '{pathToCsv}': {ex.Message}");
+    return 1;
+}
+
+
+// ── prompt ──────────────────────────────────────────────────────────
+string prompt =
+    """
+    You are a data-extraction assistant. Parse the Garmin ShotView CSV file that is attached ONLY a JSON object — no prose, no markdown fences — in exactly
+    this shape:
+    
+    {
+        "id": "01a0844a-45a3-7c2e-99cc-6357918c2097",
+        "correlationId": "01a0844a-45a3-7c2e-99cc-6357918c2097",
+        "causationId": "01a0844a-45a3-7c2e-99cc-6357918c2097",
+        "headers": "",
+        "eventDate": "2026-09-08",
+        "occurredUtc": "2026-09-08T06:00:00+00:00",
+        "firearmName": "Tikka T3 Lite",
+        "rangeName": "SPFGA",
+        "roundsFired": 22,
+        "ammoDescription": "140gr Hornady Interbond; 44.5gr N560. 2.493 CBTO.",
+        "notes": "Testing this load. MV 2510. SD 25.4. ES 87. \u002B15C.",
+        "created": "2026-09-09T03:50:55.139893+00:00",
+        "modified":"2026-09-09T03:50:55.1398931+00:00",
+    }
+    
+    ## Parsing Rules
+
+    Each row in the CSV can have different meaning depending on the row number:
+    - Row 1 should have a description of the the simple range event. It is not comma separated.  This should be JSON escaped and added to the `notes` element.
+    - Row 2 is a header row for a table that
+    - GUIDs must be a Version 7 GUID.
+    
+    ### `id`, `correlationId`, and `causationId`
+    - These values will not be present in the attached CSV file, you must add the to the JSON structure.
+    - These values should all be the same version 7 GUID.
+    
+    ### `created` and `modified` 
+    - These values doe not exist in the attached CSV file.  You must add them to the JSON structure.
+    - These values are must be the current date and time in UTC then UTC 8601 format.
+    
+    ### Event Date
+    - The event date is the date that CSV file was created.
+    - The event date is on a line that starts with "Date" that is immediately after a line that contains only a '-'.
+    - THe event date does not have the time zone specified.  It is always in the local time.
+    - Convert the event date to UTC, use the local timezone when making the conversion.
+    
+    ### Notes
+    - Notes: free-form string capturing any extra info not in other fields; use "" if none
+    - The contents of the first line is the first thing to put in the `notes` JSON element.
+    - Find the line that starts with "Session Note", and append the second field in the CSV to the `notes` element of the JSON file.
+
+    ## Error Handling
+    - If input is malformed/incomplete: extract what you can, use "unknown"/"0" for missing values
+    - Always return valid JSON matching the schema above
+    - If multiple cartridges detected: parse only the first one
+
+    Loading string: 
+    """ + loadingString;
+
+// ── build the Ollama request body ───────────────────────────────────
+var request = new
+              {
+                  model,
+                  stream = false,
+                  messages = new[]
+                             {
+                                 new { role = "system", content = "You output only raw JSON. No code fences." },
+                                 new { role = "user", content   = prompt },
+                             },
+              };
+
+#pragma warning disable IL2026, IL3050
+string json = JsonSerializer.Serialize(request);
+#pragma warning restore IL2026, IL3050
+
+// ── call Ollama ─────────────────────────────────────────────────────
+Console.Write($"Calling Ollama with the file {pathToCsv}...");
+using var http    = new HttpClient { Timeout = TimeSpan.FromSeconds(300) };
+var       content = new StringContent(json, Encoding.UTF8, "application/json");
+
+var                 stopwatch = Stopwatch.StartNew();
+HttpResponseMessage resp      = await http.PostAsync(ollamaUrl, content);
+stopwatch.Stop();
+double requestTimeSeconds = stopwatch.Elapsed.TotalSeconds;
+
+if (!resp.IsSuccessStatusCode)
+{
+    Console.Error.WriteLine($"Ollama error {resp.StatusCode}: {await resp.Content.ReadAsStringAsync()}");
+    return 1;
+}
+
+Console.Write($"Ollama replied in {requestTimeSeconds} seconds.");
+// ── extract the assistant's reply ───────────────────────────────────
+string x = await resp.Content.ReadAsStringAsync();
+using var doc = JsonDocument.Parse(x);
+string reply = doc.RootElement.GetProperty("message")
+                  .GetProperty("content")
+                  .GetString()!;
+
+// ── clean up & validate ─────────────────────────────────────────────
+// LLMs sometimes wrap the JSON in markdown fences; strip them.
+reply = reply.Trim();
+if (reply.StartsWith("```"))
+{
+    reply = reply.TrimStart('`');
+    if (reply.StartsWith("json")) reply = reply[4..];
+    reply = reply.TrimEnd('`').Trim();
+}
+
+// Re-serialize so the output is canonical, pretty-printed JSON.
+try
+{
+    var parsed = JsonDocument.Parse(reply);
+
+    // Update metadata section with model name and request time
+    using var ms = new MemoryStream();
+    await using (var writer = new Utf8JsonWriter(ms, new JsonWriterOptions { Indented = true }))
+    {
+        CopyJsonWithUpdatedMetadata(parsed.RootElement, writer, model, requestTimeSeconds);
+    }
+
+    string pretty = Encoding.UTF8.GetString(ms.ToArray());
+
+    Console.WriteLine(pretty);
+    return 0;
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error parsing JSON: {ex.Message}");
+    Console.WriteLine(reply);
+    return 1;
+}
+
+// ── helper method to copy JSON and update metadata ─────────────────
+void CopyJsonWithUpdatedMetadata(JsonElement element, Utf8JsonWriter writer, string modelName, double requestTime)
+{
+    switch (element.ValueKind)
+    {
+        case JsonValueKind.Object:
+            writer.WriteStartObject();
+            foreach (JsonProperty property in element.EnumerateObject())
+            {
+                writer.WritePropertyName(property.Name);
+
+                // If this is the metadata property, add the new fields
+                if (property.Name == "metadata")
+                {
+                    writer.WriteStartObject();
+
+                    // Copy existing metadata properties
+                    if (property.Value.ValueKind == JsonValueKind.Object)
+                        foreach (JsonProperty metaProp in property.Value.EnumerateObject())
+                        {
+                            writer.WritePropertyName(metaProp.Name);
+                            CopyJsonWithUpdatedMetadata(metaProp.Value, writer, modelName, requestTime);
+                        }
+
+                    // Add new metadata fields
+                    writer.WritePropertyName("model");
+                    writer.WriteStringValue(modelName);
+
+                    writer.WritePropertyName("request_time_seconds");
+                    writer.WriteNumberValue(requestTime);
+
+                    writer.WriteEndObject();
+                }
+                else
+                {
+                    CopyJsonWithUpdatedMetadata(property.Value, writer, modelName, requestTime);
+                }
+            }
+
+            writer.WriteEndObject();
+            break;
+
+        case JsonValueKind.Array:
+            writer.WriteStartArray();
+            foreach (JsonElement item in element.EnumerateArray())
+            {
+                CopyJsonWithUpdatedMetadata(item, writer, modelName, requestTime);
+            }
+
+            writer.WriteEndArray();
+            break;
+
+        case JsonValueKind.String:
+            writer.WriteStringValue(element.GetString());
+            break;
+
+        case JsonValueKind.Number:
+            if (element.TryGetInt64(out long longValue))
+                writer.WriteNumberValue(longValue);
+            else if (element.TryGetDouble(out double doubleValue)) writer.WriteNumberValue(doubleValue);
+            break;
+
+        case JsonValueKind.True:
+            writer.WriteBooleanValue(true);
+            break;
+
+        case JsonValueKind.False:
+            writer.WriteBooleanValue(false);
+            break;
+
+        case JsonValueKind.Null:
+            writer.WriteNullValue();
+            break;
+    }
+}
