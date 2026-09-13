@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
+const int OLLAMA_TIMEOUT_SECONDS = 400;
 // ── config ──────────────────────────────────────────────────────────
 // Command-line arguments:
 //   1. loadingString (required): the firearm load data string to parse
@@ -24,7 +25,7 @@ if (args.Length < 1)
 
 string pathToCsv = args[0];
 string ollamaUrl     = args.Length > 1 ? args[1] : "http://localhost:11434/api/chat";
-string model         = args.Length > 2 ? args[2] : "mistral";
+string model         = args.Length > 2 ? args[2] : "llama3.2";
 
 // ── load file ──────────────────────────────────────────────────────────
 
@@ -51,21 +52,23 @@ string prompt =
         "correlationId": "01a0844a-45a3-7c2e-99cc-6357918c2097",
         "causationId": "01a0844a-45a3-7c2e-99cc-6357918c2097",
         "headers": "",
-        "eventDate": "2026-09-08",
-        "occurredUtc": "2026-09-08T06:00:00+00:00",
-        "firearmName": "Tikka T3 Lite",
-        "rangeName": "SPFGA",
-        "roundsFired": 22,
-        "ammoDescription": "140gr Hornady Interbond; 44.5gr N560. 2.493 CBTO.",
-        "notes": "Testing this load. MV 2510. SD 25.4. ES 87. \u002B15C.",
-        "created": "2026-09-09T03:50:55.139893+00:00",
-        "modified":"2026-09-09T03:50:55.1398931+00:00",
+        "eventDate": "<string>",
+        "occurredUtc": "<string>",
+        "firearmName": "<string>",
+        "rangeName": "<string>",
+        "roundsFired": <integer>,
+        "ammo": {
+            "description": "<string>", 
+        },
+        "notes": "<string>",
+        "created": "<string>",
+        "modified":"<string>",
     }
     
     ## Parsing Rules
 
     Each row in the CSV can have different meaning depending on the row number:
-    - Row 1 should have a description of the the simple range event. It is not comma separated.  This should be JSON escaped and added to the `notes` element.
+    - Row 1 should have a description of the the simple range event. It is not comma separated.
     - Row 2 is a header row for a table that
     - GUIDs must be a Version 7 GUID.
     
@@ -87,15 +90,21 @@ string prompt =
     - Notes: free-form string capturing any extra info not in other fields; use "" if none
     - The contents of the first line is the first thing to put in the `notes` JSON element.
     - Find the line that starts with "Session Note", and append the second field in the CSV to the `notes` element of the JSON file.
+    - Do not include any shot velocity data in the notes.
     
-    ### Velocity 
+    ### Ammo
+    - This JSON elements holds data about the ammunition used in the ShotView session.
+    
+    #### Velocity
+    - This is an array of the velocity for each shot in the session. 
     - The header for the velocity data where the first field in the CSV is "﻿#".
     - The collection of velocity data ends with first CSV line that has a "-" in the first field.
     - The velocity is summarized 
     - The average velocity is found on the CSV line where the first field is "AVERAGE SPEED". It is a decimal number but convert it to integer.
     - The standard deviation of the velocity is found on the CSV line where the first field is "STD DEV". It is a decimal number with a precision of one decimal place.
     - The extreme spread is found on the CSV line where the first field is "EXTREME SPREAD". It is a decimal number but convert it to integer.
-    
+    - Do not include any shot velocity in the notes.
+    - For each shot, covert it's time by combining the event date and the shot time. The shot time is always in the local time. Covert the shot time to a DateTimeOffset in UTC.
 
     ## Error Handling
     - If input is malformed/incomplete: extract what you can, use "unknown"/"0" for missing values
@@ -123,7 +132,7 @@ string json = JsonSerializer.Serialize(request);
 
 // ── call Ollama ─────────────────────────────────────────────────────
 Console.Write($"Calling Ollama with the file {pathToCsv}...");
-using var http    = new HttpClient { Timeout = TimeSpan.FromSeconds(300) };
+using var http    = new HttpClient { Timeout = TimeSpan.FromSeconds(OLLAMA_TIMEOUT_SECONDS) };
 var       content = new StringContent(json, Encoding.UTF8, "application/json");
 
 var                 stopwatch = Stopwatch.StartNew();
