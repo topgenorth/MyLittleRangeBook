@@ -104,7 +104,6 @@ string prompt =
     - The standard deviation of the velocity is found on the CSV line where the first field is "STD DEV". It is a decimal number with a precision of one decimal place.
     - The extreme spread is found on the CSV line where the first field is "EXTREME SPREAD". It is a decimal number but convert it to integer.
     - Do not include any shot velocity in the notes.
-    - For each shot, covert it's time by combining the event date and the shot time. The shot time is always in the local time. Covert the shot time to a DateTimeOffset in UTC.
 
     ## Error Handling
     - If input is malformed/incomplete: extract what you can, use "unknown"/"0" for missing values
