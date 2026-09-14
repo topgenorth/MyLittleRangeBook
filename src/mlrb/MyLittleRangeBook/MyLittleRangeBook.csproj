@@ -41,6 +41,8 @@
     <ItemGroup>
         <EmbeddedResource Include="Config\AppSettings\*.json" />
         <EmbeddedResource Include="Persistence\Sqlite\Scripts\*.sql" />
+        <None Remove="ParseGarminShotViewFile\ParseGarminShotView_llama32.txt" />
+        <EmbeddedResource Include="ParseGarminShotViewFile\ParseGarminShotView_llama32.txt" />
     </ItemGroup>
 
     <ItemGroup>

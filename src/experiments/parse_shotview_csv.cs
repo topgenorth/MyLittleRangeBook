@@ -260,5 +260,9 @@ void CopyJsonWithUpdatedMetadata(JsonElement element, Utf8JsonWriter writer, str
         case JsonValueKind.Null:
             writer.WriteNullValue();
             break;
+        case JsonValueKind.Undefined:
+            break;
+        default:
+            throw new ArgumentOutOfRangeException();
     }
 }
