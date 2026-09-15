@@ -6,13 +6,38 @@ this shape:
     "correlationId": "01a0844a-45a3-7c2e-99cc-6357918c2097",
     "causationId": "01a0844a-45a3-7c2e-99cc-6357918c2097",
     "headers": "",
-    "eventDate": "<string>",
-    "occurredUtc": "<string>",
+    "event_date": "<string>",
     "firearmName": "<string>",
     "rangeName": "<string>",
     "roundsFired": <integer>,
     "ammo": {
         "description": "<string>",
+        "cartridge": { "name": "<string>"},
+        "projectile": { "manufacturer": "<string>",
+                    "type": "<string>",
+                    "weight": <number>,
+                    "name": "<string>",
+                    "units": "<string>" },
+        "powder": { "manufacturer": "<string>",
+            "type": "<string>",
+            "weight": <number>,
+            "units": "<string>",
+            "uniquetek_value": <number>},
+        "coal": <decimal>,
+        "cbto": <decimal>,
+        "case": { "trim_length": <number>,
+                    "trim_length_units": "inches",
+                    "manufacturer": "<string>",
+                    "primer": "<string>" },
+        "velocity": {
+            "units": "<string>",
+            "average": <integer>,
+            "extreme_spread": <decimal>,
+            "standard_deviation" : <decimal>,
+        },
+        "shot_velocities": [
+            { "shot_number": <integer>, "velocity": <decimal>, "shot_time" : "<string>", "clean_bore": <boolean>, "cold_bore": <boolean>, "shot_notes": <boolean> }
+        ]
     },
     "notes": "<string>",
     "created": "<string>",
@@ -34,30 +59,66 @@ Each row in the CSV can have different meaning depending on the row number:
 - These values doe not exist in the attached CSV file.  You must add them to the JSON structure.
 - These values are must be the current date and time in UTC then UTC 8601 format.
 
-### Event Date
+### `event_date`
 - The event date is the date that CSV file was created.
 - The event date is on a line that starts with "Date" that is immediately after a line that contains only a '-'.
 - THe event date does not have the time zone specified.  It is always in the local time.
 - Convert the event date to UTC, use the local timezone when making the conversion.
 
-### Notes
+### `ammo`
+- This JSON elements holds data about the ammunition used in the ShotView session.
+- Extract the cartridge name as a single string (e.g., "6.5 Creedmoor", ".308 Winchester")
+- The average velocity is found on the CSV line where the first field is "AVERAGE SPEED". It is a decimal number but convert it to integer.
+- The standard deviation of the velocity is found on the CSV line where the first field is "STD DEV". It is a decimal number with a precision of one decimal place.
+- The extreme spread is found on the CSV line where the first field is "EXTREME SPREAD". It is a decimal number but convert it to integer.
+- The ammo element is the parent of the shots in this session.
+
+#### COAL & CBTO (Cartridge Overall Length / Cartridge Base to Ogive)
+- Default unit: inches
+- If source explicitly states "mm" or "millimeters": keep as-is, unit = "mm"
+- Identifier "COAL" or "CBTO" may appear before or after value (e.g., "COAL 2.263"" or "2.263" COAL")
+- This value is in inches with a precision of three decimal places. It will never be longer than 4 inches.
+
+#### `powder`
+- Powder type = product name (e.g., "H4895", "IMR 4064")
+- If the powder manufacturer is "VV", then replace it with "Vihtavouri"
+- If there is no powder manufacturer and the powder type starts with an "N", then the powder manufacturer is "Vihtavouri".
+- Default unit: grains (gr)
+- If the powder type starts with "IMR" or "H", then the powder manufacturer is "Hodgdon".
+- If source states "g" or "grams": convert to grains using 1g = 15.4324 gr, round to 1 decimals
+- Units field must be "gr" or "g" (use "gr" after conversion)
+- the manufacturer and type can appear before or after the numeric value (e.g., "4.5gr HP-38" or "H-38 4.5gr").
+- `uniquetek_value` is the value that appears on the UnqiueTek powder bare measure. It is a decimal number with a precision of two decimal places.
+
+#### `projectile`
+- Projectile type = product name (e.g., "Berger VLD", "Hornady ELD-M")
+- Default unit: grains (gr)
+- If source states "g" or "grams": convert to grains using 1g = 15.4324 gr, round to 1 decimals
+- Preserve source precision (e.g., 168 stays 168, 168.5 stays 168.5)
+- Units field must be "gr" or "g" (use "gr" after conversion)
+- the manufacturer and type can appear before or after the numeric value
+
+#### `shot_velocities`
+- There must be at least one shot in each session. This is an array of the velocity for each shot in the session.
+- The header for the velocity data is the line where the first field in the CSV is "﻿#". Each line after this contains data for a shot.
+- The first CSV value in the line will be the shot number.
+- The second CSV value in the line will be the shot velocity. It is a decimal value with a precision of one decimal place.
+- The sixth CSV value in the line is the shot time. This is always in the local timezone and it always occurs on the same day as the session.
+- The collection of velocity data ends with first CSV line that has a "-" in the first field.
+
+#### `case`
+- This holds information about the brass case.
+- Trim length is the trim length of the cartridge. It is a decimal value with a precision of three decimal places.
+
+##### `primer`
+- A string that describes the manufacturer and product of the primer used.
+- If missing or unclear use "unknown".
+
+### `notes`
 - Notes: free-form string capturing any extra info not in other fields; use "" if none
 - The contents of the first line is the first thing to put in the `notes` JSON element.
 - Find the line that starts with "Session Note", and append the second field in the CSV to the `notes` element of the JSON file.
 - Do not include any shot velocity data in the notes.
-
-### Ammo
-- This JSON elements holds data about the ammunition used in the ShotView session.
-
-#### Velocity
-- This is an array of the velocity for each shot in the session.
-- The header for the velocity data where the first field in the CSV is "﻿#".
-- The collection of velocity data ends with first CSV line that has a "-" in the first field.
-- The velocity is summarized
-- The average velocity is found on the CSV line where the first field is "AVERAGE SPEED". It is a decimal number but convert it to integer.
-- The standard deviation of the velocity is found on the CSV line where the first field is "STD DEV". It is a decimal number with a precision of one decimal place.
-- The extreme spread is found on the CSV line where the first field is "EXTREME SPREAD". It is a decimal number but convert it to integer.
-- Do not include any shot velocity in the notes.
 
 ## Error Handling
 - If input is malformed/incomplete: extract what you can, use "unknown"/"0" for missing values

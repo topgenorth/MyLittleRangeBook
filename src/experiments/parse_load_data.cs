@@ -44,7 +44,7 @@ string prompt =
                         "type": "<string>",
                         "weight": <number>, 
                         "units": "<string>",
-                        "uniquetek_value": <number>}
+                        "uniquetek_value": <number>},
             "coal":   { "value": <number>, "unit": "inches" },
             "cbto":   { "value": <number>, "unit": "inches" },
             "case": { "trim_length": <number>, 
