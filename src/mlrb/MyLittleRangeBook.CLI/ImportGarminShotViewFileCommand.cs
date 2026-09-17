@@ -15,7 +15,7 @@ namespace MyLittleRangeBook
     {
         const string OLLAMA_URL             = "http://localhost:11434/api/chat";
         const string OLLAMA_MODEL           = "llama3.2";
-        const int    OLLAMA_TIMEOUT_SECONDS = 400;
+        const int    OLLAMA_TIMEOUT_SECONDS = 420;
 
         const string OLLAMA_PROMPT =
             """
@@ -146,7 +146,6 @@ namespace MyLittleRangeBook
             events.Add(e1);
 
 
-
             Result<string> rTransmorgify = await OllamaConvertsToJson(fileContents, cancellationToken);
             if (rTransmorgify.IsSuccess)
             {
@@ -187,52 +186,59 @@ namespace MyLittleRangeBook
 
         async Task<Result<string>> OllamaConvertsToJson(string fileContents, CancellationToken cancellationToken)
         {
+            #region Build the Ollama request.
             string prompt = OLLAMA_PROMPT + fileContents;
 
-            // ── build the Ollama request body ───────────────────────────────────
-            var request = new
-                          {
-                              model=OLLAMA_MODEL,
-                              stream = false,
-                              messages = new[]
-                                         {
-                                             new
-                                             {
-                                                 role = "system", content = "You output only raw JSON. No code fences.",
-                                             },
-                                             new { role = "user", content = prompt },
-                                         },
-                          };
+            var ollamaRequest = new
+                                {
+                                    model  = OLLAMA_MODEL,
+                                    stream = false,
+                                    messages = new[]
+                                               {
+                                                   new
+                                                   {
+                                                       role    = "system",
+                                                       content = "You output only raw JSON. No code fences.",
+                                                   },
+                                                   new { role = "user", content = prompt },
+                                               },
+                                };
 
 #pragma warning disable IL2026, IL3050
-            string json = JsonSerializer.Serialize(request);
+            string ollamaRequestJson = JsonSerializer.Serialize(ollamaRequest);
 #pragma warning restore IL2026, IL3050
+            #endregion
 
-            using HttpClient http          = new() { Timeout = TimeSpan.FromSeconds(OLLAMA_TIMEOUT_SECONDS) };
-            StringContent    ollamaContent = new(json, Encoding.UTF8, "application/json");
+            #region Send the Ollama request to the local Ollama service via REST
+            using HttpClient http                = new() { Timeout = TimeSpan.FromSeconds(OLLAMA_TIMEOUT_SECONDS) };
+            StringContent    ollamaStringPayload = new(ollamaRequestJson, Encoding.UTF8, "application/json");
 
             Stopwatch stopwatch = Stopwatch.StartNew();
             _cliDisplay.PrintInfo("Putting Ollama to work...");
             _logger.Information("Sending request to Ollama");
-            HttpResponseMessage ollamaRequest = await http.PostAsync(OLLAMA_URL, ollamaContent);
+            HttpResponseMessage ollamaHttpResponse =
+                await http.PostAsync(OLLAMA_URL, ollamaStringPayload, cancellationToken);
             stopwatch.Stop();
 
             double requestTimeSeconds = stopwatch.Elapsed.TotalSeconds;
             _cliDisplay.PrintInfo($"Ollama finished in {requestTimeSeconds} seconds");
             _logger.Information("Ollama request time: {RequestTimeSeconds} seconds", requestTimeSeconds);
+            #endregion
 
-            if (!ollamaRequest.IsSuccessStatusCode)
+            #region Handle the response; get the JSON.
+            if (!ollamaHttpResponse.IsSuccessStatusCode)
             {
-                _logger.Error("Ollama error {StatusCode}: {Content}", ollamaRequest.StatusCode,
-                              await ollamaRequest.Content.ReadAsStringAsync());
+                _logger.Error("Ollama error {StatusCode}: {Content}", ollamaHttpResponse.StatusCode,
+                              await ollamaHttpResponse.Content.ReadAsStringAsync(cancellationToken));
                 return Result.Fail("Ollama could not transmorgify the CSV file.");
             }
 
-            string             ollamaResponseJson = await ollamaRequest.Content.ReadAsStringAsync();
-            using JsonDocument doc                = JsonDocument.Parse(ollamaResponseJson.Trim());
+            string ollamaResponseJson = await ollamaHttpResponse.Content.ReadAsStringAsync(cancellationToken);
+            using JsonDocument doc = JsonDocument.Parse(ollamaResponseJson.Trim());
             string jsonResult = doc.RootElement.GetProperty("message")
                                    .GetProperty("content")
                                    .GetString()!;
+            #endregion
 
             return Result.Ok(jsonResult);
         }
