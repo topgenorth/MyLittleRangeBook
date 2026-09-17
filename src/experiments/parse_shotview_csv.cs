@@ -48,43 +48,20 @@ You are a data-extraction assistant. Parse the Garmin ShotView CSV file that is 
 this shape:
 
 {
-    "id": "<guid version 7>",
-    "correlationId": "<guid version 7>",
-    "causationId": "<guid version 7>",
-    "headers": "<string>",
+    "id": "<guid>",
+    "correlationId": "<guid>",
+    "causationId": "<guid>",
     "event_date": "<string>",
-    "firearm_name": "<string>",
-    "range_name": "<string>",
     "rounds_fired": <integer>,
-    "ammo": {
-        "description": "<string>",
-        "cartridge": { "name": "<string>"},
-        "projectile": { "manufacturer": "<string>",
-                    "type": "<string>",
-                    "weight": <number>,
-                    "name": "<string>",
-                    "units": "<string>" },
-        "powder": { "manufacturer": "<string>",
-            "type": "<string>",
-            "weight": <number>,
-            "units": "<string>",
-            "uniquetek_value": <number>},
-        "coal": <decimal>,
-        "cbto": <decimal>,
-        "case": { "trim_length": <number>,
-                    "trim_length_units": "inches",
-                    "manufacturer": "<string>",
-                    "primer": "<string>" },
-        "velocity": {
-            "units": "<string>",
-            "average": <integer>,
-            "extreme_spread": <decimal>,
-            "standard_deviation" : <decimal>,
-        },
-        "shot_velocities": [
-            { "shot_number": <integer>, "velocity": <decimal>, "shot_time" : "<string>", "clean_bore": <boolean>, "cold_bore": <boolean>, "shot_notes": <boolean> }
-        ]
+    "velocity": {
+        "units": "<string>",
+        "average": <integer>,
+        "extreme_spread": <decimal>,
+        "standard_deviation" : <decimal>,
     },
+    "shot_velocities": [
+        { "shot_number": <integer>, "velocity": <integer>, "shot_time" : "<string>", "clean_bore": <boolean>, "cold_bore": <boolean>, "shot_notes": <boolean> }
+    ],
     "notes": "<string>",
     "created": "<string>",
     "modified":"<string>",
@@ -97,16 +74,20 @@ this shape:
     - GUIDs must be a Version 7 GUID.
 - Never guess at a value.  If it is unclear, then use "unknown" or 0 for missing values.
 - Format all date and time values for ISO-8601 in UTC.
-- Never guess at the range name.
 
 ## Error Handling
 - If input is malformed/incomplete: extract what you can, use "unknown"/"0" for missing values
 - Always return valid JSON matching the schema above
-- If multiple cartridges detected: parse only the first one
+
 
 ### `id`, `correlationId`, and `causationId`
 - These values will not be present in the attached CSV file, you must add the to the JSON structure.
-- These values should all be the same version 7 GUID.
+- These values should all be the GUIDs.
+
+### `velocity`
+- This section is the average velocity of all the shots that were in fired in this session.
+- The units of measure will be either feet per second (fps) or metres per second (m/s).
+- The second value in the header will hold the units of measure for the velocity.  For example, "Speed (FPS)" means that the velocity is in feet per second (fps).
 
 ### `created` and `modified`
 - These values doe not exist in the attached CSV file.  You must add them to the JSON structure.
@@ -118,67 +99,26 @@ this shape:
 - THe event date does not have the time zone specified.  It is always in the local time.
 - Convert the event date a DateTimeOffset, use the local timezone when making the conversion.
 
-### `ammo`
-- This JSON elements holds data about the ammunition used in the ShotView session.
-- Extract the cartridge name as a single string (e.g., "6.5 Creedmoor", ".308 Winchester")
-- The average velocity is found on the CSV line where the first field is "AVERAGE SPEED". It is a decimal number but convert it to integer.
-- The standard deviation of the velocity is found on the CSV line where the first field is "STD DEV". It is a decimal number with a precision of one decimal place.
-- The extreme spread is found on the CSV line where the first field is "EXTREME SPREAD". It is a decimal number but convert it to integer.
-- The ammo element is the parent of the shots in this session.
-
-#### COAL & CBTO (Cartridge Overall Length / Cartridge Base to Ogive)
-- Default unit: inches
-- If source explicitly states "mm" or "millimeters": keep as-is, unit = "mm"
-- Identifier "COAL" or "CBTO" may appear before or after value (e.g., "COAL 2.263"" or "2.263" COAL")
-- This value is in inches with a precision of three decimal places. It will never be longer than 4 inches.
-
-#### `powder`
-- Powder type = product name (e.g., "H4895", "IMR 4064")
-- If the powder manufacturer is "VV", then replace it with "Vihtavouri"
-- If there is no powder manufacturer and the powder type starts with an "N", then the powder manufacturer is "Vihtavouri".
-- Default unit: grains (gr)
-- If the powder type starts with "IMR" or "H", then the powder manufacturer is "Hodgdon".
-- If source states "g" or "grams": convert to grains using 1g = 15.4324 gr, round to 1 decimals
-- Units field must be "gr" or "g" (use "gr" after conversion)
-- the manufacturer and type can appear before or after the numeric value (e.g., "4.5gr HP-38" or "H-38 4.5gr").
-- `uniquetek_value` is the value that appears on the UnqiueTek powder bare measure. It is a decimal number with a precision of two decimal places.
-
-#### `projectile`
-- Projectile type = product name (e.g., "Berger VLD", "Hornady ELD-M")
-- Default unit: grains (gr)
-- If source states "g" or "grams": convert to grains using 1g = 15.4324 gr, round to 1 decimals
-- Preserve source precision (e.g., 168 stays 168, 168.5 stays 168.5)
-- Units field must be "gr" or "g" (use "gr" after conversion)
-- the manufacturer and type can appear before or after the numeric value
-
 #### `shot_velocities`
 - There must be at least one shot in each session. This is an array of the velocity for each shot in the session.
 - The header for the velocity data is the line where the first field in the CSV is "﻿#". Each line after this contains data for a shot.
-- The first CSV value in the line will be the `shot_number`.
-- The second CSV value in the line will be the shot `velocity`. It is a decimal value with a precision of one decimal place.
-- The sixth CSV value in the line is the shot time. This is always in the local timezone and it always occurs on the same day as the session.
-- The seventh CSV value is the `clean_bore` value. If this value is missing or unclear, then assume it is `false`.
-- The eight CSV value is the `cold_bore` value. If this value is missing or unclear, then assume it is `false`.
-- The ninth CSV value is the `shot_notes` value.  If it is missing or unclear, assume it is blank.
+- Each line of shot data is  list of comma separated values (CSV).
+- The first CSV value is the `shot_number`. It is an integer.
+- The second CSV value is the `velocity`. It is an decimal value. It will be in double quotes. For example "2669.4".
+- Ignore the third CSV value.
+- Ignore the fourth CSV value.
+- Ignore the fifth CSV value.
+- The sixth CSV value is the `shot_time` of date that the shot was fired.
+- The seventh CSV value is the `clean_bore` value. It is a boolean. Assume that it is FALSE unless there is a true value.
+- The eighth CSV value is the `cold_bore` value. It is a boolean. Assume that it is FALSE unless there is a true value.
+- The ninth CSV value is the `shot_notes` value.  It is a string.
 - The collection of velocity data ends with first CSV line that has a "-" in the first field.
 
-#### `case`
-- This holds information about the brass case.
-- Trim length is the trim length of the cartridge. It is a decimal value with a precision of three decimal places.
-
-#### `primer`
-- A string that describes the manufacturer and product of the primer used.
-- If missing or unclear use "unknown".
-
 ### `notes`
-- Notes: free-form string capturing any extra info not in other fields; use "" if none
-- The contents of the first line is the first thing to put in the `notes` JSON element.
+- The `notes` value is the first line of this file concatenated with the "Session Note".
 - Find the line that starts with "Session Note", and append the second field in the CSV to the `notes` element of the JSON file.
-- Do not include any shot velocity data in the notes.
 
 Loading string:
-
-
 """ + loadingString;
 
 // ── build the Ollama request body ───────────────────────────────────
@@ -221,116 +161,5 @@ string reply = doc.RootElement.GetProperty("message")
                   .GetProperty("content")
                   .GetString()!;
 
-// ── clean up & validate ─────────────────────────────────────────────
-// LLMs sometimes wrap the JSON in markdown fences; strip them.
-reply = reply.Trim();
-if (reply.StartsWith("```"))
-{
-    reply = reply.TrimStart('`');
-    if (reply.StartsWith("json")) reply = reply[4..];
-    reply = reply.TrimEnd('`').Trim();
-}
-
-// Re-serialize so the output is canonical, pretty-printed JSON.
-try
-{
-    var parsed = JsonDocument.Parse(reply);
-
-    // Update metadata section with model name and request time
-    using var ms = new MemoryStream();
-    await using (var writer = new Utf8JsonWriter(ms, new JsonWriterOptions { Indented = true }))
-    {
-        CopyJsonWithUpdatedMetadata(parsed.RootElement, writer, model, requestTimeSeconds);
-    }
-
-    string pretty = Encoding.UTF8.GetString(ms.ToArray());
-
-    Console.WriteLine(pretty);
-    return 0;
-}
-catch (Exception ex)
-{
-    Console.Error.WriteLine($"Error parsing JSON: {ex.Message}");
-    Console.WriteLine(reply);
-    return 1;
-}
-
-// ── helper method to copy JSON and update metadata ─────────────────
-void CopyJsonWithUpdatedMetadata(JsonElement element, Utf8JsonWriter writer, string modelName, double requestTime)
-{
-    switch (element.ValueKind)
-    {
-        case JsonValueKind.Object:
-            writer.WriteStartObject();
-            foreach (JsonProperty property in element.EnumerateObject())
-            {
-                writer.WritePropertyName(property.Name);
-
-                // If this is the metadata property, add the new fields
-                if (property.Name == "metadata")
-                {
-                    writer.WriteStartObject();
-
-                    // Copy existing metadata properties
-                    if (property.Value.ValueKind == JsonValueKind.Object)
-                        foreach (JsonProperty metaProp in property.Value.EnumerateObject())
-                        {
-                            writer.WritePropertyName(metaProp.Name);
-                            CopyJsonWithUpdatedMetadata(metaProp.Value, writer, modelName, requestTime);
-                        }
-
-                    // Add new metadata fields
-                    writer.WritePropertyName("model");
-                    writer.WriteStringValue(modelName);
-
-                    writer.WritePropertyName("request_time_seconds");
-                    writer.WriteNumberValue(requestTime);
-
-                    writer.WriteEndObject();
-                }
-                else
-                {
-                    CopyJsonWithUpdatedMetadata(property.Value, writer, modelName, requestTime);
-                }
-            }
-
-            writer.WriteEndObject();
-            break;
-
-        case JsonValueKind.Array:
-            writer.WriteStartArray();
-            foreach (JsonElement item in element.EnumerateArray())
-            {
-                CopyJsonWithUpdatedMetadata(item, writer, modelName, requestTime);
-            }
-
-            writer.WriteEndArray();
-            break;
-
-        case JsonValueKind.String:
-            writer.WriteStringValue(element.GetString());
-            break;
-
-        case JsonValueKind.Number:
-            if (element.TryGetInt64(out long longValue))
-                writer.WriteNumberValue(longValue);
-            else if (element.TryGetDouble(out double doubleValue)) writer.WriteNumberValue(doubleValue);
-            break;
-
-        case JsonValueKind.True:
-            writer.WriteBooleanValue(true);
-            break;
-
-        case JsonValueKind.False:
-            writer.WriteBooleanValue(false);
-            break;
-
-        case JsonValueKind.Null:
-            writer.WriteNullValue();
-            break;
-        case JsonValueKind.Undefined:
-            break;
-        default:
-            throw new ArgumentOutOfRangeException();
-    }
-}
+Console.WriteLine(reply);
+return 0;
