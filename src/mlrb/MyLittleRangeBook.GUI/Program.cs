@@ -1,20 +1,18 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using Avalonia;
-using JetBrains.Annotations;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using MyLittleRangeBook.Config;
+﻿using MyLittleRangeBook.Config;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
 using MyLittleRangeBook.Persistence.Sqlite;
 using SharedControls.Services;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
-
+using Avalonia;
+using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 namespace MyLittleRangeBook.GUI
 {
-    [UsedImplicitly]
     internal sealed class Program
     {
         // Initialization code. Don't use any Avalonia, third-party APIs or any
@@ -33,9 +31,9 @@ namespace MyLittleRangeBook.GUI
             // "IDispatcherImpl belongs to a different thread" when StartWithClassicDesktopLifetime
             // is reached. Run the async bootstrap synchronously so Avalonia stays on the main thread.
             bootstrapper
-                .EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName)
-                .GetAwaiter()
-                .GetResult();
+               .EnsureAppSettingsExistsAsync(ConfigurationExtensions.DefaultAppSettingsFile.FullName)
+               .GetAwaiter()
+               .GetResult();
 
             ConfigurationExtensions.DefaultLogDirectory.Create();
 
@@ -113,6 +111,9 @@ namespace MyLittleRangeBook.GUI
         public static AppBuilder BuildAvaloniaApp() =>
             AppBuilder.Configure<App>()
                       .UsePlatformDetect()
+#if DEBUG
+                      .WithDeveloperTools()
+#endif
                       .WithInterFont()
                       .LogToTrace();
     }
