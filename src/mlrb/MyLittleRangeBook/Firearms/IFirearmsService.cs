@@ -29,15 +29,6 @@ namespace MyLittleRangeBook.Firearms
         [Obsolete("Not in use.")]
         Task<Result<MlrbId>> UpsertAsync(FirearmTableRow firearmTableRow);
 
-        /// <summary>
-        ///     This will append the contents of a Garmin shotview file to the event stream for the firearm.
-        /// </summary>
-        /// <param name="firearmName"></param>
-        /// <param name="fileContents"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        Task<Result> AddGarminShotviewCsv(string            firearmName, string fileContents,
-                                          CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Try to get the stream ID for the firearm name.  If it doesn't exist, then create the stream.

@@ -2,6 +2,7 @@
 
 #:property JsonSerializerIsReflectionEnabledByDefault=true
 using System.Diagnostics;
+using System.Dynamic;
 using System.Text;
 using System.Text.Json;
 
@@ -146,6 +147,17 @@ string reply = doc.RootElement.GetProperty("message")
                   .GetProperty("content")
                   .GetString()!;
 
+
+
 Console.WriteLine(reply);
 Console.WriteLine($"Ollama replied in {requestTimeSeconds} seconds.");
+
+var options = new JsonSerializerOptions
+              {
+                  PropertyNameCaseInsensitive = true,
+              };
+
+// reply is a string containing JSON
+dynamic data = JsonSerializer.Deserialize<ExpandoObject>(reply, options) ?? new ExpandoObject();
+
 return 0;

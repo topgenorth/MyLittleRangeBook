@@ -31,28 +31,7 @@ namespace MyLittleRangeBook.Firearms
         [Obsolete("Not in use.")]
         public Task<Result<MlrbId>> UpsertAsync(FirearmTableRow firearmTableRow) => throw new NotImplementedException();
 
-        /// <summary>
-        ///     Append a new <code>GarminShotViewFileAddedToFirearm</code> event to the firearm stream.
-        /// </summary>
-        /// <param name="firearmName"></param>
-        /// <param name="fileContents"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<Result> AddGarminShotviewCsv(string            firearmName, string fileContents,
-                                                       CancellationToken cancellationToken = default)
-        {
-            GarminShotViewFileAddedToFirearm e = new(firearmName, fileContents, DateTimeOffset.UtcNow);
 
-            Result<Guid> r = await FetchStreamIdForFirearm(firearmName, cancellationToken).ConfigureAwait(false);
-            if (r.IsFailed)
-            {
-                return Result.Fail(r.Errors);
-            }
-
-            _session.Events.Append(r.Value, e);
-            await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return Result.Ok();
-        }
 
         /// <summary>
         /// Adds a new reloading recipe to the specified firearm's event stream.
