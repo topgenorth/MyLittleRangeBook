@@ -7,14 +7,18 @@ namespace MyLittleRangeBook
     public class ParseGarminShotViewCsvFileCommand
     {
         readonly ICliDisplay _cliDisplay;
-
-        [Command("parse-shotview")]
-        public async Task<int> ParseCsvFile(string fileName, CancellationToken cancellationToken = default)
+        public ParseGarminShotViewCsvFileCommand(ICliDisplay cliDisplay)
         {
-            _cliDisplay.PrintCommandHeader("Parse Garmin ShotView CSV file.");
-            if (!File.Exists(fileName))
+            _cliDisplay = cliDisplay;
+        }
+
+        [Command("add-shotview")]
+        public async Task<int> AddShotViewFile(string file, CancellationToken cancellationToken = default)
+        {
+            _cliDisplay.PrintCommandHeader("Import Garmin ShotView CSV file.");
+            if (!File.Exists(file))
             {
-                _cliDisplay.PrintFailure($"File {fileName} not found.");
+                _cliDisplay.PrintFailure($"File {file} not found.");
                 return ReturnCodes.SHOTVIEW_FILE_NOT_FOUND;
             }
 
@@ -22,11 +26,11 @@ namespace MyLittleRangeBook
 
             try
             {
-                fileContents = await File.ReadAllTextAsync(fileName, cancellationToken);
+                fileContents = await File.ReadAllTextAsync(file, cancellationToken);
             }
             catch (Exception ex)
             {
-                _cliDisplay.PrintFailure($"Error reading file {fileName}: {ex.Message}");
+                _cliDisplay.PrintFailure($"Error reading file {file}: {ex.Message}");
                 return ReturnCodes.SHOTVIEW_FILE_READ_FAILURE;
             }
 
@@ -35,6 +39,10 @@ namespace MyLittleRangeBook
             if (returnCode == ReturnCodes.SUCCESS)
             {
                 _cliDisplay.PrintSuccess("Parsed the file.");
+            }
+            else
+            {
+                _cliDisplay.PrintFailure("Something went wrong.");
             }
             return returnCode;
         }
