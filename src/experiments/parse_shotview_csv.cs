@@ -48,9 +48,6 @@ You are a data-extraction assistant. Parse the Garmin ShotView CSV file that is 
 this shape:
 
 {
-    "id": "<guid>",
-    "correlationId": "<guid>",
-    "causationId": "<guid>",
     "event_date": "<string>",
     "rounds_fired": <integer>,
     "velocity": {
@@ -63,43 +60,31 @@ this shape:
         { "shot_number": <integer>, "velocity": <integer>, "shot_time" : "<string>", "clean_bore": <boolean>, "cold_bore": <boolean>, "shot_notes": <boolean> }
     ],
     "notes": "<string>",
-    "created": "<string>",
-    "modified":"<string>",
 }
 
 ## Parsing Rules
 - Each row in the CSV can have different meaning depending on the row number:
     - Row 1 should have a description of the the simple range event. It is not comma separated.
-    - Row 2 is a header row for a table that
-    - GUIDs must be a Version 7 GUID.
+    - Row 2 is a header row for the CSV values that hold the shot velocities.
 - Never guess at a value.  If it is unclear, then use "unknown" or 0 for missing values.
 - Format all date and time values for ISO-8601 in UTC.
 
 ## Error Handling
 - If input is malformed/incomplete: extract what you can, use "unknown"/"0" for missing values
-- Always return valid JSON matching the schema above
 
-
-### `id`, `correlationId`, and `causationId`
-- These values will not be present in the attached CSV file, you must add the to the JSON structure.
-- These values should all be the GUIDs.
-
-### `velocity`
+## `velocity`
 - This section is the average velocity of all the shots that were in fired in this session.
 - The units of measure will be either feet per second (fps) or metres per second (m/s).
 - The second value in the header will hold the units of measure for the velocity.  For example, "Speed (FPS)" means that the velocity is in feet per second (fps).
 
-### `created` and `modified`
-- These values doe not exist in the attached CSV file.  You must add them to the JSON structure.
-- These values are must be the current date and time in UTC then UTC 8601 format.
-
-### `event_date`
+## `event_date`
 - The event date is the date that CSV file was created.
 - The event date is on a line that starts with "Date" that is immediately after a line that contains only a '-'.
 - THe event date does not have the time zone specified.  It is always in the local time.
 - Convert the event date a DateTimeOffset, use the local timezone when making the conversion.
+- Format the event date according to ISO-8601
 
-#### `shot_velocities`
+## `shot_velocities`
 - There must be at least one shot in each session. This is an array of the velocity for each shot in the session.
 - The header for the velocity data is the line where the first field in the CSV is "﻿#". Each line after this contains data for a shot.
 - Each line of shot data is  list of comma separated values (CSV).
@@ -114,9 +99,9 @@ this shape:
 - The ninth CSV value is the `shot_notes` value.  It is a string.
 - The collection of velocity data ends with first CSV line that has a "-" in the first field.
 
-### `notes`
+## `notes`
+- Find the line that starts with "Session Note".
 - The `notes` value is the first line of this file concatenated with the "Session Note".
-- Find the line that starts with "Session Note", and append the second field in the CSV to the `notes` element of the JSON file.
 
 Loading string:
 """ + loadingString;
@@ -162,4 +147,5 @@ string reply = doc.RootElement.GetProperty("message")
                   .GetString()!;
 
 Console.WriteLine(reply);
+Console.WriteLine($"Ollama replied in {requestTimeSeconds} seconds.");
 return 0;
