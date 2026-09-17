@@ -154,7 +154,7 @@ namespace MyLittleRangeBook
                                                                DateTimeOffset.UtcNow);
                 events.Add(e2);
 
-                JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
+                /*JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
 
 // reply is a string containing JSON
                 dynamic data = JsonSerializer.Deserialize<ExpandoObject>(rTransmorgify.Value, options) ??
@@ -165,7 +165,7 @@ namespace MyLittleRangeBook
             else
             {
                 _logger.Warning("Failed to convert CSV to JSON");
-            }
+            }*/
 
             _session.Events.Append(rFirearmId.Value, events);
             await _session.SaveChangesAsync(cancellationToken);
@@ -233,14 +233,23 @@ namespace MyLittleRangeBook
                 return Result.Fail("Ollama could not transmorgify the CSV file.");
             }
 
-            string ollamaResponseJson = await ollamaHttpResponse.Content.ReadAsStringAsync(cancellationToken);
-            using JsonDocument doc = JsonDocument.Parse(ollamaResponseJson.Trim());
-            string jsonResult = doc.RootElement.GetProperty("message")
-                                   .GetProperty("content")
-                                   .GetString()!;
-            #endregion
+            try
+            {
+                string ollamaResponseJson = await ollamaHttpResponse.Content.ReadAsStringAsync(cancellationToken);
 
-            return Result.Ok(jsonResult);
+                using JsonDocument doc = JsonDocument.Parse(ollamaResponseJson.Trim());
+                string jsonResult = doc.RootElement.GetProperty("message")
+                                       .GetProperty("content")
+                                       .GetString()!;
+                return Result.Ok(jsonResult);
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Something is wrong with the Ollama response - {ErrorMessage}", e.Message);
+                _cliDisplay.PrintFailure($"Failed to parse Ollama response - {e.Message}");
+                return new Result<string>().WithError(e.ToError());
+            }
+            #endregion
         }
     }
 }
