@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.1" />
-    <PackageReference Include="ByteAether.Ulid" Version="1.4.0" />
+    <PackageReference Include="Avalonia" Version="12.1.2" />
+    <PackageReference Include="ByteAether.Ulid" Version="1.4.1" />
     <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.2"/>
     <PackageReference Include="FluentResults" Version="4.0.0"/>
     <PackageReference Include="CsvHelper" Version="33.1.0"/>
