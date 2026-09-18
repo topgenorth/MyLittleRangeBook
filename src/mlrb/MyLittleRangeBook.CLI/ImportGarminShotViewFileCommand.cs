@@ -160,12 +160,13 @@ namespace MyLittleRangeBook
                 dynamic data = JsonSerializer.Deserialize<ExpandoObject>(rTransmorgify.Value, options) ??
                                new ExpandoObject();
 
+                */
                 _logger.Debug("Converted the CSV to JSON");
             }
             else
             {
                 _logger.Warning("Failed to convert CSV to JSON");
-            }*/
+            }
 
             _session.Events.Append(rFirearmId.Value, events);
             await _session.SaveChangesAsync(cancellationToken);
