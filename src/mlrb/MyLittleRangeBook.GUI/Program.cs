@@ -69,10 +69,8 @@ namespace MyLittleRangeBook.GUI
                 // Last resort: silently fail to avoid crashing the app if logging setup fails (e.g., under AOT)
             }
 
-            services.AddSingleton<Func<IDialogParticipant, IDialogService>>(provider =>
-                                                                                participant =>
-                                                                                    new DialogService(participant));
-
+            services.AddSingleton<Func<IDialogParticipant, IDialogService>>(_ => participant => new DialogService(participant));
+            services.AddSingleton<IConfiguration>(configuration);
 
             // Route Avalonia's internal Trace output through Serilog for unified logs
             Trace.Listeners.Add(new SerilogTraceListener.SerilogTraceListener());

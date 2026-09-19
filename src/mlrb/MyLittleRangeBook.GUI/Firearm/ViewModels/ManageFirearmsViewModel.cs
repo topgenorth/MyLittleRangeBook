@@ -38,57 +38,48 @@ namespace MyLittleRangeBook.GUI.ViewModels
     {
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
-        readonly IFirearmsService                         _firearmsDbService;
         readonly SourceCache<FirearmViewModel, long>      _firearmViewModelCache = new(x => x.Id ?? -1);
 
         readonly ReadOnlyObservableCollection<FirearmViewModel> _firearmViewModels;
         readonly ILogger                                        _logger;
-        readonly ISqliteHelper                                  _sqliteHelper;
-        readonly ISimpleRangeEventService                       _simpleRangeEventService;
 
-        public ManageFirearmsViewModel(IFirearmsService firearmsDbService,
-                                       Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-                                       ISqliteHelper sqliteHelper,
-                                       ILogger logger,
-                                       ISimpleRangeEventService simpleRangeEventService)
+        public ManageFirearmsViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
+                                       ILogger logger)
         {
-            _sqliteHelper                  = sqliteHelper;
-            _firearmsDbService             = firearmsDbService;
-            _dialogServiceFactory          = dialogServiceFactory;
-            _dialogService                 = dialogServiceFactory(this);
-            _logger                        = logger;
-            _simpleRangeEventService       = simpleRangeEventService;
-
-
-            // Register for message notifications from other ViewModels
-            WeakReferenceMessenger.Default.Register<UpdateDataMessage<FirearmTableRow>>(this);
-            WeakReferenceMessenger.Default.Register<UpdateDataMessage<SimpleRangeEvent>>(this);
-
-            // Get the current synchronization context for UI thread operations
-            SynchronizationContext syncContext = SynchronizationContext.Current ??
-                                                 throw new InvalidOperationException(
-                                                  "No SynchronizationContext provided.");
-
-            // Create reactive observable for text filtering with 300ms throttle to reduce frequent updates
-            IObservable<Func<FirearmViewModel, bool>> filterByName = this.ObserveValue(nameof(FilterString),
-                                                                              () => FilterString)
-                                                                         .Throttle(TimeSpan.FromMilliseconds(300))
-                                                                         .DistinctUntilChanged()
-                                                                         .Select(FilterByNameObservable);
-
-
-            // Set up a reactive data pipeline: auto-refresh firearm name changes, apply filters and sorting
-            _firearmViewModelCache.Connect()
-                                  .AutoRefresh(
-                                               x => x.Name,
-                                               propertyChangeThrottle: TimeSpan.FromMilliseconds(500))
-                                  .Filter(filterByName)
-                                  .ObserveOn(syncContext)
-                                  .SortBy(x => x.Name, resetThreshold: 500)
-                                  .Bind(out _firearmViewModels)
-                                  .Subscribe();
-
-            _ = LoadDataAsync();
+            // _dialogServiceFactory          = dialogServiceFactory;
+            // _dialogService                 = dialogServiceFactory(this);
+            // _logger                        = logger;
+            //
+            //
+            // // Register for message notifications from other ViewModels
+            // WeakReferenceMessenger.Default.Register<UpdateDataMessage<FirearmTableRow>>(this);
+            // WeakReferenceMessenger.Default.Register<UpdateDataMessage<SimpleRangeEvent>>(this);
+            //
+            // // Get the current synchronization context for UI thread operations
+            // SynchronizationContext syncContext = SynchronizationContext.Current ??
+            //                                      throw new InvalidOperationException(
+            //                                       "No SynchronizationContext provided.");
+            //
+            // // Create reactive observable for text filtering with 300ms throttle to reduce frequent updates
+            // IObservable<Func<FirearmViewModel, bool>> filterByName = this.ObserveValue(nameof(FilterString),
+            //                                                                   () => FilterString)
+            //                                                              .Throttle(TimeSpan.FromMilliseconds(300))
+            //                                                              .DistinctUntilChanged()
+            //                                                              .Select(FilterByNameObservable);
+            //
+            //
+            // // Set up a reactive data pipeline: auto-refresh firearm name changes, apply filters and sorting
+            // _firearmViewModelCache.Connect()
+            //                       .AutoRefresh(
+            //                                    x => x.Name,
+            //                                    propertyChangeThrottle: TimeSpan.FromMilliseconds(500))
+            //                       .Filter(filterByName)
+            //                       .ObserveOn(syncContext)
+            //                       .SortBy(x => x.Name, resetThreshold: 500)
+            //                       .Bind(out _firearmViewModels)
+            //                       .Subscribe();
+            //
+            // _ = LoadDataAsync();
         }
 
         public ReadOnlyObservableCollection<FirearmViewModel> FirearmViewModels => _firearmViewModels;
@@ -138,28 +129,28 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand]
         async Task LoadDataAsync(CancellationToken cancellationToken = default)
         {
-            await using var ctx = await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken).ConfigureAwait(false);
-            try
-            {
-
-                Result<IEnumerable<FirearmTableRow>> result = await _firearmsDbService.GetFirearmsAsync();
-
-                if (result.IsSuccess)
-                {
-                    _firearmViewModelCache.AddOrUpdate(result.Value.Select(x => new FirearmViewModel(x)));
-                }
-                else
-                {
-                    StringBuilder msg = new("There was a problem trying to get the range events.");
-                    result.Reasons.ForEach(x => msg.AppendLine(x.Message));
-                    _logger.Error(msg.ToString());
-                    _firearmViewModelCache.Clear();
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e, "Failed to load firearms.");
-            }
+            // await using var ctx = await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken).ConfigureAwait(false);
+            // try
+            // {
+            //
+            //     Result<IEnumerable<FirearmTableRow>> result = await _firearmsDbService.GetFirearmsAsync();
+            //
+            //     if (result.IsSuccess)
+            //     {
+            //         _firearmViewModelCache.AddOrUpdate(result.Value.Select(x => new FirearmViewModel(x)));
+            //     }
+            //     else
+            //     {
+            //         StringBuilder msg = new("There was a problem trying to get the range events.");
+            //         result.Reasons.ForEach(x => msg.AppendLine(x.Message));
+            //         _logger.Error(msg.ToString());
+            //         _firearmViewModelCache.Clear();
+            //     }
+            // }
+            // catch (Exception e)
+            // {
+            //     _logger.Error(e, "Failed to load firearms.");
+            // }
         }
 
         [RelayCommand]
@@ -167,35 +158,35 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             FirearmTableRow firearmTableRow = new();
 
-            await EditFirearmAsync(new FirearmViewModel(firearmTableRow));
+            // await EditFirearmAsync(new FirearmViewModel(firearmTableRow));
         }
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteFirearm))]
         async Task AddRangeEventForFirearmAsync(FirearmViewModel? firearm)
         {
-            if (firearm is null)
-            {
-                return;
-            }
-
-            SimpleRangeEvent rangeEvent = new()
-                                          {
-                                              FirearmName = firearm.Name,
-                                              Created     = DateTimeOffset.UtcNow,
-                                              Modified    = DateTimeOffset.UtcNow,
-                                              EventDate   = DateTime.UtcNow,
-                                          };
-
-            EditSimpleRangeEventViewModel vm = new(new SimpleRangeEventViewModel(rangeEvent),
-                                                   _logger,
-                                                   _dialogServiceFactory,
-                                                   _sqliteHelper,
-                                                   _simpleRangeEventService,
-                                                   _firearmsDbService);
-
-            await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
-                                                                         "Add Range Event",
-                                                                         vm);
+        //     if (firearm is null)
+        //     {
+        //         return;
+        //     }
+        //
+        //     SimpleRangeEvent rangeEvent = new()
+        //                                   {
+        //                                       FirearmName = firearm.Name,
+        //                                       Created     = DateTimeOffset.UtcNow,
+        //                                       Modified    = DateTimeOffset.UtcNow,
+        //                                       EventDate   = DateTime.UtcNow,
+        //                                   };
+        //
+        //     EditSimpleRangeEventViewModel vm = new(new SimpleRangeEventViewModel(rangeEvent),
+        //                                            _logger,
+        //                                            _dialogServiceFactory,
+        //                                            _sqliteHelper,
+        //                                            _simpleRangeEventService,
+        //                                            _firearmsDbService);
+        //
+        //     await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
+        //                                                                  "Add Range Event",
+        //                                                                  vm);
         }
 
         bool CanEditOrDeleteFirearm(FirearmViewModel? firearm) => firearm != null;
@@ -211,7 +202,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             DialogResult result = await this.ShowOverlayDialogAsync<DialogResult>("Delete the Firearm",
                                       "Are you sure you want to delete this Firearm?", DialogCommands.YesNoCancel);
 
-            if (result == DialogResult.Yes)
+            /*if (result == DialogResult.Yes)
             {
                 try
                 {
@@ -228,7 +219,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 {
                     _logger.Error(e, "Failed to delete firearm {Id}.", firearm.Id);
                 }
-            }
+            }*/
         }
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteFirearm))]
@@ -239,16 +230,16 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            EditFirearmViewModel vm = new(firearm.CloneFirearmViewModel(), _firearmsDbService, _dialogServiceFactory,
-                                          _sqliteHelper, _logger);
-            FirearmViewModel? result = await this.ShowOverlayDialogAsync<FirearmViewModel>(
-                                        "Edit firearm", vm);
+            // EditFirearmViewModel vm = new(firearm.CloneFirearmViewModel(), _firearmsDbService, _dialogServiceFactory,
+            //                               _sqliteHelper, _logger);
+            // FirearmViewModel? result = await this.ShowOverlayDialogAsync<FirearmViewModel>(
+            //                             "Edit firearm", vm);
 
 
-            if (result is not null)
+            /*if (result is not null)
             {
                 _firearmViewModelCache.AddOrUpdate(result);
-            }
+            }*/
         }
 
         [RelayCommand]
