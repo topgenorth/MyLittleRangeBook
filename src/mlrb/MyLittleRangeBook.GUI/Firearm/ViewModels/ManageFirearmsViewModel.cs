@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -12,16 +9,11 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using DynamicData;
 using DynamicData.Kernel;
-using FluentResults;
-using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
-using MyLittleRangeBook.Persistence;
-using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
-using SharedControls.Helper;
 using SharedControls.Services;
 
 namespace MyLittleRangeBook.GUI.ViewModels
@@ -40,11 +32,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly SourceCache<FirearmViewModel, long>      _firearmViewModelCache = new(x => x.Id ?? -1);
 
-        readonly ReadOnlyObservableCollection<FirearmViewModel> _firearmViewModels;
-        readonly ILogger                                        _logger;
+        readonly ILogger _logger;
 
         public ManageFirearmsViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-                                       ILogger logger)
+                                       ILogger                                  logger)
         {
             // _dialogServiceFactory          = dialogServiceFactory;
             // _dialogService                 = dialogServiceFactory(this);
@@ -82,7 +73,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             // _ = LoadDataAsync();
         }
 
-        public ReadOnlyObservableCollection<FirearmViewModel> FirearmViewModels => _firearmViewModels;
+        public ReadOnlyObservableCollection<FirearmViewModel> FirearmViewModels { get; }
 
         /// <summary>
         ///     The string used to filter the list of firearms.
@@ -164,29 +155,29 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteFirearm))]
         async Task AddRangeEventForFirearmAsync(FirearmViewModel? firearm)
         {
-        //     if (firearm is null)
-        //     {
-        //         return;
-        //     }
-        //
-        //     SimpleRangeEvent rangeEvent = new()
-        //                                   {
-        //                                       FirearmName = firearm.Name,
-        //                                       Created     = DateTimeOffset.UtcNow,
-        //                                       Modified    = DateTimeOffset.UtcNow,
-        //                                       EventDate   = DateTime.UtcNow,
-        //                                   };
-        //
-        //     EditSimpleRangeEventViewModel vm = new(new SimpleRangeEventViewModel(rangeEvent),
-        //                                            _logger,
-        //                                            _dialogServiceFactory,
-        //                                            _sqliteHelper,
-        //                                            _simpleRangeEventService,
-        //                                            _firearmsDbService);
-        //
-        //     await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
-        //                                                                  "Add Range Event",
-        //                                                                  vm);
+            //     if (firearm is null)
+            //     {
+            //         return;
+            //     }
+            //
+            //     SimpleRangeEvent rangeEvent = new()
+            //                                   {
+            //                                       FirearmName = firearm.Name,
+            //                                       Created     = DateTimeOffset.UtcNow,
+            //                                       Modified    = DateTimeOffset.UtcNow,
+            //                                       EventDate   = DateTime.UtcNow,
+            //                                   };
+            //
+            //     EditSimpleRangeEventViewModel vm = new(new SimpleRangeEventViewModel(rangeEvent),
+            //                                            _logger,
+            //                                            _dialogServiceFactory,
+            //                                            _sqliteHelper,
+            //                                            _simpleRangeEventService,
+            //                                            _firearmsDbService);
+            //
+            //     await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
+            //                                                                  "Add Range Event",
+            //                                                                  vm);
         }
 
         bool CanEditOrDeleteFirearm(FirearmViewModel? firearm) => firearm != null;
@@ -225,10 +216,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteFirearm))]
         async Task EditFirearmAsync(FirearmViewModel? firearm)
         {
-            if (firearm is null)
-            {
-                return;
-            }
+            if (firearm is null) { }
 
             // EditFirearmViewModel vm = new(firearm.CloneFirearmViewModel(), _firearmsDbService, _dialogServiceFactory,
             //                               _sqliteHelper, _logger);

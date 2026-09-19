@@ -79,7 +79,7 @@ namespace MyLittleRangeBook.GUI
             services.AddTransient<ManageSimpleRangeEventsViewModel>();
             services.AddTransient<ManageFirearmsViewModel>();
             services.AddTransient<SettingsViewModel>();
-
+            services.RegisterFisherForMyLittleRangeBook(configuration);
             App.RegisterAppServices(services);
 
 
