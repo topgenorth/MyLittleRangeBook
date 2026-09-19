@@ -1,7 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -11,7 +13,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using DynamicData;
 using DynamicData.Binding;
 using DynamicData.Kernel;
-using Fisher;
+using FluentResults;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.RangeEvents;
@@ -27,9 +29,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
     ///     Implements reactive data binding using DynamicData for efficient UI updates.
     /// </summary>
     [UnconditionalSuppressMessage("Trimming", "IL2112",
-                                  Justification = "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
+                                  Justification =
+                                      "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     [UnconditionalSuppressMessage("Trimming", "IL2026",
-                                  Justification = "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
+                                  Justification =
+                                      "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class ManageSimpleRangeEventsViewModel : ViewModelBase,
                                                             IDialogParticipant,
                                                             IRecipient<UpdateDataMessage<SimpleRangeEvent>>
@@ -37,13 +41,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly ILogger                                  _logger;
-        readonly IDocumentSession                         _session;
+        readonly ISimpleRangeEventService                 _simpleRangeEventService;
 
         /// <summary>
         ///     Source cache for managing ManageSimpleRangeEventsVM instances with reactive updates.
         ///     Uses the SimpleRangeEvent ID as the key for efficient lookups and updates.
         /// </summary>
-        readonly SourceCache<SimpleRangeEventViewModel, long> _simpleRangeEventSourceCache = new(x => x.RowId ?? -1);
+        readonly SourceCache<SimpleRangeEventViewModel, Guid> _simpleRangeEventSourceCache = new(x => x.Id);
 
         /// <summary>
         ///     Read-only collection bound to the UI for displaying filtered and sorted SimpleRangeEvents.
@@ -52,13 +56,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly ReadOnlyObservableCollection<SimpleRangeEventViewModel> _simpleRangeEvents;
 
 
-        public ManageSimpleRangeEventsViewModel(ILogger                                  logger,
-                                                Func<IDialogParticipant, IDialogService> dialogServiceFactory, IDocumentSession session)
+        public ManageSimpleRangeEventsViewModel(ILogger logger,
+                                                Func<IDialogParticipant,
+                                                    IDialogService> dialogServiceFactory,
+                                                ISimpleRangeEventService simpleRangeEventService)
         {
-            _dialogServiceFactory = dialogServiceFactory;
-            _session         = session;
-            _dialogService        = dialogServiceFactory(this);
-            _logger               = logger;
+            _dialogServiceFactory    = dialogServiceFactory;
+            _dialogService           = dialogServiceFactory(this);
+            _logger                  = logger;
+            _simpleRangeEventService = simpleRangeEventService;
 
             // Register for message notifications from other ViewModels
             WeakReferenceMessenger.Default.Register(this);
@@ -189,7 +195,24 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     Loads SimpleRangeEvents from the database and populates the source cache.
         ///     Creates ManageSimpleRangeEventsVM wrappers for each database item.
         /// </summary>
-        async Task LoadDataAsync(CancellationToken cancellationToken = default) => _logger.Debug("coming soon.");
+        async Task LoadDataAsync(CancellationToken cancellationToken = default)
+        {
+            Result<IEnumerable<SimpleRangeEvent>> r = await _simpleRangeEventService
+                                                         .GetSimpleRangeEventsAsync(cancellationToken);
+
+            if (r.IsSuccess)
+            {
+                IEnumerable<SimpleRangeEventViewModel> items = r.Value.Select(x => new SimpleRangeEventViewModel(x));
+                _simpleRangeEventSourceCache.AddOrUpdate(items);
+            }
+            else
+            {
+                StringBuilder msg = new("There was a problem trying to get the range events.");
+                r.Reasons.ForEach(x => msg.AppendLine(x.Message));
+                _logger.Error(msg.ToString());
+                _simpleRangeEventSourceCache.Clear();
+            }
+        }
 
         [RelayCommand]
         async Task AddNewSimpleRangeEventAsync()
@@ -283,7 +306,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand]
         async Task RefreshAsync()
         {
-            long previousSelectedId = long.Parse(SelectedSimpleRangeEvent?.Id ?? "-1");
+            Guid previousSelectedId = SelectedSimpleRangeEvent.Id;
             _simpleRangeEventSourceCache.Clear();
             await LoadDataAsync();
 

@@ -69,25 +69,26 @@ namespace MyLittleRangeBook.GUI
                 // Last resort: silently fail to avoid crashing the app if logging setup fails (e.g., under AOT)
             }
 
-            services.AddSingleton<Func<IDialogParticipant, IDialogService>>(_ => participant => new DialogService(participant));
-            services.AddSingleton<IConfiguration>(configuration);
-
             // Route Avalonia's internal Trace output through Serilog for unified logs
             Trace.Listeners.Add(new SerilogTraceListener.SerilogTraceListener());
 
+            services.AddSingleton<IConfiguration>(configuration);
+            services.AddSingleton<Func<IDialogParticipant, IDialogService>>(_ => participant => new DialogService(participant));
             services.AddTransient<MainViewModel>();
             services.AddTransient<ManageSimpleRangeEventsViewModel>();
             services.AddTransient<ManageFirearmsViewModel>();
             services.AddTransient<SettingsViewModel>();
+            services.RegisterMyLittleRangeBookSqlite(configuration);
             services.RegisterFisherForMyLittleRangeBook(configuration);
             App.RegisterAppServices(services);
 
 
             try
             {
-                Log.Information("Starting Avalonia app (AOT={AOT}), environment {Env}",
+                Log.Information("Starting Avalonia Desktop app (AOT={AOT}), environment {Env}, OS {OperatingSystem}",
                                 !RuntimeFeature.IsDynamicCodeCompiled,
-                                Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
+                                Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"),
+                                Environment.OSVersion
                                );
                 BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
             }
