@@ -26,6 +26,7 @@ namespace MyLittleRangeBook.RangeEvents
         ///     ammunition description, rounds fired, range name, and additional optional notes. Provides unique identifiers
         ///     for the event, along with metadata like creation and modification timestamps.
         /// </summary>
+        [Obsolete("Use a DateTimeOffset.")]
         public SimpleRangeEvent(DateOnly eventDateOnly)
         {
             MlrbId id = MlrbId.From(eventDateOnly);

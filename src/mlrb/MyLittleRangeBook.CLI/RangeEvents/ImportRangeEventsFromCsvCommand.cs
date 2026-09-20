@@ -13,13 +13,15 @@ namespace MyLittleRangeBook.RangeEvents
     [UsedImplicitly]
     public sealed class ImportRangeEventsFromCsvCommand
     {
+        readonly ICliDisplay              _cliDisplay;
         readonly ILogger                  _logger;
         readonly ISimpleRangeEventService _service;
-        readonly ICliDisplay              _cliDisplay;
-        public ImportRangeEventsFromCsvCommand(ILogger logger, ICliDisplay display, ISimpleRangeEventService service, ICliDisplay cliDisplay)
+
+        public ImportRangeEventsFromCsvCommand(ILogger logger, ICliDisplay display, ISimpleRangeEventService service,
+                                               ICliDisplay cliDisplay)
         {
-            _logger          = logger;
-            _service         = service;
+            _logger     = logger;
+            _service    = service;
             _cliDisplay = cliDisplay;
         }
 
@@ -35,12 +37,15 @@ namespace MyLittleRangeBook.RangeEvents
         [UsedImplicitly]
         public async Task<int> ImportFromCsvFile(string file, CancellationToken cancellationToken = default)
         {
+            _cliDisplay.PrintCommandHeader("Import range events from CSV");
             if (!File.Exists(file))
             {
+                _cliDisplay.PrintFailure("The CSV file was not found.");
                 _logger.Error("The CSV file '{csvFileName}' was not found.", file);
                 return ReturnCodes.RANGE_EVENT_CSV_FILE_NOT_FOUND;
             }
 
+            _cliDisplay.PrintInfo($"Processing CSV file {file}...");
             try
             {
                 int count = 0;
@@ -56,15 +61,15 @@ namespace MyLittleRangeBook.RangeEvents
 
                     Result<Guid> rUpsert = await _service.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
 
-
                     if (rUpsert.IsSuccess)
                     {
                         count++;
                     }
                     else
                     {
-                        _logger.Warning("Failed to import row {rowId}: {error}", csvRow.RowId,
-                                        string.Join(", ", rUpsert.Reasons.Select(x => x.Message)));
+                        string reason = string.Join(", ", rUpsert.Reasons.Select(x => x.Message));
+                        _cliDisplay.PrintInfo($"Failed to import row {csvRow.RowId}: {reason}");
+                        _logger.Warning("Failed to import row {rowId}: {error}", csvRow.RowId, reason);
                     }
                 }
 

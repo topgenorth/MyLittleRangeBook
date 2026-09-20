@@ -110,8 +110,8 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <returns></returns>
         public static SqliteConnection AddFunctions(this SqliteConnection connection)
         {
-            // [TO20260524] Note that the Nanoid is actually a ULID.
-            connection.CreateFunction("nanoid", () => new MlrbId().ToString());
+
+            connection.CreateFunction("nanoid", Guid.CreateVersion7);
             connection.CreateFunction("utcnow", () => DateTimeOffset.UtcNow.ToString("O"));
 
             return connection;
@@ -127,6 +127,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                {
                                    // [TO20260820] https://fisher.jasperfx.net/configuration/hostbuilder#registration-overloads
                                    opts.Connection(connectionString);
+
 
                                    opts.Policies.AllDocumentsSoftDeleted();
                                    // opts.Policies.AllDocumentsAreMultiTenanted();

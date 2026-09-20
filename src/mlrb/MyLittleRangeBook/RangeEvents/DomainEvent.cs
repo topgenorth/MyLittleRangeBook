@@ -24,6 +24,18 @@
         string?        Notes,
         DateTimeOffset OccurredUtc);
 
+    public record struct SimpleRangeEventCreatedFromGui(
+        DateOnly       EventDate,
+        string         FirearmName,
+        Guid           Id,
+        Guid           CorrelationId,
+        Guid           CausationId,
+        string         RangeName,
+        int            RoundsFired,
+        string?        AmmoDescription,
+        string?        Notes,
+        DateTimeOffset OccurredUtc);
+
     /// <summary>
     ///     This event is raised when we try to create the "simple range event" from the contents of a ShotView CSV file.
     /// </summary>

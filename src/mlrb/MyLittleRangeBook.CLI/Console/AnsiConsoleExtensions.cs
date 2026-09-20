@@ -8,29 +8,29 @@ namespace MyLittleRangeBook.Console
         // [TO20260503] This might be a better way than using ICliDisplay?
         public const string AppName = "MyLittleRangeBook CLI";
 
-        public const string WarningGlyph = "⚠";
-        public const string SuccessGlyph = "✓";
-        public const string ErrorGlyph = "✗";
-        public const string BulletGlyph = "•";
+        public const string WARNING_GLYPH = "⚠";
+        const        string SUCCESS_GLYPH = "✓";
+        public const string ERROR_GLYPH    = "✗";
+        public const string BulletGlyph   = "•";
 
 
         public static IAnsiConsole PrintWarning(this IAnsiConsole console, string message)
         {
-            console.MarkupLineInterpolated($"[bold yellow]{WarningGlyph} {message.Trim()}[/]");
+            console.MarkupLineInterpolated($"[bold yellow]{WARNING_GLYPH} {message.Trim()}[/]");
 
             return console;
         }
 
         public static IAnsiConsole PrintProblem(this IAnsiConsole console, string message)
         {
-            console.MarkupLineInterpolated($"[bold red]{ErrorGlyph} {message.Trim()}[/]");
+            console.MarkupLineInterpolated($"[bold red]{ERROR_GLYPH} {message.Trim()}[/]");
 
             return console;
         }
 
         public static IAnsiConsole PrintSuccess(this IAnsiConsole console, string message)
         {
-            console.MarkupLineInterpolated($"[bold green]{SuccessGlyph} {message.Trim()}[/]");
+            console.MarkupLineInterpolated($"[bold green]{SUCCESS_GLYPH} {message.Trim()}[/]");
 
             return console;
         }
