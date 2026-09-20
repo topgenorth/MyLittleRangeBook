@@ -202,7 +202,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
             if (r.IsSuccess)
             {
-                IEnumerable<SimpleRangeEventViewModel> items = r.Value.Select(x => new SimpleRangeEventViewModel(x));
+                IEnumerable<SimpleRangeEventViewModel> items = r.Value
+                                                                .OrderByDescending(x => x.EventDate)
+                                                                .Select(x => new SimpleRangeEventViewModel(x));
                 _simpleRangeEventSourceCache.AddOrUpdate(items);
             }
             else
