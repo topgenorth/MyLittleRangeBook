@@ -16,11 +16,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
     public class SettingsViewModel : ViewModelBase, IDialogParticipant
     {
         readonly IConfiguration _config;
-        readonly ISqliteHelper  _sqliteHelper;
 
-        public SettingsViewModel(ISqliteHelper sqliteHelper, IConfiguration config)
+        public SettingsViewModel(IConfiguration config)
         {
-            _sqliteHelper = sqliteHelper;
             _config       = config;
         }
 

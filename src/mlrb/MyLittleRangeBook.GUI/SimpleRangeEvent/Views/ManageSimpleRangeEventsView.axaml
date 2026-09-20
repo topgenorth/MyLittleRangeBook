@@ -175,14 +175,14 @@
                         <!-- Ammo (hidden if not provided) -->
                         <TextBlock Grid.Row="1"
                                    Grid.Column="0"
-                                   IsVisible="{Binding AmmoDescription, Converter={x:Static gui:NullEmptyNAConverter.Instance}}"
+                                   IsVisible="{Binding AmmoDescription, Converter={x:Static gui:NullEmptyNaConverter.Instance}}"
                                    Text="{Binding AmmoDescription}" />
 
                         <!-- Notes (hidden if not provided) -->
                         <TextBlock Grid.Row="2"
                                    Grid.Column="0"
                                    FontStyle="Italic"
-                                   IsVisible="{Binding Notes, Converter={x:Static gui:NullEmptyNAConverter.Instance}}"
+                                   IsVisible="{Binding Notes, Converter={x:Static gui:NullEmptyNaConverter.Instance}}"
                                    Text="{Binding Notes}" />
                     </Grid>
                 </DataTemplate>

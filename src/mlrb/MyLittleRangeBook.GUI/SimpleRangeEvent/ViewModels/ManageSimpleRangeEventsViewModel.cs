@@ -14,12 +14,8 @@ using DynamicData;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using FluentResults;
-using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
-using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Persistence;
-using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
 using SharedControls.Helper;
@@ -45,36 +41,30 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly ILogger                                  _logger;
+        readonly ISimpleRangeEventService                 _simpleRangeEventService;
+
+        /// <summary>
+        ///     Source cache for managing ManageSimpleRangeEventsVM instances with reactive updates.
+        ///     Uses the SimpleRangeEvent ID as the key for efficient lookups and updates.
+        /// </summary>
+        readonly SourceCache<SimpleRangeEventViewModel, Guid> _simpleRangeEventSourceCache = new(x => x.Id);
 
         /// <summary>
         ///     Read-only collection bound to the UI for displaying filtered and sorted SimpleRangeEvents.
         ///     Automatically updated through the reactive pipeline.
         /// </summary>
         readonly ReadOnlyObservableCollection<SimpleRangeEventViewModel> _simpleRangeEvents;
-        readonly ISimpleRangeEventService _simpleRangeEventService;
-        readonly IFirearmsService         _firearmsService;
-
-        /// <summary>
-        ///     Source cache for managing ManageSimpleRangeEventsVM instances with reactive updates.
-        ///     Uses the SimpleRangeEvent ID as the key for efficient lookups and updates.
-        /// </summary>
-        readonly SourceCache<SimpleRangeEventViewModel, long> _simpleRangeEventSourceCache = new(x => x.RowId ?? -1);
-
-        readonly ISqliteHelper _sqliteHelper;
 
 
         public ManageSimpleRangeEventsViewModel(ILogger logger,
-                                                Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-                                                ISqliteHelper sqliteHelper,
-                                                ISimpleRangeEventService simpleRangeEventService,
-                                                IFirearmsService firearmsService)
+                                                Func<IDialogParticipant,
+                                                    IDialogService> dialogServiceFactory,
+                                                ISimpleRangeEventService simpleRangeEventService)
         {
-            _sqliteHelper                  = sqliteHelper;
-            _simpleRangeEventService       = simpleRangeEventService;
-            _firearmsService               = firearmsService;
-            _dialogServiceFactory          = dialogServiceFactory;
-            _dialogService                 = dialogServiceFactory(this);
-            _logger                        = logger;
+            _dialogServiceFactory    = dialogServiceFactory;
+            _dialogService           = dialogServiceFactory(this);
+            _logger                  = logger;
+            _simpleRangeEventService = simpleRangeEventService;
 
             // Register for message notifications from other ViewModels
             WeakReferenceMessenger.Default.Register(this);
@@ -207,13 +197,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         async Task LoadDataAsync(CancellationToken cancellationToken = default)
         {
-            await using DapperCommandContext context =
-                await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken);
-            Result<IEnumerable<SimpleRangeEvent>> r = await _simpleRangeEventService.GetSimpleRangeEventsAsync(cancellationToken);
+            Result<IEnumerable<SimpleRangeEvent>> r = await _simpleRangeEventService
+                                                         .GetSimpleRangeEventsAsync(cancellationToken);
 
             if (r.IsSuccess)
             {
-                _simpleRangeEventSourceCache.AddOrUpdate(r.Value.Select(x => new SimpleRangeEventViewModel(x)));
+                IEnumerable<SimpleRangeEventViewModel> items = r.Value
+                                                                .OrderByDescending(x => x.EventDate)
+                                                                .Select(x => new SimpleRangeEventViewModel(x));
+                _simpleRangeEventSourceCache.AddOrUpdate(items);
             }
             else
             {
@@ -257,10 +249,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
             if (result == DialogResult.Yes)
             {
-                await using DapperCommandContext context =
-                    await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken, true);
-                SimpleRangeEvent sre       = simpleRangeEvent.ToSimpleRangeEvent();
-                var              firearmId = MlrbId.FromString(sre.FirearmName);
+                // await using DapperCommandContext context =
+                //     await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken, true);
+                // SimpleRangeEvent sre       = simpleRangeEvent.ToSimpleRangeEvent();
+                // var              firearmId = MlrbId.FromString(sre.FirearmName);
 
                 // var r = await _simpleRangeEventDataProcessor
                 //     .DeleteSimpleRangeEvent(context, sre)
@@ -290,33 +282,33 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteSimpleRangeEvent))]
         async Task EditSimpleRangeEventAsync(SimpleRangeEventViewModel? simpleRangeEvent)
         {
-            if (simpleRangeEvent is null)
-            {
-                return;
-            }
-
-            EditSimpleRangeEventViewModel vm = new(simpleRangeEvent,
-                                                   _logger,
-                                                   _dialogServiceFactory,
-                                                   _sqliteHelper,
-                                                   _simpleRangeEventService,
-                                                   _firearmsService);
-
-            SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
-                                                 "Edit the Range Event",
-                                                 vm);
-
-            if (result != null)
-            {
-                // Update the item in the cache
-                _simpleRangeEventSourceCache.AddOrUpdate(result);
-            }
+            // if (simpleRangeEvent is null)
+            // {
+            //     return;
+            // }
+            //
+            // EditSimpleRangeEventViewModel vm = new(simpleRangeEvent,
+            //                                        _logger,
+            //                                        _dialogServiceFactory,
+            //                                        _sqliteHelper,
+            //                                        _simpleRangeEventService,
+            //                                        _firearmsService);
+            //
+            // SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
+            //                                      "Edit the Range Event",
+            //                                      vm);
+            //
+            // if (result != null)
+            // {
+            //     // Update the item in the cache
+            //     _simpleRangeEventSourceCache.AddOrUpdate(result);
+            // }
         }
 
         [RelayCommand]
         async Task RefreshAsync()
         {
-            long previousSelectedId = long.Parse(SelectedSimpleRangeEvent?.Id ?? "-1");
+            Guid previousSelectedId = SelectedSimpleRangeEvent.Id;
             _simpleRangeEventSourceCache.Clear();
             await LoadDataAsync();
 

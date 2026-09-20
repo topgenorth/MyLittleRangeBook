@@ -22,19 +22,19 @@ namespace MyLittleRangeBook.GUI.ViewModels
     {
         public SimpleRangeEventViewModel(SimpleRangeEvent rangeEvent)
         {
-            Id              = rangeEvent.Id.ToString();
+            Id              = rangeEvent.Id;
             EventDate       = rangeEvent.EventDate;
             FirearmName     = rangeEvent.FirearmName;
             RangeName       = rangeEvent.RangeName;
             RoundsFired     = rangeEvent.RoundsFired;
-            AmmoDescription = rangeEvent.AmmoDescription ?? string.Empty;
+            AmmoDescription = rangeEvent.AmmoDescription ?? "N/A";
             Notes           = rangeEvent.Notes           ?? string.Empty;
             Modified        = rangeEvent.Modified;
             Created         = rangeEvent.Created;
         }
 
-        [ObservableProperty] public partial string? Id    { get; private set; }
-        [ObservableProperty] public partial long?   RowId { get; private set; }
+        [ObservableProperty] public partial Guid  Id    { get; private set; }
+        [ObservableProperty] public partial long? RowId { get; private set; }
 
         [ObservableProperty]
         [Required]
@@ -78,7 +78,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public SimpleRangeEvent ToSimpleRangeEvent() =>
             new()
             {
-                Id              = Guid.Parse(Id!),
+                Id              = Id,
                 EventDate       = EventDate,
                 FirearmName     = FirearmName?.Trim() ?? string.Empty,
                 RangeName       = RangeName,

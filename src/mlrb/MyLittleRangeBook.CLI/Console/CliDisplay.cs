@@ -41,7 +41,7 @@ namespace MyLittleRangeBook.Console
 
         public void PrintInfo(string message)
         {
-            Console.MarkupLine($"[blue]{AnsiConsoleExtensions.BulletGlyph} {message}[/]");
+            Console.MarkupLine($"[cadetblue_1]{AnsiConsoleExtensions.BulletGlyph} {message}[/]");
         }
     }
 }

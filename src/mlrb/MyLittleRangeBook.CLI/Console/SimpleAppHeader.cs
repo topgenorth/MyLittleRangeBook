@@ -30,7 +30,7 @@ namespace MyLittleRangeBook.Console
             grid.AddRow($"[bold deepskyblue3]{Markup.Escape(AnsiConsoleExtensions.AppName)} {v}[/]");
             if (!string.IsNullOrEmpty(Action))
             {
-                grid.AddRow($"[bold cadetblue_1]{Markup.Escape(Action)}[/]");
+                grid.AddRow($"[bold deepskyblue3]{Markup.Escape(Action)}[/]");
             }
 
 

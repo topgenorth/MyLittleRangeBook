@@ -60,6 +60,8 @@ namespace MyLittleRangeBook.RangeEvents
             newEvents.Add(e1);
             #endregion
 
+
+            // [TO20260920] We only need one of the next two events, otherwise we'll double count the rounds fired.
             if (!string.IsNullOrWhiteSpace(sre.RangeName))
             {
                 // [TO20260907] Capture the range if provided.
@@ -71,14 +73,16 @@ namespace MyLittleRangeBook.RangeEvents
                                                      sre.AmmoDescription?.Trim(),
                                                      sre.OccurredUtc));
             }
-
-            if (sre.RoundsFired != 0)
+            else
             {
-                newEvents.Add(new FirearmRoundCountAltered(sre.FirearmName,
-                                                           correlationId,
-                                                           e1.Id,
-                                                           sre.RoundsFired,
-                                                           DateTimeOffset.UtcNow));
+                if (sre.RoundsFired != 0)
+                {
+                    newEvents.Add(new FirearmRoundCountAltered(sre.FirearmName,
+                                                               correlationId,
+                                                               e1.Id,
+                                                               sre.RoundsFired,
+                                                               DateTimeOffset.UtcNow));
+                }
             }
 
             if (!string.IsNullOrEmpty(sre.AmmoDescription))
@@ -91,7 +95,6 @@ namespace MyLittleRangeBook.RangeEvents
                                                   sre.Notes?.Trim(),
                                                   DateTimeOffset.UtcNow));
             }
-
             if (!string.IsNullOrWhiteSpace(sre.Notes))
             {
                 newEvents.Add(new FirearmNoteAdded(sre.FirearmName,

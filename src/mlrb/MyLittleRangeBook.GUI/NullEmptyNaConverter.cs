@@ -3,9 +3,12 @@ using Avalonia.Data.Converters;
 
 namespace MyLittleRangeBook.GUI
 {
-    public class NullEmptyNAConverter : IValueConverter
+    /// <summary>
+    ///     Converts null or empty values to "N/A" and vice versa for Avalonia.
+    /// </summary>
+    public class NullEmptyNaConverter : IValueConverter
     {
-        public static readonly NullEmptyNAConverter Instance = new();
+        public static readonly NullEmptyNaConverter Instance = new();
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo? culture)
         {
