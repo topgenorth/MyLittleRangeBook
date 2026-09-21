@@ -24,8 +24,21 @@
         string?        Notes,
         DateTimeOffset OccurredUtc);
 
+    /// <summary>
+    /// Raised by the GUI when the user creates a new range event.
+    /// </summary>
+    /// <param name="EventDate">The date of the event.</param>
+    /// <param name="FirearmName"></param>
+    /// <param name="Id"></param>
+    /// <param name="CorrelationId"></param>
+    /// <param name="CausationId"></param>
+    /// <param name="RangeName"></param>
+    /// <param name="RoundsFired"></param>
+    /// <param name="AmmoDescription"></param>
+    /// <param name="Notes"></param>
+    /// <param name="OccurredUtc"></param>
     public record struct SimpleRangeEventCreatedFromGui(
-        DateOnly       EventDate,
+        DateTime       EventDate,
         string         FirearmName,
         Guid           Id,
         Guid           CorrelationId,

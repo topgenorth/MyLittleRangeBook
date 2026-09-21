@@ -4,49 +4,41 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
-using FluentResults;
+using Fisher;
+using Fisher.Linq;
 using MyLittleRangeBook.Firearms;
-using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
-using MyLittleRangeBook.Models;
 using MyLittleRangeBook.Persistence;
-using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
 using SharedControls.Services;
 
 namespace MyLittleRangeBook.GUI.ViewModels
 {
+    /// <summary>
+    ///     ViewModel responsible for editing a simple range event.
+    ///     This class provides functionality for handling user inputs and interactions
+    ///     related to editing range events, as well as integrating with services for logging and persistence.
+    /// </summary>
     public partial class EditSimpleRangeEventViewModel : ViewModelBase, IDialogParticipant
     {
-        readonly             IDialogService                 _dialogService;
-        readonly             IFirearmsService               _firearmsService;
-        readonly             ILogger                        _logger;
-        readonly             ISimpleRangeEventService       _simpleRangeEventService;
-        readonly             ISqliteHelper                  _sqliteHelper;
-        [ObservableProperty] IEnumerable<string>            _ammoDescription = [];
-        [ObservableProperty] IEnumerable<string>            _firearmNames    = [];
-        [ObservableProperty] IEnumerable<string>            _rangeNames      = [];
+        readonly             IDialogService      _dialogService;
+        readonly             ILogger             _logger;
+        readonly             IDocumentSession    _session;
+        [ObservableProperty] IEnumerable<string> _ammoDescription = [];
+        [ObservableProperty] IEnumerable<string> _firearmNames    = [];
+        [ObservableProperty] IEnumerable<string> _rangeNames      = [];
 
-        /// <summary>
-        ///     ViewModel responsible for editing a simple range event.
-        ///     This class provides functionality for handling user inputs and interactions
-        ///     related to editing range events, as well as integrating with services for logging and persistence.
-        /// </summary>
+
         public EditSimpleRangeEventViewModel(SimpleRangeEventViewModel                simpleRangeEvent,
                                              ILogger                                  logger,
                                              Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-                                             ISqliteHelper                            sqliteHelper,
-                                             ISimpleRangeEventService                 simpleRangeEventService,
-                                             IFirearmsService                         firearmsService)
+                                             IDocumentSession                         session)
         {
-            Item                           = simpleRangeEvent;
-            _dialogService                 = dialogServiceFactory(this);
-            _logger                        = logger;
-            _sqliteHelper                  = sqliteHelper;
-            _simpleRangeEventService       = simpleRangeEventService;
-            _firearmsService               = firearmsService;
+            Item           = simpleRangeEvent;
+            _dialogService = dialogServiceFactory(this);
+            _logger        = logger;
+            _session       = session;
 
 
             _ = LoadFirearmNamesAsync();
@@ -56,53 +48,59 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
         public SimpleRangeEventViewModel Item { get; }
 
-        async Task LoadRangeNamesAsync()
-        {
-            await using DapperCommandContext ctx  = await DapperCommandContext.NewAsync(_sqliteHelper);
-            // Result<IEnumerable<string>>      list = await _simpleRangeEventService.GetRangeNames();
-            // if (list.IsSuccess)
-            // {
-            //     RangeNames = list.Value;
-            // }
-            // else
-            // {
-            //     _logger.Warning("Failed to load a list of range names.");
-            // }
-        }
+        async Task LoadRangeNamesAsync() =>
+            RangeNames = await _session.Query<SimpleRangeEvent>()
+                                       .DistinctBy(s => s.RangeName)
+                                       .Where(s => !string.IsNullOrEmpty(s.RangeName))
+                                       .OrderBy(s => s.RangeName)
+                                       .Select(s => s.RangeName)
+                                       .ToListAsync();
 
         async Task LoadAmmoDescriptionsAsync()
         {
-            await using DapperCommandContext ctx =
-                await DapperCommandContext.NewAsync(_sqliteHelper).ConfigureAwait(false);
-
-            // Result<IEnumerable<string>> ammoDescriptions =
-                // await _simpleRangeEventService.GetAmmoDescriptions().ConfigureAwait(false);
-
-            // if (ammoDescriptions.IsSuccess)
-            // {
-            //     AmmoDescription = ammoDescriptions.Value;
-            // }
-            // else
-            // {
-            //     _logger.Warning("Failed to load a list of ammo descriptions.");
-            // }
+            try
+            {
+                if (string.IsNullOrWhiteSpace(Item.FirearmName))
+                {
+                    AmmoDescription = await _session.Query<SimpleRangeEvent>()
+                                                    .Where(s=> !string.IsNullOrWhiteSpace(s.FirearmName))
+                                                    .Where(s => s.FirearmName == Item.FirearmName)
+                                                    .DistinctBy(s => s.AmmoDescription)
+                                                    .OrderBy(s => s.AmmoDescription)
+                                                    .Select(s => s.AmmoDescription)
+                                                    .ToListAsync();
+                }
+                else
+                {
+                    AmmoDescription = await _session.Query<SimpleRangeEvent>()
+                                                    .Where(s=> !string.IsNullOrWhiteSpace(s.FirearmName))
+                                                    .DistinctBy(s => s.AmmoDescription)
+                                                    .OrderBy(s => s.AmmoDescription)
+                                                    .Select(s => s.AmmoDescription!)
+                                                    .ToListAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                AmmoDescription = ["Error loading ammo descriptions"];
+                _logger.Error(e, "Could not load ammo descriptions");
+            }
         }
 
         async Task LoadFirearmNamesAsync()
         {
-            await using DapperCommandContext ctx =
-                await DapperCommandContext.NewAsync(_sqliteHelper).ConfigureAwait(false);
-
-            Result<IEnumerable<FirearmTableRow>> firearmsResult =
-                await _firearmsService.GetFirearmsAsync().ConfigureAwait(false);
-
-            if (firearmsResult.IsSuccess)
+            try
             {
-                FirearmNames = firearmsResult.Value.Select(f => f.Name).ToList();
+                FirearmNames = await _session.Query<Firearm>()
+                                             .Where(f => f.IsActive)
+                                             .OrderBy(f => f.Name)
+                                             .Select(f => f.Name)
+                                             .ToListAsync();
             }
-            else
+            catch (Exception e)
             {
-                _logger.Warning("Failed to load a list of firearm names.");
+                FirearmNames = ["Error loading firearms"];
+                _logger.Error(e, "Could not load firearm names.");
             }
         }
 
@@ -119,8 +117,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            await using DapperCommandContext ctx =
-                await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken, true).ConfigureAwait(false);
+            // await using DapperCommandContext ctx =
+            //     await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken, true).ConfigureAwait(false);
 
             try
             {
@@ -159,8 +157,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             }
             catch (Exception e)
             {
-                _logger.Error(e, "Failed to save simple range event {Id}.", Item.Id);
-                await ctx.RollbackAsync().ConfigureAwait(false);
+                _logger.Error(e, "Failed to save simple range event {Id}", Item.Id);
                 await _dialogService.ShowOverlayDialogAsync<bool>("Error",
                                                                   "An error occured while trying to save the event.",
                                                                   DialogCommands.Ok);
