@@ -59,7 +59,7 @@ namespace MyLittleRangeBook.RangeEvents
                                                                 csvRow.Notes,
                                                                 eventDate);
 
-                    Result<Guid> rUpsert = await _service.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
+                    Result<Guid> rUpsert = await _service.UpsertAsync(sre, cancellationToken: cancellationToken).ConfigureAwait(false);
 
                     if (rUpsert.IsSuccess)
                     {

@@ -20,6 +20,28 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                       "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class SimpleRangeEventViewModel : ViewModelBase, ICloneable
     {
+
+
+        /// <summary>
+        /// Use this constructor when creating a new simple range event.
+        /// </summary>
+        public SimpleRangeEventViewModel()
+        {
+            Id              = Guid.CreateVersion7();
+            Modified        = DateTimeOffset.UtcNow;
+            Created         = DateTimeOffset.UtcNow;
+            Notes           = string.Empty;
+            AmmoDescription = string.Empty;
+            RangeName       = string.Empty;
+            FirearmName     = string.Empty;
+            EventDate       = DateTime.Now;
+            IsNew           = true;
+        }
+
+        /// <summary>
+        /// Use this constructor when editing a simple range event.
+        /// </summary>
+        /// <param name="rangeEvent"></param>
         public SimpleRangeEventViewModel(SimpleRangeEvent rangeEvent)
         {
             Id              = rangeEvent.Id;
@@ -31,11 +53,16 @@ namespace MyLittleRangeBook.GUI.ViewModels
             Notes           = rangeEvent.Notes           ?? string.Empty;
             Modified        = rangeEvent.Modified;
             Created         = rangeEvent.Created;
+            IsNew           = false;
+
         }
 
-        [ObservableProperty] public partial Guid  Id    { get; private set; }
-        [ObservableProperty] public partial long? RowId { get; private set; }
+        public                              bool IsNew { get; private set; }
+        [ObservableProperty] public partial Guid Id    { get; private set; }
 
+        /// <summary>
+        /// Gets or sets the date and time when the range event occurred. Always in the local time zone.
+        /// </summary>
         [ObservableProperty]
         [Required]
         [NotifyDataErrorInfo]
@@ -51,10 +78,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [NotifyDataErrorInfo]
         public partial string RangeName { get; set; }
 
-
         [ObservableProperty]
         [NotifyDataErrorInfo]
-        [Range(0, 10000)]
+        [Range(-10000, 10000)]
         [Required]
         public partial int RoundsFired { get; set; }
 
@@ -88,6 +114,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 Modified        = Modified,
                 Created         = Created,
             };
+
+        public SimpleRangeEventCreatedFromGui ToEventCreatedFromGui() =>
+            new(EventDate, FirearmName!, Id, Id, Id, RangeName, RoundsFired, AmmoDescription, Notes, Modified);
 
         [UsedImplicitly]
         public SimpleRangeEventViewModel CloneSimpleRangeEventViewModel() => (SimpleRangeEventViewModel)Clone();

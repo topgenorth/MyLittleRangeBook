@@ -55,7 +55,7 @@ namespace MyLittleRangeBook.RangeEvents
                                                         eventDate ?? DateOnly.FromDateTime(DateTime.UtcNow));
 
 
-            Result<Guid> rAdd = await _service.UpsertAsync(sre, cancellationToken).ConfigureAwait(false);
+            Result<Guid> rAdd = await _service.UpsertAsync(sre, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             if (rAdd.IsSuccess)
             {
