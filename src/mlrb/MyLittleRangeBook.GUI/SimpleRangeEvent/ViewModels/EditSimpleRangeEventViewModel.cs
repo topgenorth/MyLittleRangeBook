@@ -8,7 +8,6 @@ using Fisher;
 using Fisher.Linq;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.GUI.Services;
-using MyLittleRangeBook.Persistence;
 using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
 using SharedControls.Services;
@@ -30,16 +29,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [ObservableProperty] IEnumerable<string> _rangeNames      = [];
 
 
-        public EditSimpleRangeEventViewModel(SimpleRangeEventViewModel                simpleRangeEvent,
+        public EditSimpleRangeEventViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                              ILogger                                  logger,
-                                             Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-                                             IDocumentSession                         session)
+                                             IDocumentSession                         session,
+                                             SimpleRangeEventViewModel                simpleRangeEvent)
         {
             Item           = simpleRangeEvent;
             _dialogService = dialogServiceFactory(this);
             _logger        = logger;
             _session       = session;
-
 
             _ = LoadFirearmNamesAsync();
             _ = LoadAmmoDescriptionsAsync();
@@ -63,7 +61,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 if (string.IsNullOrWhiteSpace(Item.FirearmName))
                 {
                     AmmoDescription = await _session.Query<SimpleRangeEvent>()
-                                                    .Where(s=> !string.IsNullOrWhiteSpace(s.FirearmName))
+                                                    .Where(s => !string.IsNullOrWhiteSpace(s.FirearmName))
                                                     .Where(s => s.FirearmName == Item.FirearmName)
                                                     .DistinctBy(s => s.AmmoDescription)
                                                     .OrderBy(s => s.AmmoDescription)
@@ -73,7 +71,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 else
                 {
                     AmmoDescription = await _session.Query<SimpleRangeEvent>()
-                                                    .Where(s=> !string.IsNullOrWhiteSpace(s.FirearmName))
+                                                    .Where(s => !string.IsNullOrWhiteSpace(s.FirearmName))
                                                     .DistinctBy(s => s.AmmoDescription)
                                                     .OrderBy(s => s.AmmoDescription)
                                                     .Select(s => s.AmmoDescription!)

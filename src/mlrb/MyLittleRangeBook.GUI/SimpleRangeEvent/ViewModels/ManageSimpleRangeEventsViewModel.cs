@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using DynamicData;
 using DynamicData.Binding;
 using DynamicData.Kernel;
+using Fisher;
 using FluentResults;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
@@ -41,6 +42,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly ILogger                                  _logger;
+        readonly IDocumentSession                         _session;
         readonly ISimpleRangeEventService                 _simpleRangeEventService;
 
         /// <summary>
@@ -59,12 +61,14 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public ManageSimpleRangeEventsViewModel(ILogger logger,
                                                 Func<IDialogParticipant,
                                                     IDialogService> dialogServiceFactory,
-                                                ISimpleRangeEventService simpleRangeEventService)
+                                                ISimpleRangeEventService simpleRangeEventService,
+                                                IDocumentSession         session)
         {
             _dialogServiceFactory    = dialogServiceFactory;
             _dialogService           = dialogServiceFactory(this);
             _logger                  = logger;
             _simpleRangeEventService = simpleRangeEventService;
+            _session                 = session;
 
             // Register for message notifications from other ViewModels
             WeakReferenceMessenger.Default.Register(this);
@@ -219,11 +223,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand]
         async Task AddNewSimpleRangeEventAsync()
         {
+            Guid correlationId = Guid.CreateVersion7();
             SimpleRangeEvent rangeEvent = new()
                                           {
-                                              Created   = DateTimeOffset.UtcNow,
-                                              Modified  = DateTimeOffset.UtcNow,
-                                              EventDate = DateTime.UtcNow,
+                                              Id            = correlationId,
+                                              CausationId   = correlationId,
+                                              CorrelationId = correlationId,
+                                              Created       = DateTimeOffset.UtcNow,
+                                              Modified      = DateTimeOffset.UtcNow,
+                                              EventDate     = DateTime.UtcNow,
                                           };
 
             await EditSimpleRangeEventAsync(new SimpleRangeEventViewModel(rangeEvent));
@@ -282,27 +290,22 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteSimpleRangeEvent))]
         async Task EditSimpleRangeEventAsync(SimpleRangeEventViewModel? simpleRangeEvent)
         {
-            // if (simpleRangeEvent is null)
-            // {
-            //     return;
-            // }
-            //
-            // EditSimpleRangeEventViewModel vm = new(simpleRangeEvent,
-            //                                        _logger,
-            //                                        _dialogServiceFactory,
-            //                                        _sqliteHelper,
-            //                                        _simpleRangeEventService,
-            //                                        _firearmsService);
-            //
-            // SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
-            //                                      "Edit the Range Event",
-            //                                      vm);
-            //
-            // if (result != null)
-            // {
-            //     // Update the item in the cache
-            //     _simpleRangeEventSourceCache.AddOrUpdate(result);
-            // }
+            if (simpleRangeEvent is null)
+            {
+                return;
+            }
+
+            EditSimpleRangeEventViewModel vm = new(_dialogServiceFactory, _logger, _session, simpleRangeEvent);
+
+            SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
+                                                 "Edit the Range Event",
+                                                 vm);
+
+            if (result != null)
+            {
+                // Update the item in the cache
+                _simpleRangeEventSourceCache.AddOrUpdate(result);
+            }
         }
 
         [RelayCommand]
