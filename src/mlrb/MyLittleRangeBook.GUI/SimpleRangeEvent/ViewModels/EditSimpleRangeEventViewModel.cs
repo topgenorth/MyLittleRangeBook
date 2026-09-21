@@ -4,9 +4,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Fisher;
 using Fisher.Linq;
+using FluentResults;
 using MyLittleRangeBook.Firearms;
+using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
@@ -21,23 +24,26 @@ namespace MyLittleRangeBook.GUI.ViewModels
     /// </summary>
     public partial class EditSimpleRangeEventViewModel : ViewModelBase, IDialogParticipant
     {
-        readonly             IDialogService      _dialogService;
-        readonly             ILogger             _logger;
-        readonly             IDocumentSession    _session;
-        [ObservableProperty] IEnumerable<string> _ammoDescription = [];
-        [ObservableProperty] IEnumerable<string> _firearmNames    = [];
-        [ObservableProperty] IEnumerable<string> _rangeNames      = [];
+        readonly             IDialogService           _dialogService;
+        readonly             ILogger                  _logger;
+        readonly             ISimpleRangeEventService _rangeEventService;
+        readonly             IDocumentSession         _session;
+        [ObservableProperty] IEnumerable<string>      _ammoDescription = [];
+        [ObservableProperty] IEnumerable<string>      _firearmNames    = [];
+        [ObservableProperty] IEnumerable<string>      _rangeNames      = [];
 
 
         public EditSimpleRangeEventViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                              ILogger                                  logger,
                                              IDocumentSession                         session,
-                                             SimpleRangeEventViewModel                simpleRangeEvent)
+                                             SimpleRangeEventViewModel                simpleRangeEvent,
+                                             ISimpleRangeEventService                 rangeEventService)
         {
-            Item           = simpleRangeEvent;
-            _dialogService = dialogServiceFactory(this);
-            _logger        = logger;
-            _session       = session;
+            Item               = simpleRangeEvent;
+            _rangeEventService = rangeEventService;
+            _dialogService     = dialogServiceFactory(this);
+            _logger            = logger;
+            _session           = session;
 
             _ = LoadFirearmNamesAsync();
             _ = LoadAmmoDescriptionsAsync();
@@ -58,25 +64,14 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(Item.FirearmName))
-                {
-                    AmmoDescription = await _session.Query<SimpleRangeEvent>()
-                                                    .Where(s => !string.IsNullOrWhiteSpace(s.FirearmName))
-                                                    .Where(s => s.FirearmName == Item.FirearmName)
-                                                    .DistinctBy(s => s.AmmoDescription)
-                                                    .OrderBy(s => s.AmmoDescription)
-                                                    .Select(s => s.AmmoDescription)
-                                                    .ToListAsync();
-                }
-                else
-                {
-                    AmmoDescription = await _session.Query<SimpleRangeEvent>()
-                                                    .Where(s => !string.IsNullOrWhiteSpace(s.FirearmName))
-                                                    .DistinctBy(s => s.AmmoDescription)
-                                                    .OrderBy(s => s.AmmoDescription)
-                                                    .Select(s => s.AmmoDescription!)
-                                                    .ToListAsync();
-                }
+                // TODO [TO20260921] Limit this to the firearm name where possible.
+                AmmoDescription = await _session.Query<SimpleRangeEvent>()
+                                                .Where(s => !string.IsNullOrWhiteSpace(s.FirearmName))
+                                                .Where(s => s.FirearmName == Item.FirearmName)
+                                                .DistinctBy(s => s.AmmoDescription)
+                                                .OrderBy(s => s.AmmoDescription)
+                                                .Select(s => s.AmmoDescription)
+                                                .ToListAsync();
             }
             catch (Exception e)
             {
@@ -115,43 +110,31 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            // await using DapperCommandContext ctx =
-            //     await DapperCommandContext.NewAsync(_sqliteHelper, cancellationToken, true).ConfigureAwait(false);
 
             try
             {
-                // Result<Guid> r1 = await _simpleRangeEventDataProcessor
-                //                          .ProcessSimpleRangeEventData(ctx,
-                //                                                       Item.FirearmName,
-                //                                                       Item.RoundsFired,
-                //                                                       Item.RangeName,
-                //                                                       Item.AmmoDescription,
-                //                                                       Item.Notes,
-                //                                                       DateOnly.FromDateTime(Item.EventDate))
-                //                          .ConfigureAwait(false);
+                Result<Guid> r1 =
+                    await _rangeEventService.UpsertAsync(Item.ToSimpleRangeEvent(), Item.IsNew, cancellationToken);
 
-                // if (r1.IsSuccess)
-                // {
-                //     await ctx.CommitAsync().ConfigureAwait(false);
-                //     Result<SimpleRangeEvent> r3 = await _simpleRangeEventService
-                //                                        .GetAsync(r1.Value, cancellationToken)
-                //                                        .ConfigureAwait(false);
-                //     SimpleRangeEvent          sre              = r3.Value;
-                //     SimpleRangeEventViewModel updatedViewModel = new(sre);
-                //     _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
-                //     WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
-                //                                              Item.RowId == null
-                //                                                  ? UpdateAction.Added
-                //                                                  : UpdateAction.Updated,
-                //                                              sre));
-                // }
-                // else
-                // {
-                //     await ctx.RollbackAsync().ConfigureAwait(false);
-                //     await _dialogService.ShowOverlayDialogAsync<bool>("Error",
-                //                                                       "An error occured while trying to save the event.",
-                //                                                       DialogCommands.Ok);
-                // }
+                if (r1.IsSuccess)
+                {
+                    SimpleRangeEvent? sre = await _session.Query<SimpleRangeEvent>()
+                                                          .Where(e => e.Id == r1.Value)
+                                                          .FirstOrDefaultAsync(cancellationToken);
+                    SimpleRangeEventViewModel updatedViewModel = new(sre!);
+                    _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
+                    WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
+                                                             Item.IsNew
+                                                                 ? UpdateAction.Added
+                                                                 : UpdateAction.Updated,
+                                                             sre));
+                }
+                else
+                {
+                    await _dialogService.ShowOverlayDialogAsync<bool>("Error",
+                                                                      "An error occured while trying to save the event.",
+                                                                      DialogCommands.Ok);
+                }
             }
             catch (Exception e)
             {

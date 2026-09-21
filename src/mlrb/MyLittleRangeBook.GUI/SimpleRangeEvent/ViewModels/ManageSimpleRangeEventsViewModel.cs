@@ -42,8 +42,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly ILogger                                  _logger;
+        readonly ISimpleRangeEventService                 _rangeEventService;
         readonly IDocumentSession                         _session;
-        readonly ISimpleRangeEventService                 _simpleRangeEventService;
 
         /// <summary>
         ///     Source cache for managing ManageSimpleRangeEventsVM instances with reactive updates.
@@ -61,14 +61,14 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public ManageSimpleRangeEventsViewModel(ILogger logger,
                                                 Func<IDialogParticipant,
                                                     IDialogService> dialogServiceFactory,
-                                                ISimpleRangeEventService simpleRangeEventService,
+                                                ISimpleRangeEventService rangeEventService,
                                                 IDocumentSession         session)
         {
-            _dialogServiceFactory    = dialogServiceFactory;
-            _dialogService           = dialogServiceFactory(this);
-            _logger                  = logger;
-            _simpleRangeEventService = simpleRangeEventService;
-            _session                 = session;
+            _dialogServiceFactory = dialogServiceFactory;
+            _dialogService        = dialogServiceFactory(this);
+            _logger               = logger;
+            _rangeEventService    = rangeEventService;
+            _session              = session;
 
             // Register for message notifications from other ViewModels
             WeakReferenceMessenger.Default.Register(this);
@@ -201,7 +201,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         async Task LoadDataAsync(CancellationToken cancellationToken = default)
         {
-            Result<IEnumerable<SimpleRangeEvent>> r = await _simpleRangeEventService
+            Result<IEnumerable<SimpleRangeEvent>> r = await _rangeEventService
                                                          .GetSimpleRangeEventsAsync(cancellationToken);
 
             if (r.IsSuccess)
@@ -221,21 +221,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         }
 
         [RelayCommand]
-        async Task AddNewSimpleRangeEventAsync()
-        {
-            Guid correlationId = Guid.CreateVersion7();
-            SimpleRangeEvent rangeEvent = new()
-                                          {
-                                              Id            = correlationId,
-                                              CausationId   = correlationId,
-                                              CorrelationId = correlationId,
-                                              Created       = DateTimeOffset.UtcNow,
-                                              Modified      = DateTimeOffset.UtcNow,
-                                              EventDate     = DateTime.UtcNow,
-                                          };
-
-            await EditSimpleRangeEventAsync(new SimpleRangeEventViewModel(rangeEvent));
-        }
+        async Task AddNewSimpleRangeEventAsync() => await EditSimpleRangeEventAsync(new SimpleRangeEventViewModel());
 
         bool CanEditOrDeleteSimpleRangeEvent(SimpleRangeEventViewModel? simpleRangeEvent) =>
             simpleRangeEvent is not null;
@@ -295,10 +281,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
-            EditSimpleRangeEventViewModel vm = new(_dialogServiceFactory, _logger, _session, simpleRangeEvent);
+            EditSimpleRangeEventViewModel vm = new(_dialogServiceFactory, _logger, _session, simpleRangeEvent,
+                                                   _rangeEventService);
 
             SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
-                                                 "Edit the Range Event",
+                                                 simpleRangeEvent.IsNew
+                                                     ? "Add Range Event"
+                                                     : "Edit the Range Event",
                                                  vm);
 
             if (result != null)

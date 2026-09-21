@@ -38,6 +38,7 @@ namespace MyLittleRangeBook.RangeEvents
         }
 
         public async Task<Result<Guid>> UpsertAsync(SimpleRangeEvent  sre,
+                                                    bool isNew = false,
                                                     CancellationToken cancellationToken = default)
         {
             List<object> newEvents     = [];

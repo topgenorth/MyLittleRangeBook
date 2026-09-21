@@ -20,7 +20,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                       "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class SimpleRangeEventViewModel : ViewModelBase, ICloneable
     {
-        bool _isNew = true;
+
 
         /// <summary>
         /// Use this constructor when creating a new simple range event.
@@ -35,6 +35,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             RangeName       = string.Empty;
             FirearmName     = string.Empty;
             EventDate       = DateTime.Now;
+            IsNew           = true;
         }
 
         /// <summary>
@@ -52,10 +53,12 @@ namespace MyLittleRangeBook.GUI.ViewModels
             Notes           = rangeEvent.Notes           ?? string.Empty;
             Modified        = rangeEvent.Modified;
             Created         = rangeEvent.Created;
-            _isNew          = false;
+            IsNew           = false;
+
         }
 
-        [ObservableProperty] public partial Guid Id { get; private set; }
+        public                              bool IsNew { get; private set; }
+        [ObservableProperty] public partial Guid Id    { get; private set; }
 
         /// <summary>
         /// Gets or sets the date and time when the range event occurred. Always in the local time zone.

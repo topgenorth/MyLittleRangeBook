@@ -41,6 +41,7 @@
         /// <param name="simpleRangeEvent">
         ///     The simple range event to insert or update.
         /// </param>
+        /// <param name="isNew"></param>
         /// <param name="cancellationToken">
         ///     A cancellation token to observe while waiting for the task to complete. This is optional and defaults to None.
         /// </param>
@@ -49,6 +50,7 @@
         ///     identifier of the inserted or updated SimpleRangeEvent.
         /// </returns>
         Task<Result<Guid>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
+                                       bool              isNew             = false,
                                        CancellationToken cancellationToken = default);
 
 
