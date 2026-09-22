@@ -110,9 +110,18 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 return;
             }
 
+            if (!Item.IsNew)
+            {
+                // TODO [TO20260921] We need to compare the old values with the new, and publish the appropriate events...
+                await _dialogService.ShowOverlayDialogAsync<bool>("Not Implemented",
+                                                                  "We don't support editing right now.",
+                                                                  DialogCommands.Ok);
+                _logger.Debug("Editing a simple range event is not supported right now - {Id}", Item.Id);
+            }
 
             try
             {
+                // TODO [TO20260921] We need to compare the old values with the new, and publish the appropriate events...
                 Result<Guid> r1 =
                     await _rangeEventService.UpsertAsync(Item.ToSimpleRangeEvent(), Item.IsNew, cancellationToken);
 
