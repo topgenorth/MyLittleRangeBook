@@ -2,13 +2,23 @@ namespace MyLittleRangeBook
 {
     public static class EnvironmentExtensions
     {
+        /// <summary>
+        ///     Returns true if the DOTNET_ENVIRONMENT variable is Development.
+        /// </summary>
         public static bool IsDevelopment => "Development".Equals(
-            Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"),
-            StringComparison.OrdinalIgnoreCase);
+                                                                 Environment
+                                                                    .GetEnvironmentVariable("DOTNET_ENVIRONMENT"),
+                                                                 StringComparison.OrdinalIgnoreCase);
 
+        /// <summary>
+        ///     Returns true if the DOTNET_ENVIRONMENT variable is Staging.
+        /// </summary>
         public static bool IsStaging => "Staging".Equals(Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"),
-            StringComparison.OrdinalIgnoreCase);
+                                                         StringComparison.OrdinalIgnoreCase);
 
+        /// <summary>
+        ///     Checks to see if this is the production environment (DOTNET_ENVIRONMENT is either an empty string or Production).
+        /// </summary>
         public static bool IsProduction
         {
             get
@@ -42,9 +52,9 @@ namespace MyLittleRangeBook
 
             string path = fileInfo.DirectoryName!;
             string name = Path.GetFileNameWithoutExtension(fileInfo.FullName);
-            string ext = fileInfo.Extension;
+            string ext  = fileInfo.Extension;
 
-            var newName = $"{name}.{env}{ext}";
+            string newName = $"{name}.{env}{ext}";
 
             string s = Path.Combine(path, newName);
 
