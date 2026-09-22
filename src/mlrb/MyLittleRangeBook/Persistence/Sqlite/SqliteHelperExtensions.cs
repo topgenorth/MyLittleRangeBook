@@ -127,10 +127,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                {
                                    // [TO20260820] https://fisher.jasperfx.net/configuration/hostbuilder#registration-overloads
                                    opts.Connection(connectionString);
-
-
                                    opts.Policies.AllDocumentsSoftDeleted();
-                                   // opts.Policies.AllDocumentsAreMultiTenanted();
 
                                    opts.Schema.For<Cartridge>()
                                        .Metadata(m =>
@@ -185,6 +182,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
 
                                    opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
                                    opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
+                                   opts.Projections.Add<AmmoDescriptionProjection>(ProjectionLifecycle.Inline);
                                    opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
                                })
                     .ApplyAllDatabaseChangesOnStartup();

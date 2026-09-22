@@ -9,7 +9,7 @@ namespace MyLittleRangeBook.Firearms
         {
             Table.AddColumn("firearm_name", "TEXT").AsPrimaryKey();
             Table.AddColumn("round_count",  "INTEGER").DefaultValue(0).NotNull();
-
+            Options.TeardownDataOnRebuild = true;
 
             Project<FirearmCreated>(map =>
                                     {

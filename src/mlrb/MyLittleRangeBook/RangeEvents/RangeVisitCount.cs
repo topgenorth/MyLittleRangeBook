@@ -12,6 +12,7 @@ namespace MyLittleRangeBook.RangeEvents
             // 1. Set the natural key column as the primary key
             Table.AddColumn("range_name",  "TEXT").AsPrimaryKey();
             Table.AddColumn("visit_count", "INTEGER").DefaultValue(0).NotNull();
+            Options.TeardownDataOnRebuild = true;
 
             // 2. Pass the natural key selector as the second parameter (primaryKeySource)
             Project<FirearmUsedAtRange>(
