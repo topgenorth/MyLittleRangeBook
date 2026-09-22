@@ -23,6 +23,12 @@ namespace MyLittleRangeBook.Recipes
                                         });
         }
 
-        public record struct AmmoDescription(string FirearmName, string Description);
     }
+    /// <summary>
+    ///     This is a "summary" of all the ammo descriptions that a user entered for a firearm.
+    /// </summary>
+    /// <param name="Id"></param>
+    /// <param name="FirearmName"></param>
+    /// <param name="AmmoDescription"></param>
+    public record struct AmmoDescriptionSentence(string FirearmName, string AmmoDescription);
 }
