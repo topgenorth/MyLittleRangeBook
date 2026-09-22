@@ -26,9 +26,8 @@ namespace MyLittleRangeBook.RangeEvents
 
     public class RangeVisitCount
     {
-        public               Guid           Id              { get; set; }
-        [UniqueIndex, NaturalKey] public string         Name            { get; set; } = "Unknown Range";
-        public               int            VisitCount      { get; set; }
-        public               DateTimeOffset MostRecentVisit { get; set; }
+        public                            Guid   Id         { get; set; }
+        [UniqueIndex] [NaturalKey] public string Name       { get; set; } = "Unknown Range";
+        public                            int    VisitCount { get; set; }
     }
 }
