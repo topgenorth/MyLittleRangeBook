@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace MyLittleRangeBook.IO
+namespace MyLittleRangeBook
 {
     public static class AssemblyExtensions
     {
@@ -19,7 +19,7 @@ namespace MyLittleRangeBook.IO
                 throw new FileNotFoundException($"Embedded resource '{fullResourceName}' not found.");
             }
 
-            using var reader = new StreamReader(stream);
+            using StreamReader reader = new(stream);
 
             return await reader.ReadToEndAsync();
         }
@@ -35,7 +35,7 @@ namespace MyLittleRangeBook.IO
         public static string GetAssemblyVersionInformation(this Assembly assembly)
         {
             string v = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion ?? "Unknown";
+                              ?.InformationalVersion ?? "Unknown";
 
 
             return RemoveFullGitShaFromInformationalVersion(v);
@@ -64,7 +64,7 @@ namespace MyLittleRangeBook.IO
                 return v;
             }
 
-            string version = versionParts[0];
+            string version   = versionParts[0];
             string afterPlus = versionParts[1];
 
             string[] shaParts = afterPlus.Split('.');
