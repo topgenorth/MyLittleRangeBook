@@ -58,15 +58,14 @@ namespace MyLittleRangeBook.Recipes
     {
         public AmmoDescriptionProjection() : base("firearm_ammo_descriptions")
         {
-            Table.AddColumn("id",               "TEXT").AsPrimaryKey();
-            Table.AddColumn("firearm_name",     "TEXT").NotNull().AddIndex();
-            Table.AddColumn("ammo_description", "TEXT").NotNull().AddIndex();
-
+            Table.AddColumn("id",               "TEXT").AsPrimaryKey().NotNull();
+            Table.AddColumn("firearm_name",     "TEXT").AddIndex().NotNull();
+            Table.AddColumn("ammo_description", "TEXT").AddIndex().NotNull();
+            Table.WithoutRowId = true;
             Project<FirearmUsedAtRange>(map =>
                                         {
                                             map.Map(x => x.AmmoDescription, "ammo_description");
                                             map.Map(x => x.FirearmName,     "firearm_name");
-
                                         });
         }
 
@@ -86,8 +85,15 @@ namespace MyLittleRangeBook.Recipes
     /// <summary>
     ///     This is a "summary" of all the ammo descriptions that a user entered for a firearm.
     /// </summary>
-    /// <param name="Id"></param>
     /// <param name="FirearmName"></param>
     /// <param name="AmmoDescription"></param>
-    public record struct AmmoDescriptionSentence(string Id, string FirearmName, string AmmoDescription);
+    public readonly record struct AmmoDescriptionSentence(string FirearmName, string AmmoDescription)
+    {
+        static string CreateId(string name, string description)
+        {
+            string id = $"{name.Trim().ToUpperInvariant()}|{description.Trim().ToUpperInvariant()}";
+            return MlrbId.FromString(id);
+        }
+        public string Id { get { return CreateId(FirearmName, AmmoDescription); } }
+    }
 }
