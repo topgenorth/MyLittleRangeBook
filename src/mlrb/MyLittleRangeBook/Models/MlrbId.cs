@@ -75,7 +75,7 @@ namespace MyLittleRangeBook.Models
         ///     If the string is a valid ULID, it is directly converted; otherwise, a deterministic ULID is generated from its
         ///     SHA-256 hash.
         /// </summary>
-        public static MlrbId FromString(string? stringValue)
+        public static MlrbId FromString(string? stringValue, DateTimeOffset? dateTimeOffset = null)
         {
             if (string.IsNullOrWhiteSpace(stringValue))
             {
@@ -88,7 +88,8 @@ namespace MyLittleRangeBook.Models
             }
 
             byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(stringValue));
-            return new MlrbId(hash);
+            return dateTimeOffset is null ? new MlrbId(hash) : new MlrbId(hash, dateTimeOffset!);
+
         }
 
         /// <summary>
