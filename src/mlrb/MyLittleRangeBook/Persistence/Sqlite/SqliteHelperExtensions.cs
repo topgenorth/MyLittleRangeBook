@@ -110,7 +110,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <returns></returns>
         public static SqliteConnection AddFunctions(this SqliteConnection connection)
         {
-
             connection.CreateFunction("nanoid", Guid.CreateVersion7);
             connection.CreateFunction("utcnow", () => DateTimeOffset.UtcNow.ToString("O"));
 
@@ -186,11 +185,12 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                                      m.CreatedAt.Enabled      = false;
                                                      m.LastModifiedBy.Enabled = false;
                                                  })
+                                       .UniqueIndex(x=> x.AmmoDescription)
                                        .UseNumericRevisions();
 
                                    opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
                                    opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
-                                   opts.Projections.Add(new AmmoDescriptionProjection(),   ProjectionLifecycle.Inline);
+                                   opts.Projections.Add<AmmoDescriptionProjection2>(ProjectionLifecycle.Inline);
                                    opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
                                })
                     .ApplyAllDatabaseChangesOnStartup();
@@ -209,7 +209,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                                                          IConfiguration          configuration)
         {
             SetSqlite3ProviderAndInit();
-
 
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset),  new SqliteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());

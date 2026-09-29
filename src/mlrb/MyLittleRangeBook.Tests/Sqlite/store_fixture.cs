@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Fisher;
+using JasperFx.Events.Projections;
 using MyLittleRangeBook.Cartridges;
 
 // ReSharper disable once CheckNamespace
@@ -13,8 +14,14 @@ namespace MyLittleRangeBook.Sqlite
 
         public async ValueTask DisposeAsync()
         {
-            await Store.DisposeAsync(); // releases this store's pooled connections
-            File.Delete(_path);
+            if (Store != null)
+            {
+                await Store.DisposeAsync(); // releases this store's pooled connections
+            }
+            if (File.Exists(_path))
+            {
+                File.Delete(_path);
+            }
         }
 
         public async Task InitializeAsync()
@@ -27,6 +34,7 @@ namespace MyLittleRangeBook.Sqlite
                                               .UseNumericRevisions()
                                               .SoftDeleted()
                                               ;
+                                          opts.Projections.Add<MyLittleRangeBook.Recipes.AmmoDescriptionProjection2>(ProjectionLifecycle.Inline);
                                           opts.Connection($"Data Source={_path}");
                                       });
 

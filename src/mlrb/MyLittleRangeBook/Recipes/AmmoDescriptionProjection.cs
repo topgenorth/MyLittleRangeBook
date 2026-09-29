@@ -1,4 +1,5 @@
-﻿using Fisher.Projections.Flattened;
+﻿using Fisher;
+using Fisher.Projections;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 
@@ -54,46 +55,62 @@ namespace MyLittleRangeBook.Recipes
     }*/
 
 
-    public class AmmoDescriptionProjection : FlatTableProjection
+    public partial class AmmoDescriptionProjection2 : EventProjection
     {
-        public AmmoDescriptionProjection() : base("firearm_ammo_descriptions")
+        const string UPSERT_FIREARM_AMMO_DESCRIPTIONS_SQL = """
+                                                            INSERT INTO firearm_ammo_descriptions (id, firearm_name, ammo_description)
+                                                            VALUES (?, ?, ?)
+                                                            ON CONFLICT(id) DO UPDATE SET
+                                                                firearm_name = EXCLUDED.firearm_name,
+                                                                ammo_description = EXCLUDED.ammo_description;
+                                                            """;
+
+        AmmoDescriptionSentence Create(FirearmUsedAtRange evt)
         {
-            Table.AddColumn("id",               "TEXT").AsPrimaryKey().NotNull();
-            Table.AddColumn("firearm_name",     "TEXT").AddIndex().NotNull();
-            Table.AddColumn("ammo_description", "TEXT").AddIndex().NotNull();
-            Table.WithoutRowId = true;
-            Project<FirearmUsedAtRange>(map =>
-                                        {
-                                            map.Map(x => x.AmmoDescription, "ammo_description");
-                                            map.Map(x => x.FirearmName,     "firearm_name");
-                                        });
+            string ammo = evt.AmmoDescription ?? "Unknown";
+            return new AmmoDescriptionSentence(CreateAmmoDescriptionId(evt.FirearmName, ammo),
+                                               ammo,
+                                               evt.CorrelationId,
+                                               evt.CausationId
+                                              );
         }
 
         /// <summary>
-        ///     Creates a deterministic ID for the name/description.
+        ///     Creates a unique ID for an ammo description based on its name and the firearm it's associated with.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="description"></param>
+        /// <remarks>All of these are assumed to be created at DateTimeOffset.MinValue.</remarks>
+        /// <param name="firearmName"></param>
+        /// <param name="ammoDescription"></param>
         /// <returns></returns>
-        static string CreateId(string name, string description)
+        string CreateAmmoDescriptionId(string firearmName, string ammoDescription)
         {
-            string id = $"{name.Trim().ToUpperInvariant()}|{description.Trim().ToUpperInvariant()}";
-            return MlrbId.FromString(id);
+            string s  = $"{firearmName}->{ammoDescription}";
+            string id = MlrbId.FromString(s, DateTimeOffset.MinValue);
+            return id;
         }
+
+        public void Project(FirearmUsedAtRange @event, IDocumentSession ops)
+        {
+            AmmoDescriptionSentence x = Create(@event);
+            ops.QueueSqlCommand(UPSERT_FIREARM_AMMO_DESCRIPTIONS_SQL,
+                                CreateAmmoDescriptionId(@event.FirearmName, x.AmmoDescription),
+                                @event.FirearmName,
+                                x.AmmoDescription);
+            ops.Store(x);
+        }
+
     }
 
+
     /// <summary>
-    ///     This is a "summary" of all the ammo descriptions that a user entered for a firearm.
+    ///     This is a "summary" of all the ammo descriptions that a user entered for a firearm. An ammo description
+    ///     could be used with ore than one firearm.
     /// </summary>
     /// <param name="FirearmName"></param>
     /// <param name="AmmoDescription"></param>
-    public readonly record struct AmmoDescriptionSentence(string FirearmName, string AmmoDescription)
-    {
-        static string CreateId(string name, string description)
-        {
-            string id = $"{name.Trim().ToUpperInvariant()}|{description.Trim().ToUpperInvariant()}";
-            return MlrbId.FromString(id);
-        }
-        public string Id { get { return CreateId(FirearmName, AmmoDescription); } }
-    }
+    public readonly record struct AmmoDescriptionSentence(
+        string   Id,
+        string AmmoDescription,
+        Guid   CorrelationId,
+        Guid   CausationId) { }
 }
