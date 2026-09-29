@@ -15,7 +15,7 @@ namespace MyLittleRangeBook.Database
     [UsedImplicitly]
     public class SqliteMigrationCommands : MlrbCommandBase
     {
-        const    string        MigrationsSql = "SELECT * FROM SchemaVersions ORDER BY Applied DESC";
+        const    string        MIGRATIONS_SQL = "SELECT * FROM SchemaVersions ORDER BY Applied DESC";
         readonly ISqliteHelper _sqliteHelper;
 
         public SqliteMigrationCommands(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper) :
@@ -39,7 +39,7 @@ namespace MyLittleRangeBook.Database
                 await using SqliteConnection connection = await _sqliteHelper
                                                                .GetDatabaseConnectionAsync(ct)
                                                                .ConfigureAwait(false);
-                await using SqliteCommand    cmd = new(MigrationsSql, connection);
+                await using SqliteCommand    cmd = new(MIGRATIONS_SQL, connection);
                 await using SqliteDataReader rdr = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
 
                 Table table = new Table().Expand().BorderColor(Color.White);
@@ -95,49 +95,6 @@ namespace MyLittleRangeBook.Database
             }
         }
 
-        /// <summary>
-        ///     Ensures that all database schema migrations have been applied.
-        /// </summary>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        [Command("migrate")]
-        [UsedImplicitly]
-        public async Task<int> MigrateSchemaAsync(CancellationToken ct = default)
-        {
-            CliDisplay.PrintCommandHeader("Applying Migrations");
-            int returnCode = -1;
-            if (!File.Exists(_sqliteHelper.DatabaseFile))
-            {
-                Logger.Warning("SQLite database {file} not found.", _sqliteHelper.DatabaseFile);
-                CliDisplay.PrintFailure($"Could not find the SQLite database '{_sqliteHelper.DatabaseFile}'.");
 
-                returnCode = SQL_FAILED_TO_APPLY_MIGRATIONS;
-                goto ExitMethod;
-            }
-
-            Result<bool> migrationResult = await _sqliteHelper.ApplyDbupMigrationsAsync(ct).ConfigureAwait(false);
-            if (migrationResult.IsSuccess)
-            {
-                Logger.Information("Migrations applied.");
-                CliDisplay.PrintSuccess("Migrations applied.");
-
-                returnCode = SUCCESS;
-                goto ExitMethod;
-            }
-
-            string? msg = migrationResult.Errors.FirstOrDefault()?.Message;
-            Logger.Error("Failed to apply migrations: {Error}", msg);
-            CliDisplay.PrintFailure($"Failed to apply migrations: {msg}");
-
-            returnCode = SQL_FAILED_TO_APPLY_MIGRATIONS;
-
-            ExitMethod:
-            if (returnCode != SUCCESS)
-            {
-                PressEnterToContinue();
-            }
-
-            return returnCode;
-        }
     }
 }

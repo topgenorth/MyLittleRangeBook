@@ -5,55 +5,6 @@ using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.Recipes
 {
-    /*/// <summary>
-    ///     Create the AmmoDescription lookup table.
-    /// </summary>
-    public partial class AmmoDescriptionProjection : MultiStreamProjection<AmmoDescriptionSentence, string>
-    {
-        public AmmoDescriptionProjection()
-        {
-            Identity<FirearmUsedAtRange>(e => CreateId(e.FirearmName, e.AmmoDescription!));
-            Identity<FirearmUsedAmmo>(e => CreateId(e.FirearmName,    e.AmmoDescription!));
-        }
-
-        /// <summary>
-        ///     Creates a deterministic ID for the name/description.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="description"></param>
-        /// <returns></returns>
-        static string CreateId(string name, string description)
-        {
-            string id = $"{name.Trim().ToUpperInvariant()}|{description.Trim().ToUpperInvariant()}";
-            return MlrbId.FromString(id);
-        }
-
-        /// <summary>
-        ///     Change the event into an <c cref="AmmoDescriptionSentence" />.
-        /// </summary>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        public static AmmoDescriptionSentence Create(FirearmUsedAtRange e) =>
-            new(CreateId(e.FirearmName, e.AmmoDescription), e.FirearmName, e.AmmoDescription);
-
-        /// <summary>
-        ///     Applies the changes from the event to the current sentence.
-        /// </summary>
-        /// <param name="evt"></param>
-        /// <param name="current"></param>
-        public void Apply(FirearmUsedAtRange evt, AmmoDescriptionSentence current)
-        {
-            current.FirearmName     = evt.FirearmName;
-            current.AmmoDescription = evt.AmmoDescription!;
-        }
-
-        public void Apply(FirearmUsedAmmo evt, AmmoDescriptionSentence current)
-        {
-            current.FirearmName = evt.FirearmName;
-            current.AmmoDescription = evt.AmmoDescription!;
-        }
-    }*/
-
 
     public partial class AmmoDescriptionProjection2 : EventProjection
     {
@@ -65,6 +16,15 @@ namespace MyLittleRangeBook.Recipes
                                                                 ammo_description = EXCLUDED.ammo_description;
                                                             """;
 
+        AmmoDescriptionSentence Create(FirearmUsedAmmo evt)
+        {
+            string ammo = evt.AmmoDescription ?? "Unknown";
+            return new AmmoDescriptionSentence(CreateAmmoDescriptionId(evt.FirearmName, ammo),
+                                               ammo,
+                                               evt.CorrelationId,
+                                               evt.CausationId
+                                              );
+        }
         AmmoDescriptionSentence Create(FirearmUsedAtRange evt)
         {
             string ammo = evt.AmmoDescription ?? "Unknown";
@@ -90,6 +50,16 @@ namespace MyLittleRangeBook.Recipes
         }
 
         public void Project(FirearmUsedAtRange @event, IDocumentSession ops)
+        {
+            AmmoDescriptionSentence x = Create(@event);
+            ops.QueueSqlCommand(UPSERT_FIREARM_AMMO_DESCRIPTIONS_SQL,
+                                CreateAmmoDescriptionId(@event.FirearmName, x.AmmoDescription),
+                                @event.FirearmName,
+                                x.AmmoDescription);
+            ops.Store(x);
+        }
+
+        public void Project(FirearmUsedAmmo @event, IDocumentSession ops)
         {
             AmmoDescriptionSentence x = Create(@event);
             ops.QueueSqlCommand(UPSERT_FIREARM_AMMO_DESCRIPTIONS_SQL,
