@@ -32,7 +32,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [ObservableProperty] IEnumerable<string>      _firearmNames    = [];
         [ObservableProperty] IEnumerable<string>      _rangeNames      = [];
 
-
         public EditSimpleRangeEventViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                              ILogger                                  logger,
                                              IDocumentSession                         session,
@@ -60,18 +59,39 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                        .Select(s => s.RangeName)
                                        .ToListAsync();
 
-        async Task LoadAmmoDescriptionsAsync()
+        /// <summary>
+        ///     Asynchronously loads ammunition descriptions based on the optionally provided firearm name.
+        ///     If no firearm name is specified, retrieves a general list of ammunition descriptions.
+        ///     Handles any errors that occur during the loading process and logs appropriate error messages.
+        /// </summary>
+        /// <param name="firearmName">
+        ///     The name of the firearm for which ammunition descriptions should be loaded.
+        ///     If null, ammunition descriptions for all firearms are loaded.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A token to monitor for cancellation requests.
+        /// </param>
+        /// <returns>
+        ///     A task that represents the asynchronous operation of loading ammunition descriptions.
+        /// </returns>
+        async Task LoadAmmoDescriptionsAsync(string? firearmName = null, CancellationToken cancellationToken = default)
         {
+            const string SQL         = "SELECT ammo_description FROM firearm_ammo_descriptions";
+            const string SQL_FIREARM = "SELECT ammo_description FROM firearm_ammo_descriptions WHERE firearm_name = ?";
             try
             {
+                IReadOnlyList<string> descriptions;
+                if (string.IsNullOrWhiteSpace(firearmName))
+                {
+                    descriptions    = await _session.AdvancedSql.QueryAsync<string>(SQL, cancellationToken);
+                }
+                else
+                {
+                    object[] p = [firearmName];
+                    descriptions    = await _session.AdvancedSql.QueryAsync<string>(SQL_FIREARM, cancellationToken, p);
+                }
                 // TODO [TO20260921] Limit this to the firearm name where possible.
-                AmmoDescription = await _session.Query<SimpleRangeEvent>()
-                                                .Where(s => !string.IsNullOrWhiteSpace(s.FirearmName))
-                                                .Where(s => s.FirearmName == Item.FirearmName)
-                                                .DistinctBy(s => s.AmmoDescription)
-                                                .OrderBy(s => s.AmmoDescription)
-                                                .Select(s => s.AmmoDescription)
-                                                .ToListAsync();
+                AmmoDescription = descriptions.Count == 0 ? ["Unknown"] : descriptions;
             }
             catch (Exception e)
             {
@@ -177,6 +197,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        readonly record struct ammoDescriptionSentence(string Description)
+        {
+            public override int GetHashCode() => Description.GetHashCode();
+
+            public override string ToString() => Description;
+
+            public bool Equals(ammoDescriptionSentence? other) => other?.Description == Description;
         }
     }
 }
