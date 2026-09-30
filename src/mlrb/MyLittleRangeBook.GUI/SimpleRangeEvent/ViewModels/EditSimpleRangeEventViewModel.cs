@@ -106,7 +106,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             string? firearmName, CancellationToken cancellationToken)
         {
             const string SQL         = "SELECT DISTINCT ammo_description FROM firearm_ammo_descriptions ORDER BY ammo_description;";
-            const string SQL_FIREARM = "SELECT ammo_description FROM firearm_ammo_descriptions WHERE firearm_name = ? ORDER BY ammo_description;";
+            const string SQL_FIREARM = "SELECT DISTINCT ammo_description FROM firearm_ammo_descriptions WHERE firearm_name = ? ORDER BY ammo_description;";
 
             IReadOnlyList<string> descriptions;
             if (string.IsNullOrWhiteSpace(firearmName))
