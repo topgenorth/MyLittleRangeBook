@@ -26,7 +26,7 @@
                 <controls:LabeledControl Header="Firearm">
                     <AutoCompleteBox x:Name="FirearmAutoCompleteBox"
                                      HorizontalAlignment="Left"
-                                     Text="{Binding FirearmName, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                     Text="{Binding $parent[UserControl].((viewModels:EditSimpleRangeEventViewModel)DataContext).FirearmNameSearchText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
                                      ItemsSource="{Binding $parent[UserControl].((viewModels:EditSimpleRangeEventViewModel)DataContext).FirearmNames}"
                                      FilterMode="Contains"
                                      PlaceholderText="The name of the firearm" />
