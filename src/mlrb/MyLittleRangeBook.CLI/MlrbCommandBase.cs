@@ -5,16 +5,10 @@ namespace MyLittleRangeBook
     /// <summary>
     ///     Base class for classes that will handle commands for the Console Application Framework.
     /// </summary>
-    public abstract class MlrbCommandBase
+    public abstract class MlrbCommandBase(ILogger logger, ICliDisplay cliDisplay)
     {
-        protected readonly ICliDisplay CliDisplay;
-        protected readonly ILogger Logger;
-
-        protected MlrbCommandBase(ILogger logger, ICliDisplay cliDisplay)
-        {
-            Logger = logger;
-            CliDisplay = cliDisplay;
-        }
+        protected readonly ICliDisplay CliDisplay = cliDisplay;
+        protected readonly ILogger     Logger     = logger;
 
         /// <summary>
         ///     Pauses the application and prompts the user to press any key to continue.

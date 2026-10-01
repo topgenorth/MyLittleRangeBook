@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using ByteAether.Ulid;
 
 namespace MyLittleRangeBook.Models
@@ -12,11 +10,12 @@ namespace MyLittleRangeBook.Models
     public readonly record struct MlrbId : IComparable<MlrbId>, IEquatable<MlrbId>
     {
         // --- Constants & Static Fields ---
-        internal static readonly Ulid.GenerationOptions DefaultOptions = new()
-                                                                         {
-                                                                             Monotonicity = Ulid.GenerationOptions
-                                                                                .MonotonicityOptions.MonotonicIncrement,
-                                                                         };
+        internal static readonly Ulid.GenerationOptions s_defaultOptions = new()
+                                                                           {
+                                                                               Monotonicity = Ulid.GenerationOptions
+                                                                                  .MonotonicityOptions
+                                                                                  .MonotonicIncrement,
+                                                                           };
 
         public static readonly MlrbId Empty = new(Ulid.Empty);
 
@@ -30,7 +29,7 @@ namespace MyLittleRangeBook.Models
 
         public MlrbId(Guid guid) : this(Ulid.New(guid.ToByteArray())) { }
 
-        public MlrbId(DateTimeOffset dto) : this(Ulid.New(dto, DefaultOptions)) { }
+        public MlrbId(DateTimeOffset dto) : this(Ulid.New(dto, s_defaultOptions)) { }
 
         public MlrbId(byte[] sha256, DateTimeOffset? utcNow = null)
             : this(Ulid.New(utcNow ?? DateTimeOffset.UtcNow, sha256)) { }
@@ -75,46 +74,17 @@ namespace MyLittleRangeBook.Models
         ///     If the string is a valid ULID, it is directly converted; otherwise, a deterministic ULID is generated from its
         ///     SHA-256 hash.
         /// </summary>
-        public static MlrbId FromString(string? stringValue)
+        public static MlrbId FromString(string? stringValue, DateTimeOffset? dateTimeOffset = null)
         {
-            if (string.IsNullOrWhiteSpace(stringValue))
-            {
-                return Empty;
-            }
-
+            ArgumentException.ThrowIfNullOrWhiteSpace(stringValue);
             if (Ulid.TryParse(stringValue, null, out Ulid parsedUlid))
             {
                 return new MlrbId(parsedUlid);
             }
 
-            byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(stringValue));
-            return new MlrbId(hash);
+            return DeterministicUlid.MlrbIdFromString(stringValue, null, dateTimeOffset);
         }
 
-        /// <summary>
-        ///     Creates a Guid V7 from an existing Guid and timestamp.
-        /// </summary>
-        public static Guid TransmuteToV7(Guid originalGuid, DateTimeOffset timestamp)
-        {
-            byte[] bytes  = originalGuid.ToByteArray();
-            long   unixMs = timestamp.ToUnixTimeMilliseconds();
-
-            // Unix epoch milliseconds in big-endian (48 bits / 6 bytes)
-            bytes[0] = (byte)((unixMs >> 40) & 0xFF);
-            bytes[1] = (byte)((unixMs >> 32) & 0xFF);
-            bytes[2] = (byte)((unixMs >> 24) & 0xFF);
-            bytes[3] = (byte)((unixMs >> 16) & 0xFF);
-            bytes[4] = (byte)((unixMs >> 8)  & 0xFF);
-            bytes[5] = (byte)(unixMs         & 0xFF);
-
-            // Set UUID version to 7 (bits 4..7 of byte 6 / time_hi_and_version)
-            bytes[6] = (byte)((bytes[6] & 0x0F) | 0x70);
-
-            // Set variant to RFC 4122/9562 (bits 6..7 of byte 8 / clock_seq_hi_and_reserved to 10xx_xxxx)
-            bytes[8] = (byte)((bytes[8] & 0x3F) | 0x80);
-
-            return new Guid(bytes);
-        }
 
         // --- Conversions & Formatting ---
         public          byte[] ToByteArray() => _id.ToByteArray();

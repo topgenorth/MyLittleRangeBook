@@ -5,6 +5,7 @@ using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Database
 {
+
     [RegisterCommands("db")]
     [UsedImplicitly]
     public class SqliteDbMaintenanceCommand : MlrbSqliteCommandBase
@@ -12,7 +13,9 @@ namespace MyLittleRangeBook.Database
         public SqliteDbMaintenanceCommand(ILogger logger, ICliDisplay cliDisplay, ISqliteHelper sqliteHelper) :
             base(logger, cliDisplay, sqliteHelper) { }
 
-        [Command("maintenance")]
+        /// <summary>
+        /// Perform some SQLite database maintenance.
+        /// </summary>        [Command("maintenance")]
         [UsedImplicitly]
         public async Task<int> SqliteMaintenance(CancellationToken cancellationToken)
         {

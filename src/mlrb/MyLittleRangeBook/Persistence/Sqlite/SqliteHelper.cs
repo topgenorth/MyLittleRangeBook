@@ -14,6 +14,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
     /// <summary>
     ///     An enumeration that represents the types of files that can be saved in SQlite.
     /// </summary>
+    [Obsolete()]
     public enum SqliteFileTable
     {
         FitFiles,

@@ -110,7 +110,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
         /// <returns></returns>
         public static SqliteConnection AddFunctions(this SqliteConnection connection)
         {
-
             connection.CreateFunction("nanoid", Guid.CreateVersion7);
             connection.CreateFunction("utcnow", () => DateTimeOffset.UtcNow.ToString("O"));
 
@@ -127,10 +126,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                {
                                    // [TO20260820] https://fisher.jasperfx.net/configuration/hostbuilder#registration-overloads
                                    opts.Connection(connectionString);
-
-
                                    opts.Policies.AllDocumentsSoftDeleted();
-                                   // opts.Policies.AllDocumentsAreMultiTenanted();
 
                                    opts.Schema.For<Cartridge>()
                                        .Metadata(m =>
@@ -183,8 +179,22 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                        .Index(x => x.Cartridge.Name)
                                        .UseOptimisticConcurrency();
 
+                                   opts.Schema.For<AmmoDescriptionSentence>()
+                                       .Metadata(m =>
+                                                 {
+                                                     m.CreatedAt.Enabled      = false;
+                                                     m.LastModifiedBy.Enabled = false;
+                                                     m.CorrelationId.Enabled  = true;
+                                                     m.CausationId.Enabled    = true;
+                                                 })
+                                       .Identity(x => x.Id)
+                                       .Index(x => x.AmmoDescription)
+                                       .IdStrategy(new AmmoDescriptionIdGenerator())
+                                       .UseNumericRevisions();
+
                                    opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
                                    opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
+                                   opts.Projections.Add<AmmoDescriptionProjection2>(ProjectionLifecycle.Inline);
                                    opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
                                })
                     .ApplyAllDatabaseChangesOnStartup();
@@ -203,7 +213,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                                                          IConfiguration          configuration)
         {
             SetSqlite3ProviderAndInit();
-
 
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset),  new SqliteDateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(typeof(DateTimeOffset?), new SqliteDateTimeOffsetHandler());

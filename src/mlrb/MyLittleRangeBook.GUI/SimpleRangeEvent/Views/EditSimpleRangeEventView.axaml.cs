@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Input;
 
 namespace MyLittleRangeBook.GUI.Views
 {
@@ -9,5 +10,6 @@ namespace MyLittleRangeBook.GUI.Views
         {
             InitializeComponent();
         }
+
     }
 }
