@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace MyLittleRangeBook.GUI.Services
+namespace MyLittleRangeBook.GUI
 {
     public interface ISettingsStorageService
     {

@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using SharedControls.Controls;
 using SharedControls.Services;
 
-namespace MyLittleRangeBook.GUI.Services
+namespace MyLittleRangeBook.GUI
 {
     /// <summary>
     ///     Default implementation of IDialogService for managing overlay dialogs.
