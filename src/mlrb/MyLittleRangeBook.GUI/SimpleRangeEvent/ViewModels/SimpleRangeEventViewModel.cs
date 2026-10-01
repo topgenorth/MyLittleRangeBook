@@ -115,8 +115,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 Created         = Created,
             };
 
-        public SimpleRangeEventCreatedFromGui ToEventCreatedFromGui() =>
-            new(EventDate, FirearmName!, Id, Id, Id, RangeName, RoundsFired, AmmoDescription, Notes, Modified);
 
         [UsedImplicitly]
         public SimpleRangeEventViewModel CloneSimpleRangeEventViewModel() => (SimpleRangeEventViewModel)Clone();

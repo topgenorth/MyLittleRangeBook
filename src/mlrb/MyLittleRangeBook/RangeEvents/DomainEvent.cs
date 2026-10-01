@@ -39,14 +39,9 @@
     /// <param name="OccurredUtc"></param>
     public record struct SimpleRangeEventCreatedFromGui(
         DateTime       EventDate,
-        string         FirearmName,
         Guid           Id,
         Guid           CorrelationId,
         Guid           CausationId,
-        string         RangeName,
-        int            RoundsFired,
-        string?        AmmoDescription,
-        string?        Notes,
         DateTimeOffset OccurredUtc);
 
     /// <summary>
