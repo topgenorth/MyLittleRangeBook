@@ -184,8 +184,12 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                                  {
                                                      m.CreatedAt.Enabled      = false;
                                                      m.LastModifiedBy.Enabled = false;
+                                                     m.CorrelationId.Enabled  = true;
+                                                     m.CausationId.Enabled    = true;
                                                  })
-                                       .UniqueIndex(x=> x.AmmoDescription)
+                                       .Identity(x => x.Id)
+                                       .Index(x => x.AmmoDescription)
+                                       .IdStrategy(new AmmoDescriptionIdGenerator())
                                        .UseNumericRevisions();
 
                                    opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);

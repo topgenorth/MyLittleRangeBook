@@ -2,6 +2,8 @@
 using Fisher.Projections;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
+using Weasel.Core.Identity;
+using Weasel.Core.Sequences;
 
 namespace MyLittleRangeBook.Recipes
 {
@@ -72,15 +74,33 @@ namespace MyLittleRangeBook.Recipes
     }
 
 
+
+    public class AmmoDescriptionIdGenerator: IIdentification<AmmoDescriptionSentence, string>
+    {
+        public string Identity(AmmoDescriptionSentence document)
+        {
+            return DeterministicUlid.MlrbIdFromString(document.Id);
+        }
+
+        public string AssignIfMissing(AmmoDescriptionSentence document, ISequenceSource sequences)
+        {
+            if (string.IsNullOrWhiteSpace(document.Id))
+            {
+                return DeterministicUlid.MlrbIdFromString(document.AmmoDescription);
+            }
+
+            return document.Id;
+        }
+    }
+
     /// <summary>
-    ///     This is a "summary" of all the ammo descriptions that a user entered for a firearm. An ammo description
-    ///     could be used with ore than one firearm.
+    ///     This document is a "summary" of all the ammo descriptions - a free-text format of a reloading recipe.
     /// </summary>
     /// <param name="FirearmName"></param>
     /// <param name="AmmoDescription"></param>
     public readonly record struct AmmoDescriptionSentence(
-        string   Id,
+        string Id,
         string AmmoDescription,
         Guid   CorrelationId,
-        Guid   CausationId) { }
+        Guid   CausationId);
 }
