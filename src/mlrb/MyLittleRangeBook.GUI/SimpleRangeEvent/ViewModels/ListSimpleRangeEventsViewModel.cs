@@ -16,7 +16,6 @@ using DynamicData.Kernel;
 using Fisher;
 using FluentResults;
 using MyLittleRangeBook.GUI.Messages;
-using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
 using SharedControls.Helper;
@@ -35,9 +34,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
     [UnconditionalSuppressMessage("Trimming", "IL2026",
                                   Justification =
                                       "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
-    public partial class ManageSimpleRangeEventsViewModel : ViewModelBase,
-                                                            IDialogParticipant,
-                                                            IRecipient<UpdateDataMessage<SimpleRangeEvent>>
+    public partial class ListSimpleRangeEventsViewModel : ViewModelBase,
+                                                          IDialogParticipant,
+                                                          IRecipient<UpdateDataMessage<SimpleRangeEvent>>
     {
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
@@ -58,11 +57,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
         readonly ReadOnlyObservableCollection<SimpleRangeEventViewModel> _simpleRangeEvents;
 
 
-        public ManageSimpleRangeEventsViewModel(ILogger logger,
-                                                Func<IDialogParticipant,
-                                                    IDialogService> dialogServiceFactory,
-                                                ISimpleRangeEventService rangeEventService,
-                                                IDocumentSession         session)
+        public ListSimpleRangeEventsViewModel(ILogger logger,
+                                              Func<IDialogParticipant,
+                                                  IDialogService> dialogServiceFactory,
+                                              ISimpleRangeEventService rangeEventService,
+                                              IDocumentSession         session)
         {
             _dialogServiceFactory = dialogServiceFactory;
             _dialogService        = dialogServiceFactory(this);
@@ -124,7 +123,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                         .Subscribe();
 
             // Load initial data from database
-            _ = LoadDataAsync();
+            _ = LoadSimpleRangeEvents();
         }
 
         /// <summary>
@@ -188,18 +187,21 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 case UpdateAction.Reset:
                     // [TO20260310] NOP.
                     break;
+                case UpdateAction.Cancelled:
+                    // [TO20261001] NOP
+                    break;
                 default:
                     throw new ArgumentException($"Unknown Update action: {message.Action}");
             }
 
-            _ = RefreshAsync();
+            _ = RefreshSimpleRangeEventsList();
         }
 
         /// <summary>
         ///     Loads SimpleRangeEvents from the database and populates the source cache.
         ///     Creates ManageSimpleRangeEventsVM wrappers for each database item.
         /// </summary>
-        async Task LoadDataAsync(CancellationToken cancellationToken = default)
+        async Task LoadSimpleRangeEvents(CancellationToken cancellationToken = default)
         {
             Result<IEnumerable<SimpleRangeEvent>> r = await _rangeEventService
                                                          .GetSimpleRangeEventsAsync(cancellationToken);
@@ -298,11 +300,11 @@ namespace MyLittleRangeBook.GUI.ViewModels
         }
 
         [RelayCommand]
-        async Task RefreshAsync()
+        async Task RefreshSimpleRangeEventsList()
         {
             Guid previousSelectedId = SelectedSimpleRangeEvent.Id;
             _simpleRangeEventSourceCache.Clear();
-            await LoadDataAsync();
+            await LoadSimpleRangeEvents();
 
             Optional<SimpleRangeEventViewModel> previousEvent = _simpleRangeEventSourceCache.Lookup(previousSelectedId);
 

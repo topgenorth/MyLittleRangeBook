@@ -75,7 +75,7 @@ namespace MyLittleRangeBook.GUI
             services.AddSingleton<IConfiguration>(configuration);
             services.AddSingleton<Func<IDialogParticipant, IDialogService>>(_ => participant => new DialogService(participant));
             services.AddTransient<MainViewModel>();
-            services.AddTransient<ManageSimpleRangeEventsViewModel>();
+            services.AddTransient<ListSimpleRangeEventsViewModel>();
             services.AddTransient<ManageFirearmsViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.RegisterMyLittleRangeBookSqlite(configuration);

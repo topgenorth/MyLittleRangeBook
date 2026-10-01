@@ -14,17 +14,17 @@
              d:DesignWidth="800"
              x:Name="Root"
              services:DialogManager.Register="{Binding}"
-             x:DataType="viewModels1:ManageSimpleRangeEventsViewModel"
+             x:DataType="viewModels1:ListSimpleRangeEventsViewModel"
              mc:Ignorable="d">
     <Design.DataContext>
-        <viewModels1:ManageSimpleRangeEventsViewModel />
+        <viewModels1:ListSimpleRangeEventsViewModel />
     </Design.DataContext>
 
     <UserControl.Resources>
         <!-- Defining a MenuFlyout for shared usage -->
         <MenuFlyout x:Key="ToDoItemContextMenu" x:DataType="viewModels1:SimpleRangeEventViewModel">
             <MenuItem Header="Edit Item"
-                      Command="{Binding #Root.((viewModels1:ManageSimpleRangeEventsViewModel)DataContext).EditSimpleRangeEventCommand}"
+                      Command="{Binding #Root.((viewModels1:ListSimpleRangeEventsViewModel)DataContext).EditSimpleRangeEventCommand}"
                       CommandParameter="{Binding}">
                 <MenuItem.Icon>
                     <PathIcon Data="{DynamicResource PhosphorIcons.NotePencilLight}" />
@@ -32,7 +32,7 @@
             </MenuItem>
 
             <MenuItem Header="Delete Item"
-                      Command="{Binding #Root.((viewModels1:ManageSimpleRangeEventsViewModel)DataContext).DeleteSimpleRangeEventCommand}"
+                      Command="{Binding #Root.((viewModels1:ListSimpleRangeEventsViewModel)DataContext).DeleteSimpleRangeEventCommand}"
                       CommandParameter="{Binding}">
                 <MenuItem.Icon>
                     <PathIcon Data="{DynamicResource PhosphorIcons.TrashLight}" />
@@ -53,7 +53,7 @@
             <WrapPanel ItemSpacing="5">
                 <Button Classes="toolBar"
                         Content="{DynamicResource PhosphorIcons.ArrowCounterClockwiseLight}"
-                        Command="{Binding RefreshCommand}"
+                        Command="{Binding RefreshSimpleRangeEventsList}"
                         ToolTip.Tip="Refresh the List" />
 
                 <Separator VerticalAlignment="Stretch" Width="1" Height="NaN"

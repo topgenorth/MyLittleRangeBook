@@ -32,6 +32,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         [ObservableProperty] IEnumerable<string>      _firearmNames    = [];
         [ObservableProperty] IEnumerable<string>      _rangeNames      = [];
         string?                                       _firearmNameSearchText;
+        readonly List<object>                         _events = [];
 
         public EditSimpleRangeEventViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                              ILogger                                  logger,
@@ -167,7 +168,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             catch (Exception e)
             {
                 FirearmNames = ["Error loading firearms"];
-                _logger.Error(e, "Could not load firearm names.");
+                _logger.Error(e, "Could not load firearm names");
             }
         }
 
@@ -191,39 +192,41 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                                                   DialogCommands.Ok);
                 _logger.Debug("Editing a simple range event is not supported right now - {Id}", Item.Id);
             }
-
-            try
+            else
             {
-                // TODO [TO20260921] We need to compare the old values with the new, and publish the appropriate events...
-                Result<Guid> r1 =
-                    await _rangeEventService.UpsertAsync(Item.ToSimpleRangeEvent(), Item.IsNew, cancellationToken);
-
-                if (r1.IsSuccess)
+                try
                 {
-                    SimpleRangeEvent? sre = await _session.Query<SimpleRangeEvent>()
-                                                          .Where(e => e.Id == r1.Value)
-                                                          .FirstOrDefaultAsync(cancellationToken);
-                    SimpleRangeEventViewModel updatedViewModel = new(sre!);
-                    _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
-                    WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
+                    // TODO [TO20260921] We need to compare the old values with the new, and publish the appropriate events...
+                    Result<Guid> r1 =
+                        await _rangeEventService.UpsertAsync(Item.ToSimpleRangeEvent(), Item.IsNew, cancellationToken);
+
+                    if (r1.IsSuccess)
+                    {
+                        SimpleRangeEvent? sre = await _session.Query<SimpleRangeEvent>()
+                                                              .Where(e => e.Id == r1.Value)
+                                                              .FirstOrDefaultAsync(cancellationToken);
+                        SimpleRangeEventViewModel updatedViewModel = new(sre!);
+                        _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
+                        WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
                                                              Item.IsNew
                                                                  ? UpdateAction.Added
                                                                  : UpdateAction.Updated,
                                                              sre));
+                    }
+                    else
+                    {
+                        await _dialogService.ShowOverlayDialogAsync<bool>("Error",
+                                                                          "An error occured while trying to save the event.",
+                                                                          DialogCommands.Ok);
+                    }
                 }
-                else
+                catch (Exception e)
                 {
+                    _logger.Error(e, "Failed to save simple range event {Id}", Item.Id);
                     await _dialogService.ShowOverlayDialogAsync<bool>("Error",
                                                                       "An error occured while trying to save the event.",
                                                                       DialogCommands.Ok);
                 }
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e, "Failed to save simple range event {Id}", Item.Id);
-                await _dialogService.ShowOverlayDialogAsync<bool>("Error",
-                                                                  "An error occured while trying to save the event.",
-                                                                  DialogCommands.Ok);
             }
         }
 
