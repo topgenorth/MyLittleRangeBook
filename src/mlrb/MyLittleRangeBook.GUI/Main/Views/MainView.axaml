@@ -48,7 +48,7 @@
                 <views:ManageFirearmsView />
             </DataTemplate>
             <DataTemplate DataType="viewModels1:ListSimpleRangeEventsViewModel">
-                <views:ManageSimpleRangeEventsView />
+                <views:ListSimpleRangeEventsView />
             </DataTemplate>
             <DataTemplate DataType="viewModels1:EditSimpleRangeEventViewModel">
                 <views:EditSimpleRangeEventView />

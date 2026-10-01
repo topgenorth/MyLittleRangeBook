@@ -73,7 +73,7 @@
             <DependentUpon>EditSimpleRangeEventView.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
-        <Compile Update="SimpleRangeEvent\Views\ManageSimpleRangeEventsView.axaml.cs">
+        <Compile Update="SimpleRangeEvent\Views\ListSimpleRangeEventsView.axaml.cs">
             <DependentUpon>ManageSimpleRangeEventsView.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
