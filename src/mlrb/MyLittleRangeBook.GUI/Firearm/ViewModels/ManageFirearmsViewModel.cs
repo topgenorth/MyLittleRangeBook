@@ -30,27 +30,26 @@ namespace MyLittleRangeBook.GUI.ViewModels
     {
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
-        readonly SourceCache<FirearmViewModel, long>      _firearmViewModelCache = new(x => x.Id ?? -1);
+        readonly SourceCache<FirearmViewModel, long>       _firearmViewModelCache = new(x => x.Id ?? -1);
 
         readonly ILogger _logger;
 
         public ManageFirearmsViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                        ILogger                                  logger)
         {
-            // _dialogServiceFactory          = dialogServiceFactory;
-            // _dialogService                 = dialogServiceFactory(this);
-            // _logger                        = logger;
-            //
-            //
-            // // Register for message notifications from other ViewModels
+            _dialogServiceFactory          = dialogServiceFactory;
+            _dialogService                 = dialogServiceFactory(this);
+            _logger                        = logger;
+
+            // Register for message notifications from other ViewModels
             // WeakReferenceMessenger.Default.Register<UpdateDataMessage<FirearmTableRow>>(this);
-            // WeakReferenceMessenger.Default.Register<UpdateDataMessage<SimpleRangeEvent>>(this);
+            WeakReferenceMessenger.Default.Register<UpdateDataMessage<SimpleRangeEvent>>(this);
             //
             // // Get the current synchronization context for UI thread operations
-            // SynchronizationContext syncContext = SynchronizationContext.Current ??
-            //                                      throw new InvalidOperationException(
-            //                                       "No SynchronizationContext provided.");
-            //
+            SynchronizationContext syncContext = SynchronizationContext.Current ??
+                                                 throw new InvalidOperationException(
+                                                  "No SynchronizationContext provided.");
+
             // // Create reactive observable for text filtering with 300ms throttle to reduce frequent updates
             // IObservable<Func<FirearmViewModel, bool>> filterByName = this.ObserveValue(nameof(FilterString),
             //                                                                   () => FilterString)
