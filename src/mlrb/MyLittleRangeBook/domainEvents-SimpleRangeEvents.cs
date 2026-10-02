@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.RangeEvents
+﻿namespace MyLittleRangeBook
 {
     /// <summary>
     ///     This event is raised when a "simple range event" is created from the command line.
@@ -15,9 +15,9 @@
     public record struct SimpleRangeEventCreatedFromCommandLine(
         DateOnly       EventDate,
         string         FirearmName,
-        Guid Id,
-        Guid CorrelationId,
-        Guid CausationId,
+        Guid           Id,
+        Guid           CorrelationId,
+        Guid           CausationId,
         string         RangeName,
         int            RoundsFired,
         string?        AmmoDescription,
@@ -25,9 +25,12 @@
         DateTimeOffset OccurredUtc);
 
     /// <summary>
-    /// Raised by the GUI when the user creates a new range event.
+    ///     Raised by the GUI when the user creates a new range event.
     /// </summary>
-    /// <param name="EventDate">The date of the event.</param>
+    /// <param name="EventDate">
+    ///     The date of the event.  Format should be yyyy-MM-dd.  Time is not required.  Will default to
+    ///     today.
+    /// </param>
     /// <param name="FirearmName"></param>
     /// <param name="Id"></param>
     /// <param name="CorrelationId"></param>
@@ -50,10 +53,10 @@
     /// <param name="FileContents">The contents of the ShotView CSV file.</param>
     /// <param name="FirearmName">The unique name of the firearm used.</param>
     /// <param name="OccurredUtc">The UTC timestamp when the event occurred.</param>
-    public record struct  ShotViewCsvFileSubmitted(
-        Guid Id,
-        Guid CorrelationId,
-        Guid CausationId,
+    public record struct ShotViewCsvFileSubmitted(
+        Guid           Id,
+        Guid           CorrelationId,
+        Guid           CausationId,
         string         FirearmName,
         string         FileContents,
         DateTimeOffset OccurredUtc);

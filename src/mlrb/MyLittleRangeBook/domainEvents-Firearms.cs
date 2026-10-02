@@ -1,6 +1,6 @@
 ﻿using JasperFx.Events.Aggregation;
 
-namespace MyLittleRangeBook.Firearms
+namespace MyLittleRangeBook
 {
     /// <summary>
     ///     A Garmin ShotView CSV file was added to a firearm.

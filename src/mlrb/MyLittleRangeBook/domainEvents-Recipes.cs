@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.Recipes
+﻿namespace MyLittleRangeBook
 {
     /// <summary>
     /// Represents an event generated when a new recipe is added from the command-line interface.
