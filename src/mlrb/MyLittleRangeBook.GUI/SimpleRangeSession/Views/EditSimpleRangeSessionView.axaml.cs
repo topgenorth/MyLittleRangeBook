@@ -4,9 +4,9 @@ using Avalonia.Input;
 namespace MyLittleRangeBook.GUI.Views
 {
     // ReSharper disable once PartialTypeWithSinglePart
-    public partial class EditSimpleRangeEventView : UserControl
+    public partial class EditSimpleRangeSessionView : UserControl
     {
-        public EditSimpleRangeEventView()
+        public EditSimpleRangeSessionView()
         {
             InitializeComponent();
         }

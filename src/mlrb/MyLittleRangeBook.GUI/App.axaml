@@ -12,8 +12,8 @@
 
     <Application.DataTemplates>
         <!-- EditCategoryViewModel: Maps to the edit category view -->
-        <DataTemplate DataType="viewModels:EditSimpleRangeEventViewModel">
-            <views:EditSimpleRangeEventView />
+        <DataTemplate DataType="viewModels:EditSimpleRangeSessionViewModel">
+            <views:EditSimpleRangeSessionView />
         </DataTemplate>
         <DataTemplate DataType="viewModels:EditFirearmViewModel">
             <views:EditFirearmView />

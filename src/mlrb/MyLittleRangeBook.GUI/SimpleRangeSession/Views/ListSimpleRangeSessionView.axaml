@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="MyLittleRangeBook.GUI.Views.ListSimpleRangeEventsView"
+﻿<UserControl x:Class="MyLittleRangeBook.GUI.Views.ListSimpleRangeSessionView"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -14,17 +14,17 @@
              d:DesignWidth="800"
              x:Name="Root"
              services:DialogManager.Register="{Binding}"
-             x:DataType="viewModels1:ListSimpleRangeEventsViewModel"
+             x:DataType="viewModels1:ListSimpleRangeSessionsViewModel"
              mc:Ignorable="d">
     <Design.DataContext>
-        <viewModels1:ListSimpleRangeEventsViewModel />
+        <viewModels1:ListSimpleRangeSessionsViewModel />
     </Design.DataContext>
 
     <UserControl.Resources>
         <!-- Defining a MenuFlyout for shared usage -->
-        <MenuFlyout x:Key="ToDoItemContextMenu" x:DataType="viewModels1:SimpleRangeEventViewModel">
+        <MenuFlyout x:Key="ToDoItemContextMenu" x:DataType="gui:SimpleRangeSessionViewModel">
             <MenuItem Header="Edit Item"
-                      Command="{Binding #Root.((viewModels1:ListSimpleRangeEventsViewModel)DataContext).EditSimpleRangeEventCommand}"
+                      Command="{Binding #Root.((viewModels1:ListSimpleRangeSessionsViewModel)DataContext).EditSimpleRangeEventCommand}"
                       CommandParameter="{Binding}">
                 <MenuItem.Icon>
                     <PathIcon Data="{DynamicResource PhosphorIcons.NotePencilLight}" />
@@ -32,7 +32,7 @@
             </MenuItem>
 
             <MenuItem Header="Delete Item"
-                      Command="{Binding #Root.((viewModels1:ListSimpleRangeEventsViewModel)DataContext).DeleteSimpleRangeEventCommand}"
+                      Command="{Binding #Root.((viewModels1:ListSimpleRangeSessionsViewModel)DataContext).DeleteSimpleRangeEventCommand}"
                       CommandParameter="{Binding}">
                 <MenuItem.Icon>
                     <PathIcon Data="{DynamicResource PhosphorIcons.TrashLight}" />
@@ -96,15 +96,15 @@
                                         Width="200">
                                 <controls:LabeledControl Header="Sort by:" HeaderPosition="Left">
                                     <ComboBox SelectedItem="{Binding SortExpression1}"
-                                              ItemsSource="{x:Static viewModels1:SimpleRangeEventsSortExpression.AvailableSortExpressions}" />
+                                              ItemsSource="{x:Static viewModels1:SimpleRangeSessionsSortExpression.AvailableSortExpressions}" />
                                 </controls:LabeledControl>
                                 <controls:LabeledControl Header="Then by:" HeaderPosition="Left">
                                     <ComboBox SelectedItem="{Binding SortExpression2}"
-                                              ItemsSource="{x:Static viewModels1:SimpleRangeEventsSortExpression.AvailableSortExpressions}" />
+                                              ItemsSource="{x:Static viewModels1:SimpleRangeSessionsSortExpression.AvailableSortExpressions}" />
                                 </controls:LabeledControl>
                                 <controls:LabeledControl Header="Then by:" HeaderPosition="Left">
                                     <ComboBox SelectedItem="{Binding SortExpression3}"
-                                              ItemsSource="{x:Static viewModels1:SimpleRangeEventsSortExpression.AvailableSortExpressions}" />
+                                              ItemsSource="{x:Static viewModels1:SimpleRangeSessionsSortExpression.AvailableSortExpressions}" />
                                 </controls:LabeledControl>
                             </StackPanel>
                         </Flyout>

@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
 using MyLittleRangeBook.RangeEvents;
 
-namespace MyLittleRangeBook.GUI.ViewModels
+namespace MyLittleRangeBook.GUI
 {
     /// <summary>
     ///     ViewModel representing a single ManageSimpleRangeEventsVM with comprehensive property management and validation.
@@ -18,14 +18,14 @@ namespace MyLittleRangeBook.GUI.ViewModels
     [UnconditionalSuppressMessage("Trimming", "IL2026",
                                   Justification =
                                       "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
-    public partial class SimpleRangeEventViewModel : ViewModelBase, ICloneable
+    public partial class SimpleRangeSessionViewModel : ViewModelBase, ICloneable
     {
 
 
         /// <summary>
         /// Use this constructor when creating a new simple range event.
         /// </summary>
-        public SimpleRangeEventViewModel()
+        public SimpleRangeSessionViewModel()
         {
             Id              = Guid.CreateVersion7();
             Modified        = DateTimeOffset.UtcNow;
@@ -42,7 +42,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// Use this constructor when editing a simple range event.
         /// </summary>
         /// <param name="rangeSession"></param>
-        public SimpleRangeEventViewModel(SimpleRangeSession rangeSession)
+        public SimpleRangeSessionViewModel(SimpleRangeSession rangeSession)
         {
             Id              = rangeSession.Id;
             EventDate       = rangeSession.EventDate;
@@ -117,6 +117,6 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
 
         [UsedImplicitly]
-        public SimpleRangeEventViewModel CloneSimpleRangeEventViewModel() => (SimpleRangeEventViewModel)Clone();
+        public SimpleRangeSessionViewModel CloneSimpleRangeEventViewModel() => (SimpleRangeSessionViewModel)Clone();
     }
 }

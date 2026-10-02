@@ -22,7 +22,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
     ///     This class provides functionality for handling user inputs and interactions
     ///     related to editing range events, as well as integrating with services for logging and persistence.
     /// </summary>
-    public partial class EditSimpleRangeEventViewModel : ViewModelBase, IDialogParticipant
+    public partial class EditSimpleRangeSessionViewModel : ViewModelBase, IDialogParticipant
     {
         readonly             IDialogService           _dialogService;
         readonly             ILogger                  _logger;
@@ -34,25 +34,25 @@ namespace MyLittleRangeBook.GUI.ViewModels
         string?                                       _firearmNameSearchText;
         readonly List<object>                         _events = [];
 
-        public EditSimpleRangeEventViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
+        public EditSimpleRangeSessionViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                              ILogger                                  logger,
                                              IDocumentSession                         session,
-                                             SimpleRangeEventViewModel                simpleRangeEvent,
-                                             ISimpleRangeSessionService                 rangeSessionService)
+                                             GUI.SimpleRangeSessionViewModel            simpleRangeSession,
+                                             ISimpleRangeSessionService               rangeSessionService)
         {
-            Item               = simpleRangeEvent;
+            Item               = simpleRangeSession;
             _rangeSessionService = rangeSessionService;
             _dialogService     = dialogServiceFactory(this);
             _logger            = logger;
             _session           = session;
-            _firearmNameSearchText = simpleRangeEvent.FirearmName;
+            _firearmNameSearchText = simpleRangeSession.FirearmName;
 
             _ = LoadFirearmNamesAsync();
-            _ = LoadAmmoDescriptionsAsync(simpleRangeEvent.FirearmName);
+            _ = LoadAmmoDescriptionsAsync(simpleRangeSession.FirearmName);
             _ = LoadRangeNamesAsync();
         }
 
-        public SimpleRangeEventViewModel Item { get; }
+        public GUI.SimpleRangeSessionViewModel Item { get; }
 
 
         public string? FirearmNameSearchText
@@ -205,7 +205,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                         SimpleRangeSession? sre = await _session.Query<SimpleRangeSession>()
                                                               .Where(e => e.Id == r1.Value)
                                                               .FirstOrDefaultAsync(cancellationToken);
-                        SimpleRangeEventViewModel updatedViewModel = new(sre!);
+                        GUI.SimpleRangeSessionViewModel updatedViewModel = new(sre!);
                         _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
                         WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeSession>(
                                                              Item.IsNew

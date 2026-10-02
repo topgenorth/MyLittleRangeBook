@@ -3,9 +3,9 @@
 namespace MyLittleRangeBook.GUI.Views
 {
     // ReSharper disable once PartialTypeWithSinglePart
-    public partial class ListSimpleRangeEventsView : UserControl
+    public partial class ListSimpleRangeSessionView : UserControl
     {
-        public ListSimpleRangeEventsView()
+        public ListSimpleRangeSessionView()
         {
             InitializeComponent();
         }

@@ -15,7 +15,7 @@ using Xunit;
 
 namespace MyLittleRangeBook.GUI.Tests
 {
-    public class EditSimpleRangeEventViewModelTests
+    public class EditSimpleRangeSessionViewModelTests
     {
         [Fact]
         public async Task SettingFirearmNameSearchText_UpdatesAmmoDescriptions_ForSelectedFirearm()
@@ -29,7 +29,7 @@ namespace MyLittleRangeBook.GUI.Tests
             session.AdvancedSql.Returns(advancedSql);
 
             var rangeEventService = Substitute.For<ISimpleRangeSessionService>();
-            var rangeEventVm = new SimpleRangeEventViewModel();
+            var rangeEventVm = new SimpleRangeSessionViewModel();
 
             var expectedAmmo = new List<string> { "9mm Luger 124gr FMJ", "9mm Luger 115gr JHP" };
             advancedSql.QueryAsync<string>(
@@ -38,7 +38,7 @@ namespace MyLittleRangeBook.GUI.Tests
                 Arg.Is<object[]>(args => args.Length == 1 && (string)args[0] == "Glock 19"))
                 .Returns(Task.FromResult<IReadOnlyList<string>>(expectedAmmo));
 
-            var vm = new EditSimpleRangeEventViewModel(
+            var vm = new EditSimpleRangeSessionViewModel(
                 dialogServiceFactory,
                 logger,
                 session,
@@ -64,8 +64,8 @@ namespace MyLittleRangeBook.GUI.Tests
             vm.FirearmNameSearchText.ShouldBe("Glock 19");
             vm.Item.FirearmName.ShouldBe("Glock 19");
             vm.AmmoDescription.ShouldBe(expectedAmmo);
-            propertyChangedEvents.ShouldContain(nameof(EditSimpleRangeEventViewModel.FirearmNameSearchText));
-            propertyChangedEvents.ShouldContain(nameof(EditSimpleRangeEventViewModel.AmmoDescription));
+            propertyChangedEvents.ShouldContain(nameof(EditSimpleRangeSessionViewModel.FirearmNameSearchText));
+            propertyChangedEvents.ShouldContain(nameof(EditSimpleRangeSessionViewModel.AmmoDescription));
         }
 
         [Fact]
@@ -88,10 +88,10 @@ namespace MyLittleRangeBook.GUI.Tests
                 Created = DateTimeOffset.UtcNow,
                 Modified = DateTimeOffset.UtcNow
             };
-            var rangeEventVm = new SimpleRangeEventViewModel(rangeEvent);
+            var rangeEventVm = new SimpleRangeSessionViewModel(rangeEvent);
 
             // Act
-            var vm = new EditSimpleRangeEventViewModel(
+            var vm = new EditSimpleRangeSessionViewModel(
                 dialogServiceFactory,
                 logger,
                 session,

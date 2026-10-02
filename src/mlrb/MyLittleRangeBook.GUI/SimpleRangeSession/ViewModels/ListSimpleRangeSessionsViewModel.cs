@@ -34,7 +34,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
     [UnconditionalSuppressMessage("Trimming", "IL2026",
                                   Justification =
                                       "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
-    public partial class ListSimpleRangeEventsViewModel : ViewModelBase,
+    public partial class ListSimpleRangeSessionsViewModel : ViewModelBase,
                                                           IDialogParticipant,
                                                           IRecipient<UpdateDataMessage<SimpleRangeSession>>
     {
@@ -48,16 +48,16 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     Source cache for managing ManageSimpleRangeEventsVM instances with reactive updates.
         ///     Uses the SimpleRangeEvent ID as the key for efficient lookups and updates.
         /// </summary>
-        readonly SourceCache<SimpleRangeEventViewModel, Guid> _simpleRangeEventSourceCache = new(x => x.Id);
+        readonly SourceCache<GUI.SimpleRangeSessionViewModel, Guid> _simpleRangeEventSourceCache = new(x => x.Id);
 
         /// <summary>
         ///     Read-only collection bound to the UI for displaying filtered and sorted SimpleRangeEvents.
         ///     Automatically updated through the reactive pipeline.
         /// </summary>
-        readonly ReadOnlyObservableCollection<SimpleRangeEventViewModel> _simpleRangeEvents;
+        readonly ReadOnlyObservableCollection<GUI.SimpleRangeSessionViewModel> _simpleRangeEvents;
 
 
-        public ListSimpleRangeEventsViewModel(ILogger logger,
+        public ListSimpleRangeSessionsViewModel(ILogger logger,
                                               Func<IDialogParticipant,
                                                   IDialogService> dialogServiceFactory,
                                               ISimpleRangeSessionService rangeSessionService,
@@ -78,7 +78,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                                   "No SynchronizationContext provided.");
 
             // Create reactive observable for text filtering with 300ms throttle to reduce frequent updates
-            IObservable<Func<SimpleRangeEventViewModel, bool>> filterByFirearmOrRangeObservable = this.ObserveValue(
+            IObservable<Func<GUI.SimpleRangeSessionViewModel, bool>> filterByFirearmOrRangeObservable = this.ObserveValue(
                  nameof(FilterString),
                  () => FilterString)
                .Throttle(TimeSpan.FromMilliseconds(300))
@@ -86,7 +86,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                .Select(FilterByFirearmOrRangeObservable);
 
             // Create a reactive observable for sorting with a three-level sort priority
-            IObservable<SortExpressionComparer<SimpleRangeEventViewModel>> sortObservable = this
+            IObservable<SortExpressionComparer<GUI.SimpleRangeSessionViewModel>> sortObservable = this
                .ObserveValue(nameof(SortExpression1), () => SortExpression1)
                .CombineLatest(
                               this.ObserveValue(nameof(SortExpression2), () => SortExpression2),
@@ -95,10 +95,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                s2,
                                s3) =>
                               {
-                                  SortExpressionComparer<SimpleRangeEventViewModel> comparer = s1.IsDescending
-                                      ? SortExpressionComparer<SimpleRangeEventViewModel>
+                                  SortExpressionComparer<GUI.SimpleRangeSessionViewModel> comparer = s1.IsDescending
+                                      ? SortExpressionComparer<GUI.SimpleRangeSessionViewModel>
                                          .Descending(s1.SortExpression)
-                                      : SortExpressionComparer<SimpleRangeEventViewModel>
+                                      : SortExpressionComparer<GUI.SimpleRangeSessionViewModel>
                                          .Ascending(s1.SortExpression);
 
                                   comparer = s2.IsDescending
@@ -129,7 +129,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// <summary>
         ///     Public property exposing the filtered and sorted SimpleRangeEvents collection for UI binding.
         /// </summary>
-        public ReadOnlyObservableCollection<SimpleRangeEventViewModel> SimpleRangeEvents => _simpleRangeEvents;
+        public ReadOnlyObservableCollection<GUI.SimpleRangeSessionViewModel> SimpleRangeEvents => _simpleRangeEvents;
 
         /// <summary>
         ///     Filter text for searching SimpleRangeEvents by firearm name or ange name.
@@ -143,28 +143,28 @@ namespace MyLittleRangeBook.GUI.ViewModels
         ///     Changes trigger immediate re-sorting of the displayed items.
         /// </summary>
         [ObservableProperty]
-        public partial SimpleRangeEventsSortExpression SortExpression1 { get; set; } =
-            SimpleRangeEventsSortExpression.SortByEventDateExpression;
+        public partial SimpleRangeSessionsSortExpression SortExpression1 { get; set; } =
+            SimpleRangeSessionsSortExpression.SortBySessionDateExpression;
 
         /// <summary>
         ///     Secondary sort expression for SimpleRangeEvents (defaults to Firearm Name).
         ///     Changes trigger immediate re-sorting of the displayed items.
         /// </summary>
         [ObservableProperty]
-        public partial SimpleRangeEventsSortExpression SortExpression2 { get; set; } =
-            SimpleRangeEventsSortExpression.SortByFirearmNameExpression;
+        public partial SimpleRangeSessionsSortExpression SortExpression2 { get; set; } =
+            SimpleRangeSessionsSortExpression.SortByFirearmNameExpression;
 
         /// <summary>
         ///     Tertiary sort expression for SimpleRangeEvents (defaults to Range Name).
         ///     Changes trigger immediate re-sorting of the displayed items.
         /// </summary>
         [ObservableProperty]
-        public partial SimpleRangeEventsSortExpression SortExpression3 { get; set; } =
-            SimpleRangeEventsSortExpression.SortByRangeNameExpression;
+        public partial SimpleRangeSessionsSortExpression SortExpression3 { get; set; } =
+            SimpleRangeSessionsSortExpression.SortByRangeNameExpression;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(DeleteSimpleRangeEventCommand), nameof(EditSimpleRangeEventCommand))]
-        public partial SimpleRangeEventViewModel? SelectedSimpleRangeEvent { get; set; }
+        public partial GUI.SimpleRangeSessionViewModel? SelectedSimpleRangeEvent { get; set; }
 
 
         public void Receive(UpdateDataMessage<SimpleRangeSession> message)
@@ -176,12 +176,12 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 case UpdateAction.Updated:
                     _simpleRangeEventSourceCache.AddOrUpdate(
                                                              updatedEvents
-                                                                .Select(x => new SimpleRangeEventViewModel(x)));
+                                                                .Select(x => new GUI.SimpleRangeSessionViewModel(x)));
 
                     break;
                 case UpdateAction.Removed:
                     _simpleRangeEventSourceCache.Remove(
-                                                        updatedEvents.Select(x => new SimpleRangeEventViewModel(x)));
+                                                        updatedEvents.Select(x => new GUI.SimpleRangeSessionViewModel(x)));
 
                     break;
                 case UpdateAction.Reset:
@@ -208,9 +208,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
             if (r.IsSuccess)
             {
-                IEnumerable<SimpleRangeEventViewModel> items = r.Value
-                                                                .OrderByDescending(x => x.EventDate)
-                                                                .Select(x => new SimpleRangeEventViewModel(x));
+                IEnumerable<GUI.SimpleRangeSessionViewModel> items = r.Value
+                                                                    .OrderByDescending(x => x.EventDate)
+                                                                    .Select(x => new GUI.SimpleRangeSessionViewModel(x));
                 _simpleRangeEventSourceCache.AddOrUpdate(items);
             }
             else
@@ -223,15 +223,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
         }
 
         [RelayCommand]
-        async Task AddNewSimpleRangeEventAsync() => await EditSimpleRangeEventAsync(new SimpleRangeEventViewModel());
+        async Task AddNewSimpleRangeEventAsync() => await EditSimpleRangeEventAsync(new GUI.SimpleRangeSessionViewModel());
 
-        bool CanEditOrDeleteSimpleRangeEvent(SimpleRangeEventViewModel? simpleRangeEvent) =>
+        bool CanEditOrDeleteSimpleRangeEvent(GUI.SimpleRangeSessionViewModel? simpleRangeEvent) =>
             simpleRangeEvent is not null;
 
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteSimpleRangeEvent))]
-        async Task DeleteSimpleRangeEventAsync(SimpleRangeEventViewModel? simpleRangeEvent,
-                                               CancellationToken          cancellationToken = default)
+        async Task DeleteSimpleRangeEventAsync(GUI.SimpleRangeSessionViewModel? simpleRangeEvent,
+                                               CancellationToken              cancellationToken = default)
         {
             if (simpleRangeEvent is null)
             {
@@ -276,21 +276,21 @@ namespace MyLittleRangeBook.GUI.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteSimpleRangeEvent))]
-        async Task EditSimpleRangeEventAsync(SimpleRangeEventViewModel? simpleRangeEvent)
+        async Task EditSimpleRangeEventAsync(GUI.SimpleRangeSessionViewModel? simpleRangeEvent)
         {
             if (simpleRangeEvent is null)
             {
                 return;
             }
 
-            EditSimpleRangeEventViewModel vm = new(_dialogServiceFactory, _logger, _session, simpleRangeEvent,
+            EditSimpleRangeSessionViewModel vm = new(_dialogServiceFactory, _logger, _session, simpleRangeEvent,
                                                    _rangeSessionService);
 
-            SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
-                                                 simpleRangeEvent.IsNew
-                                                     ? "Add Range Event"
-                                                     : "Edit the Range Event",
-                                                 vm);
+            GUI.SimpleRangeSessionViewModel? result = await this.ShowOverlayDialogAsync<GUI.SimpleRangeSessionViewModel>(
+                                                     simpleRangeEvent.IsNew
+                                                         ? "Add Range Event"
+                                                         : "Edit the Range Event",
+                                                     vm);
 
             if (result != null)
             {
@@ -306,7 +306,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _simpleRangeEventSourceCache.Clear();
             await LoadSimpleRangeEvents();
 
-            Optional<SimpleRangeEventViewModel> previousEvent = _simpleRangeEventSourceCache.Lookup(previousSelectedId);
+            Optional<GUI.SimpleRangeSessionViewModel> previousEvent = _simpleRangeEventSourceCache.Lookup(previousSelectedId);
 
             Dispatcher.UIThread.Post(() =>
                                          SelectedSimpleRangeEvent =
@@ -319,7 +319,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         /// <param name="filterText">The text to search for (null/empty shows all items)</param>
         /// <returns>Filter function for use with DynamicData</returns>
-        static Func<SimpleRangeEventViewModel, bool> FilterByFirearmOrRangeObservable(string? filterText) =>
+        static Func<GUI.SimpleRangeSessionViewModel, bool> FilterByFirearmOrRangeObservable(string? filterText) =>
             item =>
             {
                 // No filter text means this item should be visible

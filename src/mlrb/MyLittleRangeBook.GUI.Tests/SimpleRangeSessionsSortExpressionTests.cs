@@ -3,13 +3,13 @@ using Xunit;
 
 namespace MyLittleRangeBook.GUI.Tests
 {
-    public class SimpleRangeEventsSortExpressionTests
+    public class SimpleRangeSessionsSortExpressionTests
     {
         [Fact]
         public void SortByEventDateExpression_ShouldBeDescending()
         {
             // Arrange & Act
-            var expression = SimpleRangeEventsSortExpression.SortByEventDateExpression;
+            var expression = SimpleRangeSessionsSortExpression.SortBySessionDateExpression;
 
             // Assert
             Assert.True(expression.IsDescending);
@@ -20,7 +20,7 @@ namespace MyLittleRangeBook.GUI.Tests
         public void SortByFirearmNameExpression_ShouldBeAscending()
         {
             // Arrange & Act
-            var expression = SimpleRangeEventsSortExpression.SortByFirearmNameExpression;
+            var expression = SimpleRangeSessionsSortExpression.SortByFirearmNameExpression;
 
             // Assert
             Assert.False(expression.IsDescending);

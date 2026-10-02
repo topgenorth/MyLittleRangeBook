@@ -25,7 +25,7 @@
         <controls:HamburgerMenu.MenuItems>
             <controls:HamburgerMenuItem Label="Range Events"
                                         Icon="{DynamicResource PhosphorIcons.CirclesThreePlusThin}"
-                                        Tag="{Binding ListSimpleRangeEventsVm}" />
+                                        Tag="{Binding ListSimpleRangeSessionsVm}" />
         </controls:HamburgerMenu.MenuItems>
 
 
@@ -47,11 +47,11 @@
             <DataTemplate DataType="viewModels1:ManageFirearmsViewModel">
                 <views:ManageFirearmsView />
             </DataTemplate>
-            <DataTemplate DataType="viewModels1:ListSimpleRangeEventsViewModel">
-                <views:ListSimpleRangeEventsView />
+            <DataTemplate DataType="viewModels1:ListSimpleRangeSessionsViewModel">
+                <views:ListSimpleRangeSessionView />
             </DataTemplate>
-            <DataTemplate DataType="viewModels1:EditSimpleRangeEventViewModel">
-                <views:EditSimpleRangeEventView />
+            <DataTemplate DataType="viewModels1:EditSimpleRangeSessionViewModel">
+                <views:EditSimpleRangeSessionView />
             </DataTemplate>
             <DataTemplate DataType="viewModels1:SettingsViewModel">
                 <views:SettingsView />

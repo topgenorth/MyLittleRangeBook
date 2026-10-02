@@ -75,6 +75,6 @@ namespace MyLittleRangeBook.GUI
         ///     Gets the design-time data instance for the EditCategoryView.
         ///     Used by the visual designer to display a realistic category editing interface.
         /// </summary>
-        public static EditSimpleRangeEventViewModel? EditSimpleRangeEventViewModel { get; }
+        public static EditSimpleRangeSessionViewModel? EditSimpleRangeEventViewModel { get; }
     }
 }

@@ -11,8 +11,8 @@
              Width="{Binding $parent[controls:OverlayDialog].Bounds.Width, Converter={x:Static converters:MathConverter.Multiply}, ConverterParameter=0.7}"
              MaxWidth="700"
              x:Name="Root"
-             x:Class="MyLittleRangeBook.GUI.Views.EditSimpleRangeEventView"
-             x:DataType="viewModels:EditSimpleRangeEventViewModel">
+             x:Class="MyLittleRangeBook.GUI.Views.EditSimpleRangeSessionView"
+             x:DataType="viewModels:EditSimpleRangeSessionViewModel">
 
     <!--             Design.DataContext="{x:Static viewModels:_DesignData.EditSimpleRangeEventViewModel}"
 -->
@@ -26,8 +26,8 @@
                 <controls:LabeledControl Header="Firearm">
                     <AutoCompleteBox x:Name="FirearmAutoCompleteBox"
                                      HorizontalAlignment="Left"
-                                     Text="{Binding $parent[UserControl].((viewModels:EditSimpleRangeEventViewModel)DataContext).FirearmNameSearchText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                                     ItemsSource="{Binding $parent[UserControl].((viewModels:EditSimpleRangeEventViewModel)DataContext).FirearmNames}"
+                                     Text="{Binding $parent[UserControl].((viewModels:EditSimpleRangeSessionViewModel)DataContext).FirearmNameSearchText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                     ItemsSource="{Binding $parent[UserControl].((viewModels:EditSimpleRangeSessionViewModel)DataContext).FirearmNames}"
                                      FilterMode="Contains"
                                      PlaceholderText="The name of the firearm" />
                 </controls:LabeledControl>
@@ -54,7 +54,7 @@
                     <AutoCompleteBox x:Name="RangeAutoCompleteBox"
                                      HorizontalAlignment="Left"
                                      Text="{Binding RangeName}"
-                                     ItemsSource="{Binding $parent[UserControl].((viewModels:EditSimpleRangeEventViewModel)DataContext).RangeNames}"
+                                     ItemsSource="{Binding $parent[UserControl].((viewModels:EditSimpleRangeSessionViewModel)DataContext).RangeNames}"
                                      FilterMode="Contains"
                                      PlaceholderText="The name of the range." />
                 </controls:LabeledControl>
@@ -65,7 +65,7 @@
                     <AutoCompleteBox x:Name="AmmoAutoCompleteBox"
                                      HorizontalAlignment="Left"
                                      Text="{Binding AmmoDescription}"
-                                     ItemsSource="{Binding $parent[UserControl].((viewModels:EditSimpleRangeEventViewModel)DataContext).AmmoDescription}"
+                                     ItemsSource="{Binding $parent[UserControl].((viewModels:EditSimpleRangeSessionViewModel)DataContext).AmmoDescription}"
                                      FilterMode="Contains"
                                      PlaceholderText="Description of the ammo." />
                 </controls:LabeledControl>
