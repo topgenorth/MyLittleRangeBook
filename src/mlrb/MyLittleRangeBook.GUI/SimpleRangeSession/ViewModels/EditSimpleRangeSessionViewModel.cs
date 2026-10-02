@@ -10,7 +10,6 @@ using Fisher.Linq;
 using FluentResults;
 using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.GUI.Messages;
-using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
 using SharedControls.Services;
@@ -24,27 +23,27 @@ namespace MyLittleRangeBook.GUI.ViewModels
     /// </summary>
     public partial class EditSimpleRangeSessionViewModel : ViewModelBase, IDialogParticipant
     {
-        readonly             IDialogService           _dialogService;
-        readonly             ILogger                  _logger;
+        readonly             IDialogService             _dialogService;
+        readonly             List<object>               _events = [];
+        readonly             ILogger                    _logger;
         readonly             ISimpleRangeSessionService _rangeSessionService;
-        readonly             IDocumentSession         _session;
-        [ObservableProperty] IEnumerable<string>      _ammoDescription = [];
-        [ObservableProperty] IEnumerable<string>      _firearmNames    = [];
-        [ObservableProperty] IEnumerable<string>      _rangeNames      = [];
-        string?                                       _firearmNameSearchText;
-        readonly List<object>                         _events = [];
+        readonly             IDocumentSession           _session;
+        [ObservableProperty] IEnumerable<string>        _ammoDescription = [];
+        string?                                         _firearmNameSearchText;
+        [ObservableProperty] IEnumerable<string>        _firearmNames = [];
+        [ObservableProperty] IEnumerable<string>        _rangeNames   = [];
 
         public EditSimpleRangeSessionViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
-                                             ILogger                                  logger,
-                                             IDocumentSession                         session,
-                                             GUI.SimpleRangeSessionViewModel            simpleRangeSession,
-                                             ISimpleRangeSessionService               rangeSessionService)
+                                               ILogger                                  logger,
+                                               IDocumentSession                         session,
+                                               SimpleRangeSessionViewModel              simpleRangeSession,
+                                               ISimpleRangeSessionService               rangeSessionService)
         {
-            Item               = simpleRangeSession;
-            _rangeSessionService = rangeSessionService;
-            _dialogService     = dialogServiceFactory(this);
-            _logger            = logger;
-            _session           = session;
+            Item                   = simpleRangeSession;
+            _rangeSessionService   = rangeSessionService;
+            _dialogService         = dialogServiceFactory(this);
+            _logger                = logger;
+            _session               = session;
             _firearmNameSearchText = simpleRangeSession.FirearmName;
 
             _ = LoadFirearmNamesAsync();
@@ -52,7 +51,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _ = LoadRangeNamesAsync();
         }
 
-        public GUI.SimpleRangeSessionViewModel Item { get; }
+        public SimpleRangeSessionViewModel Item { get; }
 
 
         public string? FirearmNameSearchText
@@ -63,15 +62,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 if (SetProperty(ref _firearmNameSearchText, value))
                 {
                     Item.FirearmName = value ?? string.Empty;
-                    _ = UpdateAmmoDescriptions(value);
+                    _                = UpdateAmmoDescriptions(value);
                 }
             }
         }
 
-        async Task UpdateAmmoDescriptions(string? searchText, CancellationToken cancellationToken = default)
-        {
+        async Task UpdateAmmoDescriptions(string? searchText, CancellationToken cancellationToken = default) =>
             await LoadAmmoDescriptionsAsync(searchText?.Trim(), cancellationToken);
-        }
 
         async Task LoadRangeNamesAsync()
         {
@@ -106,8 +103,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
         async Task<IReadOnlyList<string>> GetAmmoDescriptionsForFirearm(
             string? firearmName, CancellationToken cancellationToken)
         {
-            const string SQL         = "SELECT DISTINCT ammo_description FROM firearm_ammo_descriptions ORDER BY ammo_description;";
-            const string SQL_FIREARM = "SELECT DISTINCT ammo_description FROM firearm_ammo_descriptions WHERE firearm_name = ? ORDER BY ammo_description;";
+            const string SQL =
+                "SELECT DISTINCT ammo_description FROM firearm_ammo_descriptions ORDER BY ammo_description;";
+            const string SQL_FIREARM =
+                "SELECT DISTINCT ammo_description FROM firearm_ammo_descriptions WHERE firearm_name = ? ORDER BY ammo_description;";
 
             IReadOnlyList<string> descriptions;
             if (string.IsNullOrWhiteSpace(firearmName))
@@ -142,7 +141,8 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             try
             {
-                IReadOnlyList<string> descriptions = await GetAmmoDescriptionsForFirearm(firearmName, cancellationToken);
+                IReadOnlyList<string> descriptions =
+                    await GetAmmoDescriptionsForFirearm(firearmName, cancellationToken);
                 AmmoDescription = descriptions;
                 _logger.Verbose("Loaded {Count} ammo descriptions for {FirearmName}",
                                 descriptions.Count,
@@ -198,14 +198,15 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 {
                     // TODO [TO20260921] We need to compare the old values with the new, and publish the appropriate events...
                     Result<Guid> r1 =
-                        await _rangeSessionService.UpsertAsync(Item.ToSimpleRangeEvent(), Item.IsNew, cancellationToken);
+                        await _rangeSessionService.UpsertAsync(Item.ToSimpleRangeSession(), Item.IsNew,
+                                                               cancellationToken);
 
                     if (r1.IsSuccess)
                     {
                         SimpleRangeSession? sre = await _session.Query<SimpleRangeSession>()
-                                                              .Where(e => e.Id == r1.Value)
-                                                              .FirstOrDefaultAsync(cancellationToken);
-                        GUI.SimpleRangeSessionViewModel updatedViewModel = new(sre!);
+                                                                .Where(e => e.Id == r1.Value)
+                                                                .FirstOrDefaultAsync(cancellationToken);
+                        SimpleRangeSessionViewModel updatedViewModel = new(sre!);
                         _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
                         WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeSession>(
                                                              Item.IsNew
@@ -235,9 +236,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             DialogCommand[] commands = [DialogCommands.No, DialogCommands.Yes];
             DialogResult userResponse = await _dialogService.ShowOverlayDialogAsync<DialogResult>(
-                                             "Cancel editing?",
-                                             "Do you want to discard your changes?",
-                                             commands);
+                                         "Cancel editing?",
+                                         "Do you want to discard your changes?",
+                                         commands);
 
             switch (userResponse)
             {

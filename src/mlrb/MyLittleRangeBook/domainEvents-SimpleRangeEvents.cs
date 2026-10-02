@@ -12,7 +12,7 @@
     /// <param name="RoundsFired"></param>
     /// <param name="AmmoDescription">A text description of the ammo that was used.</param>
     /// <param name="Notes">A free-format entry of any notes from this range event.</param>
-    public record struct SimpleRangeEventCreatedFromCommandLine(
+    public record struct SimpleRangeSessionCreatedFromCommandLine(
         DateOnly       EventDate,
         string         FirearmName,
         Guid           Id,
@@ -40,7 +40,7 @@
     /// <param name="AmmoDescription"></param>
     /// <param name="Notes"></param>
     /// <param name="OccurredUtc"></param>
-    public record struct SimpleRangeEventCreatedFromGui(
+    public record struct SimpleRangeSessionCreatedFromGui(
         DateTime       EventDate,
         Guid           Id,
         Guid           CorrelationId,
