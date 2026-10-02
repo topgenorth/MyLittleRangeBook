@@ -6,38 +6,38 @@ using MyLittleRangeBook.Firearms;
 
 namespace MyLittleRangeBook.RangeEvents
 {
-    public class FisherSimpleRangeEventService : ISimpleRangeEventService
+    public class FisherSimpleRangeSessionService : ISimpleRangeSessionService
     {
         readonly ILogger          _logger;
         readonly IDocumentSession _session;
 
-        public FisherSimpleRangeEventService(IDocumentSession session, ILogger logger)
+        public FisherSimpleRangeSessionService(IDocumentSession session, ILogger logger)
         {
             _session = session;
             _logger  = logger;
         }
 
-        public async Task<Result> DeleteAsync(SimpleRangeEvent  simpleRangeEvent,
+        public async Task<Result> DeleteAsync(SimpleRangeSession  simpleRangeSession,
                                               CancellationToken cancellationToken = default)
         {
-            _session.Delete(simpleRangeEvent);
+            _session.Delete(simpleRangeSession);
             await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return Result.Ok();
         }
 
-        public async Task<Result<SimpleRangeEvent>> GetAsync(Guid              simpleRangeEventId,
+        public async Task<Result<SimpleRangeSession>> GetAsync(Guid              simpleRangeEventId,
                                                              CancellationToken cancellationToken = default)
         {
-            SimpleRangeEvent? sre = await _session.LoadAsync<SimpleRangeEvent>(simpleRangeEventId, cancellationToken);
+            SimpleRangeSession? sre = await _session.LoadAsync<SimpleRangeSession>(simpleRangeEventId, cancellationToken);
             if (sre is null)
             {
-                return new Result().WithError(new InvalidSimpleRangeEventIdError(simpleRangeEventId));
+                return new Result().WithError(new InvalidSimpleRangeSessionIdError(simpleRangeEventId));
             }
 
             return Result.Ok(sre);
         }
 
-        public async Task<Result<Guid>> UpsertAsync(SimpleRangeEvent  sre,
+        public async Task<Result<Guid>> UpsertAsync(SimpleRangeSession  sre,
                                                     bool isNew = false,
                                                     CancellationToken cancellationToken = default)
         {
@@ -125,13 +125,13 @@ namespace MyLittleRangeBook.RangeEvents
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
+        public async Task<Result<IEnumerable<SimpleRangeSession>>> GetSimpleRangeEventsAsync(
             CancellationToken cancellationToken = default)
         {
-            IReadOnlyList<SimpleRangeEvent> events = await _session.Query<SimpleRangeEvent>()
+            IReadOnlyList<SimpleRangeSession> events = await _session.Query<SimpleRangeSession>()
                                                                    .ToListAsync(cancellationToken)
                                                                    .ConfigureAwait(false);
-            return Result.Ok<IEnumerable<SimpleRangeEvent>>(events);
+            return Result.Ok<IEnumerable<SimpleRangeSession>>(events);
         }
 
         public async Task<Result> ExportToCsv(string csvFileName, CancellationToken cancellationToken = default) =>

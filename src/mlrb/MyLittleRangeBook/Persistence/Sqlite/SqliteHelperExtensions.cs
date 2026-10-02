@@ -139,7 +139,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                        .UniqueIndex(x => x.Name)
                                        .UseNumericRevisions();
 
-                                   opts.Schema.For<SimpleRangeEvent>()
+                                   opts.Schema.For<SimpleRangeSession>()
                                        .Metadata(m =>
                                                  {
                                                      m.CreatedAt.Enabled = true;
@@ -222,8 +222,8 @@ namespace MyLittleRangeBook.Persistence.Sqlite
 
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
 
-            services.TryAddKeyedScoped<ISimpleRangeEventService, FisherSimpleRangeEventService>(DI_KEY);
-            services.TryAddScoped<ISimpleRangeEventService, FisherSimpleRangeEventService>();
+            services.TryAddKeyedScoped<ISimpleRangeSessionService, FisherSimpleRangeSessionService>(DI_KEY);
+            services.TryAddScoped<ISimpleRangeSessionService, FisherSimpleRangeSessionService>();
 
 
             return services;

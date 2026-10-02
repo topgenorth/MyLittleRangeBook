@@ -15,12 +15,12 @@ namespace MyLittleRangeBook.RangeEvents
     {
         readonly ICliDisplay              _cliDisplay;
         readonly ILogger                  _logger;
-        readonly ISimpleRangeEventService _simpleRangeEventService;
+        readonly ISimpleRangeSessionService _simpleRangeSessionService;
 
-        public DeleteSimpleRangeEventCommand(ISimpleRangeEventService simpleRangeEventService, ILogger logger,
+        public DeleteSimpleRangeEventCommand(ISimpleRangeSessionService simpleRangeSessionService, ILogger logger,
                                              ICliDisplay              cliDisplay)
         {
-            _simpleRangeEventService = simpleRangeEventService;
+            _simpleRangeSessionService = simpleRangeSessionService;
             _logger                  = logger;
             _cliDisplay              = cliDisplay;
         }
@@ -52,8 +52,8 @@ namespace MyLittleRangeBook.RangeEvents
             try
             {
                 // First, retrieve the event to ensure it exists
-                Result<SimpleRangeEvent> getResult =
-                    await _simpleRangeEventService.GetAsync(Guid.Parse(id), ct).ConfigureAwait(false);
+                Result<SimpleRangeSession> getResult =
+                    await _simpleRangeSessionService.GetAsync(Guid.Parse(id), ct).ConfigureAwait(false);
 
                 if (getResult.IsFailed)
                 {
@@ -64,7 +64,7 @@ namespace MyLittleRangeBook.RangeEvents
                 else
                 {
                     // Delete the event
-                    Result<bool> deleteResult = await _simpleRangeEventService.DeleteAsync(getResult.Value, ct)
+                    Result<bool> deleteResult = await _simpleRangeSessionService.DeleteAsync(getResult.Value, ct)
                                                                               .ConfigureAwait(false);
 
                     if (deleteResult.IsSuccess)

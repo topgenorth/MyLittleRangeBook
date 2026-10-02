@@ -8,7 +8,7 @@ namespace MyLittleRangeBook.RangeEvents
     public interface ISimpleRangeEventListPrinter
     {
         Task<ISimpleRangeEventListPrinter> Start();
-        Task<ISimpleRangeEventListPrinter> AddRow(SimpleRangeEvent simpleRangeEvent);
+        Task<ISimpleRangeEventListPrinter> AddRow(SimpleRangeSession simpleRangeSession);
         Task<ISimpleRangeEventListPrinter> Finish();
     }
 
@@ -47,7 +47,7 @@ namespace MyLittleRangeBook.RangeEvents
             return this;
         }
 
-        public async Task<ISimpleRangeEventListPrinter> AddRow(SimpleRangeEvent simpleRangeEvent)
+        public async Task<ISimpleRangeEventListPrinter> AddRow(SimpleRangeSession simpleRangeSession)
         {
             if (_simpleRangeeventTable is null)
             {
@@ -55,13 +55,13 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             _simpleRangeeventTable.AddRow(
-                simpleRangeEvent.Id!.ToString(),
-                simpleRangeEvent.EventDate.ToString("yyyy-MM-dd"),
-                simpleRangeEvent.FirearmName,
-                simpleRangeEvent.RangeName,
-                simpleRangeEvent.RoundsFired.ToString(),
-                simpleRangeEvent.AmmoDescription ?? string.Empty,
-                simpleRangeEvent.Notes ?? string.Empty
+                simpleRangeSession.Id!.ToString(),
+                simpleRangeSession.EventDate.ToString("yyyy-MM-dd"),
+                simpleRangeSession.FirearmName,
+                simpleRangeSession.RangeName,
+                simpleRangeSession.RoundsFired.ToString(),
+                simpleRangeSession.AmmoDescription ?? string.Empty,
+                simpleRangeSession.Notes ?? string.Empty
             );
 
             return this;

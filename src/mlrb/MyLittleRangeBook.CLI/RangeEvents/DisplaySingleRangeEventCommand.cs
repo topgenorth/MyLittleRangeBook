@@ -10,12 +10,12 @@ namespace MyLittleRangeBook.RangeEvents
     {
         readonly ICliDisplay              _cliDisplay;
         readonly ILogger                  _logger;
-        readonly ISimpleRangeEventService _simpleRangeEventService;
-        public DisplaySingleRangeEventCommand(ICliDisplay cliDisplay, ILogger logger, ISimpleRangeEventService simpleRangeEventService)
+        readonly ISimpleRangeSessionService _simpleRangeSessionService;
+        public DisplaySingleRangeEventCommand(ICliDisplay cliDisplay, ILogger logger, ISimpleRangeSessionService simpleRangeSessionService)
         {
             _cliDisplay              = cliDisplay;
             _logger                  = logger;
-            _simpleRangeEventService = simpleRangeEventService;
+            _simpleRangeSessionService = simpleRangeSessionService;
         }
 
         /// <summary>
@@ -48,8 +48,8 @@ namespace MyLittleRangeBook.RangeEvents
 
             try
             {
-                Result<SimpleRangeEvent> result =
-                    await _simpleRangeEventService.GetAsync(eventId, ct).ConfigureAwait(false);
+                Result<SimpleRangeSession> result =
+                    await _simpleRangeSessionService.GetAsync(eventId, ct).ConfigureAwait(false);
 
                 if (result.IsFailed)
                 {
@@ -64,7 +64,7 @@ namespace MyLittleRangeBook.RangeEvents
                 }
                 else
                 {
-                    SimpleRangeEventPrinter2 p = new();
+                    SimpleRangeSessionPrinter2 p = new();
                     p.Print(_cliDisplay.Console, result.Value!, quiet);
                     _cliDisplay.PrintSuccess("Range event displayed successfully.");
                     returnCode = ReturnCodes.SUCCESS;

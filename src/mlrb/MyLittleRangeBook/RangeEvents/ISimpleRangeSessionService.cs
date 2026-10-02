@@ -4,12 +4,12 @@
     ///     Defines methods for managing simple range events. Provides functionality for
     ///     creating, retrieving, updating, deleting, and exporting simple range event records.
     /// </summary>
-    public interface ISimpleRangeEventService
+    public interface ISimpleRangeSessionService
     {
         /// <summary>
         ///     Delete a SimpleRangeEvent document.
         /// </summary>
-        /// <param name="simpleRangeEvent">
+        /// <param name="simpleRangeSession">
         ///     The simple range event to delete.
         /// </param>
         /// <param name="cancellationToken">
@@ -19,7 +19,7 @@
         ///     A task representing the asynchronous deletion operation. It contains the result indicating the success or
         ///     failure of the operation.
         /// </returns>
-        Task<Result> DeleteAsync(SimpleRangeEvent simpleRangeEvent, CancellationToken cancellationToken = default);
+        Task<Result> DeleteAsync(SimpleRangeSession simpleRangeSession, CancellationToken cancellationToken = default);
 
 
         /// <summary>
@@ -31,14 +31,14 @@
         ///     A task representing the asynchronous operation, containing the result of the retrieval operation with the
         ///     simple range event data.
         /// </returns>
-        Task<Result<SimpleRangeEvent>> GetAsync(Guid              simpleRangeEventId,
+        Task<Result<SimpleRangeSession>> GetAsync(Guid              simpleRangeEventId,
                                                 CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Insert or update a SimpleRangeEvent document. If the document exists, it will be updated;
         ///     otherwise, a new document will be created.
         /// </summary>
-        /// <param name="simpleRangeEvent">
+        /// <param name="simpleRangeSession">
         ///     The simple range event to insert or update.
         /// </param>
         /// <param name="isNew"></param>
@@ -49,7 +49,7 @@
         ///     A task representing the asynchronous operation. It contains the result, including the unique
         ///     identifier of the inserted or updated SimpleRangeEvent.
         /// </returns>
-        Task<Result<Guid>> UpsertAsync(SimpleRangeEvent  simpleRangeEvent,
+        Task<Result<Guid>> UpsertAsync(SimpleRangeSession  simpleRangeSession,
                                        bool              isNew             = false,
                                        CancellationToken cancellationToken = default);
 
@@ -64,7 +64,7 @@
         ///     A task representing the asynchronous operation. It contains a result object which includes a collection of
         ///     SimpleRangeEvent objects or an error indicating the failure of the operation.
         /// </returns>
-        Task<Result<IEnumerable<SimpleRangeEvent>>> GetSimpleRangeEventsAsync(
+        Task<Result<IEnumerable<SimpleRangeSession>>> GetSimpleRangeEventsAsync(
             CancellationToken cancellationToken = default);
 
         /// <summary>

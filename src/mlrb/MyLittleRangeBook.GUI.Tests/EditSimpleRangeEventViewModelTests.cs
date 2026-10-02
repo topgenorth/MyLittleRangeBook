@@ -28,7 +28,7 @@ namespace MyLittleRangeBook.GUI.Tests
             var advancedSql = Substitute.For<IAdvancedSql>();
             session.AdvancedSql.Returns(advancedSql);
 
-            var rangeEventService = Substitute.For<ISimpleRangeEventService>();
+            var rangeEventService = Substitute.For<ISimpleRangeSessionService>();
             var rangeEventVm = new SimpleRangeEventViewModel();
 
             var expectedAmmo = new List<string> { "9mm Luger 124gr FMJ", "9mm Luger 115gr JHP" };
@@ -79,8 +79,8 @@ namespace MyLittleRangeBook.GUI.Tests
             var advancedSql = Substitute.For<IAdvancedSql>();
             session.AdvancedSql.Returns(advancedSql);
 
-            var rangeEventService = Substitute.For<ISimpleRangeEventService>();
-            var rangeEvent = new SimpleRangeEvent
+            var rangeEventService = Substitute.For<ISimpleRangeSessionService>();
+            var rangeEvent = new SimpleRangeSession
             {
                 Id = Guid.NewGuid(),
                 FirearmName = "Sig Sauer P320",

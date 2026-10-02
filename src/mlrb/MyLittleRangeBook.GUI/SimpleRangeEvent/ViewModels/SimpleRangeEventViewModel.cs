@@ -41,18 +41,18 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// <summary>
         /// Use this constructor when editing a simple range event.
         /// </summary>
-        /// <param name="rangeEvent"></param>
-        public SimpleRangeEventViewModel(SimpleRangeEvent rangeEvent)
+        /// <param name="rangeSession"></param>
+        public SimpleRangeEventViewModel(SimpleRangeSession rangeSession)
         {
-            Id              = rangeEvent.Id;
-            EventDate       = rangeEvent.EventDate;
-            FirearmName     = rangeEvent.FirearmName;
-            RangeName       = rangeEvent.RangeName;
-            RoundsFired     = rangeEvent.RoundsFired;
-            AmmoDescription = rangeEvent.AmmoDescription ?? "N/A";
-            Notes           = rangeEvent.Notes           ?? string.Empty;
-            Modified        = rangeEvent.Modified;
-            Created         = rangeEvent.Created;
+            Id              = rangeSession.Id;
+            EventDate       = rangeSession.EventDate;
+            FirearmName     = rangeSession.FirearmName;
+            RangeName       = rangeSession.RangeName;
+            RoundsFired     = rangeSession.RoundsFired;
+            AmmoDescription = rangeSession.AmmoDescription ?? "N/A";
+            Notes           = rangeSession.Notes           ?? string.Empty;
+            Modified        = rangeSession.Modified;
+            Created         = rangeSession.Created;
             IsNew           = false;
 
         }
@@ -101,7 +101,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public object Clone() => MemberwiseClone();
 
         [UsedImplicitly]
-        public SimpleRangeEvent ToSimpleRangeEvent() =>
+        public SimpleRangeSession ToSimpleRangeEvent() =>
             new()
             {
                 Id              = Id,

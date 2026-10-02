@@ -5,6 +5,10 @@ using MyLittleRangeBook.Firearms;
 
 namespace MyLittleRangeBook.RangeEvents
 {
+
+    /// <summary>
+    /// Update the count of visits to a shooting range.
+    /// </summary>
     public class RangeVisitProjection : FlatTableProjection
     {
         public RangeVisitProjection() : base("range_visit_counts")

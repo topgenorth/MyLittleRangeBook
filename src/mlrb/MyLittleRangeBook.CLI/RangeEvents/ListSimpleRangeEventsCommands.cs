@@ -16,15 +16,15 @@ namespace MyLittleRangeBook.RangeEvents
         readonly ICliDisplay                  _cliDisplay;
         readonly ILogger                      _logger;
         readonly ISimpleRangeEventListPrinter _printer;
-        readonly ISimpleRangeEventService     _simpleRangeEventService;
+        readonly ISimpleRangeSessionService     _simpleRangeSessionService;
 
         public ListSimpleRangeEventsCommands(ICliDisplay                  cliDisplay,
-                                             ISimpleRangeEventService     simpleRangeEventService,
+                                             ISimpleRangeSessionService     simpleRangeSessionService,
                                              ILogger                      logger,
                                              ISimpleRangeEventListPrinter printer)
         {
             _cliDisplay                   = cliDisplay;
-            _simpleRangeEventService = simpleRangeEventService;
+            _simpleRangeSessionService = simpleRangeSessionService;
             _logger                       = logger;
             _printer                      = printer;
         }
@@ -40,7 +40,7 @@ namespace MyLittleRangeBook.RangeEvents
         {
             int returnCode;
             _cliDisplay.PrintCommandHeader("List range events.");
-            Result<IEnumerable<SimpleRangeEvent>> rangeEvents = await _simpleRangeEventService
+            Result<IEnumerable<SimpleRangeSession>> rangeEvents = await _simpleRangeSessionService
                                                                      .GetSimpleRangeEventsAsync(cancellationToken)
                                                                    .ConfigureAwait(false);
             if (rangeEvents.IsFailed)
@@ -53,7 +53,7 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             await _printer.Start().ConfigureAwait(false);
-            foreach (SimpleRangeEvent sre in rangeEvents.Value)
+            foreach (SimpleRangeSession sre in rangeEvents.Value)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {

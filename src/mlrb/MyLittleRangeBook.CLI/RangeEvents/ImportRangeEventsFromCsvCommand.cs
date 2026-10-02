@@ -15,9 +15,9 @@ namespace MyLittleRangeBook.RangeEvents
     {
         readonly ICliDisplay              _cliDisplay;
         readonly ILogger                  _logger;
-        readonly ISimpleRangeEventService _service;
+        readonly ISimpleRangeSessionService _service;
 
-        public ImportRangeEventsFromCsvCommand(ILogger logger, ICliDisplay display, ISimpleRangeEventService service,
+        public ImportRangeEventsFromCsvCommand(ILogger logger, ICliDisplay display, ISimpleRangeSessionService service,
                                                ICliDisplay cliDisplay)
         {
             _logger     = logger;
@@ -52,7 +52,7 @@ namespace MyLittleRangeBook.RangeEvents
                 await foreach (CsvRow csvRow in LoadRangeEventsFromCsv(file, cancellationToken).ConfigureAwait(false))
                 {
                     DateOnly eventDate = DateOnly.FromDateTime(DateTime.Parse(csvRow.EventDate));
-                    SimpleRangeEvent sre = SimpleRangeEvent.New(csvRow.FirearmName,
+                    SimpleRangeSession sre = SimpleRangeSession.New(csvRow.FirearmName,
                                                                 csvRow.RoundsFired,
                                                                 csvRow.RangeName,
                                                                 csvRow.AmmoDescription,

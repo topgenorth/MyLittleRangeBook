@@ -26,7 +26,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
     {
         readonly             IDialogService           _dialogService;
         readonly             ILogger                  _logger;
-        readonly             ISimpleRangeEventService _rangeEventService;
+        readonly             ISimpleRangeSessionService _rangeSessionService;
         readonly             IDocumentSession         _session;
         [ObservableProperty] IEnumerable<string>      _ammoDescription = [];
         [ObservableProperty] IEnumerable<string>      _firearmNames    = [];
@@ -38,10 +38,10 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                              ILogger                                  logger,
                                              IDocumentSession                         session,
                                              SimpleRangeEventViewModel                simpleRangeEvent,
-                                             ISimpleRangeEventService                 rangeEventService)
+                                             ISimpleRangeSessionService                 rangeSessionService)
         {
             Item               = simpleRangeEvent;
-            _rangeEventService = rangeEventService;
+            _rangeSessionService = rangeSessionService;
             _dialogService     = dialogServiceFactory(this);
             _logger            = logger;
             _session           = session;
@@ -77,7 +77,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         {
             try
             {
-                RangeNames = await _session.Query<SimpleRangeEvent>()
+                RangeNames = await _session.Query<SimpleRangeSession>()
                                            .DistinctBy(s => s.RangeName)
                                            .Where(s => !string.IsNullOrEmpty(s.RangeName))
                                            .OrderBy(s => s.RangeName)
@@ -198,16 +198,16 @@ namespace MyLittleRangeBook.GUI.ViewModels
                 {
                     // TODO [TO20260921] We need to compare the old values with the new, and publish the appropriate events...
                     Result<Guid> r1 =
-                        await _rangeEventService.UpsertAsync(Item.ToSimpleRangeEvent(), Item.IsNew, cancellationToken);
+                        await _rangeSessionService.UpsertAsync(Item.ToSimpleRangeEvent(), Item.IsNew, cancellationToken);
 
                     if (r1.IsSuccess)
                     {
-                        SimpleRangeEvent? sre = await _session.Query<SimpleRangeEvent>()
+                        SimpleRangeSession? sre = await _session.Query<SimpleRangeSession>()
                                                               .Where(e => e.Id == r1.Value)
                                                               .FirstOrDefaultAsync(cancellationToken);
                         SimpleRangeEventViewModel updatedViewModel = new(sre!);
                         _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
-                        WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeEvent>(
+                        WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeSession>(
                                                              Item.IsNew
                                                                  ? UpdateAction.Added
                                                                  : UpdateAction.Updated,

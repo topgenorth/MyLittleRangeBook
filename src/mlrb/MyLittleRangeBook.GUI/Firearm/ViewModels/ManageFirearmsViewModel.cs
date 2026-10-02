@@ -26,7 +26,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                       "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class ManageFirearmsViewModel : ViewModelBase, IDialogParticipant,
                                                    IRecipient<UpdateDataMessage<FirearmTableRow>>,
-                                                   IRecipient<UpdateDataMessage<SimpleRangeEvent>>
+                                                   IRecipient<UpdateDataMessage<SimpleRangeSession>>
     {
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
@@ -43,7 +43,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
 
             // Register for message notifications from other ViewModels
             // WeakReferenceMessenger.Default.Register<UpdateDataMessage<FirearmTableRow>>(this);
-            WeakReferenceMessenger.Default.Register<UpdateDataMessage<SimpleRangeEvent>>(this);
+            WeakReferenceMessenger.Default.Register<UpdateDataMessage<SimpleRangeSession>>(this);
             //
             // // Get the current synchronization context for UI thread operations
             SynchronizationContext syncContext = SynchronizationContext.Current ??
@@ -114,7 +114,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             _ = RefreshAsync();
         }
 
-        public void Receive(UpdateDataMessage<SimpleRangeEvent> message) => _ = RefreshAsync();
+        public void Receive(UpdateDataMessage<SimpleRangeSession> message) => _ = RefreshAsync();
 
         [RelayCommand]
         async Task LoadDataAsync(CancellationToken cancellationToken = default)

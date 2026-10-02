@@ -11,15 +11,15 @@ namespace MyLittleRangeBook.RangeEvents
     {
         readonly ICliDisplay              _cliDisplay;
         readonly ILogger                  _logger;
-        readonly ISimpleRangeEventService _simpleRangeEventService;
+        readonly ISimpleRangeSessionService _simpleRangeSessionService;
 
         public ExportRangeEventsToCsvCommand(ICliDisplay              cliDisplay,
                                              ILogger                  logger,
-                                             ISimpleRangeEventService simpleRangeEventService)
+                                             ISimpleRangeSessionService simpleRangeSessionService)
         {
             _cliDisplay              = cliDisplay;
             _logger                  = logger;
-            _simpleRangeEventService = simpleRangeEventService;
+            _simpleRangeSessionService = simpleRangeSessionService;
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace MyLittleRangeBook.RangeEvents
             string csvFileName = file ?? Path.GetTempFileName();
             try
             {
-                Result r = await _simpleRangeEventService.ExportToCsv(csvFileName, cancellationToken)
+                Result r = await _simpleRangeSessionService.ExportToCsv(csvFileName, cancellationToken)
                                                          .ConfigureAwait(false);
 
                 returnCode = r.IsSuccess ? SUCCESS : FAILURE;

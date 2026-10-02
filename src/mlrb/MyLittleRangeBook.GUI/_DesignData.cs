@@ -32,7 +32,7 @@ namespace MyLittleRangeBook.GUI
             }
         ];
 
-        internal static readonly SimpleRangeEvent[] TestRangeEvents =
+        internal static readonly SimpleRangeSession[] TestRangeEvents =
         [
             new()
             {

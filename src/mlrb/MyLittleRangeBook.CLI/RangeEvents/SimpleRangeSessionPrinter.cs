@@ -2,16 +2,16 @@
 
 namespace MyLittleRangeBook.RangeEvents
 {
-    public class SimpleRangeEventPrinter : ISimpleRangeEventPrinter
+    public class SimpleRangeSessionPrinter : ISimpleRangeSessionPrinter
     {
         readonly ICliDisplay _cliDisplay;
 
-        public SimpleRangeEventPrinter(ICliDisplay cliDisplay)
+        public SimpleRangeSessionPrinter(ICliDisplay cliDisplay)
         {
             _cliDisplay = cliDisplay;
         }
 
-        public void Print(IAnsiConsole console, SimpleRangeEvent sre, bool quiet = false)
+        public void Print(IAnsiConsole console, SimpleRangeSession sre, bool quiet = false)
         {
             if (quiet)
             {

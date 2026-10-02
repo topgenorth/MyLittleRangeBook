@@ -36,12 +36,12 @@ namespace MyLittleRangeBook.GUI.ViewModels
                                       "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class ListSimpleRangeEventsViewModel : ViewModelBase,
                                                           IDialogParticipant,
-                                                          IRecipient<UpdateDataMessage<SimpleRangeEvent>>
+                                                          IRecipient<UpdateDataMessage<SimpleRangeSession>>
     {
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly ILogger                                  _logger;
-        readonly ISimpleRangeEventService                 _rangeEventService;
+        readonly ISimpleRangeSessionService                 _rangeSessionService;
         readonly IDocumentSession                         _session;
 
         /// <summary>
@@ -60,13 +60,13 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public ListSimpleRangeEventsViewModel(ILogger logger,
                                               Func<IDialogParticipant,
                                                   IDialogService> dialogServiceFactory,
-                                              ISimpleRangeEventService rangeEventService,
+                                              ISimpleRangeSessionService rangeSessionService,
                                               IDocumentSession         session)
         {
             _dialogServiceFactory = dialogServiceFactory;
             _dialogService        = dialogServiceFactory(this);
             _logger               = logger;
-            _rangeEventService    = rangeEventService;
+            _rangeSessionService    = rangeSessionService;
             _session              = session;
 
             // Register for message notifications from other ViewModels
@@ -167,9 +167,9 @@ namespace MyLittleRangeBook.GUI.ViewModels
         public partial SimpleRangeEventViewModel? SelectedSimpleRangeEvent { get; set; }
 
 
-        public void Receive(UpdateDataMessage<SimpleRangeEvent> message)
+        public void Receive(UpdateDataMessage<SimpleRangeSession> message)
         {
-            SimpleRangeEvent[] updatedEvents = message.ItemsAffected;
+            SimpleRangeSession[] updatedEvents = message.ItemsAffected;
             switch (message.Action)
             {
                 case UpdateAction.Added:
@@ -203,7 +203,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
         /// </summary>
         async Task LoadSimpleRangeEvents(CancellationToken cancellationToken = default)
         {
-            Result<IEnumerable<SimpleRangeEvent>> r = await _rangeEventService
+            Result<IEnumerable<SimpleRangeSession>> r = await _rangeSessionService
                                                          .GetSimpleRangeEventsAsync(cancellationToken);
 
             if (r.IsSuccess)
@@ -284,7 +284,7 @@ namespace MyLittleRangeBook.GUI.ViewModels
             }
 
             EditSimpleRangeEventViewModel vm = new(_dialogServiceFactory, _logger, _session, simpleRangeEvent,
-                                                   _rangeEventService);
+                                                   _rangeSessionService);
 
             SimpleRangeEventViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeEventViewModel>(
                                                  simpleRangeEvent.IsNew

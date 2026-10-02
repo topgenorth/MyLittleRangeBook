@@ -13,10 +13,10 @@ namespace MyLittleRangeBook.RangeEvents
     public sealed class AddNewSimpleRangeEventCommand
     {
         readonly ICliDisplay              _cliDisplay;
-        readonly ISimpleRangeEventService _service;
+        readonly ISimpleRangeSessionService _service;
 
         public AddNewSimpleRangeEventCommand(ICliDisplay              cliDisplay,
-                                             ISimpleRangeEventService service)
+                                             ISimpleRangeSessionService service)
         {
             _cliDisplay = cliDisplay;
             _service    = service;
@@ -51,7 +51,7 @@ namespace MyLittleRangeBook.RangeEvents
             int  returnValue = -1;
 
             _cliDisplay.PrintCommandHeader("Add a range event.");
-            SimpleRangeEvent sre = SimpleRangeEvent.New(firearm.Trim(), rounds, range.Trim(), ammo.Trim(), notes.Trim(),
+            SimpleRangeSession sre = SimpleRangeSession.New(firearm.Trim(), rounds, range.Trim(), ammo.Trim(), notes.Trim(),
                                                         eventDate ?? DateOnly.FromDateTime(DateTime.UtcNow));
 
 
@@ -61,7 +61,7 @@ namespace MyLittleRangeBook.RangeEvents
             {
                 returnValue = ReturnCodes.SUCCESS;
                 _cliDisplay.PrintSuccess("Saved the range event.");
-                SimpleRangeEventPrinter2 p = new();
+                SimpleRangeSessionPrinter2 p = new();
                 p.Print(_cliDisplay.Console,sre, false);
             }
             else

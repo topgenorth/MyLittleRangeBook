@@ -2,9 +2,9 @@
 
 namespace MyLittleRangeBook.RangeEvents
 {
-    public class SimpleRangeEventPrinter2 : ISimpleRangeEventPrinter
+    public class SimpleRangeSessionPrinter2 : ISimpleRangeSessionPrinter
     {
-        public void Print(IAnsiConsole console, SimpleRangeEvent sre, bool quiet = false)
+        public void Print(IAnsiConsole console, SimpleRangeSession sre, bool quiet = false)
         {
             if (quiet)
             {
@@ -16,7 +16,7 @@ namespace MyLittleRangeBook.RangeEvents
             console.Write(TryLayouts(sre));
         }
 
-        IRenderable QuietLayout(SimpleRangeEvent sre)
+        IRenderable QuietLayout(SimpleRangeSession sre)
         {
             Grid grid = new Grid().Expand()
                 .AddColumn()
@@ -33,7 +33,7 @@ namespace MyLittleRangeBook.RangeEvents
             return grid;
         }
 
-        IRenderable TryLayouts(SimpleRangeEvent sre)
+        IRenderable TryLayouts(SimpleRangeSession sre)
         {
             Layout root = new Layout("root").SplitRows(
                 new Layout("details"),
@@ -48,7 +48,7 @@ namespace MyLittleRangeBook.RangeEvents
             return root;
         }
 
-        static void AddDetails(Layout root, SimpleRangeEvent sre)
+        static void AddDetails(Layout root, SimpleRangeSession sre)
         {
             Table table = new Table()
                 .Border(TableBorder.Square)
@@ -70,7 +70,7 @@ namespace MyLittleRangeBook.RangeEvents
             root["details"].Update(detailsPanel);
         }
 
-        static void AddNotes(Layout root, SimpleRangeEvent sre)
+        static void AddNotes(Layout root, SimpleRangeSession sre)
         {
             GridColumn c3 = new GridColumn().Padding(0, 0).Width(7);
             GridColumn c4 = new GridColumn().Padding(0, 0);
@@ -81,7 +81,7 @@ namespace MyLittleRangeBook.RangeEvents
             root["notes"].Update(notesPanel);
         }
 
-        static void AddAmmo(Layout root, SimpleRangeEvent sre)
+        static void AddAmmo(Layout root, SimpleRangeSession sre)
         {
             GridColumn c1 = new GridColumn().Padding(0, 0).Width(7);
             GridColumn c2 = new GridColumn().Padding(0, 0);
