@@ -10,10 +10,9 @@ using Avalonia.Themes.Fluent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyLittleRangeBook.GUI.Properties;
-using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
-using MainView = MyLittleRangeBook.GUI.Views.MainView;
-using MainWindow = MyLittleRangeBook.GUI.Views.MainWindow;
+using MainView = MyLittleRangeBook.GUI.MainView;
+using MainWindow = MyLittleRangeBook.GUI.MainWindow;
 
 namespace MyLittleRangeBook.GUI
 {

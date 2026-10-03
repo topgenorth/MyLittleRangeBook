@@ -6,17 +6,17 @@
              xmlns:themes="clr-namespace:SharedControls.Themes;assembly=SharedControls"
              xmlns:viewModels="clr-namespace:MyLittleRangeBook.GUI.ViewModels"
              xmlns:properties="clr-namespace:MyLittleRangeBook.GUI.Properties"
-             xmlns:views="clr-namespace:MyLittleRangeBook.GUI.Views"
-             x:DataType="viewModels:SettingsViewModel"
+             xmlns:gui="clr-namespace:MyLittleRangeBook.GUI"
+             x:DataType="gui:SettingsViewModel"
              RequestedThemeVariant="{Binding AppTheme, Source={x:Static properties:MlrbAppSettings.Default}}">
 
     <Application.DataTemplates>
         <!-- EditCategoryViewModel: Maps to the edit category view -->
-        <DataTemplate DataType="viewModels:EditSimpleRangeSessionViewModel">
-            <views:EditSimpleRangeSessionView />
+        <DataTemplate DataType="gui:EditSimpleRangeSessionViewModel">
+            <gui:EditSimpleRangeSessionView />
         </DataTemplate>
-        <DataTemplate DataType="viewModels:EditFirearmViewModel">
-            <views:EditFirearmView />
+        <DataTemplate DataType="gui:EditFirearmViewModel">
+            <gui:EditFirearmView />
         </DataTemplate>
 
     </Application.DataTemplates>

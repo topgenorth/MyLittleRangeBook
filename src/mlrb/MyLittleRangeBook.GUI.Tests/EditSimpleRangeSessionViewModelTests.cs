@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Fisher;
 using MyLittleRangeBook.Firearms;
-using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
 using MyLittleRangeBook.RangeEvents;
 using NSubstitute;
