@@ -45,7 +45,15 @@
         Guid           Id,
         Guid           CorrelationId,
         Guid           CausationId,
-        DateTimeOffset OccurredUtc);
+        DateTimeOffset OccurredUtc,
+        string         FirearmName,
+        string         RangeName,
+        int         RoundsFired,
+        string         AmmoDescription,
+        string         Notes,
+        DateTimeOffset Created,
+        DateTimeOffset Modified
+    );
 
     /// <summary>
     ///     This event is raised when we try to create the "simple range event" from the contents of a ShotView CSV file.

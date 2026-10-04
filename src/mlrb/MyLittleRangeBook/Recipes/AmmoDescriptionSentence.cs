@@ -27,6 +27,7 @@ namespace MyLittleRangeBook.Recipes
                                                evt.CausationId
                                               );
         }
+
         AmmoDescriptionSentence Create(FirearmUsedAtRange evt)
         {
             string ammo = evt.AmmoDescription ?? "Unknown";
@@ -71,6 +72,17 @@ namespace MyLittleRangeBook.Recipes
             ops.Store(x);
         }
 
+        public void Project(SimpleRangeSessionCreatedFromGui @event, IDocumentSession ops)
+        {
+            string id = CreateAmmoDescriptionId(@event.FirearmName, @event.AmmoDescription);
+            AmmoDescriptionSentence x =
+                new AmmoDescriptionSentence(id, @event.AmmoDescription, @event.CorrelationId, @event.CausationId);
+            ops.QueueSqlCommand(UPSERT_FIREARM_AMMO_DESCRIPTIONS_SQL,
+                                CreateAmmoDescriptionId(@event.FirearmName, x.AmmoDescription),
+                                @event.FirearmName,
+                                x.AmmoDescription);
+            ops.Store(x);
+        }
     }
 
 

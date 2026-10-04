@@ -1,5 +1,4 @@
 ﻿using Fisher.Projections.Flattened;
-using MyLittleRangeBook.EventSourcing;
 
 namespace MyLittleRangeBook.Firearms
 {
@@ -31,6 +30,16 @@ namespace MyLittleRangeBook.Firearms
                                               },
                                               x => x.FirearmName);
 
+            Project<SimpleRangeSessionCreatedFromGui>(map =>
+                                                      {
+                                                          map.Map(x => x.FirearmName, "firearm_name");
+                                                          map.Increment(x => x.RoundsFired, "round_count");
+                                                      });
+            Project<SimpleRangeSessionCreatedFromCommandLine>(map =>
+                                                              {
+                                                                  map.Map(x => x.FirearmName, "firearm_name");
+                                                                  map.Increment(x => x.RoundsFired, "round_count");
+                                                              });
             Delete<FirearmDeactivated>(e => e.FirearmName);
         }
     }

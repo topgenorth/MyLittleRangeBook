@@ -26,10 +26,22 @@ namespace MyLittleRangeBook.RangeEvents
                                             map.Increment("visit_count"); // Or map.Increment(x => 1, "visit_count");
                                         },
                                         x => x.RangeName); // <-- Natural Key / Primary Key Source
+
+            Project<SimpleRangeSessionCreatedFromGui>(map =>
+                                                      {
+                                                          map.Map(x => x.RangeName, "range_name");
+                                                          map.Increment("visit_count");
+                                                      });
+
+            Project<SimpleRangeSessionCreatedFromGui>(map =>
+                                                      {
+                                                          map.Map(x => x.RangeName, "range_name");
+                                                          map.Increment("visit_count");
+                                                      });
         }
     }
 
-    public class RangeVisitCount
+    public class RangeVisitCountProjection
     {
         public                            Guid   Id         { get; set; }
         [UniqueIndex] [NaturalKey] public string Name       { get; set; } = "Unknown Range";

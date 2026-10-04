@@ -22,24 +22,17 @@ namespace MyLittleRangeBook.GUI
     {
         readonly Guid         _causationId;
         readonly Guid         _correlationId;
-        readonly List<object> _events = [];
-        readonly Guid         _streamId;
 
         /// <summary>
         ///     Use this constructor when creating a new simple range event.
         /// </summary>
         public SimpleRangeSessionViewModel()
         {
-            _streamId      = Guid.CreateVersion7();
-            _causationId   = _streamId;
-            _correlationId = _streamId;
-            DateTime eventDate = DateTime.Now;
+            Guid streamId = Guid.CreateVersion7();
+            _causationId   = streamId;
+            _correlationId = streamId;
 
-            SimpleRangeSessionCreatedFromGui e = new(eventDate, _streamId, _correlationId, _causationId,
-                                                     DateTimeOffset.UtcNow);
-            _events.Add(e);
-
-            Id              = _streamId;
+            Id              = streamId;
             Modified        = DateTimeOffset.UtcNow;
             Created         = DateTimeOffset.UtcNow;
             Notes           = string.Empty;
@@ -54,8 +47,13 @@ namespace MyLittleRangeBook.GUI
         ///     Use this constructor when editing a simple range event.
         /// </summary>
         /// <param name="rangeSession"></param>
-        public SimpleRangeSessionViewModel(SimpleRangeSession rangeSession)
+        /// <param name="correlationId">Defaults to the ID of the simple range session.</param>
+        /// <param name="causationId">Defaults to the ID of the simple range session.</param>
+        public SimpleRangeSessionViewModel(SimpleRangeSession rangeSession, Guid? correlationId = null, Guid? causationId = null)
         {
+            _correlationId = correlationId ?? rangeSession.Id;
+            _causationId   = causationId   ?? rangeSession.Id;
+
             Id              = rangeSession.Id;
             EventDate       = rangeSession.EventDate;
             FirearmName     = rangeSession.FirearmName;
@@ -109,8 +107,6 @@ namespace MyLittleRangeBook.GUI
         [NotifyDataErrorInfo]
         public partial DateTimeOffset Created { get; set; }
 
-        public IReadOnlyList<object> DomainEvents => _events;
-
         public object Clone() => MemberwiseClone();
 
         public SimpleRangeSession ToSimpleRangeSession() =>
@@ -125,6 +121,8 @@ namespace MyLittleRangeBook.GUI
                 Notes           = Notes,
                 Modified        = Modified,
                 Created         = Created,
+                CorrelationId   = _correlationId,
+                CausationId     = _causationId,
             };
     }
 }
