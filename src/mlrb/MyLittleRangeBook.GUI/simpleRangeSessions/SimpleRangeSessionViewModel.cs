@@ -113,16 +113,16 @@ namespace MyLittleRangeBook.GUI
             new()
             {
                 Id              = Id,
-                EventDate       = EventDate,
-                FirearmName     = FirearmName?.Trim() ?? string.Empty,
-                RangeName       = RangeName,
-                RoundsFired     = RoundsFired,
-                AmmoDescription = AmmoDescription,
-                Notes           = Notes,
-                Modified        = Modified,
-                Created         = Created,
                 CorrelationId   = _correlationId,
                 CausationId     = _causationId,
+                EventDate       = EventDate,
+                FirearmName     = FirearmName.Trim(),
+                RangeName       = RangeName.Trim(),
+                RoundsFired     = RoundsFired,
+                AmmoDescription = AmmoDescription.Trim(),
+                Notes           = Notes.Trim(),
+                Modified        = Modified,
+                Created         = Created,
             };
     }
 }
