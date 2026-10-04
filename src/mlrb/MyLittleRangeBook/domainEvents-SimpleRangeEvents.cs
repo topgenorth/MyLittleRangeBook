@@ -12,7 +12,7 @@
     /// <param name="RoundsFired"></param>
     /// <param name="AmmoDescription">A text description of the ammo that was used.</param>
     /// <param name="Notes">A free-format entry of any notes from this range event.</param>
-    public record struct SimpleRangeSessionCreatedFromCommandLine(
+    public record struct SimpleRangeSessionCreatedFromCli(
         DateOnly       EventDate,
         string         FirearmName,
         Guid           Id,
@@ -48,7 +48,7 @@
         DateTimeOffset OccurredUtc,
         string         FirearmName,
         string         RangeName,
-        int         RoundsFired,
+        int            RoundsFired,
         string         AmmoDescription,
         string         Notes,
         DateTimeOffset Created,

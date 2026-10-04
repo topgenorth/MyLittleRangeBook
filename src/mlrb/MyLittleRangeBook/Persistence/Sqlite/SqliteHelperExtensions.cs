@@ -194,7 +194,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
 
                                    opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
                                    opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
-                                   opts.Projections.Add<AmmoDescriptionProjection2>(ProjectionLifecycle.Inline);
+                                   opts.Projections.Add<AmmoDescriptionProjection>(ProjectionLifecycle.Inline);
                                    opts.Projections.Add<SimpleRangeSessionProjector>(ProjectionLifecycle.Inline);
                                    opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
                                })

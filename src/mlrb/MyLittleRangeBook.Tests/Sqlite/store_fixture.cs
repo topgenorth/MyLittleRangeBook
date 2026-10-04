@@ -34,7 +34,7 @@ namespace MyLittleRangeBook.Sqlite
                                               .UseNumericRevisions()
                                               .SoftDeleted()
                                               ;
-                                          opts.Projections.Add<MyLittleRangeBook.Recipes.AmmoDescriptionProjection2>(ProjectionLifecycle.Inline);
+                                          opts.Projections.Add<MyLittleRangeBook.Recipes.AmmoDescriptionProjection>(ProjectionLifecycle.Inline);
                                           opts.Connection($"Data Source={_path}");
                                       });
 

@@ -1,14 +1,12 @@
 ﻿using Fisher;
 using Fisher.Projections;
-using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 using Weasel.Core.Identity;
 using Weasel.Core.Sequences;
 
 namespace MyLittleRangeBook.Recipes
 {
-
-    public partial class AmmoDescriptionProjection2 : EventProjection
+    public partial class AmmoDescriptionProjection : EventProjection
     {
         const string UPSERT_FIREARM_AMMO_DESCRIPTIONS_SQL = """
                                                             INSERT INTO firearm_ammo_descriptions (id, firearm_name, ammo_description)
@@ -74,9 +72,18 @@ namespace MyLittleRangeBook.Recipes
 
         public void Project(SimpleRangeSessionCreatedFromGui @event, IDocumentSession ops)
         {
-            string id = CreateAmmoDescriptionId(@event.FirearmName, @event.AmmoDescription);
-            AmmoDescriptionSentence x =
-                new AmmoDescriptionSentence(id, @event.AmmoDescription, @event.CorrelationId, @event.CausationId);
+            string                  id = CreateAmmoDescriptionId(@event.FirearmName, @event.AmmoDescription);
+            AmmoDescriptionSentence x  = new(id, @event.AmmoDescription, @event.CorrelationId, @event.CausationId);
+            ops.QueueSqlCommand(UPSERT_FIREARM_AMMO_DESCRIPTIONS_SQL,
+                                CreateAmmoDescriptionId(@event.FirearmName, x.AmmoDescription),
+                                @event.FirearmName,
+                                x.AmmoDescription);
+            ops.Store(x);
+        }
+        public void Project(SimpleRangeSessionCreatedFromCli @event, IDocumentSession ops)
+        {
+            string                  id = CreateAmmoDescriptionId(@event.FirearmName, @event.AmmoDescription);
+            AmmoDescriptionSentence x  = new(id, @event.AmmoDescription, @event.CorrelationId, @event.CausationId);
             ops.QueueSqlCommand(UPSERT_FIREARM_AMMO_DESCRIPTIONS_SQL,
                                 CreateAmmoDescriptionId(@event.FirearmName, x.AmmoDescription),
                                 @event.FirearmName,
@@ -86,13 +93,9 @@ namespace MyLittleRangeBook.Recipes
     }
 
 
-
-    public class AmmoDescriptionIdGenerator: IIdentification<AmmoDescriptionSentence, string>
+    public class AmmoDescriptionIdGenerator : IIdentification<AmmoDescriptionSentence, string>
     {
-        public string Identity(AmmoDescriptionSentence document)
-        {
-            return DeterministicUlid.MlrbIdFromString(document.Id);
-        }
+        public string Identity(AmmoDescriptionSentence document) => DeterministicUlid.MlrbIdFromString(document.Id);
 
         public string AssignIfMissing(AmmoDescriptionSentence document, ISequenceSource sequences)
         {

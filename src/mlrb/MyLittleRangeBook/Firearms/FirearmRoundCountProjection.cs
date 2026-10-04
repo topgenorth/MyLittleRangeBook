@@ -35,7 +35,7 @@ namespace MyLittleRangeBook.Firearms
                                                           map.Map(x => x.FirearmName, "firearm_name");
                                                           map.Increment(x => x.RoundsFired, "round_count");
                                                       });
-            Project<SimpleRangeSessionCreatedFromCommandLine>(map =>
+            Project<SimpleRangeSessionCreatedFromCli>(map =>
                                                               {
                                                                   map.Map(x => x.FirearmName, "firearm_name");
                                                                   map.Increment(x => x.RoundsFired, "round_count");

@@ -47,7 +47,7 @@ namespace MyLittleRangeBook.RangeEvents
             (bool created, Guid firearmId) = await GetStreamIdForFirearmName(sre.FirearmName, cancellationToken);
 
             #region Capture the simple range event.
-            SimpleRangeSessionCreatedFromCommandLine e1 =
+            SimpleRangeSessionCreatedFromCli e1 =
                 new(DateOnly.FromDateTime(sre.EventDate),
                     sre.FirearmName,
                     Guid.CreateVersion7(),
