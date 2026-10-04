@@ -1,6 +1,7 @@
-﻿using Spectre.Console.Rendering;
+﻿using MyLittleRangeBook.RangeEvents;
+using Spectre.Console.Rendering;
 
-namespace MyLittleRangeBook.RangeEvents
+namespace MyLittleRangeBook.RangeSessions
 {
     public class SimpleRangeSessionPrinter2 : ISimpleRangeSessionPrinter
     {

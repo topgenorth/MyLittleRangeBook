@@ -13,11 +13,11 @@
     /// <param name="AmmoDescription">A text description of the ammo that was used.</param>
     /// <param name="Notes">A free-format entry of any notes from this range event.</param>
     public record struct SimpleRangeSessionCreatedFromCli(
-        DateOnly       EventDate,
-        string         FirearmName,
         Guid           Id,
         Guid           CorrelationId,
         Guid           CausationId,
+        DateOnly       EventDate,
+        string         FirearmName,
         string         RangeName,
         int            RoundsFired,
         string?        AmmoDescription,

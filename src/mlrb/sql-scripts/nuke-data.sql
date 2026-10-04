@@ -9,6 +9,7 @@ BEGIN TRANSACTION;
 DELETE FROM fi_doc_ammodescriptionsentence;
 DELETE FROM fi_doc_firearm;
 DELETE FROM fi_doc_simplerangeevent;
+DELETE FROM fi_doc_simplerangesession;
 DELETE FROM fi_natural_key_firearm;
 DELETE FROM fi_events;
 DELETE FROM fi_streams;

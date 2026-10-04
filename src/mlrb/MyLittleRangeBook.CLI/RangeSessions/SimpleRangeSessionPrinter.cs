@@ -1,6 +1,7 @@
 ﻿using MyLittleRangeBook.Console;
+using MyLittleRangeBook.RangeEvents;
 
-namespace MyLittleRangeBook.RangeEvents
+namespace MyLittleRangeBook.RangeSessions
 {
     public class SimpleRangeSessionPrinter : ISimpleRangeSessionPrinter
     {

@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -14,7 +12,6 @@ using DynamicData;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using Fisher;
-using FluentResults;
 using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
@@ -35,38 +32,35 @@ namespace MyLittleRangeBook.GUI.listSimpleRangeSession
                                   Justification =
                                       "We have all needed members added via DynamicallyAccessedMembers-Attribute")]
     public partial class ListSimpleRangeSessionsViewModel : ViewModelBase,
-                                                          IDialogParticipant,
-                                                          IRecipient<UpdateDataMessage<SimpleRangeSession>>
+                                                            IDialogParticipant,
+                                                            IRecipient<UpdateDataMessage<SimpleRangeSession>>
     {
         readonly IDialogService                           _dialogService;
         readonly Func<IDialogParticipant, IDialogService> _dialogServiceFactory;
         readonly ILogger                                  _logger;
-        readonly ISimpleRangeSessionService                 _rangeSessionService;
         readonly IDocumentSession                         _session;
 
         /// <summary>
         ///     Source cache for managing ManageSimpleRangeEventsVM instances with reactive updates.
         ///     Uses the SimpleRangeEvent ID as the key for efficient lookups and updates.
         /// </summary>
-        readonly SourceCache<GUI.SimpleRangeSessionViewModel, Guid> _simpleRangeEventSourceCache = new(x => x.Id);
+        readonly SourceCache<SimpleRangeSessionViewModel, Guid> _simpleRangeEventSourceCache = new(x => x.Id);
 
         /// <summary>
         ///     Read-only collection bound to the UI for displaying filtered and sorted SimpleRangeEvents.
         ///     Automatically updated through the reactive pipeline.
         /// </summary>
-        readonly ReadOnlyObservableCollection<GUI.SimpleRangeSessionViewModel> _simpleRangeEvents;
+        readonly ReadOnlyObservableCollection<SimpleRangeSessionViewModel> _simpleRangeEvents;
 
 
         public ListSimpleRangeSessionsViewModel(ILogger logger,
-                                              Func<IDialogParticipant,
-                                                  IDialogService> dialogServiceFactory,
-                                              ISimpleRangeSessionService rangeSessionService,
-                                              IDocumentSession         session)
+                                                Func<IDialogParticipant,
+                                                    IDialogService> dialogServiceFactory,
+                                                IDocumentSession session)
         {
             _dialogServiceFactory = dialogServiceFactory;
             _dialogService        = dialogServiceFactory(this);
             _logger               = logger;
-            _rangeSessionService    = rangeSessionService;
             _session              = session;
 
             // Register for message notifications from other ViewModels
@@ -78,7 +72,7 @@ namespace MyLittleRangeBook.GUI.listSimpleRangeSession
                                                   "No SynchronizationContext provided.");
 
             // Create reactive observable for text filtering with 300ms throttle to reduce frequent updates
-            IObservable<Func<GUI.SimpleRangeSessionViewModel, bool>> filterByFirearmOrRangeObservable = this.ObserveValue(
+            IObservable<Func<SimpleRangeSessionViewModel, bool>> filterByFirearmOrRangeObservable = this.ObserveValue(
                  nameof(FilterString),
                  () => FilterString)
                .Throttle(TimeSpan.FromMilliseconds(300))
@@ -86,7 +80,7 @@ namespace MyLittleRangeBook.GUI.listSimpleRangeSession
                .Select(FilterByFirearmOrRangeObservable);
 
             // Create a reactive observable for sorting with a three-level sort priority
-            IObservable<SortExpressionComparer<GUI.SimpleRangeSessionViewModel>> sortObservable = this
+            IObservable<SortExpressionComparer<SimpleRangeSessionViewModel>> sortObservable = this
                .ObserveValue(nameof(SortExpression1), () => SortExpression1)
                .CombineLatest(
                               this.ObserveValue(nameof(SortExpression2), () => SortExpression2),
@@ -95,10 +89,10 @@ namespace MyLittleRangeBook.GUI.listSimpleRangeSession
                                s2,
                                s3) =>
                               {
-                                  SortExpressionComparer<GUI.SimpleRangeSessionViewModel> comparer = s1.IsDescending
-                                      ? SortExpressionComparer<GUI.SimpleRangeSessionViewModel>
+                                  SortExpressionComparer<SimpleRangeSessionViewModel> comparer = s1.IsDescending
+                                      ? SortExpressionComparer<SimpleRangeSessionViewModel>
                                          .Descending(s1.SortExpression)
-                                      : SortExpressionComparer<GUI.SimpleRangeSessionViewModel>
+                                      : SortExpressionComparer<SimpleRangeSessionViewModel>
                                          .Ascending(s1.SortExpression);
 
                                   comparer = s2.IsDescending
@@ -129,7 +123,7 @@ namespace MyLittleRangeBook.GUI.listSimpleRangeSession
         /// <summary>
         ///     Public property exposing the filtered and sorted SimpleRangeEvents collection for UI binding.
         /// </summary>
-        public ReadOnlyObservableCollection<GUI.SimpleRangeSessionViewModel> SimpleRangeEvents => _simpleRangeEvents;
+        public ReadOnlyObservableCollection<SimpleRangeSessionViewModel> SimpleRangeEvents => _simpleRangeEvents;
 
         /// <summary>
         ///     Filter text for searching SimpleRangeEvents by firearm name or ange name.
@@ -163,8 +157,8 @@ namespace MyLittleRangeBook.GUI.listSimpleRangeSession
             SimpleRangeSessionsSortExpression.SortByRangeNameExpression;
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(ListSimpleRangeSessionsViewModel.DeleteSimpleRangeEventCommand), nameof(ListSimpleRangeSessionsViewModel.EditSimpleRangeEventCommand))]
-        public partial GUI.SimpleRangeSessionViewModel? SelectedSimpleRangeEvent { get; set; }
+        [NotifyCanExecuteChangedFor(nameof(DeleteSimpleRangeEventCommand), nameof(EditSimpleRangeEventCommand))]
+        public partial SimpleRangeSessionViewModel? SelectedSimpleRangeEvent { get; set; }
 
 
         public void Receive(UpdateDataMessage<SimpleRangeSession> message)
@@ -176,12 +170,12 @@ namespace MyLittleRangeBook.GUI.listSimpleRangeSession
                 case UpdateAction.Updated:
                     _simpleRangeEventSourceCache.AddOrUpdate(
                                                              updatedEvents
-                                                                .Select(x => new GUI.SimpleRangeSessionViewModel(x)));
+                                                                .Select(x => new SimpleRangeSessionViewModel(x)));
 
                     break;
                 case UpdateAction.Removed:
                     _simpleRangeEventSourceCache.Remove(
-                                                        updatedEvents.Select(x => new GUI.SimpleRangeSessionViewModel(x)));
+                                                        updatedEvents.Select(x => new SimpleRangeSessionViewModel(x)));
 
                     break;
                 case UpdateAction.Reset:
@@ -201,37 +195,19 @@ namespace MyLittleRangeBook.GUI.listSimpleRangeSession
         ///     Loads SimpleRangeEvents from the database and populates the source cache.
         ///     Creates ManageSimpleRangeEventsVM wrappers for each database item.
         /// </summary>
-        async Task LoadSimpleRangeEvents(CancellationToken cancellationToken = default)
-        {
-            Result<IEnumerable<SimpleRangeSession>> r = await _rangeSessionService
-                                                         .GetSimpleRangeEventsAsync(cancellationToken);
-
-            if (r.IsSuccess)
-            {
-                IEnumerable<GUI.SimpleRangeSessionViewModel> items = r.Value
-                                                                    .OrderByDescending(x => x.EventDate)
-                                                                    .Select(x => new GUI.SimpleRangeSessionViewModel(x));
-                _simpleRangeEventSourceCache.AddOrUpdate(items);
-            }
-            else
-            {
-                StringBuilder msg = new("There was a problem trying to get the range events.");
-                r.Reasons.ForEach(x => msg.AppendLine(x.Message));
-                _logger.Error(msg.ToString());
-                _simpleRangeEventSourceCache.Clear();
-            }
-        }
+        async Task LoadSimpleRangeEvents(CancellationToken cancellationToken = default) =>
+            _simpleRangeEventSourceCache.Clear();
 
         [RelayCommand]
-        async Task AddNewSimpleRangeEventAsync() => await EditSimpleRangeEventAsync(new GUI.SimpleRangeSessionViewModel());
+        async Task AddNewSimpleRangeEventAsync() => await EditSimpleRangeEventAsync(new SimpleRangeSessionViewModel());
 
-        bool CanEditOrDeleteSimpleRangeEvent(GUI.SimpleRangeSessionViewModel? simpleRangeEvent) =>
+        bool CanEditOrDeleteSimpleRangeEvent(SimpleRangeSessionViewModel? simpleRangeEvent) =>
             simpleRangeEvent is not null;
 
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteSimpleRangeEvent))]
-        async Task DeleteSimpleRangeEventAsync(GUI.SimpleRangeSessionViewModel? simpleRangeEvent,
-                                               CancellationToken              cancellationToken = default)
+        async Task DeleteSimpleRangeEventAsync(SimpleRangeSessionViewModel? simpleRangeEvent,
+                                               CancellationToken            cancellationToken = default)
         {
             if (simpleRangeEvent is null)
             {
@@ -276,21 +252,20 @@ namespace MyLittleRangeBook.GUI.listSimpleRangeSession
         }
 
         [RelayCommand(CanExecute = nameof(CanEditOrDeleteSimpleRangeEvent))]
-        async Task EditSimpleRangeEventAsync(GUI.SimpleRangeSessionViewModel? simpleRangeEvent)
+        async Task EditSimpleRangeEventAsync(SimpleRangeSessionViewModel? simpleRangeEvent)
         {
             if (simpleRangeEvent is null)
             {
                 return;
             }
 
-            EditSimpleRangeSessionViewModel vm = new(_dialogServiceFactory, _logger, _session, simpleRangeEvent,
-                                                   _rangeSessionService);
+            EditSimpleRangeSessionViewModel vm = new(_dialogServiceFactory, _logger, _session, simpleRangeEvent);
 
-            GUI.SimpleRangeSessionViewModel? result = await this.ShowOverlayDialogAsync<GUI.SimpleRangeSessionViewModel>(
-                                                     simpleRangeEvent.IsNew
-                                                         ? "Add Range Event"
-                                                         : "Edit the Range Event",
-                                                     vm);
+            SimpleRangeSessionViewModel? result = await this.ShowOverlayDialogAsync<SimpleRangeSessionViewModel>(
+                                                   simpleRangeEvent.IsNew
+                                                       ? "Add Range Event"
+                                                       : "Edit the Range Event",
+                                                   vm);
 
             if (result != null)
             {
@@ -306,7 +281,8 @@ namespace MyLittleRangeBook.GUI.listSimpleRangeSession
             _simpleRangeEventSourceCache.Clear();
             await LoadSimpleRangeEvents();
 
-            Optional<GUI.SimpleRangeSessionViewModel> previousEvent = _simpleRangeEventSourceCache.Lookup(previousSelectedId);
+            Optional<SimpleRangeSessionViewModel> previousEvent =
+                _simpleRangeEventSourceCache.Lookup(previousSelectedId);
 
             Dispatcher.UIThread.Post(() =>
                                          SelectedSimpleRangeEvent =
@@ -319,7 +295,7 @@ namespace MyLittleRangeBook.GUI.listSimpleRangeSession
         /// </summary>
         /// <param name="filterText">The text to search for (null/empty shows all items)</param>
         /// <returns>Filter function for use with DynamicData</returns>
-        static Func<GUI.SimpleRangeSessionViewModel, bool> FilterByFirearmOrRangeObservable(string? filterText) =>
+        static Func<SimpleRangeSessionViewModel, bool> FilterByFirearmOrRangeObservable(string? filterText) =>
             item =>
             {
                 // No filter text means this item should be visible

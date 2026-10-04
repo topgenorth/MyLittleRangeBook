@@ -3,41 +3,39 @@ using System.Runtime.CompilerServices;
 using ConsoleAppFramework;
 using CsvHelper;
 using CsvHelper.Configuration;
-using FluentResults;
+using Fisher;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.RangeEvents;
 
-namespace MyLittleRangeBook.RangeEvents
+namespace MyLittleRangeBook.RangeSessions
 {
     [RegisterCommands("rangeevents")]
     [UsedImplicitly]
     public sealed class ImportRangeEventsFromCsvCommand
     {
-        readonly ICliDisplay              _cliDisplay;
-        readonly ILogger                  _logger;
-        readonly ISimpleRangeSessionService _service;
+        readonly ICliDisplay      _cliDisplay;
+        readonly ILogger          _logger;
+        readonly IDocumentSession _session;
 
-        public ImportRangeEventsFromCsvCommand(ILogger logger, ICliDisplay display, ISimpleRangeSessionService service,
-                                               ICliDisplay cliDisplay)
+        public ImportRangeEventsFromCsvCommand(ILogger logger, ICliDisplay display, IDocumentSession session)
         {
             _logger     = logger;
-            _service    = service;
-            _cliDisplay = cliDisplay;
+            _session    = session;
+            _cliDisplay = display;
         }
 
         /// <summary>
-        ///     Imports range events from a CSV file into the database. There are no "guard-rails" to prevent you from importing
-        ///     the
-        ///     same file twice. Doing so will duplicate things.
+        ///     Imports range session from a CSV file into the database. This will create a new range session.
         /// </summary>
-        /// <param name="file">The file path to the CSV file containing range events.</param>
+        /// <param name="file">The file path to the CSV file containing range session.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>An integer indicating the result code of the operation.</returns>
         [Command("import-from-csv")]
         [UsedImplicitly]
         public async Task<int> ImportFromCsvFile(string file, CancellationToken cancellationToken = default)
         {
-            _cliDisplay.PrintCommandHeader("Import range events from CSV");
+            _cliDisplay.PrintCommandHeader("Import range sessions from CSV");
             if (!File.Exists(file))
             {
                 _cliDisplay.PrintFailure("The CSV file was not found.");
@@ -46,42 +44,40 @@ namespace MyLittleRangeBook.RangeEvents
             }
 
             _cliDisplay.PrintInfo($"Processing CSV file {file}...");
+            Guid causationId = Guid.CreateVersion7();
             try
             {
                 int count = 0;
                 await foreach (CsvRow csvRow in LoadRangeEventsFromCsv(file, cancellationToken).ConfigureAwait(false))
                 {
-                    DateOnly eventDate = DateOnly.FromDateTime(DateTime.Parse(csvRow.EventDate));
-                    SimpleRangeSession sre = SimpleRangeSession.New(csvRow.FirearmName,
-                                                                csvRow.RoundsFired,
-                                                                csvRow.RangeName,
-                                                                csvRow.AmmoDescription,
-                                                                csvRow.Notes,
-                                                                eventDate);
+                    Guid     id           = Guid.CreateVersion7();
+                    Guid     correctionId = id;
+                    DateOnly eventDate    = DateOnly.FromDateTime(DateTime.Parse(csvRow.EventDate));
+                    SimpleRangeSessionCreatedFromCli e = new(id,
+                                                             correctionId,
+                                                             causationId,
+                                                             eventDate,
+                                                             csvRow.FirearmName.Trim(),
+                                                             csvRow.RangeName.Trim(),
+                                                             csvRow.RoundsFired,
+                                                             csvRow.AmmoDescription.Trim(),
+                                                             csvRow.Notes.Trim(),
+                                                             DateTimeOffset.UtcNow);
 
-                    Result<Guid> rUpsert = await _service.UpsertAsync(sre, cancellationToken: cancellationToken).ConfigureAwait(false);
+                    var stream = _session.Events.StartStream<SimpleRangeSession>(id, e);
 
-                    if (rUpsert.IsSuccess)
-                    {
-                        count++;
-                    }
-                    else
-                    {
-                        string reason = string.Join(", ", rUpsert.Reasons.Select(x => x.Message));
-                        _cliDisplay.PrintInfo($"Failed to import row {csvRow.RowId}: {reason}");
-                        _logger.Warning("Failed to import row {rowId}: {error}", csvRow.RowId, reason);
-                    }
+                    count++;
                 }
-
-                _cliDisplay.PrintSuccess($"Successfully imported {count} range events from '{file}'.");
-                _logger.Information("Successfully imported {count} range events from '{csvFileName}'.", count,
+                await _session.SaveChangesAsync(cancellationToken);
+                _cliDisplay.PrintSuccess($"Successfully imported {count} range sessions from '{file}'.");
+                _logger.Information("Successfully imported {count} range sessions from '{csvFileName}'.", count,
                                     file);
                 return ReturnCodes.SUCCESS;
             }
             catch (Exception ex)
             {
-                _cliDisplay.PrintFailure($"An error occurred while importing range events from '{file}'.");
-                _logger.Error(ex, "An error occurred while importing range events from '{csvFileName}'.", file);
+                _cliDisplay.PrintFailure($"An error occurred while importing range sessions from '{file}'.");
+                _logger.Error(ex, "An error occurred while importing range sessions from '{csvFileName}'.", file);
                 return ReturnCodes.RANGEEVENT_CSV_FILE_READ_FAILURE;
             }
         }

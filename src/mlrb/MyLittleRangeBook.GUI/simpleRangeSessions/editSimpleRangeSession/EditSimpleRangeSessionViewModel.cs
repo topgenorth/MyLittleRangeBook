@@ -24,9 +24,7 @@ namespace MyLittleRangeBook.GUI
     public partial class EditSimpleRangeSessionViewModel : ViewModelBase, IDialogParticipant
     {
         readonly             IDialogService             _dialogService;
-        readonly             List<object>               _events = [];
         readonly             ILogger                    _logger;
-        readonly             ISimpleRangeSessionService _rangeSessionService;
         readonly             IDocumentSession           _session;
         [ObservableProperty] IEnumerable<string>        _ammoDescription = [];
         string?                                         _firearmNameSearchText;
@@ -36,11 +34,10 @@ namespace MyLittleRangeBook.GUI
         public EditSimpleRangeSessionViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                                ILogger                                  logger,
                                                IDocumentSession                         session,
-                                               SimpleRangeSessionViewModel              simpleRangeSession,
-                                               ISimpleRangeSessionService               rangeSessionService)
+                                               SimpleRangeSessionViewModel              simpleRangeSession)
         {
             Item                   = simpleRangeSession;
-            _rangeSessionService   = rangeSessionService;
+
             _dialogService         = dialogServiceFactory(this);
             _logger                = logger;
             _session               = session;
@@ -196,8 +193,9 @@ namespace MyLittleRangeBook.GUI
             {
                 try
                 {
+                    throw new NotImplementedException();
                     // TODO [TO20260921] We need to compare the old values with the new, and publish the appropriate events...
-                    Result<Guid> r1 =
+                    /*Result<Guid> r1 =
                         await _rangeSessionService.UpsertAsync(Item.ToSimpleRangeSession(), Item.IsNew,
                                                                cancellationToken);
 
@@ -220,6 +218,8 @@ namespace MyLittleRangeBook.GUI
                                                                           "An error occured while trying to save the event.",
                                                                           DialogCommands.Ok);
                     }
+                    */
+
                 }
                 catch (Exception e)
                 {

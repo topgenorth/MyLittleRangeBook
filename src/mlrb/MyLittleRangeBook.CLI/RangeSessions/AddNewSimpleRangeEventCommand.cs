@@ -1,9 +1,11 @@
 ﻿using ConsoleAppFramework;
-using FluentResults;
+using Fisher;
+using JasperFx.Events;
 using JetBrains.Annotations;
 using MyLittleRangeBook.Console;
+using MyLittleRangeBook.RangeEvents;
 
-namespace MyLittleRangeBook.RangeEvents
+namespace MyLittleRangeBook.RangeSessions
 {
     /// <summary>
     ///     Allows us to create a new Range Event from the CLI, and optionally the FIT file that goes with it.
@@ -12,14 +14,17 @@ namespace MyLittleRangeBook.RangeEvents
     [UsedImplicitly]
     public sealed class AddNewSimpleRangeEventCommand
     {
-        readonly ICliDisplay              _cliDisplay;
-        readonly ISimpleRangeSessionService _service;
+        readonly ICliDisplay      _cliDisplay;
+        readonly ILogger          _logger;
+        readonly IDocumentSession _session;
 
-        public AddNewSimpleRangeEventCommand(ICliDisplay              cliDisplay,
-                                             ISimpleRangeSessionService service)
+        public AddNewSimpleRangeEventCommand(ICliDisplay      cliDisplay,
+                                             ILogger          logger,
+                                             IDocumentSession session)
         {
             _cliDisplay = cliDisplay;
-            _service    = service;
+            _logger     = logger;
+            _session    = session;
         }
 
         /// <summary>
@@ -48,26 +53,35 @@ namespace MyLittleRangeBook.RangeEvents
                                                         bool                            quiet             = false,
                                                         CancellationToken               cancellationToken = default)
         {
-            int  returnValue = -1;
-
+            int returnValue = -1;
             _cliDisplay.PrintCommandHeader("Add a range event.");
-            SimpleRangeSession sre = SimpleRangeSession.New(firearm.Trim(), rounds, range.Trim(), ammo.Trim(), notes.Trim(),
-                                                        eventDate ?? DateOnly.FromDateTime(DateTime.UtcNow));
 
 
-            Result<Guid> rAdd = await _service.UpsertAsync(sre, cancellationToken: cancellationToken).ConfigureAwait(false);
+            Guid     id            = Guid.CreateVersion7();
+            Guid     correlationId = Guid.CreateVersion7();
+            Guid     causationId   = id;
+            DateOnly ed            = eventDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
 
-            if (rAdd.IsSuccess)
+            SimpleRangeSessionCreatedFromCli e = new(id,
+                                                     correlationId,
+                                                     causationId,
+                                                     ed,
+                                                     firearm.Trim(),
+                                                     range.Trim(),
+                                                     rounds,
+                                                     ammo.Trim(), notes.Trim(), DateTimeOffset.UtcNow);
+
+            StreamAction stream = _session.Events.StartStream<SimpleRangeSession>(id, e);
+            try
             {
+                await _session.SaveChangesAsync(cancellationToken);
                 returnValue = ReturnCodes.SUCCESS;
-                _cliDisplay.PrintSuccess("Saved the range event.");
-                SimpleRangeSessionPrinter2 p = new();
-                p.Print(_cliDisplay.Console,sre, false);
+                _cliDisplay.PrintSuccess("Simple range session created successfully.");
             }
-            else
+            catch (Exception exception)
             {
-                returnValue = ReturnCodes.RANGE_EVENT_FAILED_TO_CREATE;
-                _cliDisplay.PrintFailure("Failed to save range event.");
+                _cliDisplay.PrintFailure("Could not create the simple range session.");
+                returnValue = ReturnCodes.SIMPLE_RANGE_SESSION_FAILED_TO_CREATE;
             }
 
 

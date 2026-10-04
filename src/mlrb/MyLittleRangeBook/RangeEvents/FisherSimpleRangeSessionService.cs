@@ -49,16 +49,14 @@ namespace MyLittleRangeBook.RangeEvents
 
             #region Capture the simple range event.
             SimpleRangeSessionCreatedFromCli e1 =
-                new(DateOnly.FromDateTime(sre.EventDate),
+                new(Guid.CreateVersion7(),
+                    correlationId,
+                    correlationId,
+                    DateOnly.FromDateTime(sre.EventDate),
                     sre.FirearmName,
-                    Guid.CreateVersion7(),
-                    correlationId,
-                    correlationId,
                     sre.RangeName,
                     sre.RoundsFired,
-                    sre.AmmoDescription,
-                    sre.Notes,
-                    DateTimeOffset.UtcNow);
+                    sre.AmmoDescription, sre.Notes, DateTimeOffset.UtcNow);
             newEvents.Add(e1);
             #endregion
 

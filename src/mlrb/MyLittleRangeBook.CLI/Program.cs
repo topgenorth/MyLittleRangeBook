@@ -10,6 +10,7 @@ using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
+using MyLittleRangeBook.RangeSessions;
 using Serilog.Exceptions;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
