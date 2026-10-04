@@ -4,6 +4,7 @@
     ///     Defines methods for managing simple range events. Provides functionality for
     ///     creating, retrieving, updating, deleting, and exporting simple range event records.
     /// </summary>
+    [Obsolete("Trying to change this to use events.", true)]
     public interface ISimpleRangeSessionService
     {
         /// <summary>

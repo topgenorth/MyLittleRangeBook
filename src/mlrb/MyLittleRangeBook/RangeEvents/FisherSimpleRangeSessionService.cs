@@ -6,6 +6,7 @@ using MyLittleRangeBook.Firearms;
 
 namespace MyLittleRangeBook.RangeEvents
 {
+    [Obsolete("Trying to change this to use events.", true)]
     public class FisherSimpleRangeSessionService : ISimpleRangeSessionService
     {
         readonly ILogger          _logger;

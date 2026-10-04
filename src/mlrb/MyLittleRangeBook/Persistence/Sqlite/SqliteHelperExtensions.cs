@@ -223,8 +223,8 @@ namespace MyLittleRangeBook.Persistence.Sqlite
 
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
 
-            services.TryAddKeyedScoped<ISimpleRangeSessionService, FisherSimpleRangeSessionService>(DI_KEY);
-            services.TryAddScoped<ISimpleRangeSessionService, FisherSimpleRangeSessionService>();
+            // services.TryAddKeyedScoped<ISimpleRangeSessionService, FisherSimpleRangeSessionService>(DI_KEY);
+            // services.TryAddScoped<ISimpleRangeSessionService, FisherSimpleRangeSessionService>();
 
 
             return services;
