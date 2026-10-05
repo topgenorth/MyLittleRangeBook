@@ -199,7 +199,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                    opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
                                    opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
 
-                                   // opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
+                                   opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
                                })
                     .ApplyAllDatabaseChangesOnStartup();
 

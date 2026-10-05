@@ -25,17 +25,19 @@ namespace MyLittleRangeBook.RangeEvents
                                         },
                                         x => x.RangeName); // <-- Natural Key / Primary Key Source
 
-            Project<SimpleRangeSessionCreatedFromGui>(map =>
+            Project<SimpleRangeSessionCreatedFromCli>(map =>
                                                       {
                                                           map.Map(x => x.RangeName, "range_name");
                                                           map.Increment("visit_count");
-                                                      });
+                                                      },
+                                                      x => x.RangeName);
 
             Project<SimpleRangeSessionCreatedFromGui>(map =>
                                                       {
                                                           map.Map(x => x.RangeName, "range_name");
                                                           map.Increment("visit_count");
-                                                      });
+                                                      },
+                                                      x => x.RangeName);
         }
     }
 }
