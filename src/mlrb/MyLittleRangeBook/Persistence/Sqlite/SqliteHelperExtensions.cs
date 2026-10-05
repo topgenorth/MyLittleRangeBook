@@ -192,12 +192,12 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                        .IdStrategy(new AmmoDescriptionIdGenerator())
                                        .UseNumericRevisions();
 
-
                                    opts.Projections.Snapshot<SimpleRangeSession>(SnapshotLifecycle.Inline);
                                    opts.Projections.Add<AmmoDescriptionProjection>(ProjectionLifecycle.Inline);
 
                                    opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
                                    opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
+                                   opts.Projections.Add<CreateFirearmFromSimpleRangeEvent>(ProjectionLifecycle.Inline);
 
                                    opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
                                })

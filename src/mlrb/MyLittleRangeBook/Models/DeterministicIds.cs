@@ -72,6 +72,20 @@ namespace MyLittleRangeBook.Models
         }
 
         /// <summary>
+        /// Create a GUID for the firearm.
+        /// </summary>
+        /// <param name="firearmName"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static Guid ForFirearmName(string firearmName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
+            string s  = $"mlrb.firearm.{firearmName.Trim().ToLower()}";
+            MlrbId id = MlrbId.FromString(s, DateTimeOffset.UtcNow);
+            return id;
+        }
+
+        /// <summary>
         ///     Creates a Guid V7 from an existing Guid and timestamp.
         /// </summary>
         public static Guid TransmuteToV7(Guid originalGuid, DateTimeOffset timestamp)

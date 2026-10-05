@@ -4,12 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using Fisher;
 using Fisher.Linq;
-using FluentResults;
 using MyLittleRangeBook.Firearms;
-using MyLittleRangeBook.GUI.Messages;
 using MyLittleRangeBook.RangeEvents;
 using SharedControls.Controls;
 using SharedControls.Services;
@@ -23,20 +20,20 @@ namespace MyLittleRangeBook.GUI
     /// </summary>
     public partial class EditSimpleRangeSessionViewModel : ViewModelBase, IDialogParticipant
     {
-        readonly             IDialogService             _dialogService;
-        readonly             ILogger                    _logger;
-        readonly             IDocumentSession           _session;
-        [ObservableProperty] IEnumerable<string>        _ammoDescription = [];
-        string?                                         _firearmNameSearchText;
-        [ObservableProperty] IEnumerable<string>        _firearmNames = [];
-        [ObservableProperty] IEnumerable<string>        _rangeNames   = [];
+        readonly             IDialogService      _dialogService;
+        readonly             ILogger             _logger;
+        readonly             IDocumentSession    _session;
+        [ObservableProperty] IEnumerable<string> _ammoDescription = [];
+        string?                                  _firearmNameSearchText;
+        [ObservableProperty] IEnumerable<string> _firearmNames = [];
+        [ObservableProperty] IEnumerable<string> _rangeNames   = [];
 
         public EditSimpleRangeSessionViewModel(Func<IDialogParticipant, IDialogService> dialogServiceFactory,
                                                ILogger                                  logger,
                                                IDocumentSession                         session,
                                                SimpleRangeSessionViewModel              simpleRangeSession)
         {
-            Item                   = simpleRangeSession;
+            Item = simpleRangeSession;
 
             _dialogService         = dialogServiceFactory(this);
             _logger                = logger;
@@ -181,53 +178,26 @@ namespace MyLittleRangeBook.GUI
                 return;
             }
 
-            if (!Item.IsNew)
+
+            try
             {
-                // TODO [TO20260921] We need to compare the old values with the new, and publish the appropriate events...
-                await _dialogService.ShowOverlayDialogAsync<bool>("Not Implemented",
-                                                                  "We don't support editing right now.",
-                                                                  DialogCommands.Ok);
-                _logger.Debug("Editing a simple range event is not supported right now - {Id}", Item.Id);
+                List<object> events = Item.GetEvents();
+                if (events.Count > 0)
+                {
+                    _session.Events.Append(Item.Id, events);
+                    await _session.SaveChangesAsync(cancellationToken);
+                }
+                else
+                {
+                    _logger.Verbose("Nothing was done with the simple range session {Id}", Item.Id);
+                }
             }
-            else
+            catch (Exception e)
             {
-                try
-                {
-                    throw new NotImplementedException();
-                    // TODO [TO20260921] We need to compare the old values with the new, and publish the appropriate events...
-                    /*Result<Guid> r1 =
-                        await _rangeSessionService.UpsertAsync(Item.ToSimpleRangeSession(), Item.IsNew,
-                                                               cancellationToken);
-
-                    if (r1.IsSuccess)
-                    {
-                        SimpleRangeSession? sre = await _session.Query<SimpleRangeSession>()
-                                                                .Where(e => e.Id == r1.Value)
-                                                                .FirstOrDefaultAsync(cancellationToken);
-                        SimpleRangeSessionViewModel updatedViewModel = new(sre!);
-                        _dialogService.ReturnResultFromOverlayDialog(updatedViewModel);
-                        WeakReferenceMessenger.Default.Send(new UpdateDataMessage<SimpleRangeSession>(
-                                                             Item.IsNew
-                                                                 ? UpdateAction.Added
-                                                                 : UpdateAction.Updated,
-                                                             sre));
-                    }
-                    else
-                    {
-                        await _dialogService.ShowOverlayDialogAsync<bool>("Error",
-                                                                          "An error occured while trying to save the event.",
-                                                                          DialogCommands.Ok);
-                    }
-                    */
-
-                }
-                catch (Exception e)
-                {
-                    _logger.Error(e, "Failed to save simple range event {Id}", Item.Id);
-                    await _dialogService.ShowOverlayDialogAsync<bool>("Error",
-                                                                      "An error occured while trying to save the event.",
-                                                                      DialogCommands.Ok);
-                }
+                _logger.Error(e, "Failed to save simple range event {Id}", Item.Id);
+                await _dialogService.ShowOverlayDialogAsync<bool>("Error",
+                                                                  "An error occured while trying to save the event.",
+                                                                  DialogCommands.Ok);
             }
         }
 
@@ -236,9 +206,9 @@ namespace MyLittleRangeBook.GUI
         {
             DialogCommand[] commands = [DialogCommands.No, DialogCommands.Yes];
             DialogResult userResponse = await _dialogService.ShowOverlayDialogAsync<DialogResult>(
-                                         "Cancel editing?",
-                                         "Do you want to discard your changes?",
-                                         commands);
+                                             "Cancel editing?",
+                                             "Do you want to discard your changes?",
+                                             commands);
 
             switch (userResponse)
             {
