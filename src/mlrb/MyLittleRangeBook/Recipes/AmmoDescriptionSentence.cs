@@ -95,13 +95,14 @@ namespace MyLittleRangeBook.Recipes
 
     public class AmmoDescriptionIdGenerator : IIdentification<AmmoDescriptionSentence, string>
     {
-        public string Identity(AmmoDescriptionSentence document) => DeterministicUlid.MlrbIdFromString(document.Id);
+        const  string NAMESPACE = "ammo-description";
+        public string Identity(AmmoDescriptionSentence document) => DeterministicUlid.MlrbIdFromString(document.Id, NAMESPACE);
 
         public string AssignIfMissing(AmmoDescriptionSentence document, ISequenceSource sequences)
         {
             if (string.IsNullOrWhiteSpace(document.Id))
             {
-                return DeterministicUlid.MlrbIdFromString(document.AmmoDescription);
+                return DeterministicUlid.MlrbIdFromString(document.AmmoDescription, NAMESPACE);
             }
 
             return document.Id;

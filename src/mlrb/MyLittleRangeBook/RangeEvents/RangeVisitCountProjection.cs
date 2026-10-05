@@ -1,6 +1,4 @@
-﻿using Fisher.Attributes;
-using Fisher.Projections.Flattened;
-using JasperFx.Events.Aggregation;
+﻿using Fisher.Projections.Flattened;
 using MyLittleRangeBook.Firearms;
 
 namespace MyLittleRangeBook.RangeEvents
@@ -39,12 +37,5 @@ namespace MyLittleRangeBook.RangeEvents
                                                           map.Increment("visit_count");
                                                       });
         }
-    }
-
-    public class RangeVisitCountProjection
-    {
-        public                            Guid   Id         { get; set; }
-        [UniqueIndex] [NaturalKey] public string Name       { get; set; } = "Unknown Range";
-        public                            int    VisitCount { get; set; }
     }
 }

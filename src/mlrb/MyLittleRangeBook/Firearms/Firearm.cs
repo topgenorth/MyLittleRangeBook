@@ -1,42 +1,66 @@
 ﻿using System.Text;
+using JasperFx;
 using JasperFx.Events.Aggregation;
 using MyLittleRangeBook.Models;
+using Weasel.Core.Identity;
+using Weasel.Core.Sequences;
 
 namespace MyLittleRangeBook.Firearms
 {
+    // public class FirearmIdGenerator : IIdentification<Firearm, string>
+    // {
+    //     const  string NAMESPACE = "firearm";
+    //     public string Identity(Firearm document) => DeterministicUlid.MlrbIdFromString(document.Id, NAMESPACE);
+    //
+    //     public string AssignIfMissing(Firearm document, ISequenceSource sequences)
+    //     {
+    //         if (string.IsNullOrWhiteSpace(document.Id))
+    //         {
+    //             return DeterministicUlid.MlrbIdFromString(document.Name, NAMESPACE);
+    //         }
+    //
+    //         return document.Id;
+    //     }
+    // }
+
     public class Firearm
     {
         /// <summary>
-        /// Represents the unique identifier for a firearm entity.
+        ///     Represents the unique identifier for a firearm entity.
         /// </summary>
-        public Guid Id { get; set; } = Guid.CreateVersion7();
+        public Guid Id            { get; set; } = Guid.Empty;
+
+        public Guid CorrelationId { get; set; } = Guid.Empty;
+        public Guid CausationId   { get; set; } = Guid.Empty;
 
         /// <summary>
-        ///  The name of the firearm.  This must be unique to all of the firearms that belong to you (including firearms that are "inactive").
+        ///     The name of the firearm.  This must be unique to all the firearms that belong to you (including firearms that are
+        ///     "inactive").
         /// </summary>
-        [NaturalKey] public string         Name             { get; set; } = "Unknown Firearm";
+        [NaturalKey]
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the date and time when the firearm was created.
+        ///     Gets or sets the date and time when the firearm was created.
         /// </summary>
-        public              DateTimeOffset Created          { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset Created { get; set; } = DateTimeOffset.UtcNow;
 
         /// <summary>
-        /// Represents the timestamp of the most recent modification made to the firearm entity.
+        ///     Represents the timestamp of the most recent modification made to the firearm entity.
         /// </summary>
         public DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
-        public bool           IsActive { get; set; } = true;
+
+        public bool IsActive { get; set; } = true;
 
         /// <summary>
-        /// Holds a list of Garmin Shotview CSC files for this firearm.
+        ///     Holds a list of Garmin Shotview CSC files for this firearm.
         /// </summary>
-        public              List<string>   ShotViewCsvFiles { get; set; } = new();
+        public List<string> ShotViewCsvFiles { get; set; } = new();
 
         /// <summary>
-        /// Gets or sets the list of notes associated with the firearm.
+        ///     Gets or sets the list of notes associated with the firearm.
         /// </summary>
         public List<Note> Notes { get; set; } = new();
-
 
 
         public void Apply(FirearmActivated e) => IsActive = true;
@@ -52,7 +76,7 @@ namespace MyLittleRangeBook.Firearms
         }
 
         public void Apply(FirearmCleaned e) =>
-            AppendTextAsNote($"Fiearm was cleaned.");
+            AppendTextAsNote("Fiearm was cleaned.");
 
         [NaturalKeySource]
         public void Apply(FirearmCreated e) => Name = e.FirearmName;
@@ -92,19 +116,20 @@ namespace MyLittleRangeBook.Firearms
                 return;
             }
 
-            var note = new Note() { Content = text.Trim(), NoteType = "firearm"};
+            Note note = new() { Content = text.Trim(), NoteType = "firearm" };
             Notes.Add(note);
         }
 
         string CombineAllNotes()
         {
-            var sb = new StringBuilder();
-            foreach (var n in Notes.OrderBy(x => x.ModifiedUtc))
+            StringBuilder sb = new();
+            foreach (Note n in Notes.OrderBy(x => x.ModifiedUtc))
             {
                 sb.AppendLine($"-- {n.ModifiedUtc:O}");
                 sb.AppendLine(n.Content);
                 sb.AppendLine(string.Empty);
             }
+
             return sb.ToString();
         }
     }
