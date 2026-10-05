@@ -29,13 +29,14 @@ namespace MyLittleRangeBook.RangeEvents
         public async Task<Result<SimpleRangeSession>> GetAsync(Guid              simpleRangeEventId,
                                                              CancellationToken cancellationToken = default)
         {
-            SimpleRangeSession? sre = await _session.LoadAsync<SimpleRangeSession>(simpleRangeEventId, cancellationToken);
+            /*SimpleRangeSession? sre = await _session.LoadAsync<SimpleRangeSession>(simpleRangeEventId, cancellationToken);
             if (sre is null)
             {
                 return new Result().WithError(new InvalidSimpleRangeSessionIdError(simpleRangeEventId));
             }
 
-            return Result.Ok(sre);
+            return Result.Ok(sre!);*/
+            throw new NotImplementedException();
         }
 
         public async Task<Result<Guid>> UpsertAsync(SimpleRangeSession  sre,

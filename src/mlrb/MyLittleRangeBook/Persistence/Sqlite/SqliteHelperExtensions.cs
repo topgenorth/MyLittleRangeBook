@@ -22,9 +22,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
     /// </summary>
     public static class SqliteHelperExtensions
     {
-        // ReSharper disable once MemberCanBePrivate.Global
-        public const string DI_KEY = "sqlite";
-
         /// <summary>
         ///     The name of the default database.
         /// </summary>
@@ -192,11 +189,15 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                        .IdStrategy(new AmmoDescriptionIdGenerator())
                                        .UseNumericRevisions();
 
-                                   opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
-                                   opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
-                                   opts.Projections.Add<AmmoDescriptionProjection>(ProjectionLifecycle.Inline);
-                                   opts.Projections.Add<SimpleRangeSessionProjector>(ProjectionLifecycle.Inline);
-                                   opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
+                                   // opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
+                                   opts.Projections.Snapshot<SimpleRangeSession>(SnapshotLifecycle.Inline);
+
+
+                                   // opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
+                                   // opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
+                                   // opts.Projections.Add<AmmoDescriptionProjection>(ProjectionLifecycle.Inline);
+
+
                                })
                     .ApplyAllDatabaseChangesOnStartup();
 
@@ -222,9 +223,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             services.TryAddSingleton(configuration);
 
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
-
-            // services.TryAddKeyedScoped<ISimpleRangeSessionService, FisherSimpleRangeSessionService>(DI_KEY);
-            // services.TryAddScoped<ISimpleRangeSessionService, FisherSimpleRangeSessionService>();
 
 
             return services;

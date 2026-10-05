@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using MyLittleRangeBook.Models;
 
 namespace MyLittleRangeBook.RangeEvents
 {
@@ -7,48 +6,29 @@ namespace MyLittleRangeBook.RangeEvents
     ///     Represents an session that occurs at a shooting range, capturing details such as firearm, ammunition,
     ///     rounds fired, and additional event metadata. Everything is in plain text
     /// </summary>
-    public record SimpleRangeSession
+    public class SimpleRangeSession
     {
         /// <summary>
         ///     Represents a simple range event containing details such as firearm used, rounds fired, range name,
         ///     ammunition details, and additional notes. Each instance is uniquely identified and automatically
         ///     timestamped upon creation.
         /// </summary>
-        public SimpleRangeSession()
-        {
-            Id            = Guid.CreateVersion7();
-            CorrelationId = Id;
-            CausationId   = Id;
-        }
+        public SimpleRangeSession() : this(DateTimeOffset.UtcNow) { }
 
         /// <summary>
         ///     Represents an event occurring at a shooting range, capturing various details such as the firearm used,
         ///     ammunition description, rounds fired, range name, and additional optional notes. Provides unique identifiers
         ///     for the event, along with metadata like creation and modification timestamps.
         /// </summary>
-        [Obsolete("Use a DateTimeOffset.")]
-        public SimpleRangeSession(DateOnly eventDateOnly)
-        {
-            MlrbId id = MlrbId.From(eventDateOnly);
-            Id            = MlrbId.From(eventDateOnly);
-            CorrelationId = id;
-            CausationId   = id;
-            EventDate     = id.DateTimeLocal;
-        }
+        [Obsolete("Use a DateTimeOffset.", true)]
+        public SimpleRangeSession(DateOnly eventDateOnly) : this(eventDateOnly.ToUtcDateTimeOffset()) { }
 
         /// <summary>
         ///     Represents a basic range event containing information such as the event's unique identifier,
         ///     firearm name, range name, number of rounds fired, ammunition details, notes, timestamps,
         ///     and other metadata. Automatically timestamps creation and modification times.
         /// </summary>
-        public SimpleRangeSession(DateTime eventDateTime)
-        {
-            DateTimeOffset eventDateTimeOffset = new(eventDateTime, TimeZoneInfo.Local.GetUtcOffset(eventDateTime));
-            Id            = Guid.CreateVersion7(eventDateTimeOffset);
-            CorrelationId = Id;
-            CausationId   = Id;
-            EventDate     = eventDateTime.ToLocalTime();
-        }
+        public SimpleRangeSession(DateTime eventDateTime) : this(eventDateTime.ToUtcDateTimeOffset()) { }
 
         /// <summary>
         ///     Represents a shooting range event with details such as firearm name, ammunition description,
@@ -61,7 +41,9 @@ namespace MyLittleRangeBook.RangeEvents
             CorrelationId = Id;
             CausationId   = Id;
             EventDate     = eventDateTimeOffset.ToLocalTime().DateTime;
+            IsActive      = true;
         }
+
 
         /// <summary>
         ///     A Nanoid to uniquely identify the SimpleRangeEvent. Will be null for a new entity.
@@ -97,10 +79,7 @@ namespace MyLittleRangeBook.RangeEvents
         /// <summary>
         ///     Explicitly convert the EventDate into a DateTimeOffset in UTC.
         /// </summary>
-        public DateTimeOffset OccurredUtc => EventDate.Kind == DateTimeKind.Utc
-                                                 ? new DateTimeOffset(EventDate)
-                                                 : new DateTimeOffset(DateTime.SpecifyKind(EventDate,
-                                                                          DateTimeKind.Local)).ToUniversalTime();
+        public DateTimeOffset OccurredUtc { get; private set; }
 
         /// <summary>
         ///     The name of the firearm used. Should match a firearm in the Firearms table.
@@ -145,47 +124,36 @@ namespace MyLittleRangeBook.RangeEvents
         /// </summary>
         public bool IsActive { get; set; } = true;
 
-        /// <summary>
-        ///     Creates a new instance of the <see cref="SimpleRangeSession" /> class with the specified parameters.
-        /// </summary>
-        /// <param name="firearm">The name of the firearm used in the event.</param>
-        /// <param name="rounds">The number of rounds fired during the event.</param>
-        /// <param name="range">The name of the range where the event took place.</param>
-        /// <param name="ammo">The description of the ammunition used in the event.</param>
-        /// <param name="notes">Additional notes related to the event.</param>
-        /// <param name="date">
-        ///     The date of the event. If not provided, the current date is used. This is always assumed to be in
-        ///     the local timezone.
-        /// </param>
-        /// <returns>A new instance of the <see cref="SimpleRangeSession" /> class with the provided details.</returns>
-        public static SimpleRangeSession New(string                          firearm,
-                                             [ValueRange(-10000, 10000)] int rounds,
-                                             string                          range,
-                                             string                          ammo,
-                                             string                          notes,
-                                             DateOnly                        date = default)
+        public SimpleRangeSession Apply(SimpleRangeSessionCreatedFromGui @event)
         {
-            if (string.IsNullOrWhiteSpace(firearm))
-            {
-                throw new ArgumentException("Firearm name must be provided.");
-            }
+            Id              = @event.Id;
+            CorrelationId   = @event.CorrelationId;
+            CausationId     = @event.CausationId;
+            FirearmName     = @event.FirearmName;
+            RangeName       = @event.RangeName;
+            RoundsFired     = @event.RoundsFired;
+            AmmoDescription = @event.AmmoDescription;
+            Notes           = @event.Notes;
+            Modified        = @event.Modified;
+            Created         = @event.Created;
+            IsActive        = true;
+            return this;
+        }
 
-            DateOnly eventDate = date == default ? DateOnly.FromDateTime(DateTime.Now) : date;
-            Guid     id        = Guid.CreateVersion7();
-            SimpleRangeSession sre = new()
-                                     {
-                                         Id              = id,
-                                         CorrelationId   = id,
-                                         CausationId     = id,
-                                         FirearmName     = firearm,
-                                         RoundsFired     = rounds,
-                                         RangeName       = range,
-                                         AmmoDescription = ammo,
-                                         Notes           = notes,
-                                         EventDate       = eventDate.ToDateTime(TimeOnly.MinValue),
-                                     };
-
-            return sre;
+        public SimpleRangeSession Apply(SimpleRangeSessionCreatedFromCli @event)
+        {
+            Id              = @event.Id;
+            CorrelationId   = @event.CorrelationId;
+            CausationId     = @event.CausationId;
+            FirearmName     = @event.FirearmName;
+            RangeName       = @event.RangeName;
+            RoundsFired     = @event.RoundsFired;
+            AmmoDescription = @event.AmmoDescription;
+            Notes           = @event.Notes;
+            Modified        = DateTimeOffset.UtcNow;
+            Created         = @event.EventDate.ToUtcDateTimeOffset();
+            IsActive        = true;
+            return this;
         }
     }
 }
