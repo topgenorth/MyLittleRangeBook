@@ -1,7 +1,6 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
 
 namespace MyLittleRangeBook.Sqlite

@@ -14,7 +14,7 @@ using MyLittleRangeBook.Recipes;
 using SQLitePCL;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 
-namespace MyLittleRangeBook.Persistence.Sqlite
+namespace MyLittleRangeBook.Sqlite
 {
     /// <summary>
     ///     Extension methods for setting up SQLite and registering <see cref="ISqliteHelper" /> in the dependency injection

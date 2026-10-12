@@ -3,7 +3,6 @@ using Dapper;
 using FluentResults;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Models;
-using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Sqlite
 {

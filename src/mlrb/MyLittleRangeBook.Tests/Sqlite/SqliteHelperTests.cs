@@ -1,7 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using FluentResults;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.Persistence.Sqlite;
 
 namespace MyLittleRangeBook.Sqlite
 {

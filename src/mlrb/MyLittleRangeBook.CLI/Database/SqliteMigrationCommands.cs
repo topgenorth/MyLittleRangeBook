@@ -3,7 +3,7 @@ using FluentResults;
 using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Console;
-using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.Sqlite;
 using static MyLittleRangeBook.ReturnCodes;
 
 namespace MyLittleRangeBook.Database

@@ -2,7 +2,7 @@
 using Dapper;
 using MyLittleRangeBook.Models;
 
-namespace MyLittleRangeBook.Persistence.Sqlite
+namespace MyLittleRangeBook.Sqlite
 {
     /// <summary>
     /// A custom type handler for the MlrbId type, enabling seamless conversion between the MlrbId C# struct

@@ -1,5 +1,5 @@
 ﻿using MyLittleRangeBook.Console;
-using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.Sqlite;
 
 namespace MyLittleRangeBook
 {

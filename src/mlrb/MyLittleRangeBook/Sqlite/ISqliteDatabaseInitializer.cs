@@ -1,4 +1,4 @@
-﻿namespace MyLittleRangeBook.Persistence.Sqlite
+﻿namespace MyLittleRangeBook.Sqlite
 {
     /// <summary>
     /// Defines an interface for initializing and managing an SQLite database, specifically

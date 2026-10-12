@@ -8,8 +8,9 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Models;
+using MyLittleRangeBook.Persistence;
 
-namespace MyLittleRangeBook.Persistence.Sqlite
+namespace MyLittleRangeBook.Sqlite
 {
     /// <summary>
     ///     An enumeration that represents the types of files that can be saved in SQlite.

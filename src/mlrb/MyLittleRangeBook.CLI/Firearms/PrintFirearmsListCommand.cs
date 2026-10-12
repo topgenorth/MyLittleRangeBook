@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Firearms;
-using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.Sqlite;
 using Spectre.Console.Rendering;
 
 namespace MyLittleRangeBook

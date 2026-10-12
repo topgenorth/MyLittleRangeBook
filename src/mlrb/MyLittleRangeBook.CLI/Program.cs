@@ -8,9 +8,9 @@ using MyLittleRangeBook.Config;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
-using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
 using MyLittleRangeBook.RangeSessions;
+using MyLittleRangeBook.Sqlite;
 using Serilog.Exceptions;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 

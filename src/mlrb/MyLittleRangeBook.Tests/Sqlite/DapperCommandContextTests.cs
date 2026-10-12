@@ -1,5 +1,4 @@
 using MyLittleRangeBook.Persistence;
-using MyLittleRangeBook.Persistence.Sqlite;
 using Shouldly;
 using Dapper;
 using Xunit;

@@ -1,6 +1,5 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
-using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.Sqlite;
 
 namespace MyLittleRangeBook.Tests.Sqlite

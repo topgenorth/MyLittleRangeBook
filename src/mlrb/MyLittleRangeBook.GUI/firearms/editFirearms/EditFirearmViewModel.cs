@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using MyLittleRangeBook.Firearms;
-using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.Sqlite;
 using SharedControls.Controls;
 using SharedControls.Services;
 

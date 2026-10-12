@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 using MyLittleRangeBook.Console;
 using MyLittleRangeBook.Persistence;
-using MyLittleRangeBook.Persistence.Sqlite;
+using MyLittleRangeBook.Sqlite;
 
 namespace MyLittleRangeBook.MlrbAssets
 {

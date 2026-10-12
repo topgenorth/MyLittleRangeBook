@@ -1,6 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 
-namespace MyLittleRangeBook.Persistence.Sqlite
+namespace MyLittleRangeBook.Sqlite
 {
     public interface ISqliteHelper : ISqliteDatabaseInitializer
     {

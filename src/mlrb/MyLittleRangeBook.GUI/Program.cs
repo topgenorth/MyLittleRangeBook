@@ -1,6 +1,5 @@
 ﻿using MyLittleRangeBook.Config;
 using MyLittleRangeBook.GUI.ViewModels;
-using MyLittleRangeBook.Persistence.Sqlite;
 using SharedControls.Services;
 using ConfigurationExtensions = MyLittleRangeBook.Config.ConfigurationExtensions;
 using Avalonia;
@@ -10,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MyLittleRangeBook.Sqlite;
 using ListSimpleRangeSessionsViewModel = MyLittleRangeBook.GUI.listSimpleRangeSession.ListSimpleRangeSessionsViewModel;
 
 namespace MyLittleRangeBook.GUI
