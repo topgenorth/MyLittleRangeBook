@@ -13,7 +13,7 @@ namespace MyLittleRangeBook.Models
         /// <summary>
         ///     The default namespace that will be used.
         /// </summary>
-        public const string DEFAULT_MLRBID_CATEGORY = "MyLittleRangeBook";
+        public const string DEFAULT_MLRBID_NAMESPACE = "mlrb";
 
         /// <summary>
         ///     Generates a cryptographic hash of the provided category and value, returning the first 16 bytes.
@@ -53,11 +53,36 @@ namespace MyLittleRangeBook.Models
         /// <param name="namespace">This is used to help reduce collisions.  The value will be "scoped" to a particular namespace.</param>
         /// <param name="dateTimeOffset">If missing then DateTimeOffset.UtcNow will be used.</param>
         /// <returns></returns>
-        public static MlrbId MlrbIdFromString(string          value, string? @namespace = null,
+        public static MlrbId MlrbIdFromString(string          value,
+                                              string?         @namespace     = null,
                                               DateTimeOffset? dateTimeOffset = null)
         {
-            byte[] bytes = GetBytes(@namespace ?? DEFAULT_MLRBID_CATEGORY, value);
+            string category;
+            if (string.IsNullOrWhiteSpace(@namespace))
+            {
+                category = string.Concat(DEFAULT_MLRBID_NAMESPACE, ".");
+            }
+            else
+            {
+                category = string.Concat(DEFAULT_MLRBID_NAMESPACE, ".", @namespace);
+            }
+
+            byte[] bytes = GetBytes(category, value);
             return new MlrbId(bytes, dateTimeOffset ?? DateTimeOffset.UtcNow);
+        }
+
+        /// <summary>
+        /// Create a GUID for the firearm.
+        /// </summary>
+        /// <param name="firearmName"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static Guid ForFirearmName(string firearmName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(firearmName);
+            string s  = $"mlrb.firearm.{firearmName.Trim().ToLower()}";
+            MlrbId id = MlrbId.FromString(s, DateTimeOffset.UtcNow);
+            return id;
         }
 
         /// <summary>

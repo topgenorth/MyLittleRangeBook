@@ -1,5 +1,4 @@
 ﻿using MyLittleRangeBook.Config;
-using MyLittleRangeBook.GUI.Services;
 using MyLittleRangeBook.GUI.ViewModels;
 using MyLittleRangeBook.Persistence.Sqlite;
 using SharedControls.Services;
@@ -11,6 +10,8 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ListSimpleRangeSessionsViewModel = MyLittleRangeBook.GUI.listSimpleRangeSession.ListSimpleRangeSessionsViewModel;
+
 namespace MyLittleRangeBook.GUI
 {
     internal sealed class Program
@@ -75,7 +76,7 @@ namespace MyLittleRangeBook.GUI
             services.AddSingleton<IConfiguration>(configuration);
             services.AddSingleton<Func<IDialogParticipant, IDialogService>>(_ => participant => new DialogService(participant));
             services.AddTransient<MainViewModel>();
-            services.AddTransient<ManageSimpleRangeEventsViewModel>();
+            services.AddTransient<ListSimpleRangeSessionsViewModel>();
             services.AddTransient<ManageFirearmsViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.RegisterMyLittleRangeBookSqlite(configuration);

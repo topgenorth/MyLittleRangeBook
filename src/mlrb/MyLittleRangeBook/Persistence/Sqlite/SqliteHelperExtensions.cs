@@ -22,9 +22,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
     /// </summary>
     public static class SqliteHelperExtensions
     {
-        // ReSharper disable once MemberCanBePrivate.Global
-        public const string DI_KEY = "sqlite";
-
         /// <summary>
         ///     The name of the default database.
         /// </summary>
@@ -139,7 +136,7 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                        .UniqueIndex(x => x.Name)
                                        .UseNumericRevisions();
 
-                                   opts.Schema.For<SimpleRangeEvent>()
+                                   opts.Schema.For<SimpleRangeSession>()
                                        .Metadata(m =>
                                                  {
                                                      m.CreatedAt.Enabled = true;
@@ -161,9 +158,12 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                                      m.LastModifiedBy.Enabled = true;
                                                      m.CreatedAt.MapTo(x => x.Created);
                                                      m.LastModified.MapTo(x => x.Modified);
+                                                     m.CorrelationId.Enabled = true;
+                                                     m.CausationId.Enabled   = true;
                                                  })
+                                       .UniqueIndex(x => x.Name)
                                        .UseNumericRevisions()
-                                       .UniqueIndex(x => x.Name);
+                                       ;
 
                                    opts.Schema.For<Recipe>()
                                        .Metadata(m =>
@@ -192,10 +192,14 @@ namespace MyLittleRangeBook.Persistence.Sqlite
                                        .IdStrategy(new AmmoDescriptionIdGenerator())
                                        .UseNumericRevisions();
 
-                                   opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
-                                   opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
-                                   opts.Projections.Add<AmmoDescriptionProjection2>(ProjectionLifecycle.Inline);
+                                   opts.Projections.Snapshot<SimpleRangeSession>(SnapshotLifecycle.Inline);
+                                   opts.Projections.Add<AmmoDescriptionProjection>(ProjectionLifecycle.Inline);
+
                                    opts.Projections.Snapshot<Firearm>(SnapshotLifecycle.Inline);
+                                   opts.Projections.Add(new FirearmRoundCountProjection(), ProjectionLifecycle.Inline);
+                                   opts.Projections.Add<CreateFirearmFromSimpleRangeEvent>(ProjectionLifecycle.Inline);
+
+                                   opts.Projections.Add<RangeVisitProjection>(ProjectionLifecycle.Inline);
                                })
                     .ApplyAllDatabaseChangesOnStartup();
 
@@ -221,9 +225,6 @@ namespace MyLittleRangeBook.Persistence.Sqlite
             services.TryAddSingleton(configuration);
 
             services.TryAddSingleton<ISqliteHelper, SqliteHelper>();
-
-            services.TryAddKeyedScoped<ISimpleRangeEventService, FisherSimpleRangeEventService>(DI_KEY);
-            services.TryAddScoped<ISimpleRangeEventService, FisherSimpleRangeEventService>();
 
 
             return services;

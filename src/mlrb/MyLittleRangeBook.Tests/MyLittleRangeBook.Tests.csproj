@@ -40,4 +40,8 @@
         <ProjectReference Include="..\MyLittleRangeBook\MyLittleRangeBook.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Firearms\" />
+    </ItemGroup>
+
 </Project>

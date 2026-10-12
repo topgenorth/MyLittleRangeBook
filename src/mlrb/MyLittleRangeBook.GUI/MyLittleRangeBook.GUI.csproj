@@ -73,12 +73,8 @@
             <DependentUpon>EditSimpleRangeEventView.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
-        <Compile Update="SimpleRangeEvent\Views\ManageSimpleRangeEventsView.axaml.cs">
+        <Compile Update="SimpleRangeEvent\Views\ListSimpleRangeEventsView.axaml.cs">
             <DependentUpon>ManageSimpleRangeEventsView.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="AppSettings\Views\SettingsView.axaml.cs">
-            <DependentUpon>SettingsView.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
         <Compile Update="Main\Views\MainView.axaml.cs">
@@ -88,6 +84,34 @@
         <Compile Update="Main\Views\MainWindow.axaml.cs">
             <DependentUpon>MainWindow.axaml</DependentUpon>
             <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="SimpleRangeSession\editSimpleRangeSession\EditSimpleRangeSessionView.axaml.cs">
+          <DependentUpon>EditSimpleRangeSessionView.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="SimpleRangeSession\listSimpleRangeSession\ListSimpleRangeSessionView.axaml.cs">
+          <DependentUpon>ListSimpleRangeSessionView.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="firearms\editFirearms\EditFirearmView.axaml.cs">
+          <DependentUpon>EditFirearmView.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="firearms\listFirearms\ManageFirearmsView.axaml.cs">
+          <DependentUpon>ManageFirearmsView.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="mainWindow\MainView.axaml.cs">
+          <DependentUpon>MainView.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="mainWindow\MainWindow.axaml.cs">
+          <DependentUpon>MainWindow.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="AppSettings\SettingsView.axaml.cs">
+          <DependentUpon>SettingsView.axaml</DependentUpon>
+          <SubType>Code</SubType>
         </Compile>
     </ItemGroup>
 

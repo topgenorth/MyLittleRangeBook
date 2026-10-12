@@ -6,13 +6,16 @@
 PRAGMA defer_foreign_keys = ON; -- Allow deferred enforcement while transaction is active
 PRAGMA read_uncommitted = OFF;--enables ca
 BEGIN TRANSACTION;
+DELETE FROM fi_dead_letters;
 DELETE FROM fi_doc_ammodescriptionsentence;
+DELETE FROM fi_doc_cartridge;
 DELETE FROM fi_doc_firearm;
-DELETE FROM fi_doc_simplerangeevent;
-DELETE FROM fi_natural_key_firearm;
+DELETE FROM fi_doc_recipe;
+DELETE FROM fi_doc_simplerangesession;
+DELETE FROM fi_event_progression;
 DELETE FROM fi_events;
-DELETE FROM fi_streams;
 DELETE FROM fi_natural_key_firearm;
+DELETE FROM fi_streams;
 DELETE FROM firearm_ammo_descriptions;
 DELETE FROM firearm_round_counts;
 DELETE FROM range_visit_counts;

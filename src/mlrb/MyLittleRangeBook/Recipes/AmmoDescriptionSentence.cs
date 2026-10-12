@@ -1,14 +1,12 @@
 ﻿using Fisher;
 using Fisher.Projections;
-using MyLittleRangeBook.Firearms;
 using MyLittleRangeBook.Models;
 using Weasel.Core.Identity;
 using Weasel.Core.Sequences;
 
 namespace MyLittleRangeBook.Recipes
 {
-
-    public partial class AmmoDescriptionProjection2 : EventProjection
+    public partial class AmmoDescriptionProjection : EventProjection
     {
         const string UPSERT_FIREARM_AMMO_DESCRIPTIONS_SQL = """
                                                             INSERT INTO firearm_ammo_descriptions (id, firearm_name, ammo_description)
@@ -27,6 +25,7 @@ namespace MyLittleRangeBook.Recipes
                                                evt.CausationId
                                               );
         }
+
         AmmoDescriptionSentence Create(FirearmUsedAtRange evt)
         {
             string ammo = evt.AmmoDescription ?? "Unknown";
@@ -71,22 +70,39 @@ namespace MyLittleRangeBook.Recipes
             ops.Store(x);
         }
 
+        public void Project(SimpleRangeSessionCreatedFromGui @event, IDocumentSession ops)
+        {
+            string                  id = CreateAmmoDescriptionId(@event.FirearmName, @event.AmmoDescription);
+            AmmoDescriptionSentence x  = new(id, @event.AmmoDescription, @event.CorrelationId, @event.CausationId);
+            ops.QueueSqlCommand(UPSERT_FIREARM_AMMO_DESCRIPTIONS_SQL,
+                                CreateAmmoDescriptionId(@event.FirearmName, x.AmmoDescription),
+                                @event.FirearmName,
+                                x.AmmoDescription);
+            ops.Store(x);
+        }
+        public void Project(SimpleRangeSessionCreatedFromCli @event, IDocumentSession ops)
+        {
+            string                  id = CreateAmmoDescriptionId(@event.FirearmName, @event.AmmoDescription);
+            AmmoDescriptionSentence x  = new(id, @event.AmmoDescription, @event.CorrelationId, @event.CausationId);
+            ops.QueueSqlCommand(UPSERT_FIREARM_AMMO_DESCRIPTIONS_SQL,
+                                CreateAmmoDescriptionId(@event.FirearmName, x.AmmoDescription),
+                                @event.FirearmName,
+                                x.AmmoDescription);
+            ops.Store(x);
+        }
     }
 
 
-
-    public class AmmoDescriptionIdGenerator: IIdentification<AmmoDescriptionSentence, string>
+    public class AmmoDescriptionIdGenerator : IIdentification<AmmoDescriptionSentence, string>
     {
-        public string Identity(AmmoDescriptionSentence document)
-        {
-            return DeterministicUlid.MlrbIdFromString(document.Id);
-        }
+        const  string NAMESPACE = "ammo-description";
+        public string Identity(AmmoDescriptionSentence document) => DeterministicUlid.MlrbIdFromString(document.Id, NAMESPACE);
 
         public string AssignIfMissing(AmmoDescriptionSentence document, ISequenceSource sequences)
         {
             if (string.IsNullOrWhiteSpace(document.Id))
             {
-                return DeterministicUlid.MlrbIdFromString(document.AmmoDescription);
+                return DeterministicUlid.MlrbIdFromString(document.AmmoDescription, NAMESPACE);
             }
 
             return document.Id;

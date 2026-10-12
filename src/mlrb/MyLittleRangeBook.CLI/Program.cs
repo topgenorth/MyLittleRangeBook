@@ -10,6 +10,7 @@ using MyLittleRangeBook.FIT;
 using MyLittleRangeBook.IO;
 using MyLittleRangeBook.Persistence.Sqlite;
 using MyLittleRangeBook.RangeEvents;
+using MyLittleRangeBook.RangeSessions;
 using Serilog.Exceptions;
 using static MyLittleRangeBook.Config.ConfigurationExtensions;
 
@@ -41,7 +42,7 @@ builder.Services.TryAddSingleton(AnsiConsole.Console);
 builder.Services.AddTransient<ICliDisplay, CliDisplay>();
 builder.Services.AddTransient<SimpleAppHeader>();
 builder.Services.AddTransient<ICommandHeaderPrinter, SimpleAppHeaderWithLogging>();
-builder.Services.AddTransient<ISimpleRangeEventPrinter, SimpleRangeEventPrinter>();
+builder.Services.AddTransient<ISimpleRangeSessionPrinter, SimpleRangeSessionPrinter>();
 builder.Services.AddTransient<ISimpleRangeEventListPrinter, SimpleRangeEventListPrinter>();
 #endregion
 

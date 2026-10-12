@@ -20,6 +20,11 @@
         /// <summary>
         ///     The collection has bulk changes and should be reset
         /// </summary>
-        Reset
+        Reset,
+
+        /// <summary>
+        ///     Nothing was done to the collection.
+        /// </summary>
+        Cancelled,
     }
 }

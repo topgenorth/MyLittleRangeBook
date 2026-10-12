@@ -1,0 +1,120 @@
+-------------------------------------------------------------------------------
+ WARNING: Table produced by not verified Ballistics Calculations! Check results
+always against loading data of current reloading manuals! Input data and results
+may be invalid or wrong! The use of this data for loading ammunition can cause,
+directly or indirectly, serious injury to personnel and material. No responsibi-
+  lity is implied and THE USER MUST ASSUME THE ENTIRE RISK OF USING THE DATA.
+                QuickLOAD© V.3.9 Interior BallisticsV.3.9 #82034
+            © Copyright 1987-2018 - H.Broemel, Babenhausen, Germany
+-------------------------------------------------------------------------------
+ Case capacity and propellant properties may vary considerably from lot to lot!
+
+**** Input data:                         Date: 8-Oct-2026     Time: 08:58:02
+Cartridge................. = 6 x 45 (6-223)
+Projectile type........... = .243, 75, Hornady V-MAX 22420 with boattail
+
+Max.avg.pressure(Wildcat  )= 55114 psi   Shot start / init pressure = 3626 psi
+Projectile weight      (gr)= 75          Groove caliber         (in)= 0.243
+Length of cartridge    (in)= 2.260       Length of case         (in)= 1.759
+Case capacity(Grains Water)= 31.50       Length of projectile   (in)= 0.935
+Length of barrel       (in)= 20.000
+**** Values calculated:
+Seating depth          (in)= 0.434       Volume displaced   (gn H2O)= 4.78
+Comb.chamber volume(gn H2O)= 26.71       Projectile travel      (in)= 18.675
+**** Input data:
+Propellant type........... = IMR 8208 XBR
+Charge weight..........(gr)= 25.5        Load density......(g/cu.cm)= 0.952
+Heat of Explosion  (cal/lb)= 424695      Ratio of spec. heats cp/cv = 1.236
+Solid density    (gr/cu.in)= 409.7       Weighting factor...........= 0.5
+Burning rate factor Ba(1/s)= 0.625       Pro-/degressivity factor a = 0.664
+Burning limit ......... z1 = 0.4         Combust.Chamber Vb(ft³)= 6.124858E-5
+Factor.................. b = 1.454       X-S.Area of Bore A(ft²)= 3.177604E-4
+Bulk density     (gr/cu.in)= 232.7       Projectile mass mp (lb)= 1.071429E-2
+Loading ratio           (%)= 103.5       Projectile travel x(ft)= 1.556234E+0
+
+**** Results calculated:
+Maximum pressure ........ = 49588 psi    Way of projectile at Pmax = 1.20 in
+Muzzle velocity  ......Ve = 2819 fps     Muzzle pressure .......Pe = 7728 psi
+Project. energy at muzzle = 1323 ft.lbs  Fraction of powder burnt  = 92.5  %
+Projectile travel time from 10% Pmax to muzzle = 0.97 ms
+
+Real maximum of pressure inside barrel.
+End of combustion after the projectile passes muzzle.
+
+                 Table of progress of computed firing process:
+
+NR.:          x(in)         z (%)         v (fps)       p (psi)       t (ms)
+-------------------------------------------------------------------------------
+  0             0.000         1.17           0.0           3626        0.0000
+  1             0.000         1.20           1.0           3738        0.0011
+  2             0.000         1.26           2.4           3907        0.0037
+  3             0.000         1.31           3.9           4075        0.0071
+  4             0.000         1.39           6.0           4327        0.0112
+  5             0.001         1.48           8.5           4605        0.0161
+  6             0.002         1.60          11.6           4966        0.0217
+  7             0.003         1.75          15.5           5408        0.0279
+  8             0.004         1.92          19.9           5916        0.0347
+  9             0.006         2.12          25.2           6516        0.0420
+ 10             0.009         2.35          31.5           7219        0.0497
+ 11             0.012         2.62          38.7           8020        0.0577
+ 12             0.016         2.94          47.1           8936        0.0661
+ 13             0.022         3.31          56.8           9981        0.0748
+ 14             0.028         3.72          67.8          11153        0.0837
+ 15             0.036         4.20          80.4          12469        0.0928
+ 16             0.046         4.75          94.7          13921        0.1020
+ 17             0.058         5.36         110.8          15513        0.1113
+ 18             0.071         6.05         129.0          17247        0.1206
+ 19             0.087         6.82         149.2          19112        0.1301
+ 20             0.105         7.68         171.6          21101        0.1396
+ 21             0.126         8.63         196.4          23194        0.1490
+ 22             0.150         9.68         223.6          25372        0.1586
+ 23             0.177        10.83         253.4          27613        0.1681
+ 24             0.208        12.09         285.7          29885        0.1776
+ 25             0.243        13.44         320.5          32159        0.1871
+ 26             0.281        14.91         357.9          34404        0.1966
+ 27             0.324        16.48         397.9          36583        0.2061
+ 28             0.372        18.16         440.3          38670        0.2157
+ 29             0.426        19.94         485.2          40628        0.2252
+ 30             0.484        21.82         532.3          42436        0.2349
+ 31             0.549        23.80         581.7          44065        0.2445
+ 32             0.620        25.88         633.1          45500        0.2542
+ 33             0.697        28.04         686.4          46724        0.2640
+ 34             0.781        30.29         741.4          47734        0.2738
+ 35             0.873        32.62         798.0          48521        0.2838
+ 36             0.973        35.02         856.0          49087        0.2938
+ 37             1.081        37.49         915.2          49441        0.3040
+ 38             1.139        38.77         945.8          49540        0.3092
+ 39             1.201        40.10         977.3          49588        0.3146
+ 40             1.201        40.10         977.3          49588        0.3146
+ 41             1.356        43.05        1048.4          49305        0.3273
+ 42             1.522        45.94        1119.5          48684        0.3401
+ 43             1.701        48.74        1190.6          47772        0.3530
+ 44             1.895        51.48        1261.8          46610        0.3662
+ 45             2.106        54.13        1332.9          45238        0.3797
+ 46             2.335        56.72        1404.0          43690        0.3937
+ 47             2.585        59.23        1475.2          42001        0.4081
+ 48             2.858        61.66        1546.3          40198        0.4232
+ 49             3.156        64.02        1617.4          38309        0.4389
+ 50             3.484        66.30        1688.5          36358        0.4555
+ 51             3.845        68.51        1759.7          34367        0.4729
+ 52             4.243        70.64        1830.8          32356        0.4914
+ 53             4.683        72.70        1901.9          30341        0.5110
+ 54             5.171        74.69        1973.0          28340        0.5320
+ 55             5.713        76.60        2044.2          26366        0.5545
+ 56             6.317        78.43        2115.3          24431        0.5787
+ 57             6.991        80.19        2186.4          22545        0.6048
+ 58             7.748        81.88        2257.6          20719        0.6332
+ 59             8.599        83.49        2328.7          18959        0.6641
+ 60             9.559        85.02        2399.8          17273        0.6980
+ 61            10.647        86.48        2470.9          15665        0.7352
+ 62            11.884        87.87        2542.1          14140        0.7763
+ 63            13.296        89.18        2613.2          12701        0.8220
+ 64            14.914        90.41        2684.3          11350        0.8729
+ 65            16.778        91.57        2755.5          10087        0.9300
+ 66            17.817        92.12        2791.0           9489        0.9612
+ 67            18.366        92.39        2808.8           9199        0.9775
+ 68            18.648        92.53        2817.7           9055        0.9859
+ 69            18.666        92.53        2818.2           9047        0.9864
+ 70            18.675        92.54        2818.5           9042        0.9867
+
+Muzzle exit

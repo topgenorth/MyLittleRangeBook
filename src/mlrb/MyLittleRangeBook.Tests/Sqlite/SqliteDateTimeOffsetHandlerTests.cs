@@ -15,7 +15,7 @@ namespace MyLittleRangeBook.Sqlite
 
             await using ScopedSqliteConnection scopedConn = await GetSqliteConnectionAsync();
 
-            var rangeEvent = new SimpleRangeEvent(DateTime.Now)
+            var rangeEvent = new SimpleRangeSession(DateTime.Now)
             {
                 FirearmName = "Test Firearm",
                 RangeName = "Test Range",
@@ -33,7 +33,7 @@ namespace MyLittleRangeBook.Sqlite
 
             // Query back - this is where it fails in the issue description
             var events =
-                (await scopedConn.Connection.QueryAsync<SimpleRangeEvent>(
+                (await scopedConn.Connection.QueryAsync<SimpleRangeSession>(
                     "SELECT id AS Id, event_date AS EventDate, firearm_name AS FirearmName, created AS Created FROM simple_range_events WHERE firearm_name = 'Test Firearm'")).ToList();
 
             Assert.Single(events);
