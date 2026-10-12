@@ -1,4 +1,4 @@
-﻿CREATE TABLE firearm_ammo_descriptions
+﻿CREATE TABLE IF NOT EXISTS firearm_ammo_descriptions
 (
     id               TEXT NOT NULL
         CONSTRAINT pk_firearm_ammo_descriptions
@@ -7,6 +7,6 @@
     ammo_description TEXT NOT NULL
 );
 
-CREATE INDEX idx_firearm_ammo_descriptions_firearm_name
+CREATE INDEX IF NOT EXISTS idx_firearm_ammo_descriptions_firearm_name
     ON firearm_ammo_descriptions (firearm_name, ammo_description);
 

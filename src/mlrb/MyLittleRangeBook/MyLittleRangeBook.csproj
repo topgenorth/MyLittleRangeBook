@@ -40,11 +40,15 @@
 
     <ItemGroup>
         <EmbeddedResource Include="Config\AppSettings\*.json" />
-        <EmbeddedResource Include="Persistence\Sqlite\Scripts\*.sql" />
-        <EmbeddedResource Include="Sqlite\dbup_migration_scripts\*.sql" />
+        <EmbeddedResource Include="Sqlite\Scripts\*.sql" />
         <None Remove="ParseGarminShotViewFile\ParseGarminShotView_llama32.txt" />
         <EmbeddedResource Include="ParseGarminShotViewFile\ParseGarminShotView_llama32.txt" />
-        <None Remove="Persistence\Sqlite\dbup_migration_scripts\00001-ammo_description_table.sql" />
+        <None Remove="Sqlite\dbup_migration_scripts\00001-ammo_description_table.sql" />
+        <EmbeddedResource Include="Sqlite\dbup_migration_scripts\00001-ammo_description_table.sql" />
+        <None Remove="Sqlite\dbup_migration_scripts\00002-firearm-round-count_table.sql" />
+        <EmbeddedResource Include="Sqlite\dbup_migration_scripts\00002-firearm-round-count_table.sql" />
+        <None Remove="Sqlite\dbup_migration_scripts\00003-range-visit-counts_table.sql" />
+        <EmbeddedResource Include="Sqlite\dbup_migration_scripts\00003-range-visit-counts_table.sql" />
     </ItemGroup>
 
     <ItemGroup>
@@ -127,10 +131,6 @@
       <Content Include="..\..\..\data\simple_range_events.csv">
         <Link>data\simple_range_events.csv</Link>
       </Content>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Persistence\Sqlite\dbup_migration_scripts\" />
     </ItemGroup>
 
 </Project>
